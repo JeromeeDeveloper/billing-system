@@ -13,13 +13,16 @@ return new class extends Migration
     {
         Schema::create('loan_forecast', function (Blueprint $table) {
             $table->id();
-            $table->string('acct_no');
+            $table->string('loan_acct_no');
             $table->decimal('amount_due', 12, 2)->default(0);
-            $table->date('due_date');
+            $table->date('open_date');
+            $table->date('maturity_date');
+            $table->date('amortization_due_date');
+            $table->decimal('total_due', 12, 2)->default(0);
             $table->decimal('principal_due', 12, 2)->default(0);
             $table->decimal('interest_due', 12, 2)->default(0);
-            $table->decimal('penalty', 12, 2)->default(0);
-            $table->unsignedBigInteger('member_id');  // Change to unsignedBigInteger
+            $table->decimal('penalty_due', 12, 2)->default(0);
+            $table->unsignedBigInteger('member_id');
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
             $table->timestamps();
         });

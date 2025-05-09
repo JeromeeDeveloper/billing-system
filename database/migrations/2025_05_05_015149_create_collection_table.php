@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('sc_dep_amount', 12, 2)->default(0);
             $table->string('ln_acct_no');
             $table->decimal('ln_payment', 12, 2)->default(0);
-            $table->unsignedBigInteger('member_id');  // Change to unsignedBigInteger
+            $table->unsignedBigInteger('member_id');  
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
             $table->timestamps();
         });

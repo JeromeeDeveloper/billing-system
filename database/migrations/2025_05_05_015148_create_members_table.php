@@ -13,8 +13,13 @@ return new class extends Migration
     {
         Schema::create('members', function (Blueprint $table) {
             $table->id();
+
+            // Foreign key to branches
+            $table->unsignedBigInteger('branch_id');
+            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
+
             $table->string('cid')->unique();
-            $table->string('emp_id_no')->unique();
+            $table->string('emp_id')->unique();
             $table->string('fname');
             $table->string('lname');
             $table->text('address');
@@ -23,8 +28,6 @@ return new class extends Migration
             $table->decimal('loan_balance', 12, 2)->default(0);
             $table->timestamps();
         });
-
-
     }
 
     /**

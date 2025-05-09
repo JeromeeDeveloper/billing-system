@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('remittance_file', function (Blueprint $table) {
+        Schema::create('remittance', function (Blueprint $table) {
             $table->id();
-            $table->string('emp_id_no')->nullable(); // Might be missing
+
+            $table->unsignedBigInteger('member_id');  // Change to unsignedBigInteger
+            $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
+
             $table->decimal('loan_payment', 12, 2)->default(0);
             $table->decimal('savings_dep', 12, 2)->default(0);
             $table->decimal('share_dep', 12, 2)->default(0);
-            $table->unsignedBigInteger('member_id');  // Change to unsignedBigInteger
-            $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
+
             $table->timestamps();
         });
 
@@ -29,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('remittance_file');
+        Schema::dropIfExists('remittance');
     }
 };

@@ -2,7 +2,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>@yield('title', 'BILLING AND COLLECTION')</title>
+    <title>Billing and Collection</title>
 
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
 

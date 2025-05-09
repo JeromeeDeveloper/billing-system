@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DocumentUpload;
+
 class BillingController extends Controller
 {
     public function index()
     {
-        return view('components.billing');
+        $documents = DocumentUpload::all();
+
+        return view('components.billing.billing', compact('documents'));
     }
 }
