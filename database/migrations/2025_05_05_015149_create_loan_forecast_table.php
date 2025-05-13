@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('loan_forecast', function (Blueprint $table) {
             $table->id();
-            $table->string('loan_acct_no');
+            $table->string('loan_acct_no')->unique();
             $table->decimal('amount_due', 12, 2)->default(0);
             $table->date('open_date');
             $table->date('maturity_date');

@@ -13,6 +13,11 @@ class LoginController extends Controller
         return view('auth.login');
     }
 
+    public function index()
+    {
+        return view('auth.users');
+    }
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
