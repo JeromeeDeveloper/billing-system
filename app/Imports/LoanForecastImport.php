@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Branch;
 use App\Models\Member;
 use App\Models\LoanForecast;
+use App\Models\MasterList;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -31,7 +32,7 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            // Cache branch - Use updateOrCreate to either update or insert the branch
+            // Cache branch - update or create
             $branchCode = $row['branch_code'];
             $branch = $this->branchCache[$branchCode] ?? null;
             if (!$branch) {
@@ -39,13 +40,13 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     ['code' => $branchCode],
                     ['name' => $row['branch_name']]
                 );
-                $this->branchCache[$branchCode] = $branch; // Cache the branch
+                $this->branchCache[$branchCode] = $branch;
             }
 
             // Parse name - Format as "Lastname, Firstname"
             [$lname, $fname] = array_map('trim', explode(',', $row['name'] . ','));
 
-            // Cache member - Use updateOrCreate to either update or insert the member
+            // Cache member - update or create
             $cid = $row['cid'];
             $member = $this->memberCache[$cid] ?? null;
             if (!$member) {
@@ -62,23 +63,37 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                         'loan_balance' => 0,
                     ]
                 );
-                $this->memberCache[$cid] = $member; // Cache the member
+                $this->memberCache[$cid] = $member;
             }
 
-            // Use updateOrCreate to either insert or update the loan forecast
-            LoanForecast::updateOrCreate(
-                ['loan_acct_no' => $row['loan_account_no']], // Match by loan account number
+            // Update or create loan forecast
+            $loanForecast = LoanForecast::updateOrCreate(
+                ['loan_acct_no' => $row['loan_account_no']],
                 [
-                    'open_date'              => $this->parseDate($row['open_date']),
-                    'maturity_date'          => $this->parseDate($row['maturity_date']),
-                    'amortization_due_date'  => $this->parseDate($row['amortization_due_date']),
-                    'total_due'              => $this->cleanNumber($row['total_due']),
-                    'principal_due'          => $this->cleanNumber($row['principal_due']),
-                    'interest_due'           => $this->cleanNumber($row['interest_due']),
-                    'penalty_due'            => $this->cleanNumber($row['penalty_due']),
-                    'amount_due'             => 0, // Default value, adjust as needed
-                    'member_id'              => $member->id,
-                    'updated_at'             => $now,
+                    'open_date' => $this->parseDate($row['open_date']),
+                    'maturity_date' => $this->parseDate($row['maturity_date']),
+                    'amortization_due_date' => $this->parseDate($row['amortization_due_date']),
+                    'total_due' => $this->cleanNumber($row['total_due']),
+                    'principal_due' => $this->cleanNumber($row['principal_due']),
+                    'interest_due' => $this->cleanNumber($row['interest_due']),
+                    'penalty_due' => $this->cleanNumber($row['penalty_due']),
+                    'amount_due' => 0,
+                    'member_id' => $member->id,
+                    'updated_at' => $now,
+                ]
+            );
+
+            // Create or update master_list entry (use branches_id as column name)
+            MasterList::updateOrCreate(
+                [
+                    'member_id' => $member->id,
+                    'loan_forecast_id' => $loanForecast->id,
+                ],
+                [
+                    'branches_id' => $branch->id,  // <---- This matches your DB column name
+                    'status' => 'Imported',
+                    'updated_at' => $now,
+                    'created_at' => $now,
                 ]
             );
         }

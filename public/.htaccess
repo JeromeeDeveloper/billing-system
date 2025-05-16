@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Allow access to storage files (e.g. /storage/uploads/...)
+    RewriteRule ^storage/(.*)$ /storage/$1 [L]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

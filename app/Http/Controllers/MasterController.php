@@ -1,13 +1,16 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\MasterList;
 use Illuminate\Http\Request;
 
 class MasterController extends Controller
 {
-    public function index()
+     public function index()
     {
-        return view('components.master.master');
+
+        $masterlists = MasterList::with(['member', 'branch'])->get();
+
+        return view('components.master.master', compact('masterlists'));
     }
 }

@@ -14,21 +14,27 @@ class DocumentUploadController extends Controller
 {
     public function store(Request $request)
     {
+        ini_set('max_execution_time', 300);
+
         $request->validate([
             'file' => 'required|file|mimes:xls,xlsx,csv|max:5120',
         ]);
 
-
         try {
             $file = $request->file('file');
-            $path = $file->store('uploads/documents', 'public');
+
+            // Generate a new file name based on your custom logic
+            $newFileName = time() . '-' . $file->getClientOriginalName(); // Example: timestamp + original name
+
+            // Store the file with the new name
+            $path = $file->storeAs('uploads/documents', $newFileName, 'public');
 
             // Try to import the data
             Excel::import(new LoanForecastImport, $file);
 
             // Log upload
             DocumentUpload::create([
-                'filename'     => $file->getClientOriginalName(),
+                'filename'     => $newFileName,  // Use the new file name
                 'filepath'     => $path,
                 'mime_type'    => $file->getClientMimeType(),
                 'uploaded_by'  => Auth::id(),

@@ -135,6 +135,7 @@
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
+
                                         <tbody>
                                             @foreach ($documents as $document)
                                                 <tr>
@@ -142,8 +143,15 @@
                                                     <td>{{ $document->filepath }}</td>
                                                     <td>{{ $document->upload_date->format('Y-m-d H:i:s') }}</td>
                                                     <td>
-                                                        <a href="{{ Storage::url($document->filepath) }}"
-                                                            target="_blank">Download</a>
+                                                        <a class="btn btn-rounded btn-primary"
+                                                            href="{{ asset('storage/' . $document->filepath) }}"
+                                                            target="_blank">
+                                                            <i class="fas fa-download me-1"></i> Download
+                                                        </a>
+                                                        <button class="btn btn-rounded btn-primary">
+                                                            <i class="fas fa-file-invoice-dollar me-1"></i> Process
+                                                            Billing
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             @endforeach
