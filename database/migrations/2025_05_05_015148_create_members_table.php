@@ -26,6 +26,19 @@ return new class extends Migration
             $table->decimal('savings_balance', 12, 2)->default(0);
             $table->decimal('share_balance', 12, 2)->default(0);
             $table->decimal('loan_balance', 12, 2)->default(0);
+
+            $table->date('birth_date')->nullable();
+            $table->date('date_registered')->nullable();
+            $table->enum('gender', ['male', 'female', 'other'])->nullable();
+            $table->string('customer_type')->nullable();
+            $table->string('customer_classification')->nullable();
+            $table->string('occupation')->nullable();
+            $table->string('industry')->nullable();
+            $table->string('area_officer')->nullable();
+            $table->string('area')->nullable();
+            $table->enum('status', ['active', 'merged'])->default('active');
+            $table->text('additional_address')->nullable();
+            $table->enum('account_status', ['deduction', 'non-deduction'])->nullable();
             $table->timestamps();
         });
     }

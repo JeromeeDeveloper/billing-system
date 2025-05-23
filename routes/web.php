@@ -17,7 +17,9 @@ Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 //Users
-Route::get('/users', [LoginController::class, 'index'])->name('users');
+Route::get('/users', [LoginController::class, 'userindex'])->name('users');
+Route::put('/users/update', [LoginController::class, 'update'])->name('users.update');
+Route::delete('/users/destroy', [LoginController::class, 'destroy'])->name('users.destroy');
 
 //Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -33,6 +35,7 @@ Route::delete('/members/{id}', [MemberController::class, 'destroy'])->name('memb
 
 //Document
 Route::post('/upload', [DocumentUploadController::class, 'store'])->name('document.upload');
+Route::get('/Documents', [DocumentUploadController::class, 'index'])->name('documents');
 
 //Atm
 Route::get('/Atm', [AtmController::class, 'index'])->name('atm');
@@ -50,4 +53,6 @@ Route::get('/Remittance', [RemittanceController::class, 'index'])->name('remitta
 
 //Master List
 Route::get('/Master', [MasterController::class, 'index'])->name('master');
+Route::put('/members/{id}', [MasterController::class, 'update']);
+Route::delete('/members/{id}', [MasterController::class, 'destroy']);
 

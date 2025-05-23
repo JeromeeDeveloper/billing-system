@@ -9,6 +9,16 @@
             </li>
 
             <li class="nav-label">Transactions</li>
+
+            <li>
+                <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                    <i class="fa fa-upload"></i><span class="nav-text">File Uploads</span>
+                </a>
+                <ul aria-expanded="false">
+                    <li><a href="{{route('documents')}}">File Datatable</a></li>
+                </ul>
+            </li>
+
             <li>
                 <a class="has-arrow" href="javascript:void()" aria-expanded="false">
                     <i class="icon icon-credit-card"></i><span class="nav-text">Billing</span>
@@ -22,7 +32,7 @@
                     <i class="icon icon-wallet-90"></i><span class="nav-text">Remittance</span>
                 </a>
                 <ul aria-expanded="false">
-                    <li><a href="{{ route('remittance')}}">Remittance Datatable</a></li>
+                    <li><a href="{{ route('remittance') }}">Remittance Datatable</a></li>
                 </ul>
             </li>
             <li>
@@ -30,7 +40,7 @@
                     <i class="icon icon-chart-pie-36"></i><span class="nav-text">Master List</span>
                 </a>
                 <ul aria-expanded="false">
-                    <li><a href="{{ route('master')}}">Master List Datatable</a></li>
+                    <li><a href="{{ route('master') }}">Master List Datatable</a></li>
                 </ul>
             </li>
             <li>
@@ -38,7 +48,7 @@
                     <i class="icon icon-payment"></i><span class="nav-text">Atm</span>
                 </a>
                 <ul aria-expanded="false">
-                    <li><a href="{{ route('atm')}}">Atm Module</a></li>
+                    <li><a href="{{ route('atm') }}">Atm Module</a></li>
                 </ul>
             </li>
 
@@ -48,7 +58,7 @@
                     <i class="icon icon-pin-3"></i><span class="nav-text">Branch</span>
                 </a>
                 <ul aria-expanded="false">
-                    <li><a href="{{ route('branch')}}">Branch Datatable</a></li>
+                    <li><a href="{{ route('branch') }}">Branch Datatable</a></li>
                 </ul>
             </li>
             <li>
@@ -56,12 +66,12 @@
                     <i class="icon icon-users-mm"></i><span class="nav-text">Members</span>
                 </a>
                 <ul aria-expanded="false">
-                    <li><a href="{{ route('member')}}">Members Datatable</a></li>
+                    <li><a href="{{ route('member') }}">Members Datatable</a></li>
                 </ul>
             </li>
             <li>
-                <a href="widget-basic.html" aria-expanded="false">
-                    <i class="{{ route('users')}}"></i><span class="nav-text">Users</span>
+                <a href="{{route('users')}}" aria-expanded="false">
+                    <i></i><span class="nav-text">Users</span>
                 </a>
             </li>
         </ul>

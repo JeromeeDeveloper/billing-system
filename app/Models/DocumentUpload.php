@@ -14,6 +14,7 @@ class DocumentUpload extends Model
         'remittance_id',
         'loan_forecast_id',
         'atm_module_id',
+        'document_type',
         'filename',
         'filepath',
         'mime_type',

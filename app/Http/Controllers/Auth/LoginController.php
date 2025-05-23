@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class LoginController extends Controller
 {
@@ -43,5 +45,33 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'You have been logged out.');
+    }
+
+    public function userindex()
+    {
+        // Fetch all members with related branch data
+        $users = User::all(); // or paginate() if you want pagination
+        return view('auth.users', compact('users'));
+    }
+
+    public function update(Request $request)
+    {
+        $user = User::findOrFail($request->id);
+
+        $data = $request->only(['name', 'email']);
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return redirect()->back()->with('success', 'User updated successfully.');
+    }
+
+    public function destroy(Request $request)
+    {
+        User::destroy($request->id);
+        return redirect()->back()->with('success', 'User deleted successfully.');
     }
 }

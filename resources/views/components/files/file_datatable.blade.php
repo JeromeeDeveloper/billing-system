@@ -38,7 +38,7 @@
                 <div class="row page-titles mx-0">
                     <div class="col-sm-6 p-md-0">
                         <div class="welcome-text">
-                            <h4>Billing</h4>
+                            <h4>File Uploads</h4>
                             <span class="ml-1">Datatable</span>
                         </div>
                     </div>
@@ -54,13 +54,13 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">Billing Datatable</h4>
+                                <h4 class="card-title mb-0">File Datatable</h4>
                                 <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
                                     data-target="#exampleModalpopover">
                                     <span class="btn-icon-left text-primary">
-                                        <i class="fa fa-file"></i>
+                                        <i class="fa fa-upload"></i>
                                     </span>
-                                    Generate Billing
+                                    Upload
                                 </button>
                             </div>
 
@@ -68,30 +68,70 @@
                                 aria-labelledby="exampleModalpopoverLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered" role="document">
                                     <div class="modal-content">
-                                        <form id="uploadForm" method="POST">
+                                        <form id="uploadForm" action="{{ route('document.upload') }}" method="POST"
+                                            enctype="multipart/form-data">
                                             @csrf
+
                                             <div class="modal-body">
                                                 <div class="form-group">
-                                                    <label for="selected_date" class="font-weight-bold mb-2">📅 Select
-                                                        Date</label>
-                                                    <input type="date" class="form-control" id="selected_date"
-                                                        name="selected_date" required>
+                                                    <label for="file" class="font-weight-bold mb-2">📁 Installment Forecast
+                                                        File
+                                                    </label>
+                                                    <div class="custom-file">
+                                                        <input type="file" class="custom-file-input" id="file"
+                                                            name="file" required>
+                                                        <label class="custom-file-label" for="file">Choose
+                                                            file...</label>
+                                                    </div>
                                                     <small class="form-text text-muted mt-2">
-                                                        Please choose a date to generate the report or process data.
+                                                        Accepted formats: PDF, DOCX, CSV, JPG. Max size: 5MB.
                                                     </small>
                                                 </div>
+
+                                                <div class="form-group">
+                                                    <label for="savings_file" class="font-weight-bold mb-2">💰 Savings
+                                                        File</label>
+                                                    <div class="custom-file">
+                                                        <input type="file" class="custom-file-input"
+                                                            id="savings_file" name="savings_file">
+                                                        <label class="custom-file-label" for="savings_file">Choose
+                                                            file...</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="shares_file" class="font-weight-bold mb-2">📊 Shares
+                                                        File</label>
+                                                    <div class="custom-file">
+                                                        <input type="file" class="custom-file-input" id="shares_file"
+                                                            name="shares_file">
+                                                        <label class="custom-file-label" for="shares_file">Choose
+                                                            file...</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="cif_file" class="font-weight-bold mb-2">👤 CIF File
+                                                        </label>
+                                                    <div class="custom-file">
+                                                        <input type="file" class="custom-file-input" id="cif_file"
+                                                            name="cif_file">
+                                                        <label class="custom-file-label" for="cif_file">Choose
+                                                            file...</label>
+                                                    </div>
+                                                </div>
                                             </div>
+
 
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary"
                                                     data-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Generate</button>
+                                                <button type="submit" class="btn btn-primary">Upload</button>
                                             </div>
                                         </form>
                                     </div>
                                 </div>
                             </div>
-
 
                             @if (session('success'))
                                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -125,6 +165,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Filename</th>
+                                                <th>Document Type</th>
                                                 <th>File Path</th>
                                                 <th>Upload Date</th>
                                                 <th>Actions</th>
@@ -135,6 +176,7 @@
                                             @foreach ($documents as $document)
                                                 <tr>
                                                     <td>{{ $document->filename }}</td>
+                                                    <td>{{ $document->document_type }}</td>
                                                     <td>{{ $document->filepath }}</td>
                                                     <td>{{ $document->upload_date->format('Y-m-d H:i:s') }}</td>
                                                     <td>
@@ -151,6 +193,7 @@
                                         <tfoot>
                                             <tr>
                                                 <th>Filename</th>
+                                                <th>Document Type</th>
                                                 <th>File Path</th>
                                                 <th>Upload Date</th>
                                                 <th>Actions</th>
@@ -168,7 +211,8 @@
 
         <div class="footer">
             <div class="copyright">
-                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/" target="_blank">MASS-SPECC
+                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/"
+                        target="_blank">MASS-SPECC
                         COOPERATIVE</a>2025</p>
             </div>
         </div>
@@ -201,11 +245,14 @@
     </script>
 
     <script>
-        document.querySelector('.custom-file-input').addEventListener('change', function(e) {
-            const fileName = e.target.files[0].name;
+    document.querySelectorAll('.custom-file-input').forEach(input => {
+        input.addEventListener('change', function (e) {
+            let fileName = e.target.files[0]?.name || 'Choose file...';
             e.target.nextElementSibling.innerText = fileName;
         });
-    </script>
+    });
+</script>
+
 
 </body>
 

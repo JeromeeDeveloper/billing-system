@@ -90,8 +90,7 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'loan_forecast_id' => $loanForecast->id,
                 ],
                 [
-                    'branches_id' => $branch->id,  // <---- This matches your DB column name
-                    'status' => 'Imported',
+                    'branches_id' => $branch->id,
                     'updated_at' => $now,
                     'created_at' => $now,
                 ]
