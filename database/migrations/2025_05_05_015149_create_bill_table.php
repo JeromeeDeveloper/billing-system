@@ -16,17 +16,18 @@ return new class extends Migration
 
             $table->unsignedBigInteger('member_id');
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
+            $table->foreignId('loan_forecast_id')->nullable()->constrained('loan_forecast')->onDelete('cascade');
+            $table->foreignId('branches_id')->nullable()->constrained('branches')->onDelete('cascade');
 
-            $table->string('account_no');
-            $table->date('cut_off_date');
-            $table->decimal('principal', 12, 2)->default(0);
-            $table->decimal('interest', 12, 2)->default(0);
-            $table->decimal('penalty', 12, 2)->default(0);
-         
+            $table->string('amortization');
+            $table->date('start');
+            $table->date('end');
+            $table->decimal('gross', 12, 2)->default(0);
+
+            $table->enum('status', ['pending', 'approved'])->nullable()->default('pending');
+
             $table->timestamps();
         });
-
-
     }
 
     /**
@@ -34,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('billing_file');
+        Schema::dropIfExists('bill');
     }
 };

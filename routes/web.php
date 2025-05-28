@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AtmController;
+use App\Http\Controllers\LoansController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\MemberController;
@@ -23,6 +24,7 @@ Route::delete('/users/destroy', [LoginController::class, 'destroy'])->name('user
 
 //Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::post('/dashboard/store', [DashboardController::class, 'store'])->name('dashboard.store');
 
 //Billing
 Route::get('/Billing', [BillingController::class, 'index'])->name('billing');
@@ -32,7 +34,11 @@ Route::get('/Member', [MemberController::class, 'index'])->name('member');
 Route::put('/members/{id}', [MemberController::class, 'update'])->name('member.update');
 Route::delete('/members/{id}', [MemberController::class, 'destroy'])->name('member.delete');
 
-
+//Loans
+Route::get('/Loans', [LoansController::class, 'index'])->name('loans');
+Route::post('/loans', [LoansController::class, 'store'])->name('loans.store');
+Route::put('/loans/{loan}', [LoansController::class, 'update'])->name('loans.update');
+Route::delete('/loans/{loan}', [LoansController::class, 'destroy'])->name('loans.destroy');
 //Document
 Route::post('/upload', [DocumentUploadController::class, 'store'])->name('document.upload');
 Route::get('/Documents', [DocumentUploadController::class, 'index'])->name('documents');

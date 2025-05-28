@@ -14,7 +14,7 @@ class BranchController extends Controller
         // Fetch all branches with related members data
         $branches = Branch::with('members')->get(); // Adjust 'members' to the relation name in your Branch model
 
-        return view('components.branch.branch', compact('branches'));
+        return view('components.admin.branch.branch', compact('branches'));
     }
 
     public function view($id)
@@ -23,7 +23,7 @@ class BranchController extends Controller
         $branch = Branch::with('members')->findOrFail($id);
 
         // Return the view for viewing the branch details
-        return view('components.branch.view', compact('branch'));
+        return view('components.admin.branch.view', compact('branch'));
     }
 
     public function edit($id)
@@ -31,7 +31,7 @@ class BranchController extends Controller
         // Find the branch by ID
         $branch = Branch::findOrFail($id);
 
-        return view('components.branch.edit', compact('branch'));
+        return view('components.admin.branch.edit', compact('branch'));
     }
 
     public function update(Request $request, $id)

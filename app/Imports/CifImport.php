@@ -11,6 +11,13 @@ use Carbon\Carbon;
 
 class CifImport implements ToCollection, WithHeadingRow
 {
+    protected string $billingPeriod;
+
+    public function __construct(string $billingPeriod)
+    {
+        $this->billingPeriod = $billingPeriod;
+    }
+
     public function headingRow(): int
     {
         return 4; // A4 to M4 = headers, so data starts at row 5
@@ -39,7 +46,8 @@ class CifImport implements ToCollection, WithHeadingRow
                     'area_officer'            => $row['area_officer'],
                     'area'                    => $row['area'],
                     'status'                  => strtolower($row['status']) === 'merged' ? 'merged' : 'active',
-                    'additional_address'      => $row['address'],
+                    'address'                 => $row['address'],
+                    'billing_period'          => $this->billingPeriod, // Added billing period here
                 ]);
             }
             // Do nothing if member doesn't exist

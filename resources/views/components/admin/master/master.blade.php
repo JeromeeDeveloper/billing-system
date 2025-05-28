@@ -54,28 +54,50 @@
                                 <h4 class="card-title mb-0">Member Datatable</h4>
                             </div>
                             <div class="card-body">
+                                <form method="GET" action="{{ url()->current() }}"
+                                    class="mb-3 d-flex justify-content-center">
+                                    <input type="text" name="search" value="{{ request('search') }}"
+                                        class="form-control w-50" placeholder="Search by CID, Name, Branch..." />
+                                    <button type="submit" class="btn btn-primary ms-2">Search</button>
+                                </form>
                                 <div class="table-responsive">
-                                    <table id="example" class="display" style="min-width: 845px">
+                                    <table id="masterlistTable" class="display table table-striped"
+                                        style="min-width: 845px">
                                         <thead>
                                             <tr>
                                                 <th>CID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-                                                <th>Status</th>
-                                                <th>Account Status</th>
+                                                <th>Savings</th>
+                                                <th>Share Balance</th>
+                                                <th>Loan Balance</th>
+                                                <th>Loan Accounts</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($masterlists as $item)
+                                            @foreach ($masterlists->unique('member.id') as $item)
                                                 <tr>
                                                     <td>{{ $item->member->cid ?? '' }}</td>
                                                     <td>{{ $item->member->lname ?? '' }},
                                                         {{ $item->member->fname ?? '' }}</td>
                                                     <td>{{ $item->branch->name ?? '' }}</td>
-                                                    <td>{{ $item->member->status ?? '' }}</td>
-                                                    <td>{{ $item->member->account_status ?? 'N/A' }}</td>
+                                                    <td>{{ $item->member->savings_balance ?? '' }}</td>
+                                                    <td>{{ $item->member->share_balance ?? 'N/A' }}</td>
+                                                    <td>{{ $item->member->loan_balance ?? 'N/A' }}</td>
                                                     <td>
+                                                        @if ($item->member && $item->member->loanForecasts->isNotEmpty())
+                                                            @foreach ($item->member->loanForecasts as $loan)
+                                                                <div>{{ $loan->loan_acct_no }}</div>
+                                                            @endforeach
+                                                        @else
+                                                            <div>N/A</div>
+                                                        @endif
+                                                    </td>
+
+                                                    <td>
+
+
                                                         <button type="button" class="btn btn-rounded btn-primary"
                                                             data-toggle="modal" data-target="#editModal"
                                                             data-id="{{ $item->member->id }}"
@@ -93,15 +115,17 @@
                                                             data-customer_type="{{ $item->member->customer_type }}"
                                                             data-customer_classification="{{ $item->member->customer_classification }}"
                                                             data-occupation="{{ $item->member->occupation }}"
+                                                            data-expiry_date="{{ optional($item->member->expiry_date)->format('Y-m-d') ?? '' }}"
                                                             data-industry="{{ $item->member->industry }}"
                                                             data-area_officer="{{ $item->member->area_officer }}"
                                                             data-area="{{ $item->member->area }}"
                                                             data-status="{{ $item->member->status }}"
                                                             data-branch_id="{{ $item->member->branch_id }}"
                                                             data-additional_address="{{ $item->member->additional_address }}"
-                                                            data-account_status="{{ $item->member->account_status }}">
-
-                                                            Edit </button>
+                                                            data-account_status="{{ $item->member->account_status }}"
+                                                            data-loans='{!! json_encode($item->member->loan_forecasts_data) !!}'>
+                                                            Edit
+                                                        </button>
 
 
                                                         <button type="button" class="btn btn-rounded btn-info"
@@ -126,7 +150,8 @@
                                                             data-area="{{ $item->member->area }}"
                                                             data-status="{{ $item->member->status }}"
                                                             data-additional_address="{{ e($item->member->additional_address) }}"
-                                                            data-account_status="{{ $item->member->account_status }}">
+                                                            data-account_status="{{ $item->member->account_status }}"
+                                                            data-loans='@json($item->member->loan_forecasts_data)'>
                                                             View
                                                         </button>
 
@@ -146,8 +171,9 @@
                                                 <th>CID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-                                                <th>Status</th>
-                                                <th>Account Status</th>
+                                                <th>Savings</th>
+                                                <th>Share Balance</th>
+                                                <th>Loan Balance</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
@@ -167,10 +193,10 @@
                                                     <span>&times;</span>
                                                 </button>
                                             </div>
-
+                                               <h5 class="member-profile">Member Profile</h5>
                                             <div class="modal-body row">
-                                                <input type="hidden" name="id" id="edit-id">
 
+                                                <input type="hidden" name="id" id="edit-id">
                                                 <div class="form-group col-md-6">
                                                     <label for="edit-cid">CID</label>
                                                     <input type="text" class="form-control" name="cid"
@@ -198,37 +224,6 @@
                                                 <div class="form-group col-md-12">
                                                     <label for="edit-address">Address</label>
                                                     <textarea class="form-control" name="address" id="edit-address"></textarea>
-                                                </div>
-
-                                                <div class="form-group col-md-12">
-                                                    <label for="edit-branch_id">Branch</label>
-                                                    <select class="form-control" id="edit-branch_id"
-                                                        name="branch_id">
-                                                        <option value="">Select Branch</option>
-                                                        @foreach ($branches as $branch)
-                                                            <option value="{{ $branch->id }}">{{ $branch->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-
-
-                                                <div class="form-group col-md-4">
-                                                    <label for="edit-savings_balance">Savings</label>
-                                                    <input type="number" step="0.01" class="form-control"
-                                                        name="savings_balance" id="edit-savings_balance">
-                                                </div>
-
-                                                <div class="form-group col-md-4">
-                                                    <label for="edit-share_balance">Shares</label>
-                                                    <input type="number" step="0.01" class="form-control"
-                                                        name="share_balance" id="edit-share_balance">
-                                                </div>
-
-                                                <div class="form-group col-md-4">
-                                                    <label for="edit-loan_balance">Loan</label>
-                                                    <input type="number" step="0.01" class="form-control"
-                                                        name="loan_balance" id="edit-loan_balance">
                                                 </div>
 
                                                 <div class="form-group col-md-6">
@@ -298,46 +293,108 @@
                                                     </select>
                                                 </div>
 
+
+
                                                 <div class="form-group col-md-6">
-                                                    <label for="edit-account_status">Account Status</label>
-                                                    <select class="form-control" name="account_status"
-                                                        id="edit-account_status">
-                                                        <option value="">Select</option>
-                                                        <option value="deduction">Deduction</option>
-                                                        <option value="non-deduction">Non-Deduction</option>
+                                                    <label for="edit-branch_id">Branch</label>
+                                                    <select class="form-control" id="edit-branch_id"
+                                                        name="branch_id">
+                                                        <option value="">Select Branch</option>
+                                                        @foreach ($branches as $branch)
+                                                            <option value="{{ $branch->id }}">{{ $branch->name }}
+                                                            </option>
+                                                        @endforeach
                                                     </select>
                                                 </div>
 
-                                                <div class="form-group col-md-12">
-                                                    <label for="edit-additional_address">Additional Address</label>
-                                                    <textarea class="form-control" name="additional_address" id="edit-additional_address"></textarea>
+
+                                                <div class="form-group col-md-6">
+                                                    <label for="edit-savings_balance">Savings</label>
+                                                    <input type="number" step="0.01" class="form-control"
+                                                        name="savings_balance" id="edit-savings_balance">
                                                 </div>
+
+                                                <div class="form-group col-md-6">
+                                                    <label for="edit-share_balance">Shares</label>
+                                                    <input type="number" step="0.01" class="form-control"
+                                                        name="share_balance" id="edit-share_balance">
+                                                </div>
+
+                                                <div class="form-group col-md-6">
+                                                    <label for="edit-loan_balance">Loan Balance</label>
+                                                    <input type="number" step="0.01" class="form-control"
+                                                        name="loan_balance" id="edit-loan_balance">
+                                                </div>
+
+                                                <div class="form-group col-md-12">
+                                                    <h5>Deduction Settings</h5>
+                                                    <div class="form-row">
+                                                        <div class="form-group col-md-6">
+                                                            <label for="edit-account_status">Request for Hold</label>
+                                                            <select class="form-control" name="account_status"
+                                                                id="edit-account_status">
+                                                                <option value="">Select</option>
+                                                                <option value="deduction">Deduction</option>
+                                                                <option value="non-deduction">Non-Deduction</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group col-md-6">
+                                                            <label for="edit-expiry_date">Expiry Date</label>
+                                                            <input type="date" class="form-control"
+                                                                name="expiry_date" id="edit-expiry_date">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <h5>All Loans</h5>
+                                                    <div id="loan-counter" class="mb-2 font-weight-bold"></div>
+                                                    <div id="edit-loan-forecast-container"></div>
+                                                </div>
+
+
+
+
+
                                             </div>
 
-                                            <div class="modal-footer">
+                                            <div class="modal-footer d-flex justify-content-between">
+                                                <div>
+                                                    <button type="button" class="btn btn-secondary"
+                                                        id="btnPrev">Previous</button>
+                                                    <button type="button" class="btn btn-secondary"
+                                                        id="btnNext">Next</button>
+                                                </div>
                                                 <button type="submit" class="btn btn-primary">Save Changes</button>
                                             </div>
 
                                         </div>
                                     </form>
+
+
                                 </div>
+
+
                             </div>
 
 
 
-                            <div class="modal fade" id="viewModal" tabindex="-1" role="dialog">
+                            <div class="modal fade" id="viewModal" tabindex="-1" role="dialog"
+                                aria-labelledby="viewModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-lg" role="document"> <!-- larger modal for space -->
                                     <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">View Member Details</h5>
-                                            <button type="button" class="close"
-                                                data-dismiss="modal">&times;</button>
+                                        <div class="modal-header bg-primary text-white">
+                                            <h5 class="modal-title" id="viewModalLabel">Member Details</h5>
+                                            <button type="button" class="close text-white" data-dismiss="modal"
+                                                aria-label="Close">&times;</button>
                                         </div>
                                         <div class="modal-body">
                                             <div class="container-fluid">
-                                                <div class="row">
-                                                    <!-- First Column -->
+                                                <div class="row g-3">
+                                                    <!-- Member Info Column -->
                                                     <div class="col-md-6">
+                                                        <h6>Personal Information</h6>
                                                         <p><strong>First Name:</strong> <span id="view-fname"></span>
                                                         </p>
                                                         <p><strong>Last Name:</strong> <span id="view-lname"></span>
@@ -347,21 +404,21 @@
                                                         </p>
                                                         <p><strong>Address:</strong> <span id="view-address"></span>
                                                         </p>
-                                                        <p><strong>Branch:</strong> <span id="view-branch"></span>
-                                                        </p>
-                                                        <p><strong>Savings Balance:</strong> <span
-                                                                id="view-savings_balance"></span></p>
-                                                        <p><strong>Share Balance:</strong> <span
-                                                                id="view-share_balance"></span></p>
-                                                        <p><strong>Loan Balance:</strong> <span
-                                                                id="view-loan_balance"></span></p>
+                                                        <p><strong>Additional Address:</strong> <span
+                                                                id="view-additional_address"></span></p>
+                                                        <p><strong>Branch:</strong> <span id="view-branch"></span></p>
+                                                        <p><strong>Area Officer:</strong> <span
+                                                                id="view-area_officer"></span></p>
+                                                        <p><strong>Area:</strong> <span id="view-area"></span></p>
                                                         <p><strong>Birth Date:</strong> <span
                                                                 id="view-birth_date"></span></p>
                                                         <p><strong>Date Registered:</strong> <span
                                                                 id="view-date_registered"></span></p>
                                                     </div>
-                                                    <!-- Second Column -->
+
+                                                    <!-- Account Info Column -->
                                                     <div class="col-md-6">
+                                                        <h6>Account Details</h6>
                                                         <p><strong>Gender:</strong> <span id="view-gender"></span></p>
                                                         <p><strong>Customer Type:</strong> <span
                                                                 id="view-customer_type"></span></p>
@@ -371,16 +428,34 @@
                                                                 id="view-occupation"></span></p>
                                                         <p><strong>Industry:</strong> <span id="view-industry"></span>
                                                         </p>
-                                                        <p><strong>Area Officer:</strong> <span
-                                                                id="view-area_officer"></span></p>
-                                                        <p><strong>Area:</strong> <span id="view-area"></span></p>
                                                         <p><strong>Status:</strong> <span id="view-status"></span></p>
-                                                        <p><strong>Additional Address:</strong> <span
-                                                                id="view-additional_address"></span></p>
                                                         <p><strong>Account Status:</strong> <span
                                                                 id="view-account_status"></span></p>
+                                                        <p><strong>Savings Balance:</strong> <span
+                                                                id="view-savings_balance"></span></p>
+                                                        <p><strong>Share Balance:</strong> <span
+                                                                id="view-share_balance"></span></p>
+                                                        <p><strong>Loan Balance:</strong> <span
+                                                                id="view-loan_balance"></span></p>
                                                     </div>
                                                 </div>
+
+                                                <hr>
+
+                                                <div>
+                                                    <h6>Loan Details</h6>
+                                                    <div id="loan-account-numbers" style="min-height: 150px;">
+                                                        <!-- Loan details will be injected here -->
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between mt-2">
+                                                        <button id="loan-prev" class="btn btn-sm btn-outline-primary"
+                                                            disabled>Previous</button>
+                                                        <button id="loan-next" class="btn btn-sm btn-outline-primary"
+                                                            disabled>Next</button>
+                                                    </div>
+                                                </div>
+
                                             </div>
                                         </div>
                                         <div class="modal-footer">
@@ -390,8 +465,6 @@
                                     </div>
                                 </div>
                             </div>
-
-
 
 
                             <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
@@ -417,11 +490,30 @@
                                 </div>
                             </div>
 
+                            <style>
+                                p.small.text-muted {
+                                    display: none;
+                                }
+                            </style>
+
+                            <div class="d-flex flex-column align-items-center my-4">
+                                <div>
+                                    Showing {{ $masterlists->firstItem() }} to {{ $masterlists->lastItem() }} of
+                                    {{ $masterlists->total() }} results
+                                </div>
+                                <nav aria-label="Page navigation" class="mt-3">
+                                    {{ $masterlists->links('pagination::bootstrap-5') }}
+                                </nav>
+                            </div>
+
+
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+
 
         <div class="footer">
             <div class="copyright">
@@ -464,19 +556,19 @@
 
 
     <script>
+        let loans = []; // Will hold loans for current modal
+        let currentLoanIndex = 0;
+
         $('#editModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
 
-            // List all fields to set
+            // Fill member fields as before
             $('#edit-id').val(button.data('id'));
             $('#edit-cid').val(button.data('cid'));
             $('#edit-emp_id').val(button.data('emp_id'));
             $('#edit-fname').val(button.data('fname'));
             $('#edit-lname').val(button.data('lname'));
             $('#edit-address').val(button.data('address'));
-            $('#edit-savings_balance').val(button.data('savings_balance'));
-            $('#edit-share_balance').val(button.data('share_balance'));
-            $('#edit-loan_balance').val(button.data('loan_balance'));
             $('#edit-birth_date').val(button.data('birth_date'));
             $('#edit-date_registered').val(button.data('date_registered'));
             $('#edit-gender').val(button.data('gender'));
@@ -487,15 +579,142 @@
             $('#edit-area_officer').val(button.data('area_officer'));
             $('#edit-area').val(button.data('area'));
             $('#edit-status').val(button.data('status'));
-            $('#edit-additional_address').val(button.data('additional_address'));
-            $('#edit-account_status').val(button.data('account_status'));
             $('#edit-branch_id').val(button.data('branch_id'));
+            $('#edit-savings_balance').val(button.data('savings_balance'));
+            $('#edit-share_balance').val(button.data('share_balance'));
+            $('#edit-loan_balance').val(button.data('loan_balance'));
+            $('#edit-billing_period').val(button.data('billing_period'));
+            $('#edit-account_status').val(button.data('account_status'));
+            $('#edit-expiry_date').val(button.data('expiry_date'));
+
+            // Clear loans container
+            loans = button.data('loans') || [];
+            if (typeof loans === 'string') {
+                try {
+                    loans = JSON.parse(loans);
+                } catch {
+                    loans = [];
+                }
+            }
+
+            currentLoanIndex = 0; // Reset index on modal show
+
+            // Render the first loan or empty loan if none
+            renderLoan(currentLoanIndex);
+
+            // Set form action dynamically
             $('#editForm').attr('action', '/members/' + button.data('id'));
+
+            updateNavButtons();
         });
+
+        // Render loan at given index in container (overwrite existing)
+        function renderLoan(index) {
+            $('#edit-loan-forecast-container').empty();
+
+            let loan = loans.length > 0 ? loans[index] : {};
+
+            let html = `
+    <div class="loan-item border p-3 mb-3 rounded position-relative">
+        <button type="button" class="btn btn-danger btn-sm position-absolute" style="top:5px; right:5px;" onclick="removeCurrentLoan()">Remove</button>
+
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label>Loan Account No.</label>
+                <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Total Due</label>
+                <input type="text" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Amount Due</label>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][amount_due]" class="form-control" value="${loan.amount_due || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Open Date</label>
+                <input type="date" name="loan_forecasts[${index}][open_date]" class="form-control" value="${loan.open_date || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Maturity Date</label>
+                <input type="date" name="loan_forecasts[${index}][maturity_date]" class="form-control" value="${loan.maturity_date || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Amortization Due Date</label>
+                <input type="date" name="loan_forecasts[${index}][amortization_due_date]" class="form-control" value="${loan.amortization_due_date || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Principal Due</label>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control" value="${loan.principal_due || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Interest Due</label>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control" value="${loan.interest_due || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Penalty Due</label>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][penalty_due]" class="form-control" value="${loan.penalty_due || ''}">
+            </div>
+        </div>
+    </div>`;
+
+            $('#edit-loan-forecast-container').html(html);
+
+            if (loans.length === 0) {
+                $('#loan-counter').text('No loans. You can add one.');
+            } else {
+                $('#loan-counter').text(`Loan ${index + 1} of ${loans.length}`);
+            }
+        }
+
+
+        function updateNavButtons() {
+            $('#btnPrev').prop('disabled', currentLoanIndex <= 0);
+            $('#btnNext').prop('disabled', currentLoanIndex >= loans.length - 1);
+        }
+
+
+        function removeCurrentLoan() {
+            if (loans.length === 0) return;
+
+            loans.splice(currentLoanIndex, 1);
+
+            if (currentLoanIndex >= loans.length) {
+                currentLoanIndex = loans.length - 1;
+            }
+
+            if (loans.length === 0) {
+                renderLoan(-1);
+            } else {
+                renderLoan(currentLoanIndex);
+            }
+            updateNavButtons();
+        }
+
+        // Button click handlers
+        $('#btnNext').click(function() {
+            if (currentLoanIndex < loans.length - 1) {
+                currentLoanIndex++;
+                renderLoan(currentLoanIndex);
+                updateNavButtons();
+            }
+        });
+
+        $('#btnPrev').click(function() {
+            if (currentLoanIndex > 0) {
+                currentLoanIndex--;
+                renderLoan(currentLoanIndex);
+                updateNavButtons();
+            }
+        });
+
+
 
 
         $('#viewModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
+
+            // Set member info fields
             $('#view-fname').text(button.data('fname'));
             $('#view-lname').text(button.data('lname'));
             $('#view-cid').text(button.data('cid'));
@@ -517,7 +736,71 @@
             $('#view-status').text(button.data('status'));
             $('#view-additional_address').text(button.data('additional_address'));
             $('#view-account_status').text(button.data('account_status'));
+
+            // Loans navigation logic
+            var loans = button.data('loans') || [];
+            var currentIndex = 0;
+
+            // Cache buttons and container
+            var $loanNumbers = $('#loan-account-numbers');
+            var $btnPrev = $('#loan-prev');
+            var $btnNext = $('#loan-next');
+
+            function renderLoan(index) {
+                var loan = loans[index];
+                if (!loan) {
+                    $loanNumbers.html('<p>No loan accounts found.</p>');
+                    $btnPrev.prop('disabled', true);
+                    $btnNext.prop('disabled', true);
+                    return;
+                }
+
+                // Simple, clean loan info display
+                var html = `
+            <p><strong>Loan Account No.:</strong> ${loan.loan_acct_no || 'N/A'}</p>
+            <p><strong>Amount Due:</strong> ${loan.amount_due || 'N/A'}</p>
+            <p><strong>Open Date:</strong> ${loan.open_date || 'N/A'}</p>
+            <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
+            <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
+            <p><strong>Total Due:</strong> ${loan.total_due || 'N/A'}</p>
+            <p><strong>Principal Due:</strong> ${loan.principal_due || 'N/A'}</p>
+            <p><strong>Interest Due:</strong> ${loan.interest_due || 'N/A'}</p>
+            <p><strong>Penalty Due:</strong> ${loan.penalty_due || 'N/A'}</p>
+            <p><em>Loan ${index + 1} of ${loans.length}</em></p>
+        `;
+                $loanNumbers.html(html);
+
+                // Enable/disable buttons based on index
+                $btnPrev.prop('disabled', index === 0);
+                $btnNext.prop('disabled', index === loans.length - 1);
+            }
+
+            // Initial render
+            if (loans.length === 0) {
+                $loanNumbers.html('<p>No loan accounts found.</p>');
+                $btnPrev.prop('disabled', true);
+                $btnNext.prop('disabled', true);
+            } else {
+                renderLoan(currentIndex);
+            }
+
+            // Button click handlers
+            $btnPrev.off('click').on('click', function() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    renderLoan(currentIndex);
+                }
+            });
+            $btnNext.off('click').on('click', function() {
+                if (currentIndex < loans.length - 1) {
+                    currentIndex++;
+                    renderLoan(currentIndex);
+                }
+            });
         });
+
+
+
 
 
         $('#deleteModal').on('show.bs.modal', function(event) {
@@ -527,7 +810,25 @@
         });
     </script>
 
+    @if ($errors->any())
+        <script>
+            $(function() {
+                let oldLoans = @json(old('loan_forecasts', []));
+                loans = oldLoans;
+                currentLoanIndex = 0;
+                renderLoan(currentLoanIndex);
+                updateNavButtons();
 
+                $('#editModal').modal('show');
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Failed',
+                    html: '{!! implode('<br>', $errors->all()) !!}'
+                });
+            });
+        </script>
+    @endif
 </body>
 
 </html>

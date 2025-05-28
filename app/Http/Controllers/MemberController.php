@@ -10,15 +10,22 @@ use Exception;
 
 class MemberController extends Controller
 {
-   public function index()
+  public function index(Request $request)
 {
-    // Fetch all members with related branch data
-    $members = Member::with('branch')->get();
+    $search = $request->input('search');
 
-    // Fetch branches for the edit modal dropdown
+    $members = Member::with('branch')
+        ->when($search, function ($query, $search) {
+            $query->where('cid', 'like', "%{$search}%")
+                  ->orWhere('lname', 'like', "%{$search}%")
+                  ->orWhere('fname', 'like', "%{$search}%");
+        })
+        ->paginate(25)
+        ->appends(['search' => $search]); // keep search query in pagination links
+
     $branches = Branch::all();
 
-    return view('components.members.member', compact('members', 'branches'));
+    return view('components.admin.members.member', compact('members', 'branches'));
 }
 
 
@@ -28,7 +35,7 @@ class MemberController extends Controller
         $member = Member::with('branch')->findOrFail($id);
 
         // Return the view for viewing the member details
-        return view('components.members.view', compact('member'));
+        return view('components.admin.members.view', compact('member'));
     }
 
     public function edit($id)
@@ -39,7 +46,7 @@ class MemberController extends Controller
         // Fetch all branches to populate the branch dropdown in the form
         $branches = Branch::all();
 
-        return view('components.members.edit', compact('member', 'branches'));
+        return view('components.admin.members.edit', compact('member', 'branches'));
     }
 
     public function update(Request $request, $id)
@@ -49,7 +56,8 @@ class MemberController extends Controller
             'fname' => 'required|string|max:255',
             'lname' => 'required|string|max:255',
             'cid' => 'required|numeric',
-            'branch_id' => 'required|exists:branches,id', // Assuming a branch_id is present
+            'branch_id' => 'required|exists:branches,id',
+            'expiry_date' => 'nullable|date',
         ]);
 
         try {
@@ -59,6 +67,7 @@ class MemberController extends Controller
             $member->lname = $request->input('lname');
             $member->cid = $request->input('cid');
             $member->branch_id = $request->input('branch_id');
+            $member->expiry_date = $request->input('expiry_date');
             $member->save();
 
             return redirect()->route('member')->with('success', 'Member updated successfully!');

@@ -59,8 +59,14 @@
                                 }
                             </style>
                             <div class="card-body">
+                                 <form method="GET" action="{{ url()->current() }}"
+                                    class="mb-3 d-flex justify-content-center">
+                                    <input type="text" name="search" value="{{ request('search') }}"
+                                        class="form-control w-50" placeholder="Search by CID, Name, Branch..." />
+                                    <button type="submit" class="btn btn-primary ms-2">Search</button>
+                                </form>
                                 <div class="table-responsive">
-                                    <table id="example" class="display" style="min-width: 845px">
+                                    <table class="display table table-striped" style="min-width: 845px">
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
@@ -75,8 +81,7 @@
                                                 <tr>
                                                     <td>{{ $member->id }}</td>
                                                     <td>{{ $member->fname }} {{ $member->lname }}</td>
-                                                    <td>{{ $member->branch->name }}</td>
-                                                    <!-- Assuming you have a 'branch' relation -->
+                                                    <td>{{ $member->branch?->name ?? 'N/A' }}</td>
                                                     <td>{{ $member->cid }}</td>
                                                     <td>
                                                         <!-- Edit Button -->
@@ -90,13 +95,12 @@
                                                             Edit
                                                         </button>
 
-
                                                         <!-- View Button -->
                                                         <button class="btn btn-rounded btn-info" data-toggle="modal"
                                                             data-target="#viewModal" data-id="{{ $member->id }}"
                                                             data-fname="{{ $member->fname }}"
                                                             data-lname="{{ $member->lname }}"
-                                                            data-branch="{{ $member->branch->name }}"
+                                                            data-branch="{{ $member->branch?->name ?? 'N/A' }}"
                                                             data-cid="{{ $member->cid }}"
                                                             data-emp_id="{{ $member->emp_id }}"
                                                             data-address="{{ $member->address }}"
@@ -105,7 +109,6 @@
                                                             data-loan="{{ $member->loan_balance }}">
                                                             View
                                                         </button>
-
 
                                                         <!-- Delete Button -->
                                                         <button class="btn btn-rounded btn-danger" data-toggle="modal"
@@ -128,6 +131,23 @@
                                     </table>
                                 </div>
                             </div>
+
+                            <style>
+                                p.small.text-muted {
+                                    display: none;
+                                }
+                            </style>
+
+                            <div class="d-flex flex-column align-items-center my-4">
+                                <div>
+                                    Showing {{ $members->firstItem() }} to {{ $members->lastItem() }} of
+                                    {{ $members->total() }} results
+                                </div>
+                                <nav aria-label="Page navigation" class="mt-3">
+                                    {{ $members->links('pagination::bootstrap-5') }}
+                                </nav>
+                            </div>
+
                         </div>
                     </div>
                 </div>

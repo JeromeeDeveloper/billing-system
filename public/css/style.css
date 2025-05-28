@@ -19431,3 +19431,10 @@ html[dir="rtl"] [direction="rtl"][data-sidebar-style="compact"]:not([data-layout
     width: 200px;
     height: auto;
 }
+
+h5.member-profile {
+    /* padding: 6px 14px; */
+    position: relative;
+    left: 13px;
+    top: 11px;
+}

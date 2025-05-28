@@ -10,6 +10,6 @@ class BillingController extends Controller
     {
         $documents = DocumentUpload::all();
 
-        return view('components.billing.billing', compact('documents'));
+        return view('components.admin.billing.billing', compact('documents'));
     }
 }

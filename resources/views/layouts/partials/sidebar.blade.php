@@ -18,7 +18,14 @@
                     <li><a href="{{route('documents')}}">File Datatable</a></li>
                 </ul>
             </li>
-
+              <li>
+                <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                    <i class="icon icon-chart-pie-36"></i><span class="nav-text">Master List</span>
+                </a>
+                <ul aria-expanded="false">
+                    <li><a href="{{ route('master') }}">Master List Datatable</a></li>
+                </ul>
+            </li>
             <li>
                 <a class="has-arrow" href="javascript:void()" aria-expanded="false">
                     <i class="icon icon-credit-card"></i><span class="nav-text">Billing</span>
@@ -27,6 +34,7 @@
                     <li><a href="{{ route('billing') }}">Billing Datatable</a></li>
                 </ul>
             </li>
+
             <li>
                 <a class="has-arrow" href="javascript:void()" aria-expanded="false">
                     <i class="icon icon-wallet-90"></i><span class="nav-text">Remittance</span>
@@ -35,12 +43,13 @@
                     <li><a href="{{ route('remittance') }}">Remittance Datatable</a></li>
                 </ul>
             </li>
+
             <li>
                 <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                    <i class="icon icon-chart-pie-36"></i><span class="nav-text">Master List</span>
+                    <i class="icon icon-chart-pie-36"></i><span class="nav-text">Loans Product</span>
                 </a>
                 <ul aria-expanded="false">
-                    <li><a href="{{ route('master') }}">Master List Datatable</a></li>
+                    <li><a href="{{route('loans')}}">Loans Products List</a></li>
                 </ul>
             </li>
             <li>

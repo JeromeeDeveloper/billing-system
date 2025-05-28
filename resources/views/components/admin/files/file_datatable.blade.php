@@ -73,8 +73,17 @@
                                             @csrf
 
                                             <div class="modal-body">
+
                                                 <div class="form-group">
-                                                    <label for="file" class="font-weight-bold mb-2">📁 Installment Forecast
+                                                    <label class="font-weight-bold mb-2">Billing Period</label>
+                                                    <input type="text" class="form-control"
+                                                        value="{{ auth()->user()->billing_period ?? 'N/A' }}" readonly>
+                                                </div>
+
+                                                <div class="form-group">
+
+                                                    <label for="file" class="font-weight-bold mb-2">📁 Installment
+                                                        Forecast
                                                         File
                                                     </label>
                                                     <div class="custom-file">
@@ -112,7 +121,7 @@
 
                                                 <div class="form-group">
                                                     <label for="cif_file" class="font-weight-bold mb-2">👤 CIF File
-                                                        </label>
+                                                    </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="cif_file"
                                                             name="cif_file">
@@ -167,7 +176,7 @@
                                                 <th>Filename</th>
                                                 <th>Document Type</th>
                                                 <th>File Path</th>
-                                                <th>Upload Date</th>
+                                                <th>Billing Period</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -178,7 +187,16 @@
                                                     <td>{{ $document->filename }}</td>
                                                     <td>{{ $document->document_type }}</td>
                                                     <td>{{ $document->filepath }}</td>
-                                                    <td>{{ $document->upload_date->format('Y-m-d H:i:s') }}</td>
+                                                    @php
+                                                        $billingPeriod = $document->billing_period
+                                                            ? \Carbon\Carbon::parse($document->billing_period)
+                                                            : null;
+                                                    @endphp
+
+                                                    <td>
+                                                        {{ $billingPeriod ? $billingPeriod->format('Y-m') : 'N/A' }}
+                                                    </td>
+
                                                     <td>
                                                         <a class="btn btn-rounded btn-primary"
                                                             href="{{ asset('storage/' . $document->filepath) }}"
@@ -195,7 +213,7 @@
                                                 <th>Filename</th>
                                                 <th>Document Type</th>
                                                 <th>File Path</th>
-                                                <th>Upload Date</th>
+                                                <th>Billing Period</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
@@ -245,13 +263,13 @@
     </script>
 
     <script>
-    document.querySelectorAll('.custom-file-input').forEach(input => {
-        input.addEventListener('change', function (e) {
-            let fileName = e.target.files[0]?.name || 'Choose file...';
-            e.target.nextElementSibling.innerText = fileName;
+        document.querySelectorAll('.custom-file-input').forEach(input => {
+            input.addEventListener('change', function(e) {
+                let fileName = e.target.files[0]?.name || 'Choose file...';
+                e.target.nextElementSibling.innerText = fileName;
+            });
         });
-    });
-</script>
+    </script>
 
 
 </body>

@@ -8,6 +8,6 @@ class RemittanceController extends Controller
 {
     public function index()
     {
-        return view('components.remittance.remittance');
+        return view('components.admin.remittance.remittance');
     }
 }

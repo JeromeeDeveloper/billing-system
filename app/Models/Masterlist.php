@@ -17,6 +17,7 @@ class MasterList extends Model
         'remittance_id',
         'atm_module_id',
         'status',
+        'billing_period'
     ];
 
     public function member()

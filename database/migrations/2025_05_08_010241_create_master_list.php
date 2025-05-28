@@ -22,6 +22,7 @@ return new class extends Migration
             $table->foreignId('loan_forecast_id')->nullable()->constrained('loan_forecast')->onDelete('cascade');
             $table->foreignId('atm_module_id')->nullable()->constrained('atm_module')->onDelete('cascade');
             $table->enum('status', ['deduction', 'non-deduction'])->nullable();
+            $table->string('billing_period')->nullable();
 
             $table->timestamps();
         });

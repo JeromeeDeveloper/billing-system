@@ -19,6 +19,10 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+            $table->string('billing_period')->nullable();
+
+            $table->enum('role', ['admin', 'branch'])->default('admin');
+            $table->enum('status', ['pending', 'approved'])->default('pending');
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

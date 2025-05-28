@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\LoanProduct;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class LoansController extends Controller
+{
+    public function index(Request $request)
+    {
+        $loans = LoanProduct::all();
+        return view('components.admin.loans.loans_datatable', compact('loans'));
+    }
+
+    public function update(Request $request, LoanProduct $loan)
+    {
+        $request->validate([
+            'product' => 'required|string|max:255',
+            'product_code' => 'required|string|max:255',
+            'prioritization' => 'required|string|max:255',
+        ]);
+
+        $loan->update($request->only(['product', 'prioritization', 'product_code']));
+
+        return redirect()->route('loans')->with('success', 'Loan updated successfully.');
+    }
+
+    public function destroy(LoanProduct $loan)
+    {
+        $loan->delete();
+
+        return redirect()->route('loans')->with('success', 'Loan deleted successfully.');
+    }
+
+    public function store(Request $request)
+{
+    $request->validate([
+        'product' => 'required|string|max:255',
+        'product_code' => 'required|string|max:255',
+        'prioritization' => 'required|string|max:255',
+    ]);
+
+    LoanProduct::create($request->only(['product', 'prioritization', 'product_code']));
+
+    return redirect()->route('loans')->with('success', 'Loan added successfully.');
+}
+
+}

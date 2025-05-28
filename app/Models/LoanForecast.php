@@ -14,7 +14,7 @@ class LoanForecast extends Model
     protected $fillable = [
         'loan_acct_no', 'amount_due', 'open_date', 'maturity_date',
         'amortization_due_date', 'total_due', 'principal_due',
-        'interest_due', 'penalty_due', 'member_id'
+        'interest_due', 'penalty_due', 'member_id', 'billing_period'
     ];
 
     public function member()

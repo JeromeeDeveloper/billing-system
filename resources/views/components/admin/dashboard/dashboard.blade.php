@@ -514,6 +514,52 @@
 
     @include('layouts.partials.footer')
 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@if ($showPrompt)
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+        title: 'Select Billing Period',
+        html:
+            `<input type="month" id="billing_period" class="swal2-input" placeholder="Billing Period">`,
+        confirmButtonText: 'Agree',
+        showCancelButton: false,
+        allowOutsideClick: false,
+        preConfirm: () => {
+            const billingPeriod = document.getElementById('billing_period').value;
+            if (!billingPeriod) {
+                Swal.showValidationMessage('Please select a billing period');
+                return false;
+            }
+
+            return fetch('{{ route('dashboard.store') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ billing_period: billingPeriod })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to save billing period');
+                }
+                return response.json();
+            })
+            .catch(error => {
+                Swal.showValidationMessage(`Request failed: ${error}`);
+            });
+        }
+    }).then(result => {
+        if (result.isConfirmed) {
+            window.location.reload();
+        }
+    });
+});
+</script>
+@endif
+
     @if (session('success'))
     <script>
         Swal.fire({

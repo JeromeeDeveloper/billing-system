@@ -11,9 +11,19 @@ class Branch extends Model
 
     protected $fillable = ['name', 'code'];
 
+    /**
+     * Get all members associated with this branch.
+     */
     public function members()
     {
         return $this->hasMany(Member::class);
     }
-}
 
+    /**
+     * Get all bills associated with this branch.
+     */
+    public function bills()
+    {
+        return $this->hasMany(Billing::class, 'branches_id');
+    }
+}

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->decimal('penalty_due', 12, 2)->default(0);
             $table->unsignedBigInteger('member_id');
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
+            $table->string('billing_period')->nullable();
             $table->timestamps();
         });
 

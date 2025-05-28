@@ -20,6 +20,7 @@ class DocumentUpload extends Model
         'mime_type',
         'uploaded_by',
         'upload_date',
+        'billing_period',
     ];
 
     protected $casts = [

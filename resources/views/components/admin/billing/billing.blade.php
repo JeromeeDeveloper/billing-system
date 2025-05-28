@@ -124,36 +124,31 @@
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
                                             <tr>
-                                                <th>Filename</th>
-                                                <th>File Path</th>
-                                                <th>Upload Date</th>
-                                                <th>Actions</th>
+                                                <th>Employee #</th>
+                                                <th>Amortization</th>
+                                                <th>Name</th>
+                                                <th>Start Date</th>
+                                                <th>End Date</th>
+                                                <th>Gross</th>
+                                                <th>Office</th>
                                             </tr>
                                         </thead>
 
                                         <tbody>
-                                            @foreach ($documents as $document)
-                                                <tr>
-                                                    <td>{{ $document->filename }}</td>
-                                                    <td>{{ $document->filepath }}</td>
-                                                    <td>{{ $document->upload_date->format('Y-m-d H:i:s') }}</td>
-                                                    <td>
-                                                        <a class="btn btn-rounded btn-primary"
-                                                            href="{{ asset('storage/' . $document->filepath) }}"
-                                                            target="_blank">
-                                                            <i class="fas fa-download me-1"></i> Download
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
+                                            <tr>
+                                                <td></td>
+                                            </tr>
                                         </tbody>
 
                                         <tfoot>
                                             <tr>
-                                                <th>Filename</th>
-                                                <th>File Path</th>
-                                                <th>Upload Date</th>
-                                                <th>Actions</th>
+                                                <th>Employee #</th>
+                                                <th>Amortization</th>
+                                                <th>Name</th>
+                                                <th>Start Date</th>
+                                                <th>End Date</th>
+                                                <th>Gross</th>
+                                                <th>Office</th>
                                             </tr>
                                         </tfoot>
                                     </table>

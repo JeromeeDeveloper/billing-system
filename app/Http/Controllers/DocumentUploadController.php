@@ -19,16 +19,16 @@ class DocumentUploadController extends Controller
     {
         ini_set('max_execution_time', 300);
 
-        // Validate input
         $request->validate([
-            'file'           => 'required|file|mimes:xls,xlsx,csv|max:5120',
-            'savings_file'   => 'nullable|file|mimes:xls,xlsx,csv|max:5120',
-            'shares_file'    => 'nullable|file|mimes:xls,xlsx,csv|max:5120',
-            'cif_file'       => 'nullable|file|mimes:xls,xlsx,csv|max:5120',
+            'file'           => 'required|file|mimes:xls,xlsx,csv',
+            'savings_file'   => 'nullable|file|mimes:xls,xlsx,csv',
+            'shares_file'    => 'nullable|file|mimes:xls,xlsx,csv',
+            'cif_file'       => 'nullable|file|mimes:xls,xlsx,csv',
         ]);
 
         try {
-            // File field mappings
+            $billingPeriod = Auth::user()->billing_period ?? null; // get logged-in user's billing period
+
             $uploadMappings = [
                 'file'         => ['type' => 'Installment File', 'import' => LoanForecastImport::class],
                 'savings_file' => ['type' => 'Savings', 'import' => SavingsImport::class],
@@ -39,14 +39,9 @@ class DocumentUploadController extends Controller
             foreach ($uploadMappings as $field => $options) {
                 if ($request->hasFile($field)) {
                     $file = $request->file($field);
-
-                    // Rename file with timestamp prefix to avoid name collisions
                     $newFileName = time() . '-' . $file->getClientOriginalName();
-
-                    // Store the file
                     $path = $file->storeAs('uploads/documents', $newFileName, 'public');
 
-                    // Save document info to database
                     DocumentUpload::create([
                         'document_type' => $options['type'],
                         'filename'      => $newFileName,
@@ -54,10 +49,16 @@ class DocumentUploadController extends Controller
                         'mime_type'     => $file->getClientMimeType(),
                         'uploaded_by'   => Auth::id(),
                         'upload_date'   => now(),
+                        'billing_period' => $billingPeriod,
                     ]);
 
-                    // Import the file's data
-                    $importClass = new ($options['import']);
+                    if (in_array($options['type'], ['CIF', 'Installment File'])) {
+                        $importClass = new $options['import']($billingPeriod);
+                    } else {
+                        $importClass = new $options['import']();
+                    }
+
+
                     Excel::import($importClass, $file);
                 }
             }
@@ -70,7 +71,11 @@ class DocumentUploadController extends Controller
 
     public function index()
     {
-        $documents = DocumentUpload::all();
-        return view('components.files.file_datatable', compact('documents'));
+        $user = Auth::user();
+        $billingPeriod = $user->billing_period; // e.g. '2025-05'
+
+        $documents = DocumentUpload::where('billing_period', $billingPeriod)->get();
+
+        return view('components.admin.files.file_datatable', compact('documents'));
     }
 }

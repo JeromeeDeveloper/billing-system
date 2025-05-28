@@ -17,6 +17,12 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
 {
     protected $branchCache = [];
     protected $memberCache = [];
+    protected $billingPeriod;
+
+    public function __construct(string $billingPeriod)
+    {
+        $this->billingPeriod = $billingPeriod;
+    }
 
     public function headingRow(): int
     {
@@ -56,17 +62,18 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                         'branch_id' => $branch->id,
                         'fname' => $fname,
                         'lname' => $lname,
-                        'emp_id' => 'EMP-' . Str::random(8),
+
                         'address' => '',
                         'savings_balance' => 0,
                         'share_balance' => 0,
-                        'loan_balance' => 0,
+
+                        'billing_period' => $this->billingPeriod,
                     ]
                 );
                 $this->memberCache[$cid] = $member;
             }
 
-            // Update or create loan forecast
+            // Update or create loan forecast with billing period
             $loanForecast = LoanForecast::updateOrCreate(
                 ['loan_acct_no' => $row['loan_account_no']],
                 [
@@ -79,11 +86,12 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'penalty_due' => $this->cleanNumber($row['penalty_due']),
                     'amount_due' => 0,
                     'member_id' => $member->id,
+                    'billing_period' => $this->billingPeriod,   // <-- Add billing period here
                     'updated_at' => $now,
                 ]
             );
 
-            // Create or update master_list entry (use branches_id as column name)
+            // Create or update master_list entry with billing period
             MasterList::updateOrCreate(
                 [
                     'member_id' => $member->id,
@@ -93,8 +101,17 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'branches_id' => $branch->id,
                     'updated_at' => $now,
                     'created_at' => $now,
+                    'billing_period' => $this->billingPeriod,  // <-- Add billing period here as well
                 ]
             );
+        }
+
+        foreach ($this->memberCache as $member) {
+            $loanBalance = LoanForecast::where('member_id', $member->id)
+                ->where('billing_period', $this->billingPeriod)
+                ->sum('total_due');
+
+            $member->update(['loan_balance' => $loanBalance]);
         }
     }
 

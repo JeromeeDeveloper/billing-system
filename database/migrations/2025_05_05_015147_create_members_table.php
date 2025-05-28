@@ -19,10 +19,10 @@ return new class extends Migration
             $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
 
             $table->string('cid')->unique();
-            $table->string('emp_id')->unique();
+            $table->string('emp_id')->unique()->nullable();
             $table->string('fname');
             $table->string('lname');
-            $table->text('address');
+            $table->text('address')->nullable();
             $table->decimal('savings_balance', 12, 2)->default(0);
             $table->decimal('share_balance', 12, 2)->default(0);
             $table->decimal('loan_balance', 12, 2)->default(0);
@@ -36,9 +36,13 @@ return new class extends Migration
             $table->string('industry')->nullable();
             $table->string('area_officer')->nullable();
             $table->string('area')->nullable();
+            $table->string('account_name')->nullable();
+
             $table->enum('status', ['active', 'merged'])->default('active');
-            $table->text('additional_address')->nullable();
+            $table->date('expiry_date')->nullable();
+
             $table->enum('account_status', ['deduction', 'non-deduction'])->nullable();
+            $table->string('billing_period')->nullable();
             $table->timestamps();
         });
     }

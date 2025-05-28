@@ -30,6 +30,7 @@ return new class extends Migration
             $table->string('filename');
             $table->string('filepath');
             $table->string('mime_type')->nullable();
+            $table->string('billing_period')->nullable();
             $table->unsignedBigInteger('uploaded_by')->nullable();
             $table->timestamp('upload_date')->useCurrent();
             $table->timestamps();
