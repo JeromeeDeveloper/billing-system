@@ -114,7 +114,9 @@
                                                             data-customer_type="{{ $item->member->customer_type }}"
                                                             data-customer_classification="{{ $item->member->customer_classification }}"
                                                             data-occupation="{{ $item->member->occupation }}"
+                                                            data-approval_no="{{ $item->member->approval_no }}"
                                                             data-expiry_date="{{ optional($item->member->expiry_date)->format('Y-m-d') ?? '' }}"
+                                                            data-start_hold="{{ optional($item->member->start_hold)->format('Y-m-d') ?? '' }}"
                                                             data-industry="{{ $item->member->industry }}"
                                                             data-area_officer="{{ $item->member->area_officer }}"
                                                             data-area="{{ $item->member->area }}"
@@ -340,10 +342,23 @@
                                                         </div>
 
                                                         <div class="form-group col-md-6">
+                                                            <label for="edit-approval_no">Approval Number</label>
+                                                            <input type="text" class="form-control" name="approval_no"
+                                                                id="edit-approval_no">
+                                                        </div>
+
+                                                         <div class="form-group col-md-6">
+                                                            <label for="edit-start_hold">Start Hold</label>
+                                                            <input type="date" class="form-control"
+                                                                name="start_hold" id="edit-start_hold">
+                                                        </div>
+
+                                                        <div class="form-group col-md-6">
                                                             <label for="edit-expiry_date">Expiry Date</label>
                                                             <input type="date" class="form-control"
                                                                 name="expiry_date" id="edit-expiry_date">
                                                         </div>
+
                                                     </div>
                                                 </div>
 
@@ -352,10 +367,6 @@
                                                     <div id="loan-counter" class="mb-2 font-weight-bold"></div>
                                                     <div id="edit-loan-forecast-container"></div>
                                                 </div>
-
-
-
-
 
                                             </div>
 
@@ -585,7 +596,9 @@
             $('#edit-loan_balance').val(button.data('loan_balance'));
             $('#edit-billing_period').val(button.data('billing_period'));
             $('#edit-account_status').val(button.data('account_status'));
+            $('#edit-approval_no').val(button.data('approval_no'));
             $('#edit-expiry_date').val(button.data('expiry_date'));
+            $('#edit-start_hold').val(button.data('start_hold'));
 
             // Clear loans container
             loans = button.data('loans') || [];

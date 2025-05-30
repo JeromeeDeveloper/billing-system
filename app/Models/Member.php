@@ -37,6 +37,8 @@ class Member extends Model
         'additional_address',
         'billing_period',
         'expiry_date',
+        'start_hold',
+        'approval_no',
     ];
 
     protected $casts = [
@@ -46,8 +48,9 @@ class Member extends Model
         'birth_date' => 'date',
         'date_registered' => 'date',
         'expiry_date' => 'date',
-          'start_date' => 'date',
-    'end_date' => 'date',
+        'start_hold' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function branch()
@@ -60,53 +63,53 @@ class Member extends Model
         return $this->hasMany(LoanForecast::class);
     }
 
-public function loanProducts()
-{
-    return $this->belongsToMany(LoanProduct::class, 'loan_product_member', 'member_id', 'loan_product_id')->withTimestamps();
-}
+    public function loanProducts()
+    {
+        return $this->belongsToMany(LoanProduct::class, 'loan_product_member', 'member_id', 'loan_product_id')->withTimestamps();
+    }
 
 
-     public function savings()
+    public function savings()
     {
         return $this->hasMany(Saving::class);
     }
 
-     public function shares()
+    public function shares()
     {
         return $this->hasMany(Shares::class);
     }
 
-   public function loanForecastsData(): Attribute
-{
-    return Attribute::make(
-        get: fn () => $this->loanForecasts->map(function ($loan) {
-            return [
-                'loan_acct_no' => $loan->loan_acct_no,
-                'amount_due' => $loan->amount_due,
-                'open_date' => $loan->open_date ? Carbon::parse($loan->open_date)->format('Y-m-d') : null,
-                'maturity_date' => $loan->maturity_date ? Carbon::parse($loan->maturity_date)->format('Y-m-d') : null,
-                'amortization_due_date' => $loan->amortization_due_date ? Carbon::parse($loan->amortization_due_date)->format('Y-m-d') : null,
-                'total_due' => $loan->total_due,
-                'principal_due' => $loan->principal_due,
-                'interest_due' => $loan->interest_due,
-                'penalty_due' => $loan->penalty_due,
-                'billing_period' => $loan->billing_period,
-            ];
-        })->toArray()
-    );
-}
+    public function loanForecastsData(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->loanForecasts->map(function ($loan) {
+                return [
+                    'loan_acct_no' => $loan->loan_acct_no,
+                    'amount_due' => $loan->amount_due,
+                    'open_date' => $loan->open_date ? Carbon::parse($loan->open_date)->format('Y-m-d') : null,
+                    'maturity_date' => $loan->maturity_date ? Carbon::parse($loan->maturity_date)->format('Y-m-d') : null,
+                    'amortization_due_date' => $loan->amortization_due_date ? Carbon::parse($loan->amortization_due_date)->format('Y-m-d') : null,
+                    'total_due' => $loan->total_due,
+                    'principal_due' => $loan->principal_due,
+                    'interest_due' => $loan->interest_due,
+                    'penalty_due' => $loan->penalty_due,
+                    'billing_period' => $loan->billing_period,
+                ];
+            })->toArray()
+        );
+    }
 
-public function savingsBalance(): Attribute
-{
-    return Attribute::make(
-        get: fn () => $this->savings->sum('current_balance')
-    );
-}
+    public function savingsBalance(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->savings->sum('current_balance')
+        );
+    }
 
-public function shareBalance(): Attribute
-{
-    return Attribute::make(
-        get: fn () => $this->shares->sum('current_balance')
-    );
-}
+    public function shareBalance(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->shares->sum('current_balance')
+        );
+    }
 }

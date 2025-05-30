@@ -39,11 +39,13 @@ return new class extends Migration
             $table->string('area_officer')->nullable();
             $table->string('area')->nullable();
             $table->string('account_name')->nullable();
-
             $table->enum('status', ['active', 'merged'])->default('active');
-            $table->date('expiry_date')->nullable();
 
+            $table->string('approval_no')->nullable();
+            $table->date('start_hold')->nullable();
+            $table->date('expiry_date')->nullable();
             $table->enum('account_status', ['deduction', 'non-deduction'])->default('deduction');
+
             $table->string('billing_period')->nullable();
             $table->timestamps();
         });

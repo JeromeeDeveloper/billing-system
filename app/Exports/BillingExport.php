@@ -22,7 +22,10 @@ class BillingExport implements FromCollection, WithHeadings
             $query->where('account_status', 'deduction')
                 ->orWhere(function ($query) {
                     $query->where('account_status', 'non-deduction')
-                       ->whereDate('expiry_date', '<=', now()->toDateString());
+                        ->where(function ($q) {
+                            $q->whereDate('start_hold', '>', now()->toDateString())  // today before start_hold
+                                ->orWhereDate('expiry_date', '<=', now()->toDateString()); // OR expiry_date reached/passed
+                        });
                 });
         })
             ->whereHas('loanForecasts', function ($query) {
