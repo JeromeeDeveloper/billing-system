@@ -19,8 +19,6 @@ class Member extends Model
         'fname',
         'lname',
         'address',
-        'savings_balance',
-        'share_balance',
         'loan_balance',
         'birth_date',
         'date_registered',
@@ -95,6 +93,20 @@ public function loanProducts()
                 'billing_period' => $loan->billing_period,
             ];
         })->toArray()
+    );
+}
+
+public function savingsBalance(): Attribute
+{
+    return Attribute::make(
+        get: fn () => $this->savings->sum('current_balance')
+    );
+}
+
+public function shareBalance(): Attribute
+{
+    return Attribute::make(
+        get: fn () => $this->shares->sum('current_balance')
     );
 }
 }

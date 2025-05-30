@@ -71,30 +71,30 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 $this->memberCache[$cid] = $member;
             }
 
-          // Match member_id from LoanProduct using the 3rd part of loan_acct_no
-$loanAcctParts = explode('-', $row['loan_account_no']);
-$productCodePart = isset($loanAcctParts[2]) ? trim($loanAcctParts[2]) : null;
+            // Match member_id from LoanProduct using the 3rd part of loan_acct_no
+            $loanAcctParts = explode('-', $row['loan_account_no']);
+            $productCodePart = isset($loanAcctParts[2]) ? trim($loanAcctParts[2]) : null;
 
-$loanProductMemberIds = [];  // Array of member ids linked to loan products
+            $loanProductMemberIds = [];  // Array of member ids linked to loan products
 
-if ($productCodePart) {
-    // Get all loan products with this product code
-    $loanProducts = LoanProduct::where('product_code', $productCodePart)
-        ->orderBy('prioritization', 'asc')
-        ->get();
+            if ($productCodePart) {
+                // Get all loan products with this product code
+                $loanProducts = LoanProduct::where('product_code', $productCodePart)
+                    ->orderBy('prioritization', 'asc')
+                    ->get();
 
-    foreach ($loanProducts as $loanProduct) {
-        // Attach the member to the loan product pivot if not already attached
-        if (!$loanProduct->members()->where('member_id', $member->id)->exists()) {
-            $loanProduct->members()->attach($member->id);
-        }
-    }
+                foreach ($loanProducts as $loanProduct) {
+                    // Attach the member to the loan product pivot if not already attached
+                    if (!$loanProduct->members()->where('member_id', $member->id)->exists()) {
+                        $loanProduct->members()->attach($member->id);
+                    }
+                }
 
-    // Collect all member IDs linked to these loan products (optional)
-    foreach ($loanProducts as $loanProduct) {
-        $loanProductMemberIds = array_merge($loanProductMemberIds, $loanProduct->members()->pluck('members.id')->toArray());
-    }
-}
+                // Collect all member IDs linked to these loan products (optional)
+                foreach ($loanProducts as $loanProduct) {
+                    $loanProductMemberIds = array_merge($loanProductMemberIds, $loanProduct->members()->pluck('members.id')->toArray());
+                }
+            }
 
 
             // Update or create loan forecast with billing period

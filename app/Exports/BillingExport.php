@@ -3,23 +3,37 @@
 namespace App\Exports;
 
 use App\Models\Member;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\FromCollection;
 
 class BillingExport implements FromCollection, WithHeadings
 {
     protected $billingPeriod;
 
-    public function __construct($billingPeriod)
+    public function __construct()
     {
-        $this->billingPeriod = $billingPeriod;
+        $this->billingPeriod = Auth::user()->billing_period;
     }
 
     public function collection()
     {
-        $members = Member::with(['loanForecasts' => function ($query) {
-            $query->where('billing_period', $this->billingPeriod);
-        }])->get();
+        $members = Member::where(function ($query) {
+            $query->where('account_status', 'deduction')
+                ->orWhere(function ($query) {
+                    $query->where('account_status', 'non-deduction')
+                       ->whereDate('expiry_date', '<=', now()->toDateString());
+                });
+        })
+            ->whereHas('loanForecasts', function ($query) {
+                $query->where('billing_period', $this->billingPeriod);
+            })
+            ->with(['loanForecasts' => function ($query) {
+                $query->where('billing_period', $this->billingPeriod);
+            }])
+            ->get();
+
+
 
         return $members->map(function ($member) {
             $forecast = $member->loanForecasts->first();

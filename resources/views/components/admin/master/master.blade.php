@@ -61,8 +61,7 @@
                                     <button type="submit" class="btn btn-primary ms-2">Search</button>
                                 </form>
                                 <div class="table-responsive">
-                                    <table id="masterlistTable" class="display table table-striped"
-                                        style="min-width: 845px">
+                                    <table id="masterlistTable" class="table table-striped table-bordered display">
                                         <thead>
                                             <tr>
                                                 <th>CID</th>
@@ -106,8 +105,8 @@
                                                             data-fname="{{ $item->member->fname }}"
                                                             data-lname="{{ $item->member->lname }}"
                                                             data-address="{{ $item->member->address }}"
-                                                            data-savings_balance="{{ $item->member->savings_balance }}"
-                                                            data-share_balance="{{ $item->member->share_balance }}"
+                                                            data-savings_balance="{{ $item->member->savingsBalance }}"
+                                                            data-share_balance="{{ $item->member->shareBalance }}"
                                                             data-loan_balance="{{ $item->member->loan_balance }}"
                                                             data-birth_date="{{ optional($item->member->birth_date)->format('Y-m-d') }}"
                                                             data-date_registered="{{ optional($item->member->date_registered)->format('Y-m-d') }}"
@@ -135,9 +134,9 @@
                                                             data-cid="{{ $item->member->cid }}"
                                                             data-emp_id="{{ $item->member->emp_id }}"
                                                             data-address="{{ e($item->member->address) }}"
-                                                            data-savings_balance="{{ $item->member->savings_balance }}"
                                                             data-branch="{{ $item->branch->name }}"
-                                                            data-share_balance="{{ $item->member->share_balance }}"
+                                                            data-savings_balance="{{ $item->member->savingsBalance }}"
+                                                            data-share_balance="{{ $item->member->shareBalance }}"
                                                             data-loan_balance="{{ $item->member->loan_balance }}"
                                                             data-birth_date="{{ optional($item->member->birth_date)->format('Y-m-d') }}"
                                                             data-date_registered="{{ optional($item->member->date_registered)->format('Y-m-d') }}"
@@ -174,6 +173,7 @@
                                                 <th>Savings</th>
                                                 <th>Share Balance</th>
                                                 <th>Loan Balance</th>
+                                                <th>Loan Accounts</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
@@ -193,7 +193,7 @@
                                                     <span>&times;</span>
                                                 </button>
                                             </div>
-                                               <h5 class="member-profile">Member Profile</h5>
+                                            <h5 class="member-profile">Member Profile</h5>
                                             <div class="modal-body row">
 
                                                 <input type="hidden" name="id" id="edit-id">
@@ -384,9 +384,9 @@
                                 aria-labelledby="viewModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-lg" role="document"> <!-- larger modal for space -->
                                     <div class="modal-content">
-                                        <div class="modal-header bg-primary text-white">
+                                        <div class="modal-header text-dark">
                                             <h5 class="modal-title" id="viewModalLabel">Member Details</h5>
-                                            <button type="button" class="close text-white" data-dismiss="modal"
+                                            <button type="button" class="close" data-dismiss="modal"
                                                 aria-label="Close">&times;</button>
                                         </div>
                                         <div class="modal-body">
@@ -616,7 +616,6 @@
 
             let html = `
     <div class="loan-item border p-3 mb-3 rounded position-relative">
-        <button type="button" class="btn btn-danger btn-sm position-absolute" style="top:5px; right:5px;" onclick="removeCurrentLoan()">Remove</button>
 
         <div class="form-row">
             <div class="form-group col-md-6">
@@ -674,22 +673,7 @@
         }
 
 
-        function removeCurrentLoan() {
-            if (loans.length === 0) return;
 
-            loans.splice(currentLoanIndex, 1);
-
-            if (currentLoanIndex >= loans.length) {
-                currentLoanIndex = loans.length - 1;
-            }
-
-            if (loans.length === 0) {
-                renderLoan(-1);
-            } else {
-                renderLoan(currentLoanIndex);
-            }
-            updateNavButtons();
-        }
 
         // Button click handlers
         $('#btnNext').click(function() {

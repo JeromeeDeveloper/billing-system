@@ -49,8 +49,8 @@
                     <i class="icon icon-chart-pie-36"></i><span class="nav-text">Loans Product</span>
                 </a>
                 <ul aria-expanded="false">
-                    <li><a href="{{route('loans')}}">Loans Products List</a></li>
-                    <li><a href="{{route('list')}}">Member Loans</a></li>
+                    <li><a href="{{route('loans')}}">Loan Priority</a></li>
+                    <li><a href="{{route('list')}}">Member Loan</a></li>
                 </ul>
             </li>
             <li>

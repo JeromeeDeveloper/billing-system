@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AtmController;
+use App\Http\Middleware\AdminMiddleware;
 use App\Http\Controllers\LoansController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\MasterController;
@@ -17,6 +18,8 @@ Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+
+Route::middleware([AdminMiddleware::class])->group(function () {
 //Users
 Route::get('/users', [LoginController::class, 'userindex'])->name('users');
 Route::put('/users/update', [LoginController::class, 'update'])->name('users.update');
@@ -29,6 +32,9 @@ Route::post('/dashboard/store', [DashboardController::class, 'store'])->name('da
 //Billing
 Route::get('/Billing', [BillingController::class, 'index'])->name('billing');
 Route::get('/billing/export', [BillingController::class, 'export'])->name('billing.export');
+Route::put('/billing/{member}', [BillingController::class, 'update'])->name('billing.update');
+Route::delete('/billing/{member}', [BillingController::class, 'destroy'])->name('billing.destroy');
+
 //Member
 Route::get('/Member', [MemberController::class, 'index'])->name('member');
 Route::put('/members/{id}', [MemberController::class, 'update'])->name('member.update');
@@ -54,7 +60,6 @@ Route::get('/branches/{id}/edit', [BranchController::class, 'edit'])->name('bran
 Route::put('/branches/{id}', [BranchController::class, 'update'])->name('branch.update');
 Route::delete('/branches/{id}', [BranchController::class, 'destroy'])->name('branch.destroy');
 
-
 //Remittance
 Route::get('/Remittance', [RemittanceController::class, 'index'])->name('remittance');
 
@@ -63,3 +68,4 @@ Route::get('/Master', [MasterController::class, 'index'])->name('master');
 Route::put('/members/{id}', [MasterController::class, 'update']);
 Route::delete('/members/{id}', [MasterController::class, 'destroy']);
 
+});

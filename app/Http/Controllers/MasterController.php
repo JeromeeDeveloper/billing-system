@@ -15,7 +15,13 @@ class MasterController extends Controller
         $billingPeriod = auth()->user()->billing_period;
         $search = $request->input('search');
 
-        $masterlists = MasterList::with(['member.loanForecasts', 'branch'])
+        $masterlists = MasterList::with([
+            'member.loanForecasts',
+            'member.savings',
+            'member.shares',
+            'branch'
+        ])
+
             ->where('billing_period', $billingPeriod)
             ->when($search, function ($query, $search) {
                 $query->whereHas('member', function ($q) use ($search) {
@@ -83,31 +89,24 @@ class MasterController extends Controller
 
         $member = Member::findOrFail($id);
 
-        // Update member data
-        $member->update($request->only([
-            'cid',
-            'emp_id',
-            'fname',
-            'lname',
-            'address',
-            'savings_balance',
-            'share_balance',
-            'loan_balance',
-            'birth_date',
-            'date_registered',
-            'expiry_date',
-            'gender',
-            'customer_type',
-            'customer_classification',
-            'occupation',
-            'industry',
-            'area_officer',
-            'area',
-            'status',
-            'additional_address',
-            'account_status',
-            'branch_id'
-        ]));
+        // Update member fields EXCEPT balances (remove 'savings_balance' and 'share_balance')
+        $member->update($request->except(['savings_balance', 'share_balance']));
+
+        // Update savings balance if provided
+        if ($request->filled('savings_balance')) {
+            $savings = $member->savings()->first();
+            if ($savings) {
+                $savings->update(['current_balance' => $request->input('savings_balance')]);
+            }
+        }
+
+        // Update shares balance if provided
+        if ($request->filled('share_balance')) {
+            $shares = $member->shares()->first();
+            if ($shares) {
+                $shares->update(['current_balance' => $request->input('share_balance')]);
+            }
+        }
 
         // Update or create loan forecasts if present
         if ($request->has('loan_forecasts')) {
@@ -124,6 +123,7 @@ class MasterController extends Controller
 
         return redirect()->back()->with('success', 'Member and loan forecast(s) updated successfully!');
     }
+
 
 
 

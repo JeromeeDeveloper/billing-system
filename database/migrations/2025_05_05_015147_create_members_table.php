@@ -43,7 +43,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'merged'])->default('active');
             $table->date('expiry_date')->nullable();
 
-            $table->enum('account_status', ['deduction', 'non-deduction'])->nullable();
+            $table->enum('account_status', ['deduction', 'non-deduction'])->default('deduction');
             $table->string('billing_period')->nullable();
             $table->timestamps();
         });
