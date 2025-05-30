@@ -5,13 +5,13 @@ namespace App\Imports;
 use App\Models\Branch;
 use App\Models\Member;
 use App\Models\LoanForecast;
+use App\Models\LoanProduct;
 use App\Models\MasterList;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
 
 class LoanForecastImport implements ToCollection, WithHeadingRow
 {
@@ -62,16 +62,40 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                         'branch_id' => $branch->id,
                         'fname' => $fname,
                         'lname' => $lname,
-
                         'address' => '',
                         'savings_balance' => 0,
                         'share_balance' => 0,
-
                         'billing_period' => $this->billingPeriod,
                     ]
                 );
                 $this->memberCache[$cid] = $member;
             }
+
+          // Match member_id from LoanProduct using the 3rd part of loan_acct_no
+$loanAcctParts = explode('-', $row['loan_account_no']);
+$productCodePart = isset($loanAcctParts[2]) ? trim($loanAcctParts[2]) : null;
+
+$loanProductMemberIds = [];  // Array of member ids linked to loan products
+
+if ($productCodePart) {
+    // Get all loan products with this product code
+    $loanProducts = LoanProduct::where('product_code', $productCodePart)
+        ->orderBy('prioritization', 'asc')
+        ->get();
+
+    foreach ($loanProducts as $loanProduct) {
+        // Attach the member to the loan product pivot if not already attached
+        if (!$loanProduct->members()->where('member_id', $member->id)->exists()) {
+            $loanProduct->members()->attach($member->id);
+        }
+    }
+
+    // Collect all member IDs linked to these loan products (optional)
+    foreach ($loanProducts as $loanProduct) {
+        $loanProductMemberIds = array_merge($loanProductMemberIds, $loanProduct->members()->pluck('members.id')->toArray());
+    }
+}
+
 
             // Update or create loan forecast with billing period
             $loanForecast = LoanForecast::updateOrCreate(
@@ -85,8 +109,8 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'interest_due' => $this->cleanNumber($row['interest_due']),
                     'penalty_due' => $this->cleanNumber($row['penalty_due']),
                     'amount_due' => 0,
-                    'member_id' => $member->id,
-                    'billing_period' => $this->billingPeriod,   // <-- Add billing period here
+                    'member_id' => $loanProductMemberId ?? $member->id, // use product match or fallback
+                    'billing_period' => $this->billingPeriod,
                     'updated_at' => $now,
                 ]
             );
@@ -101,11 +125,12 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'branches_id' => $branch->id,
                     'updated_at' => $now,
                     'created_at' => $now,
-                    'billing_period' => $this->billingPeriod,  // <-- Add billing period here as well
+                    'billing_period' => $this->billingPeriod,
                 ]
             );
         }
 
+        // Update loan balance for each member
         foreach ($this->memberCache as $member) {
             $loanBalance = LoanForecast::where('member_id', $member->id)
                 ->where('billing_period', $this->billingPeriod)

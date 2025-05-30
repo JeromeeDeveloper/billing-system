@@ -21,6 +21,7 @@ return new class extends Migration
             $table->decimal('total_due', 12, 2)->default(0);
             $table->decimal('principal_due', 12, 2)->default(0);
             $table->decimal('interest_due', 12, 2)->default(0);
+            $table->decimal('principal', 12, 2)->nullable()->default(0);
             $table->decimal('penalty_due', 12, 2)->default(0);
             $table->unsignedBigInteger('member_id');
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');

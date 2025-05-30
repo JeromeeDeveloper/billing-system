@@ -74,11 +74,20 @@
 
                                             <div class="modal-body">
 
+                                                @php
+                                                    $billingPeriod = auth()->user()->billing_period
+                                                        ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format(
+                                                            'F Y',
+                                                        )
+                                                        : 'N/A';
+                                                @endphp
+
                                                 <div class="form-group">
                                                     <label class="font-weight-bold mb-2">Billing Period</label>
                                                     <input type="text" class="form-control"
-                                                        value="{{ auth()->user()->billing_period ?? 'N/A' }}" readonly>
+                                                        value="{{ $billingPeriod }}" readonly>
                                                 </div>
+
 
                                                 <div class="form-group">
 
@@ -88,13 +97,10 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="file"
-                                                            name="file" required>
+                                                            name="file">
                                                         <label class="custom-file-label" for="file">Choose
                                                             file...</label>
                                                     </div>
-                                                    <small class="form-text text-muted mt-2">
-                                                        Accepted formats: PDF, DOCX, CSV, JPG. Max size: 5MB.
-                                                    </small>
                                                 </div>
 
                                                 <div class="form-group">
@@ -126,6 +132,18 @@
                                                         <input type="file" class="custom-file-input" id="cif_file"
                                                             name="cif_file">
                                                         <label class="custom-file-label" for="cif_file">Choose
+                                                            file...</label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label for="loan_file" class="font-weight-bold mb-2">🏛️ Loans
+                                                        File
+                                                    </label>
+                                                    <div class="custom-file">
+                                                        <input type="file" class="custom-file-input"
+                                                            id="loan_file" name="loan_file">
+                                                        <label class="custom-file-label" for="loan_file">Choose
                                                             file...</label>
                                                     </div>
                                                 </div>

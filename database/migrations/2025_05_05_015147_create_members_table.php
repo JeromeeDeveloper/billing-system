@@ -26,8 +26,10 @@ return new class extends Migration
             $table->decimal('savings_balance', 12, 2)->default(0);
             $table->decimal('share_balance', 12, 2)->default(0);
             $table->decimal('loan_balance', 12, 2)->default(0);
-
+            $table->decimal('principal', 12, 2)->nullable()->default(0);
             $table->date('birth_date')->nullable();
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
             $table->date('date_registered')->nullable();
             $table->enum('gender', ['male', 'female', 'other'])->nullable();
             $table->string('customer_type')->nullable();

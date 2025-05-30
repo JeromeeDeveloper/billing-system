@@ -11,23 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('loans_product', function (Blueprint $table) {
+        Schema::create('loan_product_member', function (Blueprint $table) {
             $table->id();
-      
-            $table->string('product');
-            $table->string('product_code')->nullable();
-            $table->integer('prioritization')->nullable();
-            $table->string('Status')->nullable();
-
+            $table->foreignId('loan_product_id')->constrained('loans_product')->onDelete('cascade');
+            $table->foreignId('member_id')->constrained()->onDelete('cascade');
             $table->timestamps();
+
+            $table->unique(['loan_product_id', 'member_id']);  // prevent duplicates
         });
     }
+
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('loans_product');
+        Schema::dropIfExists('loan_product_member');
     }
 };

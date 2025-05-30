@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use App\Models\Shares;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,9 @@ class Member extends Model
         'customer_classification',
         'occupation',
         'industry',
+        'start_date',
+        'end_date',
+        'principal',
         'area_officer',
         'area',
         'account_status',
@@ -44,6 +48,8 @@ class Member extends Model
         'birth_date' => 'date',
         'date_registered' => 'date',
         'expiry_date' => 'date',
+          'start_date' => 'date',
+    'end_date' => 'date',
     ];
 
     public function branch()
@@ -56,14 +62,20 @@ class Member extends Model
         return $this->hasMany(LoanForecast::class);
     }
 
-    public function loanProducts()
-    {
-        return $this->hasMany(LoanProduct::class);
-    }
+public function loanProducts()
+{
+    return $this->belongsToMany(LoanProduct::class, 'loan_product_member', 'member_id', 'loan_product_id')->withTimestamps();
+}
+
 
      public function savings()
     {
         return $this->hasMany(Saving::class);
+    }
+
+     public function shares()
+    {
+        return $this->hasMany(Shares::class);
     }
 
    public function loanForecastsData(): Attribute

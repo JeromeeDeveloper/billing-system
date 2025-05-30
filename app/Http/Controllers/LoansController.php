@@ -14,6 +14,15 @@ class LoansController extends Controller
         return view('components.admin.loans.loans_datatable', compact('loans'));
     }
 
+
+    public function list()
+    {
+        // Eager load members for each loan product
+        $list = LoanProduct::with('members')->get();
+
+        return view('components.admin.loans.list_loan_member', compact('list'));
+    }
+
     public function update(Request $request, LoanProduct $loan)
     {
         $request->validate([

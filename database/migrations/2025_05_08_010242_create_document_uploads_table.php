@@ -25,7 +25,8 @@ return new class extends Migration
                 'Installment File',
                 'CIF',
                 'Savings',
-                'Shares'
+                'Shares',
+                'Loan'
             ]);
             $table->string('filename');
             $table->string('filepath');

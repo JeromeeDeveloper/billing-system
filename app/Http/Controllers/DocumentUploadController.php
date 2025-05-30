@@ -2,72 +2,86 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\DocumentUpload;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\LoanForecastImport;
-use App\Imports\SavingsImport;
-use App\Imports\SharesImport;
-use App\Imports\CifImport;
 use Exception;
+use App\Imports\CifImport;
+use App\Imports\LoanImport;
+use Illuminate\Http\Request;
+use App\Imports\SharesImport;
+use App\Imports\SavingsImport;
+use App\Models\DocumentUpload;
+use App\Imports\LoanForecastImport;
+use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentUploadController extends Controller
 {
-    public function store(Request $request)
-    {
-        ini_set('max_execution_time', 300);
+   public function store(Request $request)
+{
+    ini_set('max_execution_time', 600);
 
-        $request->validate([
-            'file'           => 'required|file|mimes:xls,xlsx,csv',
-            'savings_file'   => 'nullable|file|mimes:xls,xlsx,csv',
-            'shares_file'    => 'nullable|file|mimes:xls,xlsx,csv',
-            'cif_file'       => 'nullable|file|mimes:xls,xlsx,csv',
-        ]);
+    $request->validate([
+        'file'           => 'nullable|file|mimes:xls,xlsx,csv',
+        'savings_file'   => 'nullable|file|mimes:xls,xlsx,csv',
+        'shares_file'    => 'nullable|file|mimes:xls,xlsx,csv',
+        'cif_file'       => 'nullable|file|mimes:xls,xlsx,csv',
+        'loan_file'      => 'nullable|file|mimes:xls,xlsx,csv',
+    ]);
 
-        try {
-            $billingPeriod = Auth::user()->billing_period ?? null; // get logged-in user's billing period
+    try {
+        $billingPeriod = Auth::user()->billing_period ?? null;
 
-            $uploadMappings = [
-                'file'         => ['type' => 'Installment File', 'import' => LoanForecastImport::class],
-                'savings_file' => ['type' => 'Savings', 'import' => SavingsImport::class],
-                'shares_file'  => ['type' => 'Shares', 'import' => SharesImport::class],
-                'cif_file'     => ['type' => 'CIF', 'import' => CifImport::class],
-            ];
+        $uploadMappings = [
+            'file'         => ['type' => 'Installment File', 'import' => LoanForecastImport::class],
+            'savings_file' => ['type' => 'Savings', 'import' => SavingsImport::class],
+            'shares_file'  => ['type' => 'Shares', 'import' => SharesImport::class],
+            'cif_file'     => ['type' => 'CIF', 'import' => CifImport::class],
+            'loan_file'    => ['type' => 'Loan', 'import' => LoanImport::class],
+        ];
 
-            foreach ($uploadMappings as $field => $options) {
-                if ($request->hasFile($field)) {
-                    $file = $request->file($field);
-                    $newFileName = time() . '-' . $file->getClientOriginalName();
-                    $path = $file->storeAs('uploads/documents', $newFileName, 'public');
+        foreach ($uploadMappings as $field => $options) {
+            if ($request->hasFile($field)) {
+                // Delete existing files for this document_type & billing_period
+                $existingFiles = DocumentUpload::where('document_type', $options['type'])
+                    ->where('billing_period', $billingPeriod)
+                    ->get();
 
-                    DocumentUpload::create([
-                        'document_type' => $options['type'],
-                        'filename'      => $newFileName,
-                        'filepath'      => $path,
-                        'mime_type'     => $file->getClientMimeType(),
-                        'uploaded_by'   => Auth::id(),
-                        'upload_date'   => now(),
-                        'billing_period' => $billingPeriod,
-                    ]);
-
-                    if (in_array($options['type'], ['CIF', 'Installment File'])) {
-                        $importClass = new $options['import']($billingPeriod);
-                    } else {
-                        $importClass = new $options['import']();
+                foreach ($existingFiles as $existingFile) {
+                    if (Storage::disk('public')->exists($existingFile->filepath)) {
+                        Storage::disk('public')->delete($existingFile->filepath);
                     }
-
-
-                    Excel::import($importClass, $file);
+                    $existingFile->delete();
                 }
-            }
 
-            return redirect()->back()->with('success', 'Files uploaded and data imported successfully!');
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
+                $file = $request->file($field);
+                $newFileName = time() . '-' . $file->getClientOriginalName();
+                $path = $file->storeAs('uploads/documents', $newFileName, 'public');
+
+                DocumentUpload::create([
+                    'document_type'  => $options['type'],
+                    'filename'       => $newFileName,
+                    'filepath'       => $path,
+                    'mime_type'      => $file->getClientMimeType(),
+                    'uploaded_by'    => Auth::id(),
+                    'upload_date'    => now(),
+                    'billing_period' => $billingPeriod,
+                ]);
+
+                if (in_array($options['type'], ['CIF', 'Installment File', 'Savings', 'Shares', 'Loan'])) {
+                    $importClass = new $options['import']($billingPeriod);
+                } else {
+                    $importClass = new $options['import']();
+                }
+                Excel::import($importClass, $file);
+            }
         }
+
+        return redirect()->back()->with('success', 'Files uploaded and data imported successfully!');
+    } catch (Exception $e) {
+        return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
     }
+}
+
 
     public function index()
     {

@@ -28,7 +28,7 @@ Route::post('/dashboard/store', [DashboardController::class, 'store'])->name('da
 
 //Billing
 Route::get('/Billing', [BillingController::class, 'index'])->name('billing');
-
+Route::get('/billing/export', [BillingController::class, 'export'])->name('billing.export');
 //Member
 Route::get('/Member', [MemberController::class, 'index'])->name('member');
 Route::put('/members/{id}', [MemberController::class, 'update'])->name('member.update');
@@ -36,6 +36,7 @@ Route::delete('/members/{id}', [MemberController::class, 'destroy'])->name('memb
 
 //Loans
 Route::get('/Loans', [LoansController::class, 'index'])->name('loans');
+Route::get('/Loans/Members', [LoansController::class, 'list'])->name('list');
 Route::post('/loans', [LoansController::class, 'store'])->name('loans.store');
 Route::put('/loans/{loan}', [LoansController::class, 'update'])->name('loans.update');
 Route::delete('/loans/{loan}', [LoansController::class, 'destroy'])->name('loans.destroy');

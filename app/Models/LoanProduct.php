@@ -24,8 +24,10 @@ class LoanProduct extends Model
     /**
      * Relationship: A loan product belongs to a member.
      */
-    public function member()
-    {
-        return $this->belongsTo(Member::class);
-    }
+public function members()
+{
+    return $this->belongsToMany(Member::class, 'loan_product_member', 'loan_product_id', 'member_id')->withTimestamps();
+}
+
+
 }

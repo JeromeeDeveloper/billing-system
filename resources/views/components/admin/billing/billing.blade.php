@@ -55,68 +55,14 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h4 class="card-title mb-0">Billing Datatable</h4>
-                                <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
-                                    data-target="#exampleModalpopover">
+                                <a href="{{ route('billing.export', ['billing_period' => now()->format('Y-m')]) }}"
+                                    class="btn btn-rounded btn-primary">
                                     <span class="btn-icon-left text-primary">
                                         <i class="fa fa-file"></i>
-                                    </span>
+                                    </span> 
                                     Generate Billing
-                                </button>
+                                </a>
                             </div>
-
-                            <div class="modal fade" id="exampleModalpopover" tabindex="-1" role="dialog"
-                                aria-labelledby="exampleModalpopoverLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered" role="document">
-                                    <div class="modal-content">
-                                        <form id="uploadForm" method="POST">
-                                            @csrf
-                                            <div class="modal-body">
-                                                <div class="form-group">
-                                                    <label for="selected_date" class="font-weight-bold mb-2">📅 Select
-                                                        Date</label>
-                                                    <input type="date" class="form-control" id="selected_date"
-                                                        name="selected_date" required>
-                                                    <small class="form-text text-muted mt-2">
-                                                        Please choose a date to generate the report or process data.
-                                                    </small>
-                                                </div>
-                                            </div>
-
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Generate</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            @if (session('success'))
-                                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                    {{ session('success') }}
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                </div>
-                            @endif
-
-                            @if (session('error'))
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    {{ session('error') }}
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                </div>
-                            @endif
-
-                            @if ($errors->any())
-                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                    <ul class="mb-0">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                </div>
-                            @endif
 
 
                             <div class="card-body">

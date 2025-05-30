@@ -50,6 +50,7 @@
                 </a>
                 <ul aria-expanded="false">
                     <li><a href="{{route('loans')}}">Loans Products List</a></li>
+                    <li><a href="{{route('list')}}">Member Loans</a></li>
                 </ul>
             </li>
             <li>
