@@ -81,7 +81,7 @@
             </li>
             <li>
                 <a href="{{route('users')}}" aria-expanded="false">
-                    <i></i><span class="nav-text">Users</span>
+                <i class="icon icon-single-04"></i><span class="nav-text">Users</span>
                 </a>
             </li>
         </ul>

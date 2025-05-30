@@ -54,13 +54,7 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h4 class="card-title mb-0">Loan Datatable</h4>
-                                <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
-                                    data-target="#addLoanModal">
-                                    <span class="btn-icon-left text-primary">
-                                        <i class="fa fa-plus"></i>
-                                    </span>
-                                    Add Loan
-                                </button>
+
                             </div>
 
                             <div class="card">
