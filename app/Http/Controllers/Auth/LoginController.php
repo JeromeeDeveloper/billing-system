@@ -20,22 +20,29 @@ class LoginController extends Controller
         return view('auth.users');
     }
 
-    public function login(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+   public function login(Request $request)
+{
+    $credentials = $request->validate([
+        'email' => ['required', 'email'],
+        'password' => ['required'],
+    ]);
 
-        if (Auth::attempt($credentials, $request->filled('remember'))) {
-            $request->session()->regenerate();
-            return redirect()->intended('/dashboard')->with('success', 'Logged in successfully!');
+    if (Auth::attempt($credentials, $request->filled('remember'))) {
+        $request->session()->regenerate();
+
+        $user = Auth::user();
+        if ($user->role === 'admin') {
+            return redirect()->route('dashboard')->with('success', 'Welcome, Admin!');
+        } elseif ($user->role === 'branch') {
+            return redirect()->route('dashboard_branch')->with('success', 'Welcome, Branch!');
         }
-
-        return back()->withErrors([
-            'email' => 'Invalid email or password.',
-        ])->onlyInput('email');
     }
+
+    return back()->withErrors([
+        'email' => 'Invalid email or password.',
+    ])->onlyInput('email');
+}
+
 
     public function logout(Request $request)
     {

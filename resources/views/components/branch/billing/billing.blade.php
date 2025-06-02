@@ -2,17 +2,8 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
 
-    <title>Billing and Collection</title>
-
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
-
-    <link href="./vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
-
-    <link href="./css/style.css" rel="stylesheet">
+    @include('layouts.partials.head')
 
 </head>
 
@@ -44,8 +35,8 @@
                     </div>
                     <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active"><a href="{{ route('billing') }}">Billing</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard_branch') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active"><a href="{{ route('billing.branch') }}">Billing</a></li>
                         </ol>
                     </div>
                 </div>
@@ -58,7 +49,7 @@
                                 <h4 class="card-title mb-0">Billing Datatable</h4>
 
                                 <div class="d-flex flex-column align-items-end">
-                                    <div class="d-flex mb-1">
+                                    <div class="d-flex mb-1 buttons-header">
                                         <a href="{{ $allBranchApproved ? route('billing.export.branch', ['billing_period' => now()->format('Y-m')]) : '#' }}"
                                             class="btn btn-rounded btn-primary text-white me-2 {{ !$allBranchApproved ? 'disabled' : '' }}"
                                             @if (!$allBranchApproved) onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;" @endif>
@@ -67,6 +58,16 @@
                                             </span>
                                             Generate Billing
                                         </a>
+
+                                        <form action="{{ route('billing.approve') }}" method="POST" class="m-0">
+                                            @csrf
+                                            <button type="submit" class="btn btn-rounded btn-primary text-white">
+                                                <span class="btn-icon-left text-primary">
+                                                    <i class="fa fa-check"></i>
+                                                </span>
+                                                Approve Billing
+                                            </button>
+                                        </form>
                                     </div>
 
                                     @if (!$allBranchApproved)
@@ -181,7 +182,8 @@
 
                             <div class="modal fade" id="editModal" tabindex="-1" role="dialog">
                                 <div class="modal-dialog modal-lg" role="document">
-                                    <form method="POST" action="{{ route('billing.update', 0) }}" id="editForm">
+                                    <form method="POST" action="{{ route('billing.update.branch', 0) }}"
+                                        id="editForm">
                                         @csrf
                                         @method('PUT')
                                         <div class="modal-content">
@@ -317,12 +319,7 @@
 
     </div>
 
-    <script src="./vendor/global/global.min.js"></script>
-    <script src="./js/quixnav-init.js"></script>
-    <script src="./js/custom.min.js"></script>
-    <script src="./vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="./js/plugins-init/datatables.init.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @include('layouts.partials.footer')
 
     <script>
         $('.edit-btn').on('click', function() {
@@ -376,6 +373,32 @@
             // Redirect to href after showing loader
             window.location.href = this.href;
         });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        @if (session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: '{{ session('success') }}',
+                timer: 3000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+        @endif
+
+        @if (session('info'))
+            Swal.fire({
+                icon: 'info',
+                title: 'Info',
+                text: '{{ session('info') }}',
+                timer: 3000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            });
+        @endif
     </script>
 
 </body>

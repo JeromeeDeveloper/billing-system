@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AtmController;
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Controllers\LoansController;
+use App\Http\Middleware\BranchMiddleware;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\MasterController;
 use App\Http\Controllers\MemberController;
@@ -67,5 +68,31 @@ Route::get('/Remittance', [RemittanceController::class, 'index'])->name('remitta
 Route::get('/Master', [MasterController::class, 'index'])->name('master');
 Route::put('/members/{id}', [MasterController::class, 'update']);
 Route::delete('/members/{id}', [MasterController::class, 'destroy']);
+Route::post('Admin/master/add', [MasterController::class, 'store'])->name('members.store');
+
+
+});
+
+Route::middleware([BranchMiddleware::class])->group(function () {
+//Dashboard
+Route::get('/Branch/dashboard', [DashboardController::class, 'index_branch'])->name('dashboard_branch');
+Route::post('/Branch/dashboard/store', [DashboardController::class, 'store_branch'])->name('dashboard.store.branch');
+
+
+//Master
+Route::get('/Branch/Master', [MasterController::class, 'index_branch'])->name('master.branch');
+Route::put('/Branch/members/{id}', [MasterController::class, 'update_branch']);
+Route::delete('/Branch/members/{id}', [MasterController::class, 'destroy_branch']);
+
+//Billing
+Route::get('/Branch/Billing', [BillingController::class, 'index_branch'])->name('billing.branch');
+Route::get('/Branch/billing/export', [BillingController::class, 'export_branch'])->name('billing.export.branch');
+Route::put('/Branch/billing/{member}', [BillingController::class, 'update_branch'])->name('billing.update.branch');
+Route::delete('/Branch/billing/{member}', [BillingController::class, 'destroy_branch'])->name('billing.destroy.branch');
+Route::post('/Branch/billing/approve', [BillingController::class, 'approve'])->name('billing.approve');
+
+
+Route::post('/Branch/upload', [DocumentUploadController::class, 'store_branch'])->name('document.upload.branch');
+Route::get('/Branch/Documents', [DocumentUploadController::class, 'index_branch'])->name('documents.branch');
 
 });

@@ -2,16 +2,9 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
 
-    <title>Billing and Collection</title>
+    @include('layouts.partials.head')
 
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
-
-    <link href="./vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
-    <link href="./css/style.css" rel="stylesheet">
 </head>
 
 <body>
@@ -41,242 +34,25 @@
                     </div>
                     <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active"><a href="{{ route('member') }}">Member</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard_branch') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active"><a href="{{ route('master.branch') }}">Master</a></li>
                         </ol>
                     </div>
                 </div>
-                <!-- Add Member Modal -->
-                <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel"
-                    aria-hidden="true">
-                    <div class="modal-dialog modal-xl">
-                        <form action="{{ route('members.store') }}" method="POST">
-                            @csrf
-                            <div class="modal-content">
-                                <div class="modal-header text-dark">
-                                    <h5 class="modal-title" id="addModalLabel">Add Member</h5>
-                                       <button type="button" class="close" data-dismiss="modal">
-                                                    <span>&times;</span>
-                                                </button>
-                                </div>
-
-                                <div class="modal-body">
-                                    <div class="container-fluid">
-                                        <div class="row g-3">
-                                            {{-- Row 1: Branch, CID, Employee ID --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Branch</label>
-                                                <div class="dropdown">
-                                                    <button data-toggle="dropdown"
-                                                        class="btn btn-primary dropdown-toggle w-100 text-left"
-                                                        type="button" aria-expanded="false" id="branchDropdownBtn">
-                                                        Select Branch
-                                                    </button>
-                                                    <div class="dropdown-menu" aria-labelledby="branchDropdownBtn">
-                                                        @foreach ($branches as $branch)
-                                                            <a href="javascript:void(0)"
-                                                                class="dropdown-item branch-item"
-                                                                data-id="{{ $branch->id }}">{{ $branch->name }}</a>
-                                                        @endforeach
-                                                    </div>
-                                                    <input type="hidden" name="branch_id" id="branch_id" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-4">
-                                                <label class="form-label">CID</label>
-                                                <input type="text" name="cid" class="form-control" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Employee ID</label>
-                                                <input type="text" name="emp_id" class="form-control">
-                                            </div>
-
-                                            {{-- Row 2: First Name, Last Name, Account Name --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">First Name</label>
-                                                <input type="text" name="fname" class="form-control" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Last Name</label>
-                                                <input type="text" name="lname" class="form-control" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Account Name</label>
-                                                <input type="text" name="account_name" class="form-control">
-                                            </div>
-
-                                            {{-- Row 3: Address (full width) --}}
-                                            <div class="col-md-12">
-                                                <label class="form-label">Address</label>
-                                                <textarea name="address" class="form-control" rows="2"></textarea>
-                                            </div>
-
-                                            {{-- Row 4: Birth, Start, End Dates --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Birth Date</label>
-                                                <input type="date" name="birth_date" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Start Date</label>
-                                                <input type="date" name="start_date" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">End Date</label>
-                                                <input type="date" name="end_date" class="form-control">
-                                            </div>
-
-                                            {{-- Row 5: Registered, Hold, Expiry --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Date Registered</label>
-                                                <input type="date" name="date_registered" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Start Hold</label>
-                                                <input type="date" name="start_hold" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Expiry Date</label>
-                                                <input type="date" name="expiry_date" class="form-control">
-                                            </div>
-
-                                            {{-- Row 6: Gender, Type, Classification --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Gender</label>
-                                                <div class="dropdown">
-                                                    <button data-toggle="dropdown"
-                                                        class="btn btn-primary dropdown-toggle w-100 text-left"
-                                                        type="button" aria-expanded="false" id="genderDropdownBtn">
-                                                        Select
-                                                    </button>
-                                                    <div class="dropdown-menu" aria-labelledby="genderDropdownBtn">
-                                                        <a href="javascript:void(0)" class="dropdown-item gender-item"
-                                                            data-value="">-- Select --</a>
-                                                        <a href="javascript:void(0)" class="dropdown-item gender-item"
-                                                            data-value="male">Male</a>
-                                                        <a href="javascript:void(0)" class="dropdown-item gender-item"
-                                                            data-value="female">Female</a>
-                                                        <a href="javascript:void(0)" class="dropdown-item gender-item"
-                                                            data-value="other">Other</a>
-                                                    </div>
-                                                    <input type="hidden" name="gender" id="gender" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-4">
-                                                <label class="form-label">Customer Type</label>
-                                                <input type="text" name="customer_type" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Customer Classification</label>
-                                                <input type="text" name="customer_classification"
-                                                    class="form-control">
-                                            </div>
-
-                                            {{-- Row 7: Occupation, Industry, Area Officer --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Occupation</label>
-                                                <input type="text" name="occupation" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Industry</label>
-                                                <input type="text" name="industry" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Area Officer</label>
-                                                <input type="text" name="area_officer" class="form-control">
-                                            </div>
-
-                                            {{-- Row 8: Area, Approval No, Billing Period --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Area</label>
-                                                <input type="text" name="area" class="form-control">
-                                            </div>
-
-                                              <div class="col-md-4">
-                                                <label class="form-label">Account Status</label>
-                                                <div class="dropdown">
-                                                    <button data-toggle="dropdown"
-                                                        class="btn btn-primary dropdown-toggle w-100 text-left"
-                                                        type="button" aria-expanded="false"
-                                                        id="accountStatusDropdownBtn">
-                                                        Select
-                                                    </button>
-                                                    <div class="dropdown-menu"
-                                                        aria-labelledby="accountStatusDropdownBtn">
-                                                        <a href="javascript:void(0)"
-                                                            class="dropdown-item account-status-item"
-                                                            data-value="">-- Select --</a>
-                                                        <a href="javascript:void(0)"
-                                                            class="dropdown-item account-status-item"
-                                                            data-value="deduction">Deduction</a>
-                                                        <a href="javascript:void(0)"
-                                                            class="dropdown-item account-status-item"
-                                                            data-value="non-deduction">Non-Deduction</a>
-                                                    </div>
-                                                    <input type="hidden" name="account_status" id="account_status"
-                                                        required>
-                                                </div>
-                                            </div>
-
-                                            {{-- <div class="col-md-4">
-                                                <label class="form-label">Approval No</label>
-                                                <input type="text" name="approval_no" class="form-control">
-                                            </div> --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Billing Period</label>
-                                                <input type="text" name="billing_period" class="form-control">
-                                            </div>
-
-                                            {{-- Row 10: Balances --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Savings Balance</label>
-                                                <input type="number" step="0.01" name="savings_balance"
-                                                    class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Share Balance</label>
-                                                <input type="number" step="0.01" name="share_balance"
-                                                    class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Loan Balance</label>
-                                                <input type="number" step="0.01" name="loan_balance"
-                                                    class="form-control">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-success">Save Member</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-
 
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h4 class="card-title mb-0">Member Datatable</h4>
-
-                                <div class="d-flex align-items-center">
-                                    <form method="GET" action="{{ url()->current() }}" class="d-flex">
-                                        <input type="text" name="search" value="{{ request('search') }}"
-                                            class="form-control" placeholder="Search..." />
-                                        <button type="submit" class="btn btn-primary ms-2">Search</button>
-                                    </form>
-
-                                    <a href="#" class="btn btn-success ms-3" data-toggle="modal"
-                                        data-target="#addModal">Add</a>
-                                </div>
                             </div>
-
                             <div class="card-body">
+                                <form method="GET" action="{{ url()->current() }}"
+                                    class="mb-3 d-flex justify-content-center">
+                                    <input type="text" name="search" value="{{ request('search') }}"
+                                        class="form-control w-50" placeholder="Search by CID, Name, Branch..." />
+                                    <button type="submit" class="btn btn-primary ms-2">Search</button>
+                                </form>
                                 <div class="table-responsive">
                                     <table id="masterlistTable" class="table table-striped table-bordered display">
                                         <thead>
@@ -753,11 +529,11 @@
 
     </div>
 
-    <script src="./vendor/global/global.min.js"></script>
-    <script src="./js/quixnav-init.js"></script>
-    <script src="./js/custom.min.js"></script>
-    <script src="./vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="./js/plugins-init/datatables.init.js"></script>
+    <script src="{{ asset('vendor/global/global.min.js') }}"></script>
+    <script src="{{ asset('js/quixnav-init.js') }}"></script>
+    <script src="{{ asset('js/custom.min.js') }}"></script>
+    <script src="{{ asset('vendor/datatables/js/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('js/plugins-init/datatables.init.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @if (session('success'))
@@ -833,7 +609,7 @@
             renderLoan(currentLoanIndex);
 
             // Set form action dynamically
-            $('#editForm').attr('action', '/members/' + button.data('id'));
+            $('#editForm').attr('action', '/Branch/members/' + button.data('id'));
 
             updateNavButtons();
         });
@@ -901,9 +677,6 @@
             $('#btnPrev').prop('disabled', currentLoanIndex <= 0);
             $('#btnNext').prop('disabled', currentLoanIndex >= loans.length - 1);
         }
-
-
-
 
         // Button click handlers
         $('#btnNext').click(function() {
@@ -1020,7 +793,7 @@
         $('#deleteModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
             var id = button.data('id');
-            $('#deleteForm').attr('action', '/members/' + id);
+            $('#deleteForm').attr('action', '/Branch/members/' + id);
         });
     </script>
 
@@ -1043,18 +816,6 @@
             });
         </script>
     @endif
-
-    <script>
-        $(document).ready(function() {
-            $('.branch-item').click(function(e) {
-                e.preventDefault();
-                var branchName = $(this).text();
-                var branchId = $(this).data('id');
-                $('#branchDropdownBtn').text(branchName);
-                $('#branch_id').val(branchId);
-            });
-        });
-    </script>
 </body>
 
 </html>

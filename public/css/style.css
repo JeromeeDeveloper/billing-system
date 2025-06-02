@@ -19438,3 +19438,7 @@ h5.member-profile {
     left: 13px;
     top: 11px;
 }
+
+.buttons-header{
+    gap: 16px;
+}

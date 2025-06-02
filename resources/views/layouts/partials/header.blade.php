@@ -1,8 +1,18 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <div class="nav-header">
-        <a href="{{ route('dashboard') }}" class="brand-logo">
-            <img class="logomsp" src="{{asset('images/logomsp.png')}}" alt="">
-        </a>
+
+        @if (Auth::check())
+            @if (Auth::user()->role === 'admin')
+                <a href="{{ route('dashboard') }}" class="brand-logo">
+                    <img class="logomsp" src="{{ asset('images/logomsp.png') }}" alt="">
+                </a>
+            @elseif (Auth::user()->role === 'branch')
+                <a href="{{ route('dashboard_branch') }}" class="brand-logo">
+                    <img class="logomsp" src="{{ asset('images/logomsp.png') }}" alt="">
+                </a>
+            @endif
+        @endif
+
 
         <div class="nav-control">
             <div class="hamburger">
