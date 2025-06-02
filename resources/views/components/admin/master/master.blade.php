@@ -55,224 +55,240 @@
                             <div class="modal-content">
                                 <div class="modal-header text-dark">
                                     <h5 class="modal-title" id="addModalLabel">Add Member</h5>
-                                       <button type="button" class="close" data-dismiss="modal">
-                                                    <span>&times;</span>
-                                                </button>
+                                    <button type="button" class="close" data-dismiss="modal">
+                                        <span>&times;</span>
+                                    </button>
                                 </div>
 
                                 <div class="modal-body">
                                     <div class="container-fluid">
-                                        <div class="row g-3">
-                                            {{-- Row 1: Branch, CID, Employee ID --}}
+                                        <div class="row">
+                                            <!-- Personal Information Section -->
+                                            <div class="col-12 mb-3">
+                                                <h5>Personal Information</h5>
+                                            </div>
+
                                             <div class="col-md-4">
-                                                <label class="form-label">Branch</label>
-                                                <div class="dropdown">
-                                                    <button data-toggle="dropdown"
-                                                        class="btn btn-primary dropdown-toggle w-100 text-left"
-                                                        type="button" aria-expanded="false" id="branchDropdownBtn">
-                                                        Select Branch
-                                                    </button>
-                                                    <div class="dropdown-menu" aria-labelledby="branchDropdownBtn">
+                                                <div class="form-group">
+                                                    <label class="form-label">Branch</label>
+                                                    <select class="form-control" name="branch_id" required>
+                                                        <option value="">Select Branch</option>
                                                         @foreach ($branches as $branch)
-                                                            <a href="javascript:void(0)"
-                                                                class="dropdown-item branch-item"
-                                                                data-id="{{ $branch->id }}">{{ $branch->name }}</a>
+                                                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                                         @endforeach
-                                                    </div>
-                                                    <input type="hidden" name="branch_id" id="branch_id" required>
+                                                    </select>
                                                 </div>
                                             </div>
 
                                             <div class="col-md-4">
-                                                <label class="form-label">CID</label>
-                                                <input type="text" name="cid" class="form-control" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Employee ID</label>
-                                                <input type="text" name="emp_id" class="form-control">
+                                                <div class="form-group">
+                                                    <label class="form-label">CID</label>
+                                                    <input type="text" name="cid" class="form-control" required>
+                                                </div>
                                             </div>
 
-                                            {{-- Row 2: First Name, Last Name, Account Name --}}
                                             <div class="col-md-4">
-                                                <label class="form-label">First Name</label>
-                                                <input type="text" name="fname" class="form-control" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Last Name</label>
-                                                <input type="text" name="lname" class="form-control" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Account Name</label>
-                                                <input type="text" name="account_name" class="form-control">
+                                                <div class="form-group">
+                                                    <label class="form-label">Employee ID</label>
+                                                    <input type="text" name="emp_id" class="form-control">
+                                                </div>
                                             </div>
 
-                                            {{-- Row 3: Address (full width) --}}
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="form-label">First Name</label>
+                                                    <input type="text" name="fname" class="form-control" required>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="form-label">Last Name</label>
+                                                    <input type="text" name="lname" class="form-control" required>
+                                                </div>
+                                            </div>
+
                                             <div class="col-md-12">
-                                                <label class="form-label">Address</label>
-                                                <textarea name="address" class="form-control" rows="2"></textarea>
-                                            </div>
-
-                                            {{-- Row 4: Birth, Start, End Dates --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Birth Date</label>
-                                                <input type="date" name="birth_date" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Start Date</label>
-                                                <input type="date" name="start_date" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">End Date</label>
-                                                <input type="date" name="end_date" class="form-control">
-                                            </div>
-
-                                            {{-- Row 5: Registered, Hold, Expiry --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Date Registered</label>
-                                                <input type="date" name="date_registered" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Start Hold</label>
-                                                <input type="date" name="start_hold" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Expiry Date</label>
-                                                <input type="date" name="expiry_date" class="form-control">
-                                            </div>
-
-                                            {{-- Row 6: Gender, Type, Classification --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Gender</label>
-                                                <div class="dropdown">
-                                                    <button data-toggle="dropdown"
-                                                        class="btn btn-primary dropdown-toggle w-100 text-left"
-                                                        type="button" aria-expanded="false" id="genderDropdownBtn">
-                                                        Select
-                                                    </button>
-                                                    <div class="dropdown-menu" aria-labelledby="genderDropdownBtn">
-                                                        <a href="javascript:void(0)" class="dropdown-item gender-item"
-                                                            data-value="">-- Select --</a>
-                                                        <a href="javascript:void(0)" class="dropdown-item gender-item"
-                                                            data-value="male">Male</a>
-                                                        <a href="javascript:void(0)" class="dropdown-item gender-item"
-                                                            data-value="female">Female</a>
-                                                        <a href="javascript:void(0)" class="dropdown-item gender-item"
-                                                            data-value="other">Other</a>
-                                                    </div>
-                                                    <input type="hidden" name="gender" id="gender" required>
+                                                <div class="form-group">
+                                                    <label class="form-label">Address</label>
+                                                    <textarea name="address" class="form-control" rows="2"></textarea>
                                                 </div>
                                             </div>
 
                                             <div class="col-md-4">
-                                                <label class="form-label">Customer Type</label>
-                                                <input type="text" name="customer_type" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Customer Classification</label>
-                                                <input type="text" name="customer_classification"
-                                                    class="form-control">
-                                            </div>
-
-                                            {{-- Row 7: Occupation, Industry, Area Officer --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Occupation</label>
-                                                <input type="text" name="occupation" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Industry</label>
-                                                <input type="text" name="industry" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Area Officer</label>
-                                                <input type="text" name="area_officer" class="form-control">
-                                            </div>
-
-                                            {{-- Row 8: Area, Approval No, Billing Period --}}
-                                            <div class="col-md-4">
-                                                <label class="form-label">Area</label>
-                                                <input type="text" name="area" class="form-control">
-                                            </div>
-
-                                              <div class="col-md-4">
-                                                <label class="form-label">Account Status</label>
-                                                <div class="dropdown">
-                                                    <button data-toggle="dropdown"
-                                                        class="btn btn-primary dropdown-toggle w-100 text-left"
-                                                        type="button" aria-expanded="false"
-                                                        id="accountStatusDropdownBtn">
-                                                        Select
-                                                    </button>
-                                                    <div class="dropdown-menu"
-                                                        aria-labelledby="accountStatusDropdownBtn">
-                                                        <a href="javascript:void(0)"
-                                                            class="dropdown-item account-status-item"
-                                                            data-value="">-- Select --</a>
-                                                        <a href="javascript:void(0)"
-                                                            class="dropdown-item account-status-item"
-                                                            data-value="deduction">Deduction</a>
-                                                        <a href="javascript:void(0)"
-                                                            class="dropdown-item account-status-item"
-                                                            data-value="non-deduction">Non-Deduction</a>
-                                                    </div>
-                                                    <input type="hidden" name="account_status" id="account_status"
-                                                        required>
+                                                <div class="form-group">
+                                                    <label class="form-label">Birth Date</label>
+                                                    <input type="date" name="birth_date" class="form-control">
                                                 </div>
                                             </div>
 
-                                            {{-- <div class="col-md-4">
-                                                <label class="form-label">Approval No</label>
-                                                <input type="text" name="approval_no" class="form-control">
-                                            </div> --}}
                                             <div class="col-md-4">
-                                                <label class="form-label">Billing Period</label>
-                                                <input type="text" name="billing_period" class="form-control">
+                                                <div class="form-group">
+                                                    <label class="form-label">Date Registered</label>
+                                                    <input type="date" name="date_registered" class="form-control">
+                                                </div>
                                             </div>
 
-                                            {{-- Row 10: Balances --}}
                                             <div class="col-md-4">
-                                                <label class="form-label">Savings Balance</label>
-                                                <input type="number" step="0.01" name="savings_balance"
-                                                    class="form-control">
+                                                <div class="form-group">
+                                                    <label class="form-label">Gender</label>
+                                                    <select class="form-control" name="gender">
+                                                        <option value="">Select Gender</option>
+                                                        <option value="male">Male</option>
+                                                        <option value="female">Female</option>
+                                                        <option value="other">Other</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label">Share Balance</label>
-                                                <input type="number" step="0.01" name="share_balance"
-                                                    class="form-control">
+
+                                            <!-- Additional Information Section -->
+                                            <div class="col-12 mb-3 mt-4">
+                                                <h5>Additional Information</h5>
                                             </div>
+
                                             <div class="col-md-4">
-                                                <label class="form-label">Loan Balance</label>
-                                                <input type="number" step="0.01" name="loan_balance"
-                                                    class="form-control">
+                                                <div class="form-group">
+                                                    <label class="form-label">Customer Type</label>
+                                                    <input type="text" name="customer_type" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Customer Classification</label>
+                                                    <input type="text" name="customer_classification" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Occupation</label>
+                                                    <input type="text" name="occupation" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Industry</label>
+                                                    <input type="text" name="industry" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Area Officer</label>
+                                                    <input type="text" name="area_officer" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Area</label>
+                                                    <input type="text" name="area" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <!-- Financial Information Section -->
+                                            <div class="col-12 mb-3 mt-4">
+                                                <h5>Financial Information</h5>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Savings Balance</label>
+                                                    <input type="number" step="0.01" name="savings_balance" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Share Balance</label>
+                                                    <input type="number" step="0.01" name="share_balance" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Loan Balance</label>
+                                                    <input type="number" step="0.01" name="loan_balance" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <!-- Deduction Settings Section -->
+                                            <div class="col-12 mb-3 mt-4">
+                                                <h5>Deduction Settings</h5>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="form-label">Account Status</label>
+                                                    <select class="form-control" name="account_status">
+                                                        <option value="">Select Status</option>
+                                                        <option value="deduction">Deduction</option>
+                                                        <option value="non-deduction">Non-Deduction</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="form-label">Approval Number</label>
+                                                    <input type="text" name="approval_no" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="form-label">Start Hold</label>
+                                                    <input type="date" name="start_hold" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label class="form-label">Expiry Date</label>
+                                                    <input type="date" name="expiry_date" class="form-control">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                     <button type="submit" class="btn btn-success">Save Member</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
-
-
+                <!-- End Add Member Modal -->
 
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">Member Datatable</h4>
+                            <div class="card-header d-flex justify-content-between align-items-center bg-light py-3">
+                                <div>
+                                    <h4 class="card-title mb-0 text-primary">Member Datatable</h4>
+                                    <small class="text-muted">Manage all members in the system</small>
+                                </div>
 
-                                <div class="d-flex align-items-center">
-                                    <form method="GET" action="{{ url()->current() }}" class="d-flex">
-                                        <input type="text" name="search" value="{{ request('search') }}"
-                                            class="form-control" placeholder="Search..." />
-                                        <button type="submit" class="btn btn-primary ms-2">Search</button>
+                                <div class="d-flex align-items-center gap-3">
+                                    <form method="GET" action="{{ url()->current() }}" class="d-flex gap-2">
+                                        <div class="input-group">
+                                            <input type="text" name="search" value="{{ request('search') }}"
+                                                class="form-control" placeholder="Search members..." />
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fa fa-search"></i> Search
+                                            </button>
+                                        </div>
                                     </form>
 
-                                    <a href="#" class="btn btn-success ms-3" data-toggle="modal"
-                                        data-target="#addModal">Add</a>
+                                    <a href="#" class="btn btn-success d-flex align-items-center" data-toggle="modal"
+                                        data-target="#addModal">
+                                        <i class="fa fa-plus-circle me-2"></i>
+                                        Add New Member
+                                    </a>
                                 </div>
                             </div>
 
@@ -406,207 +422,273 @@
                                         @csrf
                                         @method('PUT')
                                         <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Edit Member</h5>
-                                                <button type="button" class="close" data-dismiss="modal">
-                                                    <span>&times;</span>
-                                                </button>
+                                            <div class="modal-header text-dark">
+                                                <h5 class="modal-title">
+                                                    <i class="fa fa-edit me-2"></i>Edit Member
+                                                </h5>
+
                                             </div>
-                                            <h5 class="member-profile">Member Profile</h5>
-                                            <div class="modal-body row">
 
-                                                <input type="hidden" name="id" id="edit-id">
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-cid">CID</label>
-                                                    <input type="text" class="form-control" name="cid"
-                                                        id="edit-cid">
-                                                </div>
+                                            <div class="modal-body">
+                                                <div class="mb-4">
+                                                    <h6 class="section-title bg-light p-2 rounded">
+                                                        <i class="fa fa-user me-2"></i>Member Profile
+                                                    </h6>
+                                                    <input type="hidden" name="id" id="edit-id">
 
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-emp_id">Employee ID</label>
-                                                    <input type="text" class="form-control" name="emp_id"
-                                                        id="edit-emp_id">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-fname">First Name</label>
-                                                    <input type="text" class="form-control" name="fname"
-                                                        id="edit-fname">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-lname">Last Name</label>
-                                                    <input type="text" class="form-control" name="lname"
-                                                        id="edit-lname">
-                                                </div>
-
-                                                <div class="form-group col-md-12">
-                                                    <label for="edit-address">Address</label>
-                                                    <textarea class="form-control" name="address" id="edit-address"></textarea>
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-birth_date">Birth Date</label>
-                                                    <input type="date" class="form-control" name="birth_date"
-                                                        id="edit-birth_date">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-date_registered">Date Registered</label>
-                                                    <input type="date" class="form-control" name="date_registered"
-                                                        id="edit-date_registered">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-gender">Gender</label>
-                                                    <select class="form-control" name="gender" id="edit-gender">
-                                                        <option value="">Select</option>
-                                                        <option value="male">Male</option>
-                                                        <option value="female">Female</option>
-                                                        <option value="other">Other</option>
-                                                    </select>
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-customer_type">Customer Type</label>
-                                                    <input type="text" class="form-control" name="customer_type"
-                                                        id="edit-customer_type">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-customer_classification">Classification</label>
-                                                    <input type="text" class="form-control"
-                                                        name="customer_classification"
-                                                        id="edit-customer_classification">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-occupation">Occupation</label>
-                                                    <input type="text" class="form-control" name="occupation"
-                                                        id="edit-occupation">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-industry">Industry</label>
-                                                    <input type="text" class="form-control" name="industry"
-                                                        id="edit-industry">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-area_officer">Area Officer</label>
-                                                    <input type="text" class="form-control" name="area_officer"
-                                                        id="edit-area_officer">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-area">Area</label>
-                                                    <input type="text" class="form-control" name="area"
-                                                        id="edit-area">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-status">Status</label>
-                                                    <select class="form-control" name="status" id="edit-status">
-                                                        <option value="active">Active</option>
-                                                        <option value="merged">Merged</option>
-                                                    </select>
-                                                </div>
-
-
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-branch_id">Branch</label>
-                                                    <select class="form-control" id="edit-branch_id"
-                                                        name="branch_id">
-                                                        <option value="">Select Branch</option>
-                                                        @foreach ($branches as $branch)
-                                                            <option value="{{ $branch->id }}">{{ $branch->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-savings_balance">Savings</label>
-                                                    <input type="number" step="0.01" class="form-control"
-                                                        name="savings_balance" id="edit-savings_balance">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-share_balance">Shares</label>
-                                                    <input type="number" step="0.01" class="form-control"
-                                                        name="share_balance" id="edit-share_balance">
-                                                </div>
-
-                                                <div class="form-group col-md-6">
-                                                    <label for="edit-loan_balance">Loan Balance</label>
-                                                    <input type="number" step="0.01" class="form-control"
-                                                        name="loan_balance" id="edit-loan_balance">
-                                                </div>
-
-                                                <div class="form-group col-md-12">
-                                                    <h5>Deduction Settings</h5>
-                                                    <div class="form-row">
-                                                        <div class="form-group col-md-6">
-                                                            <label for="edit-account_status">Request for Hold</label>
-                                                            <select class="form-control" name="account_status"
-                                                                id="edit-account_status">
-                                                                <option value="">Select</option>
-                                                                <option value="deduction">Deduction</option>
-                                                                <option value="non-deduction">Non-Deduction</option>
-                                                            </select>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-cid">CID</label>
+                                                                <input type="text" class="form-control" name="cid" id="edit-cid">
+                                                            </div>
                                                         </div>
 
-                                                        <div class="form-group col-md-6">
-                                                            <label for="edit-approval_no">Approval Number</label>
-                                                            <input type="text" class="form-control"
-                                                                name="approval_no" id="edit-approval_no">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-emp_id">Employee ID</label>
+                                                                <input type="text" class="form-control" name="emp_id" id="edit-emp_id">
+                                                            </div>
                                                         </div>
 
-                                                        <div class="form-group col-md-6">
-                                                            <label for="edit-start_hold">Start Hold</label>
-                                                            <input type="date" class="form-control"
-                                                                name="start_hold" id="edit-start_hold">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-fname">First Name</label>
+                                                                <input type="text" class="form-control" name="fname" id="edit-fname">
+                                                            </div>
                                                         </div>
 
-                                                        <div class="form-group col-md-6">
-                                                            <label for="edit-expiry_date">Expiry Date</label>
-                                                            <input type="date" class="form-control"
-                                                                name="expiry_date" id="edit-expiry_date">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-lname">Last Name</label>
+                                                                <input type="text" class="form-control" name="lname" id="edit-lname">
+                                                            </div>
                                                         </div>
-
                                                     </div>
                                                 </div>
 
-                                                <div class="col-12">
-                                                    <h5>All Loans</h5>
-                                                    <div id="loan-counter" class="mb-2 font-weight-bold"></div>
+                                                <div class="mb-4">
+                                                    <h6 class="section-title bg-light p-2 rounded">
+                                                        <i class="fa fa-info-circle me-2"></i>Additional Information
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-12">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-address">Address</label>
+                                                                <textarea class="form-control" name="address" id="edit-address" rows="2"></textarea>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-birth_date">Birth Date</label>
+                                                                <input type="date" class="form-control" name="birth_date" id="edit-birth_date">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-date_registered">Date Registered</label>
+                                                                <input type="date" class="form-control" name="date_registered" id="edit-date_registered">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-gender">Gender</label>
+                                                                <select class="form-control" name="gender" id="edit-gender">
+                                                                    <option value="">Select</option>
+                                                                    <option value="male">Male</option>
+                                                                    <option value="female">Female</option>
+                                                                    <option value="other">Other</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-branch_id">Branch</label>
+                                                                <select class="form-control" id="edit-branch_id" name="branch_id">
+                                                                    <option value="">Select Branch</option>
+                                                                    @foreach ($branches as $branch)
+                                                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <h6 class="section-title bg-light p-2 rounded">
+                                                        <i class="fa fa-money-bill me-2"></i>Financial Information
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-savings_balance">Savings Balance</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text">₱</span>
+                                                                    <input type="number" step="0.01" class="form-control" name="savings_balance" id="edit-savings_balance">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-share_balance">Share Balance</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text">₱</span>
+                                                                    <input type="number" step="0.01" class="form-control" name="share_balance" id="edit-share_balance">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-4">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-loan_balance">Loan Balance</label>
+                                                                <div class="input-group">
+                                                                    <span class="input-group-text">₱</span>
+                                                                    <input type="number" step="0.01" class="form-control" name="loan_balance" id="edit-loan_balance">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <h6 class="section-title bg-light p-2 rounded">
+                                                        <i class="fa fa-cog me-2"></i>Account Settings
+                                                    </h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-account_status">Account Status</label>
+                                                                <select class="form-control" name="account_status" id="edit-account_status">
+                                                                    <option value="">Select</option>
+                                                                    <option value="deduction">Deduction</option>
+                                                                    <option value="non-deduction">Non-Deduction</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-approval_no">Approval Number</label>
+                                                                <input type="text" class="form-control" name="approval_no" id="edit-approval_no">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-start_hold">Start Hold</label>
+                                                                <input type="date" class="form-control" name="start_hold" id="edit-start_hold">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-expiry_date">Expiry Date</label>
+                                                                <input type="date" class="form-control" name="expiry_date" id="edit-expiry_date">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-4">
+                                                    <h6 class="section-title bg-light p-2 rounded">
+                                                        <i class="fa fa-file-invoice-dollar me-2"></i>Loan Information
+                                                    </h6>
+                                                    <div id="loan-counter" class="alert alert-info mb-3"></div>
                                                     <div id="edit-loan-forecast-container"></div>
                                                 </div>
-
                                             </div>
 
-                                            <div class="modal-footer d-flex justify-content-between">
-                                                <div>
-                                                    <button type="button" class="btn btn-secondary"
-                                                        id="btnPrev">Previous</button>
-                                                    <button type="button" class="btn btn-secondary"
-                                                        id="btnNext">Next</button>
+                                            <div class="modal-footer bg-light">
+                                                <div class="me-auto">
+                                                    <button type="button" class="btn btn-outline-secondary" id="btnPrev">
+                                                        <i class="fa fa-arrow-left me-1"></i>Previous
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary" id="btnNext">
+                                                        Next<i class="fa fa-arrow-right ms-1"></i>
+                                                    </button>
                                                 </div>
-                                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                                                <div>
+                                                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fa fa-save me-1"></i>Save Changes
+                                                    </button>
+                                                </div>
                                             </div>
-
                                         </div>
                                     </form>
-
-
                                 </div>
-
-
                             </div>
 
+                            <style>
+                                .modal-lg {
+                                    max-width: 900px;
+                                }
 
+                                .section-title {
+                                    color: #2c3e50;
+                                    font-size: 1rem;
+                                    margin-bottom: 1rem;
+                                    border-left: 4px solid #3498db;
+                                }
+
+                                .form-label {
+                                    font-weight: 500;
+                                    color: #34495e;
+                                    margin-bottom: 0.5rem;
+                                }
+
+                                .form-control {
+                                    border-radius: 0.375rem;
+                                    border: 1px solid #ddd;
+                                    padding: 0.5rem 0.75rem;
+                                }
+
+                                .form-control:focus {
+                                    border-color: #3498db;
+                                    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+                                }
+
+                                .input-group-text {
+                                    background-color: #f8f9fa;
+                                    border: 1px solid #ddd;
+                                }
+
+                                .modal-body {
+                                    padding: 1.5rem;
+                                }
+
+                                .btn {
+                                    padding: 0.5rem 1rem;
+                                    border-radius: 0.375rem;
+                                }
+
+                                .btn-primary {
+                                    background-color: #3498db;
+                                    border-color: #3498db;
+                                }
+
+                                .btn-primary:hover {
+                                    background-color: #2980b9;
+                                    border-color: #2980b9;
+                                }
+
+                                .modal-content {
+                                    border-radius: 0.5rem;
+                                    overflow: hidden;
+                                }
+
+                                .alert-info {
+                                    background-color: #ebf5fb;
+                                    border-color: #3498db;
+                                    color: #2c3e50;
+                                }
+                            </style>
 
                             <div class="modal fade" id="viewModal" tabindex="-1" role="dialog"
                                 aria-labelledby="viewModalLabel" aria-hidden="true">
@@ -721,6 +803,29 @@
                             <style>
                                 p.small.text-muted {
                                     display: none;
+                                }
+
+                                .card-header {
+                                    border-bottom: 1px solid rgba(0,0,0,.125);
+                                    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+                                }
+
+                                .input-group {
+                                    min-width: 300px;
+                                }
+
+                                .btn-success {
+                                    transition: all 0.3s ease;
+                                }
+
+                                .btn-success:hover {
+                                    transform: translateY(-1px);
+                                    box-shadow: 0 4px 6px rgba(0,0,0,.1);
+                                }
+
+                                .card-title {
+                                    font-weight: 600;
+                                    letter-spacing: 0.5px;
                                 }
                             </style>
 

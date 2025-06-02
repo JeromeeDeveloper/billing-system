@@ -6,13 +6,14 @@ use App\Models\Branch;
 use App\Models\Member;
 use App\Models\MasterList;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class MasterController extends Controller
 {
 
     public function index(Request $request)
     {
-        $billingPeriod = auth()->user()->billing_period;
+        $billingPeriod = Auth::user()->billing_period;
         $search = $request->input('search');
 
         $masterlists = MasterList::with([
@@ -56,8 +57,6 @@ class MasterController extends Controller
         'loan_balance' => 'nullable|numeric',
         'birth_date' => 'nullable|date',
         'expiry_date' => 'nullable|date',
-        'start_date' => 'nullable|date',
-        'end_date' => 'nullable|date',
         'date_registered' => 'nullable|date',
         'gender' => 'nullable|in:male,female,other',
         'customer_type' => 'nullable|string',
@@ -71,10 +70,23 @@ class MasterController extends Controller
         'start_hold' => 'nullable|date',
         'account_status' => 'nullable|in:deduction,non-deduction',
         'branch_id' => 'required|exists:branches,id',
-        'billing_period' => 'nullable|string',
     ]);
 
-    $member = Member::create($request->except(['savings_balance', 'share_balance']));
+    // Get current billing period from authenticated user
+    $billingPeriod = Auth::user()->billing_period;
+
+    if (!$billingPeriod) {
+        return redirect()->back()->with('error', 'Please set a billing period in the dashboard first.');
+    }
+
+    // Merge the billing period into the request data
+    $memberData = array_merge(
+        $request->except(['savings_balance', 'share_balance']),
+        ['billing_period' => $billingPeriod]
+    );
+
+    // Create the member with billing period
+    $member = Member::create($memberData);
 
     if ($request->filled('savings_balance')) {
         $member->savings()->create([
@@ -92,13 +104,21 @@ class MasterController extends Controller
         ]);
     }
 
+    // Create master list entry for the new member
+    MasterList::create([
+        'member_id' => $member->id,
+        'branches_id' => $member->branch_id,
+        'billing_period' => $billingPeriod,
+        'status' => 'deduction'
+    ]);
+
     return redirect()->back()->with('success', 'Member successfully added.');
 }
 
 
      public function index_branch(Request $request)
     {
-        $billingPeriod = auth()->user()->billing_period;
+        $billingPeriod = Auth::user()->billing_period;
         $search = $request->input('search');
 
         $masterlists = MasterList::with([
