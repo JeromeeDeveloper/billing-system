@@ -19,6 +19,7 @@ class Shares extends Model
         'current_balance',
         'available_balance',
         'interest',
+        'product_name',
     ];
 
     protected $casts = [

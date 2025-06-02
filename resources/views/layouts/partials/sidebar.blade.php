@@ -52,7 +52,6 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('loans') }}">Loan Priority</a></li>
-                        <li><a href="{{ route('list') }}">Member Loan</a></li>
                     </ul>
                 </li>
 
@@ -82,6 +81,9 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('member') }}">Members Datatable</a></li>
+                        <li><a href="{{ route('savings') }}">Savings Accounts</a></li>
+                        <li><a href="{{ route('shares') }}">Share Accounts</a></li>
+                        <li><a href="{{ route('list') }}">Loan Accounts</a></li>
                     </ul>
                 </li>
 
@@ -114,6 +116,9 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('master.branch') }}">Master List Datatable</a></li>
+                        <li><a href="{{ route('savings.branch') }}">Savings Accounts</a></li>
+                        <li><a href="{{ route('shares.branch') }}">Share Accounts</a></li>
+                        <li><a href="{{ route('list') }}">Loan Accounts</a></li>
                     </ul>
                 </li>
 

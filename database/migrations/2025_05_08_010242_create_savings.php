@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('member_id')->nullable()->constrained('members')->onDelete('cascade');
             $table->string('account_number')->unique();
             $table->string('product_code')->nullable();
+            $table->string('product_name')->nullable();
             $table->date('open_date');
             $table->decimal('current_balance', 15, 2)->nullable();
             $table->decimal('available_balance', 15, 2)->nullable();

@@ -15,6 +15,7 @@ class Saving extends Model
         'member_id',
         'account_number',
         'product_code',
+        'product_name',
         'open_date',
         'current_balance',
         'available_balance',

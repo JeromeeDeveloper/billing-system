@@ -13,6 +13,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\RemittanceController;
 use App\Http\Controllers\DocumentUploadController;
+use App\Http\Controllers\SavingsController;
+use App\Http\Controllers\SharesController;
 
 //Login
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
@@ -70,6 +72,17 @@ Route::put('/members/{id}', [MasterController::class, 'update']);
 Route::delete('/members/{id}', [MasterController::class, 'destroy']);
 Route::post('Admin/master/add', [MasterController::class, 'store'])->name('members.store');
 
+//Savings
+Route::get('/savings', [SavingsController::class, 'index'])->name('savings');
+Route::post('/savings', [SavingsController::class, 'store'])->name('savings.store');
+Route::put('/savings/{id}', [SavingsController::class, 'update'])->name('savings.update');
+Route::delete('/savings/{id}', [SavingsController::class, 'destroy'])->name('savings.destroy');
+
+//Shares
+Route::get('/shares', [SharesController::class, 'index'])->name('shares');
+Route::post('/shares', [SharesController::class, 'store'])->name('shares.store');
+Route::put('/shares/{id}', [SharesController::class, 'update'])->name('shares.update');
+Route::delete('/shares/{id}', [SharesController::class, 'destroy'])->name('shares.destroy');
 
 });
 
@@ -94,5 +107,11 @@ Route::post('/Branch/billing/approve', [BillingController::class, 'approve'])->n
 
 Route::post('/Branch/upload', [DocumentUploadController::class, 'store_branch'])->name('document.upload.branch');
 Route::get('/Branch/Documents', [DocumentUploadController::class, 'index_branch'])->name('documents.branch');
+
+//Savings
+Route::get('/Branch/savings', [SavingsController::class, 'index_branch'])->name('savings.branch');
+
+//Shares
+Route::get('/Branch/shares', [SharesController::class, 'index_branch'])->name('shares.branch');
 
 });
