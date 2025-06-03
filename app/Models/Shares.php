@@ -20,13 +20,19 @@ class Shares extends Model
         'available_balance',
         'interest',
         'product_name',
+        'approval_no',
+        'start_hold',
+        'expiry_date',
+        'account_status'
     ];
 
     protected $casts = [
         'open_date' => 'date',
+        'start_hold' => 'date',
+        'expiry_date' => 'date',
         'current_balance' => 'decimal:2',
         'available_balance' => 'decimal:2',
-        'interest' => 'decimal:2',
+        'interest' => 'decimal:2'
     ];
 
     /**

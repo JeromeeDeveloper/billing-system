@@ -1079,6 +1079,25 @@
                         <label>Open Date</label>
                         <input type="date" class="form-control" value="${saving.open_date || ''}" readonly>
                     </div>
+                    <div class="form-group col-md-6">
+                        <label>Approval Number</label>
+                        <input type="text" class="form-control" value="${saving.approval_no || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Start Hold</label>
+                        <input type="date" class="form-control" value="${saving.start_hold || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Expiry Date</label>
+                        <input type="date" class="form-control" value="${saving.expiry_date || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Account Status</label>
+                        <select class="form-control" disabled>
+                            <option value="deduction" ${saving.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
+                            <option value="non-deduction" ${saving.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
+                        </select>
+                    </div>
                 </div>
             </div>`;
 
@@ -1127,6 +1146,25 @@
                     <div class="form-group col-md-6">
                         <label>Open Date</label>
                         <input type="date" class="form-control" value="${share.open_date || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Approval Number</label>
+                        <input type="text" class="form-control" value="${share.approval_no || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Start Hold</label>
+                        <input type="date" class="form-control" value="${share.start_hold || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Expiry Date</label>
+                        <input type="date" class="form-control" value="${share.expiry_date || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Account Status</label>
+                        <select class="form-control" disabled>
+                            <option value="deduction" ${share.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
+                            <option value="non-deduction" ${share.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
+                        </select>
                     </div>
                 </div>
             </div>`;
@@ -1179,6 +1217,25 @@
             <div class="form-group col-md-6">
                 <label>Penalty Due</label>
                 <input type="number" step="0.01" name="loan_forecasts[${index}][penalty_due]" class="form-control" value="${loan.penalty_due || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Approval Number</label>
+                <input type="text" name="loan_forecasts[${index}][approval_no]" class="form-control" value="${loan.approval_no || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Start Hold</label>
+                <input type="date" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Expiry Date</label>
+                <input type="date" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${loan.expiry_date || ''}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Account Status</label>
+                <select name="loan_forecasts[${index}][account_status]" class="form-control">
+                    <option value="deduction" ${loan.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
+                    <option value="non-deduction" ${loan.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
+                </select>
             </div>
         </div>
     </div>`;
@@ -1243,6 +1300,10 @@
                         <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
                         <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>
+                        <p><strong>Approval Number:</strong> ${loan.approval_no || 'N/A'}</p>
+                        <p><strong>Start Hold:</strong> ${loan.start_hold || 'N/A'}</p>
+                        <p><strong>Expiry Date:</strong> ${loan.expiry_date || 'N/A'}</p>
+                        <p><strong>Account Status:</strong> ${loan.account_status || 'N/A'}</p>
                         <p><em>Loan ${index + 1} of ${loans.length}</em></p>
                     </div>`;
 
@@ -1277,6 +1338,10 @@
                         <p><strong>Available Balance:</strong> ${saving.available_balance || '0.00'}</p>
                         <p><strong>Interest:</strong> ${saving.interest || '0.00'}</p>
                         <p><strong>Open Date:</strong> ${saving.open_date || 'N/A'}</p>
+                        <p><strong>Approval Number:</strong> ${saving.approval_no || 'N/A'}</p>
+                        <p><strong>Start Hold:</strong> ${saving.start_hold || 'N/A'}</p>
+                        <p><strong>Expiry Date:</strong> ${saving.expiry_date || 'N/A'}</p>
+                        <p><strong>Account Status:</strong> ${saving.account_status || 'N/A'}</p>
                         <p><em>Savings Account ${index + 1} of ${savings.length}</em></p>
                     </div>`;
 
@@ -1311,6 +1376,10 @@
                         <p><strong>Available Balance:</strong> ${share.available_balance || '0.00'}</p>
                         <p><strong>Interest:</strong> ${share.interest || '0.00'}</p>
                         <p><strong>Open Date:</strong> ${share.open_date || 'N/A'}</p>
+                        <p><strong>Approval Number:</strong> ${share.approval_no || 'N/A'}</p>
+                        <p><strong>Start Hold:</strong> ${share.start_hold || 'N/A'}</p>
+                        <p><strong>Expiry Date:</strong> ${share.expiry_date || 'N/A'}</p>
+                        <p><strong>Account Status:</strong> ${share.account_status || 'N/A'}</p>
                         <p><em>Share Account ${index + 1} of ${shares.length}</em></p>
                     </div>`;
 
