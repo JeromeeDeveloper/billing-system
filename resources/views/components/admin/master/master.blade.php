@@ -313,7 +313,7 @@
                                                 <th>Savings</th>
                                                 <th>Share Balance</th>
                                                 <th>Loan Balance</th>
-                                                <th>Loan Accounts</th>
+
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -327,15 +327,7 @@
                                                     <td>{{ $item->member->savings_balance ?? '' }}</td>
                                                     <td>{{ $item->member->share_balance ?? 'N/A' }}</td>
                                                     <td>{{ $item->member->loan_balance ?? 'N/A' }}</td>
-                                                    <td>
-                                                        @if ($item->member && $item->member->loanForecasts->isNotEmpty())
-                                                            @foreach ($item->member->loanForecasts as $loan)
-                                                                <div>{{ $loan->loan_acct_no }}</div>
-                                                            @endforeach
-                                                        @else
-                                                            <div>N/A</div>
-                                                        @endif
-                                                    </td>
+
 
                                                     <td>
 
@@ -348,9 +340,6 @@
                                                             data-fname="{{ $item->member->fname }}"
                                                             data-lname="{{ $item->member->lname }}"
                                                             data-address="{{ $item->member->address }}"
-                                                            data-savings_balance="{{ $item->member->savingsBalance }}"
-                                                            data-share_balance="{{ $item->member->shareBalance }}"
-                                                            data-loan_balance="{{ $item->member->loan_balance }}"
                                                             data-birth_date="{{ optional($item->member->birth_date)->format('Y-m-d') }}"
                                                             data-date_registered="{{ optional($item->member->date_registered)->format('Y-m-d') }}"
                                                             data-gender="{{ $item->member->gender }}"
@@ -367,7 +356,9 @@
                                                             data-branch_id="{{ $item->member->branch_id }}"
                                                             data-additional_address="{{ $item->member->additional_address }}"
                                                             data-account_status="{{ $item->member->account_status }}"
-                                                            data-loans='{!! json_encode($item->member->loan_forecasts_data) !!}'>
+                                                            data-loans='{!! json_encode($item->member->loan_forecasts_data) !!}'
+                                                            data-savings='{!! json_encode($item->member->savings) !!}'
+                                                            data-shares='{!! json_encode($item->member->shares) !!}'>
                                                             Edit
                                                         </button>
 
@@ -380,9 +371,6 @@
                                                             data-emp_id="{{ $item->member->emp_id }}"
                                                             data-address="{{ e($item->member->address) }}"
                                                             data-branch="{{ $item->branch->name }}"
-                                                            data-savings_balance="{{ $item->member->savingsBalance }}"
-                                                            data-share_balance="{{ $item->member->shareBalance }}"
-                                                            data-loan_balance="{{ $item->member->loan_balance }}"
                                                             data-birth_date="{{ optional($item->member->birth_date)->format('Y-m-d') }}"
                                                             data-date_registered="{{ optional($item->member->date_registered)->format('Y-m-d') }}"
                                                             data-gender="{{ $item->member->gender }}"
@@ -395,7 +383,9 @@
                                                             data-status="{{ $item->member->status }}"
                                                             data-additional_address="{{ e($item->member->additional_address) }}"
                                                             data-account_status="{{ $item->member->account_status }}"
-                                                            data-loans='@json($item->member->loan_forecasts_data)'>
+                                                            data-loans='@json($item->member->loan_forecasts_data)'
+                                                            data-savings='@json($item->member->savings)'
+                                                            data-shares='@json($item->member->shares)'>
                                                             View
                                                         </button>
 
@@ -418,7 +408,7 @@
                                                 <th>Savings</th>
                                                 <th>Share Balance</th>
                                                 <th>Loan Balance</th>
-                                                <th>Loan Accounts</th>
+
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
@@ -529,79 +519,35 @@
                                                     </div>
                                                 </div>
 
-                                                {{-- <div class="mb-4">
+                                                <div class="mb-4">
                                                     <h6 class="section-title bg-light p-2 rounded">
-                                                        <i class="fa fa-money-bill me-2"></i>Financial Information
+                                                        <i class="fa fa-piggy-bank me-2"></i>Savings Accounts
                                                     </h6>
-                                                    <div class="row g-3">
-                                                        <div class="col-md-4">
-                                                            <div class="form-group">
-                                                                <label class="form-label" for="edit-savings_balance">Savings Balance</label>
-                                                                <div class="input-group">
-                                                                    <span class="input-group-text">₱</span>
-                                                                    <input type="number" step="0.01" class="form-control" name="savings_balance" id="edit-savings_balance">
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-4">
-                                                            <div class="form-group">
-                                                                <label class="form-label" for="edit-share_balance">Share Balance</label>
-                                                                <div class="input-group">
-                                                                    <span class="input-group-text">₱</span>
-                                                                    <input type="number" step="0.01" class="form-control" name="share_balance" id="edit-share_balance">
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-4">
-                                                            <div class="form-group">
-                                                                <label class="form-label" for="edit-loan_balance">Loan Balance</label>
-                                                                <div class="input-group">
-                                                                    <span class="input-group-text">₱</span>
-                                                                    <input type="number" step="0.01" class="form-control" name="loan_balance" id="edit-loan_balance">
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                    <div id="savings-counter" class="alert alert-info mb-3"></div>
+                                                    <div id="edit-savings-container"></div>
+                                                    <div class="d-flex justify-content-between mt-2">
+                                                        <button type="button" id="btnPrevSavings" class="btn btn-outline-primary">
+                                                            <i class="fa fa-arrow-left me-1"></i>Previous
+                                                        </button>
+                                                        <button type="button" id="btnNextSavings" class="btn btn-outline-primary">
+                                                            Next<i class="fa fa-arrow-right ms-1"></i>
+                                                        </button>
                                                     </div>
-                                                </div> --}}
+                                                </div>
 
                                                 <div class="mb-4">
                                                     <h6 class="section-title bg-light p-2 rounded">
-                                                        <i class="fa fa-cog me-2"></i>Account Settings
+                                                        <i class="fa fa-chart-pie me-2"></i>Share Accounts
                                                     </h6>
-                                                    <div class="row g-3">
-                                                        <div class="col-md-6">
-                                                            <div class="form-group">
-                                                                <label class="form-label" for="edit-account_status">Account Status</label>
-                                                                <select class="form-control" name="account_status" id="edit-account_status">
-                                                                    <option value="">Select</option>
-                                                                    <option value="deduction">Deduction</option>
-                                                                    <option value="non-deduction">Non-Deduction</option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-6">
-                                                            <div class="form-group">
-                                                                <label class="form-label" for="edit-approval_no">Approval Number</label>
-                                                                <input type="text" class="form-control" name="approval_no" id="edit-approval_no">
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-6">
-                                                            <div class="form-group">
-                                                                <label class="form-label" for="edit-start_hold">Start Hold</label>
-                                                                <input type="date" class="form-control" name="start_hold" id="edit-start_hold">
-                                                            </div>
-                                                        </div>
-
-                                                        <div class="col-md-6">
-                                                            <div class="form-group">
-                                                                <label class="form-label" for="edit-expiry_date">Expiry Date</label>
-                                                                <input type="date" class="form-control" name="expiry_date" id="edit-expiry_date">
-                                                            </div>
-                                                        </div>
+                                                    <div id="shares-counter" class="alert alert-info mb-3"></div>
+                                                    <div id="edit-shares-container"></div>
+                                                    <div class="d-flex justify-content-between mt-2">
+                                                        <button type="button" id="btnPrevShares" class="btn btn-outline-primary">
+                                                            <i class="fa fa-arrow-left me-1"></i>Previous
+                                                        </button>
+                                                        <button type="button" id="btnNextShares" class="btn btn-outline-primary">
+                                                            Next<i class="fa fa-arrow-right ms-1"></i>
+                                                        </button>
                                                     </div>
                                                 </div>
 
@@ -616,12 +562,18 @@
 
                                             <div class="modal-footer bg-light">
                                                 <div class="me-auto">
-                                                    <button type="button" class="btn btn-outline-secondary" id="btnPrev">
-                                                        <i class="fa fa-arrow-left me-1"></i>Previous
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-secondary" id="btnNext">
-                                                        Next<i class="fa fa-arrow-right ms-1"></i>
-                                                    </button>
+                                                    <!-- Loan Navigation -->
+                                                    <div class="btn-group me-2">
+                                                        <button type="button" class="btn btn-outline-secondary" id="btnPrev">
+                                                            <i class="fa fa-arrow-left me-1"></i>Prev Loan
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-secondary" id="btnNext">
+                                                            Next Loan<i class="fa fa-arrow-right ms-1"></i>
+                                                        </button>
+                                                    </div>
+
+
+
                                                 </div>
                                                 <div>
                                                     <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
@@ -763,16 +715,54 @@
                                                 <hr>
 
                                                 <div>
-                                                    <h6>Loan Details</h6>
-                                                    <div id="loan-account-numbers" style="min-height: 150px;">
+                                                    <h6>Savings Accounts</h6>
+                                                    <div id="savings-account-details" class="border p-3 rounded mb-2" style="min-height: 150px;">
+                                                        <!-- Savings details will be injected here -->
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between mt-2">
+                                                        <button id="savings-view-prev" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fa fa-arrow-left me-1"></i>Previous
+                                                        </button>
+                                                        <button id="savings-view-next" class="btn btn-sm btn-outline-primary">
+                                                            Next<i class="fa fa-arrow-right ms-1"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <hr>
+
+                                                <div>
+                                                    <h6>Share Accounts</h6>
+                                                    <div id="shares-account-details" class="border p-3 rounded mb-2" style="min-height: 150px;">
+                                                        <!-- Shares details will be injected here -->
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between mt-2">
+                                                        <button id="shares-view-prev" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fa fa-arrow-left me-1"></i>Previous
+                                                        </button>
+                                                        <button id="shares-view-next" class="btn btn-sm btn-outline-primary">
+                                                            Next<i class="fa fa-arrow-right ms-1"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <hr>
+
+                                                <div>
+                                                    <h6>Loan Accounts</h6>
+                                                    <div id="loan-account-details" class="border p-3 rounded mb-2" style="min-height: 150px;">
                                                         <!-- Loan details will be injected here -->
                                                     </div>
 
                                                     <div class="d-flex justify-content-between mt-2">
-                                                        <button id="loan-prev" class="btn btn-sm btn-outline-primary"
-                                                            disabled>Previous</button>
-                                                        <button id="loan-next" class="btn btn-sm btn-outline-primary"
-                                                            disabled>Next</button>
+                                                        <button id="loan-view-prev" class="btn btn-sm btn-outline-primary">
+                                                            <i class="fa fa-arrow-left me-1"></i>Previous
+                                                        </button>
+                                                        <button id="loan-view-next" class="btn btn-sm btn-outline-primary">
+                                                            Next<i class="fa fa-arrow-right ms-1"></i>
+                                                        </button>
                                                     </div>
                                                 </div>
 
@@ -899,8 +889,12 @@
 
 
     <script>
-        let loans = []; // Will hold loans for current modal
+        let loans = [];
+        let savings = [];
+        let shares = [];
         let currentLoanIndex = 0;
+        let currentSavingsIndex = 0;
+        let currentSharesIndex = 0;
 
         $('#editModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
@@ -932,7 +926,7 @@
             $('#edit-expiry_date').val(button.data('expiry_date'));
             $('#edit-start_hold').val(button.data('start_hold'));
 
-            // Clear loans container
+            // Handle loans
             loans = button.data('loans') || [];
             if (typeof loans === 'string') {
                 try {
@@ -942,10 +936,35 @@
                 }
             }
 
-            currentLoanIndex = 0; // Reset index on modal show
+            // Handle savings
+            savings = button.data('savings') || [];
+            if (typeof savings === 'string') {
+                try {
+                    savings = JSON.parse(savings);
+                } catch {
+                    savings = [];
+                }
+            }
 
-            // Render the first loan or empty loan if none
+            // Handle shares
+            shares = button.data('shares') || [];
+            if (typeof shares === 'string') {
+                try {
+                    shares = JSON.parse(shares);
+                } catch {
+                    shares = [];
+                }
+            }
+
+            // Reset indices
+            currentLoanIndex = 0;
+            currentSavingsIndex = 0;
+            currentSharesIndex = 0;
+
+            // Render initial views
             renderLoan(currentLoanIndex);
+            renderSavings(currentSavingsIndex);
+            renderShares(currentSharesIndex);
 
             // Set form action dynamically
             $('#editForm').attr('action', '/members/' + button.data('id'));
@@ -953,7 +972,169 @@
             updateNavButtons();
         });
 
-        // Render loan at given index in container (overwrite existing)
+        // Button click handlers for loans
+        $('#btnNext').click(function() {
+            if (currentLoanIndex < loans.length - 1) {
+                currentLoanIndex++;
+                renderLoan(currentLoanIndex);
+                updateNavButtons();
+            }
+        });
+
+        $('#btnPrev').click(function() {
+            if (currentLoanIndex > 0) {
+                currentLoanIndex--;
+                renderLoan(currentLoanIndex);
+                updateNavButtons();
+            }
+        });
+
+        // Button click handlers for savings
+        $('#btnNextSavings').click(function() {
+            if (currentSavingsIndex < savings.length - 1) {
+                currentSavingsIndex++;
+                renderSavings(currentSavingsIndex);
+                updateNavButtons();
+            }
+        });
+
+        $('#btnPrevSavings').click(function() {
+            if (currentSavingsIndex > 0) {
+                currentSavingsIndex--;
+                renderSavings(currentSavingsIndex);
+                updateNavButtons();
+            }
+        });
+
+        // Button click handlers for shares
+        $('#btnNextShares').click(function() {
+            if (currentSharesIndex < shares.length - 1) {
+                currentSharesIndex++;
+                renderShares(currentSharesIndex);
+                updateNavButtons();
+            }
+        });
+
+        $('#btnPrevShares').click(function() {
+            if (currentSharesIndex > 0) {
+                currentSharesIndex--;
+                renderShares(currentSharesIndex);
+                updateNavButtons();
+            }
+        });
+
+        function updateNavButtons() {
+            // Loans navigation
+            $('#btnPrev').prop('disabled', currentLoanIndex <= 0 || loans.length === 0);
+            $('#btnNext').prop('disabled', currentLoanIndex >= loans.length - 1 || loans.length === 0);
+
+            // Savings navigation
+            $('#btnPrevSavings').prop('disabled', currentSavingsIndex <= 0 || savings.length === 0);
+            $('#btnNextSavings').prop('disabled', currentSavingsIndex >= savings.length - 1 || savings.length === 0);
+
+            // Shares navigation
+            $('#btnPrevShares').prop('disabled', currentSharesIndex <= 0 || shares.length === 0);
+            $('#btnNextShares').prop('disabled', currentSharesIndex >= shares.length - 1 || shares.length === 0);
+        }
+
+        function renderSavings(index) {
+            $('#edit-savings-container').empty();
+
+            if (savings.length === 0) {
+                $('#savings-counter').text('No savings accounts found.');
+                return;
+            }
+
+            let saving = savings[index];
+            if (!saving) return;
+
+            let html = `
+            <div class="savings-item border p-3 mb-3 rounded">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Account Number</label>
+                        <input type="text" class="form-control" value="${saving.account_number || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Product Code</label>
+                        <input type="text" class="form-control" value="${saving.product_code || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Product Name</label>
+                        <input type="text" class="form-control" value="${saving.product_name || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Current Balance</label>
+                        <input type="number" step="0.01" class="form-control" value="${saving.current_balance || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Available Balance</label>
+                        <input type="number" step="0.01" class="form-control" value="${saving.available_balance || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Interest</label>
+                        <input type="number" step="0.01" class="form-control" value="${saving.interest || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Open Date</label>
+                        <input type="date" class="form-control" value="${saving.open_date || ''}" readonly>
+                    </div>
+                </div>
+            </div>`;
+
+            $('#edit-savings-container').html(html);
+            $('#savings-counter').text(`Savings Account ${index + 1} of ${savings.length}`);
+        }
+
+        function renderShares(index) {
+            $('#edit-shares-container').empty();
+
+            if (shares.length === 0) {
+                $('#shares-counter').text('No share accounts found.');
+                return;
+            }
+
+            let share = shares[index];
+            if (!share) return;
+
+            let html = `
+            <div class="shares-item border p-3 mb-3 rounded">
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label>Account Number</label>
+                        <input type="text" class="form-control" value="${share.account_number || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Product Code</label>
+                        <input type="text" class="form-control" value="${share.product_code || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Product Name</label>
+                        <input type="text" class="form-control" value="${share.product_name || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Current Balance</label>
+                        <input type="number" step="0.01" class="form-control" value="${share.current_balance || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Available Balance</label>
+                        <input type="number" step="0.01" class="form-control" value="${share.available_balance || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Interest</label>
+                        <input type="number" step="0.01" class="form-control" value="${share.interest || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Open Date</label>
+                        <input type="date" class="form-control" value="${share.open_date || ''}" readonly>
+                    </div>
+                </div>
+            </div>`;
+
+            $('#edit-shares-container').html(html);
+            $('#shares-counter').text(`Share Account ${index + 1} of ${shares.length}`);
+        }
+
         function renderLoan(index) {
             $('#edit-loan-forecast-container').empty();
 
@@ -1011,35 +1192,6 @@
             }
         }
 
-
-        function updateNavButtons() {
-            $('#btnPrev').prop('disabled', currentLoanIndex <= 0);
-            $('#btnNext').prop('disabled', currentLoanIndex >= loans.length - 1);
-        }
-
-
-
-
-        // Button click handlers
-        $('#btnNext').click(function() {
-            if (currentLoanIndex < loans.length - 1) {
-                currentLoanIndex++;
-                renderLoan(currentLoanIndex);
-                updateNavButtons();
-            }
-        });
-
-        $('#btnPrev').click(function() {
-            if (currentLoanIndex > 0) {
-                currentLoanIndex--;
-                renderLoan(currentLoanIndex);
-                updateNavButtons();
-            }
-        });
-
-
-
-
         $('#viewModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
 
@@ -1050,9 +1202,6 @@
             $('#view-emp_id').text(button.data('emp_id'));
             $('#view-address').text(button.data('address'));
             $('#view-branch').text(button.data('branch'));
-            $('#view-savings_balance').text(button.data('savings_balance'));
-            $('#view-share_balance').text(button.data('share_balance'));
-            $('#view-loan_balance').text(button.data('loan_balance'));
             $('#view-birth_date').text(button.data('birth_date'));
             $('#view-date_registered').text(button.data('date_registered'));
             $('#view-gender').text(button.data('gender'));
@@ -1066,64 +1215,157 @@
             $('#view-additional_address').text(button.data('additional_address'));
             $('#view-account_status').text(button.data('account_status'));
 
-            // Loans navigation logic
+            // Handle loans
             var loans = button.data('loans') || [];
-            var currentIndex = 0;
+            var currentLoanIndex = 0;
 
-            // Cache buttons and container
-            var $loanNumbers = $('#loan-account-numbers');
-            var $btnPrev = $('#loan-prev');
-            var $btnNext = $('#loan-next');
+            function renderViewLoan(index) {
+                var $container = $('#loan-account-details');
 
-            function renderLoan(index) {
-                var loan = loans[index];
-                if (!loan) {
-                    $loanNumbers.html('<p>No loan accounts found.</p>');
-                    $btnPrev.prop('disabled', true);
-                    $btnNext.prop('disabled', true);
+                if (loans.length === 0) {
+                    $container.html('<p>No loan accounts found.</p>');
+                    $('#loan-view-prev').prop('disabled', true);
+                    $('#loan-view-next').prop('disabled', true);
                     return;
                 }
 
-                // Simple, clean loan info display
+                var loan = loans[index];
+                if (!loan) return;
+
                 var html = `
-            <p><strong>Loan Account No.:</strong> ${loan.loan_acct_no || 'N/A'}</p>
-            <p><strong>Amount Due:</strong> ${loan.amount_due || 'N/A'}</p>
-            <p><strong>Open Date:</strong> ${loan.open_date || 'N/A'}</p>
-            <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
-            <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
-            <p><strong>Total Due:</strong> ${loan.total_due || 'N/A'}</p>
-            <p><strong>Principal Due:</strong> ${loan.principal_due || 'N/A'}</p>
-            <p><strong>Interest Due:</strong> ${loan.interest_due || 'N/A'}</p>
-            <p><strong>Penalty Due:</strong> ${loan.penalty_due || 'N/A'}</p>
-            <p><em>Loan ${index + 1} of ${loans.length}</em></p>
-        `;
-                $loanNumbers.html(html);
+                    <div class="loan-details">
+                        <p><strong>Loan Account No.:</strong> ${loan.loan_acct_no || 'N/A'}</p>
+                        <p><strong>Amount Due:</strong> ${loan.amount_due || '0.00'}</p>
+                        <p><strong>Open Date:</strong> ${loan.open_date || 'N/A'}</p>
+                        <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
+                        <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
+                        <p><strong>Total Due:</strong> ${loan.total_due || '0.00'}</p>
+                        <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
+                        <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
+                        <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>
+                        <p><em>Loan ${index + 1} of ${loans.length}</em></p>
+                    </div>`;
 
-                // Enable/disable buttons based on index
-                $btnPrev.prop('disabled', index === 0);
-                $btnNext.prop('disabled', index === loans.length - 1);
+                $container.html(html);
+                $('#loan-view-prev').prop('disabled', index === 0);
+                $('#loan-view-next').prop('disabled', index === loans.length - 1);
             }
 
-            // Initial render
-            if (loans.length === 0) {
-                $loanNumbers.html('<p>No loan accounts found.</p>');
-                $btnPrev.prop('disabled', true);
-                $btnNext.prop('disabled', true);
-            } else {
-                renderLoan(currentIndex);
+            // Handle savings accounts
+            var savings = button.data('savings') || [];
+            var currentSavingsIndex = 0;
+
+            function renderViewSavings(index) {
+                var $container = $('#savings-account-details');
+
+                if (savings.length === 0) {
+                    $container.html('<p>No savings accounts found.</p>');
+                    $('#savings-view-prev').prop('disabled', true);
+                    $('#savings-view-next').prop('disabled', true);
+                    return;
+                }
+
+                var saving = savings[index];
+                if (!saving) return;
+
+                var html = `
+                    <div class="savings-details">
+                        <p><strong>Account Number:</strong> ${saving.account_number || 'N/A'}</p>
+                        <p><strong>Product Code:</strong> ${saving.product_code || 'N/A'}</p>
+                        <p><strong>Product Name:</strong> ${saving.product_name || 'N/A'}</p>
+                        <p><strong>Current Balance:</strong> ${saving.current_balance || '0.00'}</p>
+                        <p><strong>Available Balance:</strong> ${saving.available_balance || '0.00'}</p>
+                        <p><strong>Interest:</strong> ${saving.interest || '0.00'}</p>
+                        <p><strong>Open Date:</strong> ${saving.open_date || 'N/A'}</p>
+                        <p><em>Savings Account ${index + 1} of ${savings.length}</em></p>
+                    </div>`;
+
+                $container.html(html);
+                $('#savings-view-prev').prop('disabled', index === 0);
+                $('#savings-view-next').prop('disabled', index === savings.length - 1);
             }
 
-            // Button click handlers
-            $btnPrev.off('click').on('click', function() {
-                if (currentIndex > 0) {
-                    currentIndex--;
-                    renderLoan(currentIndex);
+            // Handle shares accounts
+            var shares = button.data('shares') || [];
+            var currentSharesIndex = 0;
+
+            function renderViewShares(index) {
+                var $container = $('#shares-account-details');
+
+                if (shares.length === 0) {
+                    $container.html('<p>No share accounts found.</p>');
+                    $('#shares-view-prev').prop('disabled', true);
+                    $('#shares-view-next').prop('disabled', true);
+                    return;
+                }
+
+                var share = shares[index];
+                if (!share) return;
+
+                var html = `
+                    <div class="shares-details">
+                        <p><strong>Account Number:</strong> ${share.account_number || 'N/A'}</p>
+                        <p><strong>Product Code:</strong> ${share.product_code || 'N/A'}</p>
+                        <p><strong>Product Name:</strong> ${share.product_name || 'N/A'}</p>
+                        <p><strong>Current Balance:</strong> ${share.current_balance || '0.00'}</p>
+                        <p><strong>Available Balance:</strong> ${share.available_balance || '0.00'}</p>
+                        <p><strong>Interest:</strong> ${share.interest || '0.00'}</p>
+                        <p><strong>Open Date:</strong> ${share.open_date || 'N/A'}</p>
+                        <p><em>Share Account ${index + 1} of ${shares.length}</em></p>
+                    </div>`;
+
+                $container.html(html);
+                $('#shares-view-prev').prop('disabled', index === 0);
+                $('#shares-view-next').prop('disabled', index === shares.length - 1);
+            }
+
+            // Initial render for all accounts
+            renderViewSavings(currentSavingsIndex);
+            renderViewShares(currentSharesIndex);
+            renderViewLoan(currentLoanIndex);
+
+            // Savings navigation
+            $('#savings-view-prev').off('click').on('click', function() {
+                if (currentSavingsIndex > 0) {
+                    currentSavingsIndex--;
+                    renderViewSavings(currentSavingsIndex);
                 }
             });
-            $btnNext.off('click').on('click', function() {
-                if (currentIndex < loans.length - 1) {
-                    currentIndex++;
-                    renderLoan(currentIndex);
+
+            $('#savings-view-next').off('click').on('click', function() {
+                if (currentSavingsIndex < savings.length - 1) {
+                    currentSavingsIndex++;
+                    renderViewSavings(currentSavingsIndex);
+                }
+            });
+
+            // Shares navigation
+            $('#shares-view-prev').off('click').on('click', function() {
+                if (currentSharesIndex > 0) {
+                    currentSharesIndex--;
+                    renderViewShares(currentSharesIndex);
+                }
+            });
+
+            $('#shares-view-next').off('click').on('click', function() {
+                if (currentSharesIndex < shares.length - 1) {
+                    currentSharesIndex++;
+                    renderViewShares(currentSharesIndex);
+                }
+            });
+
+            // Loan navigation
+            $('#loan-view-prev').off('click').on('click', function() {
+                if (currentLoanIndex > 0) {
+                    currentLoanIndex--;
+                    renderViewLoan(currentLoanIndex);
+                }
+            });
+
+            $('#loan-view-next').off('click').on('click', function() {
+                if (currentLoanIndex < loans.length - 1) {
+                    currentLoanIndex++;
+                    renderViewLoan(currentLoanIndex);
                 }
             });
         });

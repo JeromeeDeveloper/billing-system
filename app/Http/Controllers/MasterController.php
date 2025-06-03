@@ -13,7 +13,7 @@ class MasterController extends Controller
 
     public function index(Request $request)
     {
-        $billingPeriod = Auth::user()->billing_period;
+
         $search = $request->input('search');
 
         $masterlists = MasterList::with([
@@ -22,22 +22,38 @@ class MasterController extends Controller
             'member.shares',
             'branch'
         ])
-
-            ->where('billing_period', $billingPeriod)
+            
             ->when($search, function ($query, $search) {
                 $query->whereHas('member', function ($q) use ($search) {
                     $q->where('cid', 'like', "%{$search}%")
                         ->orWhere('lname', 'like', "%{$search}%")
                         ->orWhere('fname', 'like', "%{$search}%");
                 })
-                    ->orWhereHas('branch', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
-                    });
+                ->orWhereHas('branch', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                });
             })
             ->paginate(25)
             ->appends(['search' => $search]);
 
+        // Format the dates for JSON serialization
+        $masterlists->getCollection()->transform(function ($item) {
+            $member = $item->member;
 
+            // Format savings dates
+            $member->savings->transform(function ($saving) {
+                $saving->open_date = $saving->open_date ? $saving->open_date->format('Y-m-d') : null;
+                return $saving;
+            });
+
+            // Format shares dates
+            $member->shares->transform(function ($share) {
+                $share->open_date = $share->open_date ? $share->open_date->format('Y-m-d') : null;
+                return $share;
+            });
+
+            return $item;
+        });
 
         $branches = Branch::all();
 
