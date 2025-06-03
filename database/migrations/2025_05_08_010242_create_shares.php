@@ -21,6 +21,10 @@ return new class extends Migration
             $table->decimal('current_balance', 15, 2)->nullable();
             $table->decimal('available_balance', 15, 2)->nullable();
             $table->decimal('interest', 15, 2)->nullable();
+            $table->string('approval_no')->nullable();
+            $table->date('start_hold')->nullable();
+            $table->date('expiry_date')->nullable();
+            $table->enum('account_status', ['deduction', 'non-deduction'])->default('deduction');
             $table->timestamps();
         });
     }

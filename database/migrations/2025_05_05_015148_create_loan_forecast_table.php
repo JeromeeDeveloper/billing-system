@@ -26,6 +26,10 @@ return new class extends Migration
             $table->unsignedBigInteger('member_id');
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
             $table->string('billing_period')->nullable();
+            $table->string('approval_no')->nullable();
+            $table->date('start_hold')->nullable();
+            $table->date('expiry_date')->nullable();
+            $table->enum('account_status', ['deduction', 'non-deduction'])->default('deduction');
             $table->timestamps();
         });
 
