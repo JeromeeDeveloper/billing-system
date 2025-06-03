@@ -68,6 +68,7 @@
                                             <tr>
                                                 <th>Product Name</th>
                                                 <th>Product Code</th>
+                                                <th>Members Count</th>
                                                 <th>Account Number</th>
                                                 <th>Current Balance</th>
                                                 <th>Available Balance</th>
@@ -77,44 +78,45 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($savings_products as $product)
+                                            @foreach ($savings as $saving)
                                                 <tr>
-                                                    <td>{{ $product->product_name }}</td>
-                                                    <td>{{ $product->product_code }}</td>
-                                                    <td>{{ $product->account_number }}</td>
-                                                    <td>₱{{ number_format($product->current_balance, 2) }}</td>
-                                                    <td>₱{{ number_format($product->available_balance, 2) }}</td>
-                                                    <td>{{ $product->interest }}%</td>
-                                                    <td>{{ $product->open_date }}</td>
+                                                    <td>{{ $saving->product_name }}</td>
+                                                    <td>{{ $saving->product_code }}</td>
+                                                    <td>{{ $saving->member_count }}</td>
+                                                    <td>{{ $saving->account_number }}</td>
+                                                    <td>₱{{ number_format($saving->current_balance, 2) }}</td>
+                                                    <td>₱{{ number_format($saving->available_balance, 2) }}</td>
+                                                    <td>₱{{ number_format($saving->interest, 2) }}</td>
+                                                    <td>{{ $saving->open_date }}</td>
                                                     <td>
                                                         <button type="button" class="btn btn-rounded btn-primary"
                                                             data-toggle="modal" data-target="#editModal"
-                                                            data-id="{{ $product->id }}"
-                                                            data-product_name="{{ $product->product_name }}"
-                                                            data-product_code="{{ $product->product_code }}"
-                                                            data-account_number="{{ $product->account_number }}"
-                                                            data-current_balance="{{ $product->current_balance }}"
-                                                            data-available_balance="{{ $product->available_balance }}"
-                                                            data-interest="{{ $product->interest }}"
-                                                            data-open_date="{{ $product->open_date }}">
+                                                            data-id="{{ $saving->id }}"
+                                                            data-product_name="{{ $saving->product_name }}"
+                                                            data-product_code="{{ $saving->product_code }}"
+                                                            data-account_number="{{ $saving->account_number }}"
+                                                            data-current_balance="{{ $saving->current_balance }}"
+                                                            data-available_balance="{{ $saving->available_balance }}"
+                                                            data-interest="{{ $saving->interest }}"
+                                                            data-open_date="{{ $saving->open_date }}">
                                                             Edit
                                                         </button>
 
                                                         <button type="button" class="btn btn-rounded btn-info"
                                                             data-toggle="modal" data-target="#viewModal"
-                                                            data-product_name="{{ $product->product_name }}"
-                                                            data-product_code="{{ $product->product_code }}"
-                                                            data-account_number="{{ $product->account_number }}"
-                                                            data-current_balance="{{ $product->current_balance }}"
-                                                            data-available_balance="{{ $product->available_balance }}"
-                                                            data-interest="{{ $product->interest }}"
-                                                            data-open_date="{{ $product->open_date }}">
+                                                            data-product_name="{{ $saving->product_name }}"
+                                                            data-product_code="{{ $saving->product_code }}"
+                                                            data-account_number="{{ $saving->account_number }}"
+                                                            data-current_balance="{{ $saving->current_balance }}"
+                                                            data-available_balance="{{ $saving->available_balance }}"
+                                                            data-interest="{{ $saving->interest }}"
+                                                            data-open_date="{{ $saving->open_date }}">
                                                             View
                                                         </button>
 
                                                         <button type="button" class="btn btn-rounded btn-danger"
                                                             data-toggle="modal" data-target="#deleteModal"
-                                                            data-id="{{ $product->id }}">
+                                                            data-id="{{ $saving->id }}">
                                                             Delete
                                                         </button>
                                                     </td>

@@ -15,6 +15,8 @@ use App\Http\Controllers\RemittanceController;
 use App\Http\Controllers\DocumentUploadController;
 use App\Http\Controllers\SavingsController;
 use App\Http\Controllers\SharesController;
+use App\Http\Controllers\ShareProductController;
+use App\Http\Controllers\SavingProductController;
 
 //Login
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
@@ -83,6 +85,20 @@ Route::get('/shares', [SharesController::class, 'index'])->name('shares');
 Route::post('/shares', [SharesController::class, 'store'])->name('shares.store');
 Route::put('/shares/{id}', [SharesController::class, 'update'])->name('shares.update');
 Route::delete('/shares/{id}', [SharesController::class, 'destroy'])->name('shares.destroy');
+
+//Share Products
+Route::get('/share-products', [ShareProductController::class, 'index'])->name('share-products.index');
+Route::post('/share-products', [ShareProductController::class, 'store'])->name('share-products.store');
+Route::put('/share-products/{id}', [ShareProductController::class, 'update'])->name('share-products.update');
+Route::delete('/share-products/{id}', [ShareProductController::class, 'destroy'])->name('share-products.destroy');
+Route::post('/share-products/{id}/assign-member', [ShareProductController::class, 'assignMember'])->name('share-products.assign-member');
+
+//Saving Products
+Route::get('/saving-products', [SavingProductController::class, 'index'])->name('saving-products.index');
+Route::post('/saving-products', [SavingProductController::class, 'store'])->name('saving-products.store');
+Route::put('/saving-products/{id}', [SavingProductController::class, 'update'])->name('saving-products.update');
+Route::delete('/saving-products/{id}', [SavingProductController::class, 'destroy'])->name('saving-products.destroy');
+Route::post('/saving-products/{id}/assign-member', [SavingProductController::class, 'assignMember'])->name('saving-products.assign-member');
 
 });
 

@@ -19,26 +19,28 @@ class Member extends Model
         'fname',
         'lname',
         'address',
+        'savings_balance',
+        'share_balance',
         'loan_balance',
+        'principal',
         'birth_date',
+        'start_date',
+        'end_date',
         'date_registered',
         'gender',
         'customer_type',
         'customer_classification',
         'occupation',
         'industry',
-        'start_date',
-        'end_date',
-        'principal',
         'area_officer',
         'area',
-        'account_status',
+        'account_name',
         'status',
-        'additional_address',
-        'billing_period',
-        'expiry_date',
-        'start_hold',
         'approval_no',
+        'start_hold',
+        'expiry_date',
+        'account_status',
+        'billing_period'
     ];
 
     protected $casts = [
@@ -68,7 +70,6 @@ class Member extends Model
         return $this->belongsToMany(LoanProduct::class, 'loan_product_member', 'member_id', 'loan_product_id')->withTimestamps();
     }
 
-
     public function savings()
     {
         return $this->hasMany(Saving::class);
@@ -77,6 +78,18 @@ class Member extends Model
     public function shares()
     {
         return $this->hasMany(Shares::class);
+    }
+
+    public function savingProducts()
+    {
+        return $this->belongsToMany(SavingProduct::class, 'member_saving_product')
+                    ->withTimestamps();
+    }
+
+    public function shareProducts()
+    {
+        return $this->belongsToMany(ShareProduct::class, 'member_share_product')
+                    ->withTimestamps();
     }
 
     public function loanForecastsData(): Attribute

@@ -68,6 +68,7 @@
                                             <tr>
                                                 <th>Product Name</th>
                                                 <th>Product Code</th>
+                                                <th>Members Count</th>
                                                 <th>Account Number</th>
                                                 <th>Current Balance</th>
                                                 <th>Available Balance</th>
@@ -77,44 +78,45 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($share_products as $product)
+                                            @foreach ($shares as $share)
                                                 <tr>
-                                                    <td>{{ $product->product_name }}</td>
-                                                    <td>{{ $product->product_code }}</td>
-                                                    <td>{{ $product->account_number }}</td>
-                                                    <td>₱{{ number_format($product->current_balance, 2) }}</td>
-                                                    <td>₱{{ number_format($product->available_balance, 2) }}</td>
-                                                    <td>{{ $product->interest }}%</td>
-                                                    <td>{{ $product->open_date }}</td>
+                                                    <td>{{ $share->product_name }}</td>
+                                                    <td>{{ $share->product_code }}</td>
+                                                    <td>{{ $share->member_count }}</td>
+                                                    <td>{{ $share->account_number }}</td>
+                                                    <td>₱{{ number_format($share->current_balance, 2) }}</td>
+                                                    <td>₱{{ number_format($share->available_balance, 2) }}</td>
+                                                    <td>₱{{ number_format($share->interest, 2) }}</td>
+                                                    <td>{{ $share->open_date }}</td>
                                                     <td>
                                                         <button type="button" class="btn btn-rounded btn-primary"
                                                             data-toggle="modal" data-target="#editModal"
-                                                            data-id="{{ $product->id }}"
-                                                            data-product_name="{{ $product->product_name }}"
-                                                            data-product_code="{{ $product->product_code }}"
-                                                            data-account_number="{{ $product->account_number }}"
-                                                            data-current_balance="{{ $product->current_balance }}"
-                                                            data-available_balance="{{ $product->available_balance }}"
-                                                            data-interest="{{ $product->interest }}"
-                                                            data-open_date="{{ $product->open_date }}">
+                                                            data-id="{{ $share->id }}"
+                                                            data-product_name="{{ $share->product_name }}"
+                                                            data-product_code="{{ $share->product_code }}"
+                                                            data-account_number="{{ $share->account_number }}"
+                                                            data-current_balance="{{ $share->current_balance }}"
+                                                            data-available_balance="{{ $share->available_balance }}"
+                                                            data-interest="{{ $share->interest }}"
+                                                            data-open_date="{{ $share->open_date }}">
                                                             Edit
                                                         </button>
 
                                                         <button type="button" class="btn btn-rounded btn-info"
                                                             data-toggle="modal" data-target="#viewModal"
-                                                            data-product_name="{{ $product->product_name }}"
-                                                            data-product_code="{{ $product->product_code }}"
-                                                            data-account_number="{{ $product->account_number }}"
-                                                            data-current_balance="{{ $product->current_balance }}"
-                                                            data-available_balance="{{ $product->available_balance }}"
-                                                            data-interest="{{ $product->interest }}"
-                                                            data-open_date="{{ $product->open_date }}">
+                                                            data-product_name="{{ $share->product_name }}"
+                                                            data-product_code="{{ $share->product_code }}"
+                                                            data-account_number="{{ $share->account_number }}"
+                                                            data-current_balance="{{ $share->current_balance }}"
+                                                            data-available_balance="{{ $share->available_balance }}"
+                                                            data-interest="{{ $share->interest }}"
+                                                            data-open_date="{{ $share->open_date }}">
                                                             View
                                                         </button>
 
                                                         <button type="button" class="btn btn-rounded btn-danger"
                                                             data-toggle="modal" data-target="#deleteModal"
-                                                            data-id="{{ $product->id }}">
+                                                            data-id="{{ $share->id }}">
                                                             Delete
                                                         </button>
                                                     </td>

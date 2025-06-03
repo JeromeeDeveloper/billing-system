@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Member;
 use App\Models\Saving;
 use Illuminate\Http\Request;
+use App\Models\SavingProduct;
 use Illuminate\Support\Facades\Auth;
 
 class SavingsController extends Controller
@@ -13,6 +14,12 @@ class SavingsController extends Controller
     {
         $billingPeriod = Auth::user()->billing_period;
         $search = $request->input('search');
+
+        // Get unique product codes with their member counts
+        $productCounts = Saving::select('product_code')
+            ->selectRaw('COUNT(*) as member_count')
+            ->groupBy('product_code')
+            ->pluck('member_count', 'product_code');
 
         $savings = Saving::with(['member'])
             ->whereHas('member', function($query) use ($billingPeriod) {
@@ -26,36 +33,15 @@ class SavingsController extends Controller
                             ->orWhere('lname', 'like', "%{$search}%");
                     });
             })
-            ->paginate(25)
-            ->appends(['search' => $search]);
+            ->get()
+            ->map(function ($saving) use ($productCounts) {
+                $saving->member_count = $productCounts[$saving->product_code] ?? 0;
+                return $saving;
+            });
 
         $members = Member::where('billing_period', $billingPeriod)->get();
 
-        // Create dummy savings products data based on savings table structure
-        $savings_products = collect([
-            (object)[
-                'id' => 1,
-                'product_name' => 'Regular Savings',
-                'product_code' => 'SAV-REG',
-                'account_number' => 'SAV-001',
-                'current_balance' => 500.00,
-                'available_balance' => 500.00,
-                'interest' => 2.50,
-                'open_date' => '2024-01-01'
-            ],
-            (object)[
-                'id' => 2,
-                'product_name' => 'Time Deposit',
-                'product_code' => 'SAV-TD',
-                'account_number' => 'SAV-002',
-                'current_balance' => 10000.00,
-                'available_balance' => 10000.00,
-                'interest' => 4.00,
-                'open_date' => '2024-01-01'
-            ]
-        ]);
-
-        return view('components.admin.savings.savings_datatable', compact('savings', 'members', 'savings_products'));
+        return view('components.admin.savings.savings_datatable', compact('savings', 'members'));
     }
 
     public function store(Request $request)
@@ -63,15 +49,23 @@ class SavingsController extends Controller
         $request->validate([
             'member_id' => 'required|exists:members,id',
             'account_number' => 'required|string|unique:savings',
-            'product_code' => 'nullable|string',
-            'product_name' => 'nullable|string',
+            'product_code' => 'required|exists:saving_products,product_code',
+            'product_name' => 'required|string',
             'open_date' => 'required|date',
             'current_balance' => 'required|numeric|min:0',
             'available_balance' => 'nullable|numeric|min:0',
             'interest' => 'nullable|numeric',
         ]);
 
-        Saving::create($request->all());
+        // Get product details
+        $product = SavingProduct::where('product_code', $request->product_code)->first();
+
+        // Create saving with product details
+        $data = $request->all();
+        $data['product_name'] = $product->product_name;
+        $data['interest'] = $product->interest;
+
+        Saving::create($data);
 
         return redirect()->back()->with('success', 'Savings account created successfully');
     }
@@ -80,8 +74,8 @@ class SavingsController extends Controller
     {
         $request->validate([
             'account_number' => 'required|string|unique:savings,account_number,' . $id,
-            'product_code' => 'nullable|string',
-            'product_name' => 'nullable|string',
+            'product_code' => 'required|exists:saving_products,product_code',
+            'product_name' => 'required|string',
             'open_date' => 'required|date',
             'current_balance' => 'required|numeric|min:0',
             'available_balance' => 'nullable|numeric|min:0',
@@ -89,7 +83,16 @@ class SavingsController extends Controller
         ]);
 
         $saving = Saving::findOrFail($id);
-        $saving->update($request->all());
+
+        // Get product details
+        $product = SavingProduct::where('product_code', $request->product_code)->first();
+
+        // Update saving with product details
+        $data = $request->all();
+        $data['product_name'] = $product->product_name;
+        $data['interest'] = $product->interest;
+
+        $saving->update($data);
 
         return redirect()->back()->with('success', 'Savings account updated successfully');
     }

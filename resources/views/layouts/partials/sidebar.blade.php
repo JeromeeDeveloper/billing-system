@@ -48,10 +48,23 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-chart-pie-36"></i><span class="nav-text">Loans Product</span>
+                        <i class="icon icon-chart-pie-36"></i><span class="nav-text">Products</span>
                     </a>
                     <ul aria-expanded="false">
-                        <li><a href="{{ route('loans') }}">Loan Priority</a></li>
+                        <li><a href="{{ route('loans') }}">Loan Products</a></li>
+                        <li><a href="{{ route('saving-products.index') }}">Saving Products</a></li>
+                        <li><a href="{{ route('share-products.index') }}">Share Products</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="icon icon-wallet-90"></i><span class="nav-text">Accounts</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('savings') }}">Savings Accounts</a></li>
+                        <li><a href="{{ route('shares') }}">Share Accounts</a></li>
+                        <li><a href="{{ route('list') }}">Loan Accounts</a></li>
                     </ul>
                 </li>
 
@@ -81,9 +94,6 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('member') }}">Members Datatable</a></li>
-                        <li><a href="{{ route('savings') }}">Savings Accounts</a></li>
-                        <li><a href="{{ route('shares') }}">Share Accounts</a></li>
-                        <li><a href="{{ route('list') }}">Loan Accounts</a></li>
                     </ul>
                 </li>
 
@@ -116,9 +126,7 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('master.branch') }}">Master List Datatable</a></li>
-                        <li><a href="{{ route('savings.branch') }}">Savings Accounts</a></li>
-                        <li><a href="{{ route('shares.branch') }}">Share Accounts</a></li>
-                        <li><a href="{{ route('list') }}">Loan Accounts</a></li>
+                      
                     </ul>
                 </li>
 
