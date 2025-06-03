@@ -50,16 +50,7 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">Savings Products</h4>
-                                <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
-                                    data-target="#addSavingsModal">
-                                    <span class="btn-icon-left text-primary">
-                                        <i class="fa fa-plus"></i>
-                                    </span>
-                                    Add Savings Product
-                                </button>
-                            </div>
+                            
 
                             <div class="card-body">
                                 <div class="table-responsive">
@@ -140,55 +131,6 @@
             </div>
         </div>
 
-    </div>
-
-    <!-- Add Modal -->
-    <div class="modal fade" id="addSavingsModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <form action="{{ route('savings.store') }}" method="POST">
-                @csrf
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Add New Savings Product</h5>
-                        <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label>Product Name</label>
-                            <input type="text" class="form-control" name="product_name" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Product Code</label>
-                            <input type="text" class="form-control" name="product_code" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Account Number</label>
-                            <input type="text" class="form-control" name="account_number" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Current Balance</label>
-                            <input type="number" step="0.01" class="form-control" name="current_balance" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Available Balance</label>
-                            <input type="number" step="0.01" class="form-control" name="available_balance" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Interest Rate (%)</label>
-                            <input type="number" step="0.01" class="form-control" name="interest" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Open Date</label>
-                            <input type="date" class="form-control" name="open_date" required>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        <button type="submit" class="btn btn-primary">Save Product</button>
-                    </div>
-                </div>
-            </form>
-        </div>
     </div>
 
     <!-- Edit Modal -->

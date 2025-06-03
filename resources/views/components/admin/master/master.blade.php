@@ -273,19 +273,29 @@
                                     <small class="text-muted">Manage all members in the system</small>
                                 </div>
 
-                                <div class="d-flex align-items-center gap-3">
-                                    <form method="GET" action="{{ url()->current() }}" class="d-flex gap-2">
+                                <div class="d-flex align-items-center" style="gap: 15px;">
+                                    <form method="GET" action="{{ url()->current() }}">
                                         <div class="input-group">
-                                            <input type="text" name="search" value="{{ request('search') }}"
-                                                class="form-control" placeholder="Search members..." />
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="fa fa-search"></i> Search
+                                            <input type="text"
+                                                name="search"
+                                                value="{{ request('search') }}"
+                                                class="form-control"
+                                                placeholder="Search members..."
+                                                style="width: 250px; height: 40px;" />
+                                            <button type="submit"
+                                                class="btn btn-primary d-flex align-items-center"
+                                                style="height: 40px;">
+                                                <i class="fa fa-search me-2"></i>
+                                                Search
                                             </button>
                                         </div>
                                     </form>
 
-                                    <a href="#" class="btn btn-success d-flex align-items-center" data-toggle="modal"
-                                        data-target="#addModal">
+                                    <a href="#"
+                                        class="btn btn-success d-flex align-items-center"
+                                        data-toggle="modal"
+                                        data-target="#addModal"
+                                        style="height: 40px;">
                                         <i class="fa fa-plus-circle me-2"></i>
                                         Add New Member
                                     </a>
@@ -519,7 +529,7 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="mb-4">
+                                                {{-- <div class="mb-4">
                                                     <h6 class="section-title bg-light p-2 rounded">
                                                         <i class="fa fa-money-bill me-2"></i>Financial Information
                                                     </h6>
@@ -554,7 +564,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </div> --}}
 
                                                 <div class="mb-4">
                                                     <h6 class="section-title bg-light p-2 rounded">
