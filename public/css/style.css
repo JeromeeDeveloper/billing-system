@@ -19442,3 +19442,8 @@ h5.member-profile {
 .buttons-header{
     gap: 16px;
 }
+
+.bulk-edit{
+    position: relative;
+    bottom: 5px;
+}

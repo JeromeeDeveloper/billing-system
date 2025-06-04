@@ -497,7 +497,7 @@
                                                         <h6 class="section-title bg-light p-2 rounded mb-0">
                                                             <i class="fa fa-piggy-bank me-2"></i>Savings Accounts
                                                         </h6>
-                                                        <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('savings')">
+                                                        <button type="button" class="btn btn-sm btn-primary bulk-edit" onclick="showBulkEditModal('savings')">
                                                             Bulk Edit Savings
                                                         </button>
                                                     </div>
@@ -518,7 +518,7 @@
                                                         <h6 class="section-title bg-light p-2 rounded mb-0">
                                                             <i class="fa fa-chart-pie me-2"></i>Share Accounts
                                                         </h6>
-                                                        <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('shares')">
+                                                        <button type="button" class="btn btn-sm btn-primary bulk-edit" onclick="showBulkEditModal('shares')">
                                                             Bulk Edit Shares
                                                         </button>
                                                     </div>
@@ -539,7 +539,7 @@
                                                         <h6 class="section-title bg-light p-2 rounded mb-0">
                                                             <i class="fa fa-file-invoice-dollar me-2"></i>Loan Information
                                                         </h6>
-                                                        <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('loans')">
+                                                        <button type="button" class="btn btn-sm btn-primary bulk-edit" onclick="showBulkEditModal('loans')">
                                                             Bulk Edit Loans
                                                         </button>
                                                     </div>
@@ -1808,7 +1808,6 @@
             z-index: 1055 !important;
         }
         .custom-control {
-            padding: 8px;
             margin-bottom: 5px;
             border-bottom: 1px solid #eee;
         }
@@ -1913,14 +1912,14 @@
         });
 
         // Show summary of pre-selected accounts if any
-        if (checkedCount > 0) {
-            const summaryHtml = `
-                <div class="alert alert-info mt-2">
-                    <small>${checkedCount} account(s) automatically selected due to existing non-deduction status or hold dates.</small>
-                </div>
-            `;
-            accountsContainer.after(summaryHtml);
-        }
+        // if (checkedCount > 0) {
+        //     const summaryHtml = `
+        //         <div class="alert alert-info mt-2">
+        //             <small>${checkedCount} account(s) automatically selected due to existing non-deduction status or hold dates.</small>
+        //         </div>
+        //     `;
+        //     accountsContainer.after(summaryHtml);
+        // }
 
         $('#bulkEditModal').modal('show');
     }
