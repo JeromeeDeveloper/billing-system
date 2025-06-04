@@ -7,6 +7,7 @@ use App\Models\Member;
 use App\Models\MasterList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class MasterController extends Controller
 {
@@ -22,7 +23,7 @@ class MasterController extends Controller
             'member.shares',
             'branch'
         ])
-            
+
             ->when($search, function ($query, $search) {
                 $query->whereHas('member', function ($q) use ($search) {
                     $q->where('cid', 'like', "%{$search}%")
@@ -204,6 +205,10 @@ class MasterController extends Controller
             'loan_forecasts.*.interest_due' => 'required|numeric',
             'loan_forecasts.*.penalty_due' => 'required|numeric',
             'loan_forecasts.*.billing_period' => 'nullable|string',
+            'loan_forecasts.*.start_hold' => 'nullable|date',
+            'loan_forecasts.*.expiry_date' => 'nullable|date',
+            'loan_forecasts.*.account_status' => 'required|in:deduction,non-deduction',
+            'loan_forecasts.*.approval_no' => 'nullable|string',
         ]);
 
         $member = Member::findOrFail($id);
@@ -229,15 +234,73 @@ class MasterController extends Controller
 
         // Update or create loan forecasts if present
         if ($request->has('loan_forecasts')) {
+            \Log::info('Updating loan forecasts for member: ' . $member->id);
+
             foreach ($request->input('loan_forecasts') as $loanData) {
-                $member->loanForecasts()->updateOrCreate(
-                    [
-                        'member_id' => $member->id,
-                        'loan_acct_no' => $loanData['loan_acct_no'],
-                    ],
-                    $loanData
-                );
+                \Log::info('Processing loan: ' . json_encode($loanData));
+
+                // Check if loan should switch back to deduction based on expiry date
+                if (isset($loanData['account_status']) &&
+                    $loanData['account_status'] === 'non-deduction' &&
+                    !empty($loanData['expiry_date']) &&
+                    strtotime($loanData['expiry_date']) < time()) {
+                    $loanData['account_status'] = 'deduction';
+                    \Log::info('Loan switched to deduction due to expired date');
+                }
+
+                // Ensure all fields are included in the update
+                $loanForecastData = [
+                    'loan_acct_no' => $loanData['loan_acct_no'],
+                    'amount_due' => $loanData['amount_due'],
+                    'open_date' => $loanData['open_date'],
+                    'maturity_date' => $loanData['maturity_date'],
+                    'amortization_due_date' => $loanData['amortization_due_date'],
+                    'total_due' => $loanData['total_due'],
+                    'principal_due' => $loanData['principal_due'],
+                    'interest_due' => $loanData['interest_due'],
+                    'penalty_due' => $loanData['penalty_due'],
+                    'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
+                    'start_hold' => $loanData['start_hold'] ?? null,
+                    'expiry_date' => $loanData['expiry_date'] ?? null,
+                    'account_status' => $loanData['account_status'],
+                    'approval_no' => $loanData['approval_no'] ?? null,
+                ];
+
+                \Log::info('Updating loan forecast with data: ' . json_encode($loanForecastData));
+
+                try {
+                    $result = $member->loanForecasts()->updateOrCreate(
+                        [
+                            'member_id' => $member->id,
+                            'loan_acct_no' => $loanData['loan_acct_no'],
+                        ],
+                        $loanForecastData
+                    );
+                    \Log::info('Loan forecast updated successfully: ' . $result->id);
+                } catch (\Exception $e) {
+                    \Log::error('Error updating loan forecast: ' . $e->getMessage());
+                    return redirect()->back()->with('error', 'Error updating loan: ' . $e->getMessage());
+                }
             }
+
+            // Recalculate loan balance excluding non-deduction loans within hold period
+            $now = now();
+            $loanBalance = $member->loanForecasts()
+                ->where(function ($query) use ($now) {
+                    $query->where('account_status', 'deduction')
+                        ->orWhere(function ($q) use ($now) {
+                            $q->where('account_status', 'non-deduction')
+                                ->where(function ($sq) use ($now) {
+                                    $sq->whereNull('start_hold')
+                                        ->orWhere('start_hold', '>', $now)
+                                        ->orWhere('expiry_date', '<', $now);
+                                });
+                        });
+                })
+                ->sum('total_due');
+
+            \Log::info('Recalculated loan balance: ' . $loanBalance);
+            $member->update(['loan_balance' => $loanBalance]);
         }
 
         return redirect()->back()->with('success', 'Member and loan forecast(s) updated successfully!');
@@ -282,6 +345,10 @@ class MasterController extends Controller
             'loan_forecasts.*.interest_due' => 'required|numeric',
             'loan_forecasts.*.penalty_due' => 'required|numeric',
             'loan_forecasts.*.billing_period' => 'nullable|string',
+            'loan_forecasts.*.start_hold' => 'nullable|date',
+            'loan_forecasts.*.expiry_date' => 'nullable|date',
+            'loan_forecasts.*.account_status' => 'required|in:deduction,non-deduction',
+            'loan_forecasts.*.approval_no' => 'nullable|string',
         ]);
 
         $member = Member::findOrFail($id);
@@ -307,15 +374,73 @@ class MasterController extends Controller
 
         // Update or create loan forecasts if present
         if ($request->has('loan_forecasts')) {
+            \Log::info('Updating loan forecasts for member: ' . $member->id);
+
             foreach ($request->input('loan_forecasts') as $loanData) {
-                $member->loanForecasts()->updateOrCreate(
-                    [
-                        'member_id' => $member->id,
-                        'loan_acct_no' => $loanData['loan_acct_no'],
-                    ],
-                    $loanData
-                );
+                \Log::info('Processing loan: ' . json_encode($loanData));
+
+                // Check if loan should switch back to deduction based on expiry date
+                if (isset($loanData['account_status']) &&
+                    $loanData['account_status'] === 'non-deduction' &&
+                    !empty($loanData['expiry_date']) &&
+                    strtotime($loanData['expiry_date']) < time()) {
+                    $loanData['account_status'] = 'deduction';
+                    \Log::info('Loan switched to deduction due to expired date');
+                }
+
+                // Ensure all fields are included in the update
+                $loanForecastData = [
+                    'loan_acct_no' => $loanData['loan_acct_no'],
+                    'amount_due' => $loanData['amount_due'],
+                    'open_date' => $loanData['open_date'],
+                    'maturity_date' => $loanData['maturity_date'],
+                    'amortization_due_date' => $loanData['amortization_due_date'],
+                    'total_due' => $loanData['total_due'],
+                    'principal_due' => $loanData['principal_due'],
+                    'interest_due' => $loanData['interest_due'],
+                    'penalty_due' => $loanData['penalty_due'],
+                    'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
+                    'start_hold' => $loanData['start_hold'] ?? null,
+                    'expiry_date' => $loanData['expiry_date'] ?? null,
+                    'account_status' => $loanData['account_status'],
+                    'approval_no' => $loanData['approval_no'] ?? null,
+                ];
+
+                \Log::info('Updating loan forecast with data: ' . json_encode($loanForecastData));
+
+                try {
+                    $result = $member->loanForecasts()->updateOrCreate(
+                        [
+                            'member_id' => $member->id,
+                            'loan_acct_no' => $loanData['loan_acct_no'],
+                        ],
+                        $loanForecastData
+                    );
+                    \Log::info('Loan forecast updated successfully: ' . $result->id);
+                } catch (\Exception $e) {
+                    \Log::error('Error updating loan forecast: ' . $e->getMessage());
+                    return redirect()->back()->with('error', 'Error updating loan: ' . $e->getMessage());
+                }
             }
+
+            // Recalculate loan balance excluding non-deduction loans within hold period
+            $now = now();
+            $loanBalance = $member->loanForecasts()
+                ->where(function ($query) use ($now) {
+                    $query->where('account_status', 'deduction')
+                        ->orWhere(function ($q) use ($now) {
+                            $q->where('account_status', 'non-deduction')
+                                ->where(function ($sq) use ($now) {
+                                    $sq->whereNull('start_hold')
+                                        ->orWhere('start_hold', '>', $now)
+                                        ->orWhere('expiry_date', '<', $now);
+                                });
+                        });
+                })
+                ->sum('total_due');
+
+            \Log::info('Recalculated loan balance: ' . $loanBalance);
+            $member->update(['loan_balance' => $loanBalance]);
         }
 
         return redirect()->back()->with('success', 'Member and loan forecast(s) updated successfully!');

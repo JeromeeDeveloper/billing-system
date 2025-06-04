@@ -333,7 +333,8 @@
 
 
                                                         <button type="button" class="btn btn-rounded btn-primary"
-                                                            data-toggle="modal" data-target="#editModal"
+                                                            data-toggle="modal"
+                                                            data-target="#editModal"
                                                             data-id="{{ $item->member->id }}"
                                                             data-cid="{{ $item->member->cid }}"
                                                             data-emp_id="{{ $item->member->emp_id }}"
@@ -347,15 +348,15 @@
                                                             data-customer_classification="{{ $item->member->customer_classification }}"
                                                             data-occupation="{{ $item->member->occupation }}"
                                                             data-approval_no="{{ $item->member->approval_no }}"
-                                                            data-expiry_date="{{ optional($item->member->expiry_date)->format('Y-m-d') ?? '' }}"
-                                                            data-start_hold="{{ optional($item->member->start_hold)->format('Y-m-d') ?? '' }}"
+                                                            data-expiry_date="{{ optional($item->member->expiry_date)->format('Y-m-d') }}"
+                                                            data-start_hold="{{ optional($item->member->start_hold)->format('Y-m-d') }}"
+                                                            data-account_status="{{ $item->member->account_status }}"
                                                             data-industry="{{ $item->member->industry }}"
                                                             data-area_officer="{{ $item->member->area_officer }}"
                                                             data-area="{{ $item->member->area }}"
                                                             data-status="{{ $item->member->status }}"
                                                             data-branch_id="{{ $item->member->branch_id }}"
                                                             data-additional_address="{{ $item->member->additional_address }}"
-                                                            data-account_status="{{ $item->member->account_status }}"
                                                             data-loans='{!! json_encode($item->member->loan_forecasts_data) !!}'
                                                             data-savings='{!! json_encode($item->member->savings) !!}'
                                                             data-shares='{!! json_encode($item->member->shares) !!}'>
@@ -514,6 +515,38 @@
                                                                         <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                                                                     @endforeach
                                                                 </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-account_status">Account Status</label>
+                                                                <select class="form-control" name="account_status" id="edit-account_status">
+                                                                    <option value="">Select Status</option>
+                                                                    <option value="deduction">Deduction</option>
+                                                                    <option value="non-deduction">Non-Deduction</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-approval_no">Approval Number</label>
+                                                                <input type="text" class="form-control" name="approval_no" id="edit-approval_no">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-start_hold">Start Hold</label>
+                                                                <input type="date" class="form-control" name="start_hold" id="edit-start_hold">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-expiry_date">Expiry Date</label>
+                                                                <input type="date" class="form-control" name="expiry_date" id="edit-expiry_date">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -899,6 +932,12 @@
         $('#editModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
 
+            // Debug the data being passed
+            console.log('Loan data:', button.data('loans'));
+            console.log('Account Status:', button.data('account_status'));
+            console.log('Start Hold:', button.data('start_hold'));
+            console.log('Expiry Date:', button.data('expiry_date'));
+
             // Fill member fields as before
             $('#edit-id').val(button.data('id'));
             $('#edit-cid').val(button.data('cid'));
@@ -921,10 +960,17 @@
             $('#edit-share_balance').val(button.data('share_balance'));
             $('#edit-loan_balance').val(button.data('loan_balance'));
             $('#edit-billing_period').val(button.data('billing_period'));
-            $('#edit-account_status').val(button.data('account_status'));
             $('#edit-approval_no').val(button.data('approval_no'));
-            $('#edit-expiry_date').val(button.data('expiry_date'));
-            $('#edit-start_hold').val(button.data('start_hold'));
+
+            // Properly format and set dates and status
+            var expiry_date = button.data('expiry_date');
+            var start_hold = button.data('start_hold');
+            var account_status = button.data('account_status');
+
+            // Set the dates and account status
+            $('#edit-expiry_date').val(formatDate(expiry_date));
+            $('#edit-start_hold').val(formatDate(start_hold));
+            $('#edit-account_status').val(account_status);
 
             // Handle loans
             loans = button.data('loans') || [];
@@ -936,25 +982,15 @@
                 }
             }
 
-            // Handle savings
-            savings = button.data('savings') || [];
-            if (typeof savings === 'string') {
-                try {
-                    savings = JSON.parse(savings);
-                } catch {
-                    savings = [];
-                }
-            }
-
-            // Handle shares
-            shares = button.data('shares') || [];
-            if (typeof shares === 'string') {
-                try {
-                    shares = JSON.parse(shares);
-                } catch {
-                    shares = [];
-                }
-            }
+            // Format dates for loans - ensure we handle both full datetime and date-only formats
+            loans = loans.map(loan => ({
+                ...loan,
+                open_date: formatDate(loan.open_date),
+                maturity_date: formatDate(loan.maturity_date),
+                amortization_due_date: formatDate(loan.amortization_due_date),
+                start_hold: formatDate(loan.start_hold),
+                expiry_date: formatDate(loan.expiry_date)
+            }));
 
             // Reset indices
             currentLoanIndex = 0;
@@ -970,7 +1006,19 @@
             $('#editForm').attr('action', '/members/' + button.data('id'));
 
             updateNavButtons();
+
+            // Debug output to help troubleshoot
+            console.log('Account Status:', account_status);
+            console.log('Expiry Date:', expiry_date);
+            console.log('Start Hold:', start_hold);
         });
+
+        // Add helper function to format dates consistently
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            // Handle both full datetime and date-only formats
+            return dateString.split(' ')[0];  // This will return YYYY-MM-DD part
+        }
 
         // Button click handlers for loans
         $('#btnNext').click(function() {
@@ -1178,52 +1226,56 @@
 
             let loan = loans.length > 0 ? loans[index] : {};
 
+            // Debug the loan data
+            console.log('Rendering loan data:', loan);
+
             let html = `
     <div class="loan-item border p-3 mb-3 rounded position-relative">
-
+        <input type="hidden" name="loan_forecasts[${index}][id]" value="${loan.id || ''}">
+        <input type="hidden" name="loan_forecasts[${index}][billing_period]" value="${loan.billing_period || ''}">
         <div class="form-row">
             <div class="form-group col-md-6">
                 <label>Loan Account No.</label>
-                <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}">
+                <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Total Due</label>
-                <input type="text" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || ''}">
+                <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || ''}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Amount Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][amount_due]" class="form-control" value="${loan.amount_due || ''}">
+                <input type="number" step="0.01" name="loan_forecasts[${index}][amount_due]" class="form-control" value="${loan.amount_due || ''}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Open Date</label>
-                <input type="date" name="loan_forecasts[${index}][open_date]" class="form-control" value="${loan.open_date || ''}">
+                <input type="date" name="loan_forecasts[${index}][open_date]" class="form-control" value="${loan.open_date || ''}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Maturity Date</label>
-                <input type="date" name="loan_forecasts[${index}][maturity_date]" class="form-control" value="${loan.maturity_date || ''}">
+                <input type="date" name="loan_forecasts[${index}][maturity_date]" class="form-control" value="${loan.maturity_date || ''}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Amortization Due Date</label>
-                <input type="date" name="loan_forecasts[${index}][amortization_due_date]" class="form-control" value="${loan.amortization_due_date || ''}">
+                <input type="date" name="loan_forecasts[${index}][amortization_due_date]" class="form-control" value="${loan.amortization_due_date || ''}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Principal Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control" value="${loan.principal_due || ''}">
+                <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control" value="${loan.principal_due || ''}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Interest Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control" value="${loan.interest_due || ''}">
+                <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control" value="${loan.interest_due || ''}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Penalty Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][penalty_due]" class="form-control" value="${loan.penalty_due || ''}">
+                <input type="number" step="0.01" name="loan_forecasts[${index}][penalty_due]" class="form-control" value="${loan.penalty_due || ''}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Approval Number</label>
                 <input type="text" name="loan_forecasts[${index}][approval_no]" class="form-control" value="${loan.approval_no || ''}">
             </div>
             <div class="form-group col-md-6">
-                <label>Start Hold</label>
+                <label>Start Hold Date</label>
                 <input type="date" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
             </div>
             <div class="form-group col-md-6">
@@ -1232,7 +1284,8 @@
             </div>
             <div class="form-group col-md-6">
                 <label>Account Status</label>
-                <select name="loan_forecasts[${index}][account_status]" class="form-control">
+                <select name="loan_forecasts[${index}][account_status]" class="form-control" required>
+                    <option value="">Select Status</option>
                     <option value="deduction" ${loan.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                     <option value="non-deduction" ${loan.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                 </select>
