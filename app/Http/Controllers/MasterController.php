@@ -8,6 +8,7 @@ use App\Models\MasterList;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class MasterController extends Controller
 {
@@ -169,12 +170,18 @@ class MasterController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            Log::info('Update request received for member ' . $id, [
+                'request_data' => $request->all(),
+                'content_type' => $request->header('Content-Type'),
+                'accept' => $request->header('Accept')
+            ]);
+
             $request->validate([
                 // Member validation
-                'cid' => 'required|string|max:255',
+                'cid' => 'nullable|string|max:255',
                 'emp_id' => 'nullable|string|max:255',
-                'fname' => 'required|string|max:255',
-                'lname' => 'required|string|max:255',
+                'fname' => 'nullable|string|max:255',
+                'lname' => 'nullable|string|max:255',
                 'address' => 'nullable|string',
                 'birth_date' => 'nullable|date',
                 'expiry_date' => 'nullable|date',
@@ -229,140 +236,182 @@ class MasterController extends Controller
 
             $member = Member::findOrFail($id);
 
-            // Update member fields
-            $member->update($request->except(['savings', 'shares', 'loan_forecasts']));
-
-            // Update savings accounts
-            if ($request->has('savings')) {
-                Log::info('Processing savings updates for member: ' . $member->id);
-                foreach ($request->input('savings') as $index => $savingsData) {
-                    Log::info('Processing savings account: ' . json_encode($savingsData));
-
-                    try {
-                        $saving = $member->savings()
-                            ->where('account_number', $savingsData['account_number'])
-                            ->first();
-
-                        if ($saving) {
-                            $updateData = [
-                                'current_balance' => $savingsData['current_balance'],
-                                'approval_no' => $savingsData['approval_no'],
-                                'start_hold' => $savingsData['start_hold'],
-                                'expiry_date' => $savingsData['expiry_date'],
-                                'account_status' => $savingsData['account_status']
-                            ];
-
-                            Log::info('Updating savings account with data: ' . json_encode($updateData));
-                            $saving->update($updateData);
-                            Log::info('Successfully updated savings account: ' . $saving->id);
-                        } else {
-                            Log::error('Savings account not found: ' . $savingsData['account_number']);
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Error updating savings account: ' . $e->getMessage());
-                        throw $e;
-                    }
+            DB::beginTransaction();
+            try {
+                // Update member fields if they exist in the request
+                if ($request->except(['savings', 'shares', 'loan_forecasts'])) {
+                    $member->update($request->except(['savings', 'shares', 'loan_forecasts']));
                 }
-            }
 
-            // Update shares accounts
-            if ($request->has('shares')) {
-                Log::info('Processing shares updates for member: ' . $member->id);
-                foreach ($request->input('shares') as $index => $sharesData) {
-                    Log::info('Processing shares account: ' . json_encode($sharesData));
+                // Update savings accounts
+                if ($request->has('savings')) {
+                    Log::info('Processing savings updates for member: ' . $member->id);
+                    foreach ($request->input('savings') as $index => $savingsData) {
+                        Log::info('Processing savings account: ' . json_encode($savingsData));
 
-                    try {
-                        $share = $member->shares()
-                            ->where('account_number', $sharesData['account_number'])
-                            ->first();
+                        try {
+                            $saving = $member->savings()
+                                ->where('account_number', $savingsData['account_number'])
+                                ->first();
 
-                        if ($share) {
-                            $updateData = [
-                                'current_balance' => $sharesData['current_balance'],
-                                'approval_no' => $sharesData['approval_no'],
-                                'start_hold' => $sharesData['start_hold'],
-                                'expiry_date' => $sharesData['expiry_date'],
-                                'account_status' => $sharesData['account_status']
-                            ];
+                            if ($saving) {
+                                $updateData = [
+                                    'current_balance' => $savingsData['current_balance'],
+                                    'approval_no' => $savingsData['approval_no'],
+                                    'start_hold' => $savingsData['start_hold'],
+                                    'expiry_date' => $savingsData['expiry_date'],
+                                    'account_status' => $savingsData['account_status']
+                                ];
 
-                            Log::info('Updating shares account with data: ' . json_encode($updateData));
-                            $share->update($updateData);
-                            Log::info('Successfully updated shares account: ' . $share->id);
-                        } else {
-                            Log::error('Shares account not found: ' . $sharesData['account_number']);
+                                Log::info('Updating savings account with data: ' . json_encode($updateData));
+                                $saving->update($updateData);
+                                Log::info('Successfully updated savings account: ' . $saving->id);
+                            } else {
+                                Log::error('Savings account not found: ' . $savingsData['account_number']);
+                                throw new \Exception('Savings account not found: ' . $savingsData['account_number']);
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Error updating savings account: ' . $e->getMessage());
+                            throw $e;
                         }
-                    } catch (\Exception $e) {
-                        Log::error('Error updating shares account: ' . $e->getMessage());
-                        throw $e;
-                    }
-                }
-            }
-
-            // Update loan forecasts
-            if ($request->has('loan_forecasts')) {
-                Log::info('Processing loan forecasts for member: ' . $member->id);
-                foreach ($request->input('loan_forecasts') as $loanData) {
-                    Log::info('Processing loan: ' . json_encode($loanData));
-
-                    try {
-                        $loan = $member->loanForecasts()
-                            ->where('loan_acct_no', $loanData['loan_acct_no'])
-                            ->first();
-
-                        if ($loan) {
-                            $updateData = [
-                                'amount_due' => $loanData['amount_due'],
-                                'open_date' => $loanData['open_date'],
-                                'maturity_date' => $loanData['maturity_date'],
-                                'amortization_due_date' => $loanData['amortization_due_date'],
-                                'total_due' => $loanData['total_due'],
-                                'principal_due' => $loanData['principal_due'],
-                                'interest_due' => $loanData['interest_due'],
-                                'penalty_due' => $loanData['penalty_due'],
-                                'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
-                                'start_hold' => $loanData['start_hold'],
-                                'expiry_date' => $loanData['expiry_date'],
-                                'account_status' => $loanData['account_status'],
-                                'approval_no' => $loanData['approval_no']
-                            ];
-
-                            Log::info('Updating loan forecast with data: ' . json_encode($updateData));
-                            $loan->update($updateData);
-                            Log::info('Successfully updated loan forecast: ' . $loan->id);
-                        } else {
-                            Log::error('Loan forecast not found: ' . $loanData['loan_acct_no']);
-                        }
-                    } catch (\Exception $e) {
-                        Log::error('Error updating loan forecast: ' . $e->getMessage());
-                        throw $e;
                     }
                 }
 
-                // Recalculate loan balance
-                $now = now();
-                $loanBalance = $member->loanForecasts()
-                    ->where(function ($query) use ($now) {
-                        $query->where('account_status', 'deduction')
-                            ->orWhere(function ($q) use ($now) {
-                                $q->where('account_status', 'non-deduction')
-                                    ->where(function ($sq) use ($now) {
-                                        $sq->whereNull('start_hold')
-                                            ->orWhere('start_hold', '>', $now)
-                                            ->orWhere('expiry_date', '<', $now);
-                                    });
-                            });
-                    })
-                    ->sum('total_due');
+                // Update shares accounts
+                if ($request->has('shares')) {
+                    Log::info('Processing shares updates for member: ' . $member->id);
+                    foreach ($request->input('shares') as $index => $sharesData) {
+                        Log::info('Processing shares account: ' . json_encode($sharesData));
 
-                Log::info('Recalculated loan balance: ' . $loanBalance);
-                $member->update(['loan_balance' => $loanBalance]);
+                        try {
+                            $share = $member->shares()
+                                ->where('account_number', $sharesData['account_number'])
+                                ->first();
+
+                            if ($share) {
+                                $updateData = [
+                                    'current_balance' => $sharesData['current_balance'],
+                                    'approval_no' => $sharesData['approval_no'],
+                                    'start_hold' => $sharesData['start_hold'],
+                                    'expiry_date' => $sharesData['expiry_date'],
+                                    'account_status' => $sharesData['account_status']
+                                ];
+
+                                Log::info('Updating shares account with data: ' . json_encode($updateData));
+                                $share->update($updateData);
+                                Log::info('Successfully updated shares account: ' . $share->id);
+                            } else {
+                                Log::error('Shares account not found: ' . $sharesData['account_number']);
+                                throw new \Exception('Shares account not found: ' . $sharesData['account_number']);
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Error updating shares account: ' . $e->getMessage());
+                            throw $e;
+                        }
+                    }
+                }
+
+                // Update loan forecasts
+                if ($request->has('loan_forecasts')) {
+                    Log::info('Processing loan forecasts for member: ' . $member->id);
+                    foreach ($request->input('loan_forecasts') as $loanData) {
+                        Log::info('Processing loan: ' . json_encode($loanData));
+
+                        try {
+                            $loan = $member->loanForecasts()
+                                ->where('loan_acct_no', $loanData['loan_acct_no'])
+                                ->first();
+
+                            if ($loan) {
+                                $updateData = [
+                                    'amount_due' => $loanData['amount_due'],
+                                    'open_date' => $loanData['open_date'],
+                                    'maturity_date' => $loanData['maturity_date'],
+                                    'amortization_due_date' => $loanData['amortization_due_date'],
+                                    'total_due' => $loanData['total_due'],
+                                    'principal_due' => $loanData['principal_due'],
+                                    'interest_due' => $loanData['interest_due'],
+                                    'penalty_due' => $loanData['penalty_due'],
+                                    'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
+                                    'start_hold' => $loanData['start_hold'],
+                                    'expiry_date' => $loanData['expiry_date'],
+                                    'account_status' => $loanData['account_status'],
+                                    'approval_no' => $loanData['approval_no']
+                                ];
+
+                                Log::info('Updating loan forecast with data: ' . json_encode($updateData));
+                                $loan->update($updateData);
+                                Log::info('Successfully updated loan forecast: ' . $loan->id);
+                            } else {
+                                Log::error('Loan forecast not found: ' . $loanData['loan_acct_no']);
+                                throw new \Exception('Loan forecast not found: ' . $loanData['loan_acct_no']);
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Error updating loan forecast: ' . $e->getMessage());
+                            throw $e;
+                        }
+                    }
+
+                    // Recalculate loan balance
+                    $now = now();
+                    $totalLoanBalance = $member->loanForecasts()
+                        ->where(function ($query) use ($now) {
+                            $query->where('account_status', 'deduction')
+                                ->orWhere(function ($q) use ($now) {
+                                    $q->where('account_status', 'non-deduction')
+                                        ->where(function ($sq) use ($now) {
+                                            $sq->whereNull('start_hold')
+                                                ->orWhere('start_hold', '>', $now)
+                                                ->orWhere('expiry_date', '<', $now);
+                                        });
+                                });
+                        })
+                        ->sum('total_due');
+
+                    Log::info('Recalculated loan balance for member ' . $member->id . ': ' . $totalLoanBalance);
+                    $member->update(['loan_balance' => $totalLoanBalance]);
+                }
+
+                DB::commit();
+
+                // Return JSON response for AJAX requests
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Member, savings, shares and loan forecast(s) updated successfully!',
+                        'member' => $member->fresh()->load(['savings', 'shares', 'loanForecasts'])
+                    ]);
+                }
+
+                return redirect()->back()->with('success', 'Member, savings, shares and loan forecast(s) updated successfully!');
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Transaction failed: ' . $e->getMessage());
+
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Error updating member data: ' . $e->getMessage()
+                    ], 422);
+                }
+
+                return redirect()->back()
+                    ->with('error', 'Error updating member data: ' . $e->getMessage())
+                    ->withInput();
             }
-
-            return redirect()->back()->with('success', 'Member, savings, shares and loan forecast(s) updated successfully!');
         } catch (\Exception $e) {
-            Log::error('Error in update method: ' . $e->getMessage());
+            Log::error('Validation or other error: ' . $e->getMessage());
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error: ' . $e->getMessage()
+                ], 422);
+            }
+
             return redirect()->back()
-                ->with('error', 'Error updating member data: ' . $e->getMessage())
+                ->with('error', 'Error: ' . $e->getMessage())
                 ->withInput();
         }
     }

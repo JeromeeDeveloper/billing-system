@@ -70,8 +70,8 @@ Route::get('/Remittance', [RemittanceController::class, 'index'])->name('remitta
 
 //Master List
 Route::get('/Master', [MasterController::class, 'index'])->name('master');
-Route::put('/members/{id}', [MasterController::class, 'update']);
-Route::delete('/members/{id}', [MasterController::class, 'destroy']);
+Route::put('/master/members/{id}', [MasterController::class, 'update'])->name('master.member.update');
+Route::delete('/master/members/{id}', [MasterController::class, 'destroy'])->name('master.member.delete');
 Route::post('Admin/master/add', [MasterController::class, 'store'])->name('members.store');
 
 //Savings

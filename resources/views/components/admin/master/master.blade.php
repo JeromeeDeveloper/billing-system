@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Billing and Collection</title>
 
@@ -1015,8 +1016,8 @@
             renderSavings(currentSavingsIndex);
             renderShares(currentSharesIndex);
 
-            // Set form action dynamically
-            $('#editForm').attr('action', '/members/' + button.data('id'));
+            // Update form action dynamically
+            $('#editForm').attr('action', '/master/members/' + button.data('id'));
 
             updateNavButtons();
         });
@@ -1502,6 +1503,13 @@
 
     <script>
         $(document).ready(function() {
+            // Setup CSRF token for all AJAX requests
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
             $('.branch-item').click(function(e) {
                 e.preventDefault();
                 var branchName = $(this).text();
@@ -1561,6 +1569,184 @@
                 });
             });
         });
+
+        function applyBulkEdit() {
+            const approvalNo = $('#bulkApprovalNo').val();
+            const startHold = $('#bulkStartHold').val();
+            const expiryDate = $('#bulkExpiryDate').val();
+            const accountStatus = $('#bulkAccountStatus').val();
+
+            // Get selected account indices
+            const selectedIndices = [];
+            $('#bulkEditAccounts input:checked').each(function() {
+                selectedIndices.push($(this).data('index'));
+            });
+
+            if (selectedIndices.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Accounts Selected',
+                    text: 'Please select at least one account to edit.',
+                });
+                return;
+            }
+
+            // Debug selected accounts before changes
+            const beforeChanges = {
+                loans: JSON.parse(JSON.stringify(loans)),
+                savings: JSON.parse(JSON.stringify(savings)),
+                shares: JSON.parse(JSON.stringify(shares))
+            };
+
+            // Apply changes to selected accounts
+            selectedIndices.forEach(index => {
+                if (currentBulkEditType === 'loans') {
+                    if (approvalNo !== '') loans[index].approval_no = approvalNo;
+                    if (startHold !== '') loans[index].start_hold = startHold;
+                    if (expiryDate !== '') loans[index].expiry_date = expiryDate;
+                    if (accountStatus !== '') loans[index].account_status = accountStatus;
+                } else if (currentBulkEditType === 'savings') {
+                    if (approvalNo !== '') savings[index].approval_no = approvalNo;
+                    if (startHold !== '') savings[index].start_hold = startHold;
+                    if (expiryDate !== '') savings[index].expiry_date = expiryDate;
+                    if (accountStatus !== '') savings[index].account_status = accountStatus;
+                } else if (currentBulkEditType === 'shares') {
+                    if (approvalNo !== '') shares[index].approval_no = approvalNo;
+                    if (startHold !== '') shares[index].start_hold = startHold;
+                    if (expiryDate !== '') shares[index].expiry_date = expiryDate;
+                    if (accountStatus !== '') shares[index].account_status = accountStatus;
+                }
+            });
+
+            // Debug data after changes
+            const afterChanges = {
+                loans: JSON.parse(JSON.stringify(loans)),
+                savings: JSON.parse(JSON.stringify(savings)),
+                shares: JSON.parse(JSON.stringify(shares))
+            };
+
+            // Re-render the current view
+            if (currentBulkEditType === 'loans') {
+                renderLoan(currentLoanIndex);
+            } else if (currentBulkEditType === 'savings') {
+                renderSavings(currentSavingsIndex);
+            } else if (currentBulkEditType === 'shares') {
+                renderShares(currentSharesIndex);
+            }
+
+            // Get the member ID from the edit form
+            const memberId = $('#edit-id').val();
+
+            // Show loading state
+            Swal.fire({
+                title: 'Saving changes...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Prepare the form data
+            let formData = new FormData();
+            formData.append('_method', 'PUT');
+            formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+            // Only include the data for the current type being edited
+            if (currentBulkEditType === 'loans') {
+                selectedIndices.forEach((index, i) => {
+                    const loan = loans[index];
+                    Object.entries(loan).forEach(([key, value]) => {
+                        if (value !== null && value !== undefined) {
+                            formData.append(`loan_forecasts[${i}][${key}]`, value);
+                        }
+                    });
+                    // Ensure required fields are present
+                    formData.append(`loan_forecasts[${i}][account_status]`, loan.account_status || accountStatus);
+                    formData.append(`loan_forecasts[${i}][approval_no]`, loan.approval_no || approvalNo);
+                    formData.append(`loan_forecasts[${i}][start_hold]`, loan.start_hold || startHold);
+                    formData.append(`loan_forecasts[${i}][expiry_date]`, loan.expiry_date || expiryDate);
+                });
+            } else if (currentBulkEditType === 'savings') {
+                selectedIndices.forEach((index, i) => {
+                    const saving = savings[index];
+                    Object.entries(saving).forEach(([key, value]) => {
+                        if (value !== null && value !== undefined) {
+                            formData.append(`savings[${i}][${key}]`, value);
+                        }
+                    });
+                    // Ensure required fields are present
+                    formData.append(`savings[${i}][account_status]`, saving.account_status || accountStatus);
+                    formData.append(`savings[${i}][approval_no]`, saving.approval_no || approvalNo);
+                    formData.append(`savings[${i}][start_hold]`, saving.start_hold || startHold);
+                    formData.append(`savings[${i}][expiry_date]`, saving.expiry_date || expiryDate);
+                });
+            } else if (currentBulkEditType === 'shares') {
+                selectedIndices.forEach((index, i) => {
+                    const share = shares[index];
+                    Object.entries(share).forEach(([key, value]) => {
+                        if (value !== null && value !== undefined) {
+                            formData.append(`shares[${i}][${key}]`, value);
+                        }
+                    });
+                    // Ensure required fields are present
+                    formData.append(`shares[${i}][account_status]`, share.account_status || accountStatus);
+                    formData.append(`shares[${i}][approval_no]`, share.approval_no || approvalNo);
+                    formData.append(`shares[${i}][start_hold]`, share.start_hold || startHold);
+                    formData.append(`shares[${i}][expiry_date]`, share.expiry_date || expiryDate);
+                });
+            }
+
+            // Add debug information to form data
+            formData.append('debug_info', JSON.stringify({
+                selectedIndices,
+                beforeChanges,
+                afterChanges,
+                currentBulkEditType
+            }));
+
+            // Submit the changes to the server
+            $.ajax({
+                url: `/master/members/${memberId}`,
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Accept': 'application/json'
+                },
+                success: function(response) {
+                    // Close the bulk edit modal
+                    $('#bulkEditModal').modal('hide');
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Changes Saved Successfully',
+                        text: 'All selected accounts have been updated.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error response:', xhr);
+                    console.error('Status:', status);
+                    console.error('Error:', error);
+
+                    let errorMessage = 'An error occurred while saving changes.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage
+                    });
+                }
+            });
+        }
     </script>
 
     <div class="modal fade" id="bulkEditModal" tabindex="-1" role="dialog" aria-labelledby="bulkEditModalLabel" aria-hidden="true">
@@ -1742,113 +1928,8 @@
     function closeBulkEdit() {
         $('#bulkEditModal').modal('hide');
     }
-
-    function applyBulkEdit() {
-        const approvalNo = $('#bulkApprovalNo').val();
-        const startHold = $('#bulkStartHold').val();
-        const expiryDate = $('#bulkExpiryDate').val();
-        const accountStatus = $('#bulkAccountStatus').val();
-
-        // Get selected account indices
-        const selectedIndices = [];
-        $('#bulkEditAccounts input:checked').each(function() {
-            selectedIndices.push($(this).data('index'));
-        });
-
-        if (selectedIndices.length === 0) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'No Accounts Selected',
-                text: 'Please select at least one account to edit.',
-            });
-            return;
-        }
-
-        // Apply changes to selected accounts
-        selectedIndices.forEach(index => {
-            if (currentBulkEditType === 'loans') {
-                if (approvalNo) loans[index].approval_no = approvalNo;
-                if (startHold) loans[index].start_hold = startHold;
-                if (expiryDate) loans[index].expiry_date = expiryDate;
-                if (accountStatus) loans[index].account_status = accountStatus;
-            } else if (currentBulkEditType === 'savings') {
-                if (approvalNo) savings[index].approval_no = approvalNo;
-                if (startHold) savings[index].start_hold = startHold;
-                if (expiryDate) savings[index].expiry_date = expiryDate;
-                if (accountStatus) savings[index].account_status = accountStatus;
-            } else if (currentBulkEditType === 'shares') {
-                if (approvalNo) shares[index].approval_no = approvalNo;
-                if (startHold) shares[index].start_hold = startHold;
-                if (expiryDate) shares[index].expiry_date = expiryDate;
-                if (accountStatus) shares[index].account_status = accountStatus;
-            }
-        });
-
-        // Re-render the current view
-        if (currentBulkEditType === 'loans') {
-            renderLoan(currentLoanIndex);
-        } else if (currentBulkEditType === 'savings') {
-            renderSavings(currentSavingsIndex);
-        } else if (currentBulkEditType === 'shares') {
-            renderShares(currentSharesIndex);
-        }
-
-        // Close the modal
-        $('#bulkEditModal').modal('hide');
-
-        // Show success message
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: 'Bulk updates applied successfully!',
-            timer: 1500,
-            showConfirmButton: false
-        });
-    }
-
-    // Update the section headers in the edit modal
-    $(document).ready(function() {
-        // Replace the existing section headers with new ones that include bulk edit buttons
-        const updateSectionHeaders = function() {
-            const savingsHeader = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="section-title bg-light p-2 rounded mb-0">
-                        <i class="fa fa-piggy-bank me-2"></i>Savings Accounts
-                    </h6>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('savings')">
-                        Bulk Edit Savings
-                    </button>
-                </div>`;
-
-            const sharesHeader = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="section-title bg-light p-2 rounded mb-0">
-                        <i class="fa fa-chart-pie me-2"></i>Share Accounts
-                    </h6>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('shares')">
-                        Bulk Edit Shares
-                    </button>
-                </div>`;
-
-            const loansHeader = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="section-title bg-light p-2 rounded mb-0">
-                        <i class="fa fa-file-invoice-dollar me-2"></i>Loan Information
-                    </h6>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('loans')">
-                        Bulk Edit Loans
-                    </button>
-                </div>`;
-
-            $('#editModal').find('.section-title:contains("Savings Accounts")').parent().replaceWith(savingsHeader);
-            $('#editModal').find('.section-title:contains("Share Accounts")').parent().replaceWith(sharesHeader);
-            $('#editModal').find('.section-title:contains("Loan Information")').parent().replaceWith(loansHeader);
-        };
-
-        // Call when edit modal is shown
-        $('#editModal').on('shown.bs.modal', updateSectionHeaders);
-    });
     </script>
+
 </body>
 
 </html>
