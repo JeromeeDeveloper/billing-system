@@ -1229,6 +1229,10 @@
                             <option value="non-deduction" ${saving.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                         </select>
                     </div>
+                    <div class="form-group col-md-6">
+                        <label>Deduction Amount</label>
+                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount || '0.00'}">
+                    </div>
                 </div>
             </div>`;
 
@@ -1285,6 +1289,10 @@
                             <option value="deduction" ${share.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                             <option value="non-deduction" ${share.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                         </select>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Deduction Amount</label>
+                        <input type="number" step="0.01" name="shares[${index}][deduction_amount]" class="form-control" value="${share.deduction_amount || '0.00'}">
                     </div>
                 </div>
             </div>`;

@@ -24,7 +24,8 @@ class Shares extends Model
         'approval_no',
         'start_hold',
         'expiry_date',
-        'account_status'
+        'account_status',
+        'deduction_amount'
     ];
 
     protected $casts = [
@@ -33,7 +34,8 @@ class Shares extends Model
         'expiry_date' => 'date:Y-m-d',
         'current_balance' => 'decimal:2',
         'available_balance' => 'decimal:2',
-        'interest' => 'decimal:2'
+        'interest' => 'decimal:2',
+        'deduction_amount' => 'decimal:2'
     ];
 
     public function setStartHoldAttribute($value)

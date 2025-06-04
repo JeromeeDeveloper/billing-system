@@ -206,6 +206,7 @@ class MasterController extends Controller
                 'savings.*.start_hold' => 'nullable|date',
                 'savings.*.expiry_date' => 'nullable|date',
                 'savings.*.account_status' => 'required|in:deduction,non-deduction',
+                'savings.*.deduction_amount' => 'nullable|numeric',
 
                 // Shares validation
                 'shares' => 'nullable|array',
@@ -215,6 +216,7 @@ class MasterController extends Controller
                 'shares.*.start_hold' => 'nullable|date',
                 'shares.*.expiry_date' => 'nullable|date',
                 'shares.*.account_status' => 'required|in:deduction,non-deduction',
+                'shares.*.deduction_amount' => 'nullable|numeric',
 
                 // LoanForecast validation
                 'loan_forecasts' => 'nullable|array',
@@ -260,7 +262,8 @@ class MasterController extends Controller
                                     'approval_no' => $savingsData['approval_no'],
                                     'start_hold' => $savingsData['start_hold'],
                                     'expiry_date' => $savingsData['expiry_date'],
-                                    'account_status' => $savingsData['account_status']
+                                    'account_status' => $savingsData['account_status'],
+                                    'deduction_amount' => $savingsData['deduction_amount']
                                 ];
 
                                 Log::info('Updating savings account with data: ' . json_encode($updateData));
@@ -294,7 +297,8 @@ class MasterController extends Controller
                                     'approval_no' => $sharesData['approval_no'],
                                     'start_hold' => $sharesData['start_hold'],
                                     'expiry_date' => $sharesData['expiry_date'],
-                                    'account_status' => $sharesData['account_status']
+                                    'account_status' => $sharesData['account_status'],
+                                    'deduction_amount' => $sharesData['deduction_amount']
                                 ];
 
                                 Log::info('Updating shares account with data: ' . json_encode($updateData));
