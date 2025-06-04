@@ -188,68 +188,6 @@
                                                 </div>
                                             </div>
 
-                                            <!-- Financial Information Section -->
-                                            <div class="col-12 mb-3 mt-4">
-                                                <h5>Financial Information</h5>
-                                            </div>
-
-                                            <div class="col-md-4">
-                                                <div class="form-group">
-                                                    <label class="form-label">Savings Balance</label>
-                                                    <input type="number" step="0.01" name="savings_balance" class="form-control">
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-4">
-                                                <div class="form-group">
-                                                    <label class="form-label">Share Balance</label>
-                                                    <input type="number" step="0.01" name="share_balance" class="form-control">
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-4">
-                                                <div class="form-group">
-                                                    <label class="form-label">Loan Balance</label>
-                                                    <input type="number" step="0.01" name="loan_balance" class="form-control">
-                                                </div>
-                                            </div>
-
-                                            <!-- Deduction Settings Section -->
-                                            <div class="col-12 mb-3 mt-4">
-                                                <h5>Deduction Settings</h5>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Account Status</label>
-                                                    <select class="form-control" name="account_status">
-                                                        <option value="">Select Status</option>
-                                                        <option value="deduction">Deduction</option>
-                                                        <option value="non-deduction">Non-Deduction</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Approval Number</label>
-                                                    <input type="text" name="approval_no" class="form-control">
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Start Hold</label>
-                                                    <input type="date" name="start_hold" class="form-control">
-                                                </div>
-                                            </div>
-
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label class="form-label">Expiry Date</label>
-                                                    <input type="date" name="expiry_date" class="form-control">
-                                                </div>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -518,7 +456,7 @@
                                                             </div>
                                                         </div>
 
-                                                        <div class="col-md-6">
+                                                        {{-- <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label" for="edit-account_status">Account Status</label>
                                                                 <select class="form-control" name="account_status" id="edit-account_status">
@@ -548,7 +486,8 @@
                                                                 <label class="form-label" for="edit-expiry_date">Expiry Date</label>
                                                                 <input type="date" class="form-control" name="expiry_date" id="edit-expiry_date">
                                                             </div>
-                                                        </div>
+                                                        </div> --}}
+
                                                     </div>
                                                 </div>
 
