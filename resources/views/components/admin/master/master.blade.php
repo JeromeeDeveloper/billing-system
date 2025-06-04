@@ -75,7 +75,8 @@
                                                     <select class="form-control" name="branch_id" required>
                                                         <option value="">Select Branch</option>
                                                         @foreach ($branches as $branch)
-                                                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                            <option value="{{ $branch->id }}">{{ $branch->name }}
+                                                            </option>
                                                         @endforeach
                                                     </select>
                                                 </div>
@@ -157,7 +158,8 @@
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">Customer Classification</label>
-                                                    <input type="text" name="customer_classification" class="form-control">
+                                                    <input type="text" name="customer_classification"
+                                                        class="form-control">
                                                 </div>
                                             </div>
 
@@ -194,7 +196,8 @@
                                 </div>
 
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-secondary"
+                                        data-dismiss="modal">Close</button>
                                     <button type="submit" class="btn btn-success">Save Member</button>
                                 </div>
                             </div>
@@ -215,14 +218,10 @@
                                 <div class="d-flex align-items-center" style="gap: 15px;">
                                     <form method="GET" action="{{ url()->current() }}">
                                         <div class="input-group">
-                                            <input type="text"
-                                                name="search"
-                                                value="{{ request('search') }}"
-                                                class="form-control"
-                                                placeholder="Search members..."
+                                            <input type="text" name="search" value="{{ request('search') }}"
+                                                class="form-control" placeholder="Search members..."
                                                 style="width: 250px; height: 40px;" />
-                                            <button type="submit"
-                                                class="btn btn-primary d-flex align-items-center"
+                                            <button type="submit" class="btn btn-primary d-flex align-items-center"
                                                 style="height: 40px;">
                                                 <i class="fa fa-search me-2"></i>
                                                 Search
@@ -230,11 +229,8 @@
                                         </div>
                                     </form>
 
-                                    <a href="#"
-                                        class="btn btn-success d-flex align-items-center"
-                                        data-toggle="modal"
-                                        data-target="#addModal"
-                                        style="height: 40px;">
+                                    <a href="#" class="btn btn-success d-flex align-items-center"
+                                        data-toggle="modal" data-target="#addModal" style="height: 40px;">
                                         <i class="fa fa-plus-circle me-2"></i>
                                         Add New Member
                                     </a>
@@ -272,8 +268,7 @@
 
 
                                                         <button type="button" class="btn btn-rounded btn-primary"
-                                                            data-toggle="modal"
-                                                            data-target="#editModal"
+                                                            data-toggle="modal" data-target="#editModal"
                                                             data-id="{{ $item->member->id }}"
                                                             data-cid="{{ $item->member->cid }}"
                                                             data-emp_id="{{ $item->member->emp_id }}"
@@ -380,28 +375,35 @@
                                                         <div class="col-md-6">
                                                             <div class="form-group">
                                                                 <label class="form-label" for="edit-cid">CID</label>
-                                                                <input type="text" class="form-control" name="cid" id="edit-cid">
+                                                                <input type="text" class="form-control"
+                                                                    name="cid" id="edit-cid">
                                                             </div>
                                                         </div>
 
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label" for="edit-emp_id">Employee ID</label>
-                                                                <input type="text" class="form-control" name="emp_id" id="edit-emp_id">
+                                                                <label class="form-label" for="edit-emp_id">Employee
+                                                                    ID</label>
+                                                                <input type="text" class="form-control"
+                                                                    name="emp_id" id="edit-emp_id">
                                                             </div>
                                                         </div>
 
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label" for="edit-fname">First Name</label>
-                                                                <input type="text" class="form-control" name="fname" id="edit-fname">
+                                                                <label class="form-label" for="edit-fname">First
+                                                                    Name</label>
+                                                                <input type="text" class="form-control"
+                                                                    name="fname" id="edit-fname">
                                                             </div>
                                                         </div>
 
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label" for="edit-lname">Last Name</label>
-                                                                <input type="text" class="form-control" name="lname" id="edit-lname">
+                                                                <label class="form-label" for="edit-lname">Last
+                                                                    Name</label>
+                                                                <input type="text" class="form-control"
+                                                                    name="lname" id="edit-lname">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -414,29 +416,36 @@
                                                     <div class="row g-3">
                                                         <div class="col-md-12">
                                                             <div class="form-group">
-                                                                <label class="form-label" for="edit-address">Address</label>
+                                                                <label class="form-label"
+                                                                    for="edit-address">Address</label>
                                                                 <textarea class="form-control" name="address" id="edit-address" rows="2"></textarea>
                                                             </div>
                                                         </div>
 
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label" for="edit-birth_date">Birth Date</label>
-                                                                <input type="date" class="form-control" name="birth_date" id="edit-birth_date">
+                                                                <label class="form-label" for="edit-birth_date">Birth
+                                                                    Date</label>
+                                                                <input type="date" class="form-control"
+                                                                    name="birth_date" id="edit-birth_date">
                                                             </div>
                                                         </div>
 
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label" for="edit-date_registered">Date Registered</label>
-                                                                <input type="date" class="form-control" name="date_registered" id="edit-date_registered">
+                                                                <label class="form-label"
+                                                                    for="edit-date_registered">Date Registered</label>
+                                                                <input type="date" class="form-control"
+                                                                    name="date_registered" id="edit-date_registered">
                                                             </div>
                                                         </div>
 
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label" for="edit-gender">Gender</label>
-                                                                <select class="form-control" name="gender" id="edit-gender">
+                                                                <label class="form-label"
+                                                                    for="edit-gender">Gender</label>
+                                                                <select class="form-control" name="gender"
+                                                                    id="edit-gender">
                                                                     <option value="">Select</option>
                                                                     <option value="male">Male</option>
                                                                     <option value="female">Female</option>
@@ -447,11 +456,14 @@
 
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                                <label class="form-label" for="edit-branch_id">Branch</label>
-                                                                <select class="form-control" id="edit-branch_id" name="branch_id">
+                                                                <label class="form-label"
+                                                                    for="edit-branch_id">Branch</label>
+                                                                <select class="form-control" id="edit-branch_id"
+                                                                    name="branch_id">
                                                                     <option value="">Select Branch</option>
                                                                     @foreach ($branches as $branch)
-                                                                        <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                                        <option value="{{ $branch->id }}">
+                                                                            {{ $branch->name }}</option>
                                                                     @endforeach
                                                                 </select>
                                                             </div>
@@ -497,17 +509,21 @@
                                                         <h6 class="section-title bg-light p-2 rounded mb-0">
                                                             <i class="fa fa-piggy-bank me-2"></i>Savings Accounts
                                                         </h6>
-                                                        <button type="button" class="btn btn-sm btn-primary bulk-edit" onclick="showBulkEditModal('savings')">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-primary bulk-edit"
+                                                            onclick="showBulkEditModal('savings')">
                                                             Bulk Edit Savings
                                                         </button>
                                                     </div>
                                                     <div id="savings-counter" class="alert alert-info mb-3"></div>
                                                     <div id="edit-savings-container"></div>
                                                     <div class="d-flex justify-content-between mt-2">
-                                                        <button type="button" id="btnPrevSavings" class="btn btn-outline-primary">
+                                                        <button type="button" id="btnPrevSavings"
+                                                            class="btn btn-outline-primary">
                                                             <i class="fa fa-arrow-left me-1"></i>Previous
                                                         </button>
-                                                        <button type="button" id="btnNextSavings" class="btn btn-outline-primary">
+                                                        <button type="button" id="btnNextSavings"
+                                                            class="btn btn-outline-primary">
                                                             Next<i class="fa fa-arrow-right ms-1"></i>
                                                         </button>
                                                     </div>
@@ -518,17 +534,21 @@
                                                         <h6 class="section-title bg-light p-2 rounded mb-0">
                                                             <i class="fa fa-chart-pie me-2"></i>Share Accounts
                                                         </h6>
-                                                        <button type="button" class="btn btn-sm btn-primary bulk-edit" onclick="showBulkEditModal('shares')">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-primary bulk-edit"
+                                                            onclick="showBulkEditModal('shares')">
                                                             Bulk Edit Shares
                                                         </button>
                                                     </div>
                                                     <div id="shares-counter" class="alert alert-info mb-3"></div>
                                                     <div id="edit-shares-container"></div>
                                                     <div class="d-flex justify-content-between mt-2">
-                                                        <button type="button" id="btnPrevShares" class="btn btn-outline-primary">
+                                                        <button type="button" id="btnPrevShares"
+                                                            class="btn btn-outline-primary">
                                                             <i class="fa fa-arrow-left me-1"></i>Previous
                                                         </button>
-                                                        <button type="button" id="btnNextShares" class="btn btn-outline-primary">
+                                                        <button type="button" id="btnNextShares"
+                                                            class="btn btn-outline-primary">
                                                             Next<i class="fa fa-arrow-right ms-1"></i>
                                                         </button>
                                                     </div>
@@ -537,9 +557,12 @@
                                                 <div class="mb-4">
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <h6 class="section-title bg-light p-2 rounded mb-0">
-                                                            <i class="fa fa-file-invoice-dollar me-2"></i>Loan Information
+                                                            <i class="fa fa-file-invoice-dollar me-2"></i>Loan
+                                                            Information
                                                         </h6>
-                                                        <button type="button" class="btn btn-sm btn-primary bulk-edit" onclick="showBulkEditModal('loans')">
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-primary bulk-edit"
+                                                            onclick="showBulkEditModal('loans')">
                                                             Bulk Edit Loans
                                                         </button>
                                                     </div>
@@ -552,10 +575,12 @@
                                                 <div class="me-auto">
                                                     <!-- Loan Navigation -->
                                                     <div class="btn-group me-2">
-                                                        <button type="button" class="btn btn-outline-secondary" id="btnPrev">
+                                                        <button type="button" class="btn btn-outline-secondary"
+                                                            id="btnPrev">
                                                             <i class="fa fa-arrow-left me-1"></i>Prev Loan
                                                         </button>
-                                                        <button type="button" class="btn btn-outline-secondary" id="btnNext">
+                                                        <button type="button" class="btn btn-outline-secondary"
+                                                            id="btnNext">
                                                             Next Loan<i class="fa fa-arrow-right ms-1"></i>
                                                         </button>
                                                     </div>
@@ -564,7 +589,8 @@
 
                                                 </div>
                                                 <div>
-                                                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
+                                                    <button type="button" class="btn btn-light"
+                                                        data-dismiss="modal">Cancel</button>
                                                     <button type="submit" class="btn btn-primary">
                                                         <i class="fa fa-save me-1"></i>Save Changes
                                                     </button>
@@ -704,15 +730,18 @@
 
                                                 <div>
                                                     <h6>Savings Accounts</h6>
-                                                    <div id="savings-account-details" class="border p-3 rounded mb-2" style="min-height: 150px;">
+                                                    <div id="savings-account-details" class="border p-3 rounded mb-2"
+                                                        style="min-height: 150px;">
                                                         <!-- Savings details will be injected here -->
                                                     </div>
 
                                                     <div class="d-flex justify-content-between mt-2">
-                                                        <button id="savings-view-prev" class="btn btn-sm btn-outline-primary">
+                                                        <button id="savings-view-prev"
+                                                            class="btn btn-sm btn-outline-primary">
                                                             <i class="fa fa-arrow-left me-1"></i>Previous
                                                         </button>
-                                                        <button id="savings-view-next" class="btn btn-sm btn-outline-primary">
+                                                        <button id="savings-view-next"
+                                                            class="btn btn-sm btn-outline-primary">
                                                             Next<i class="fa fa-arrow-right ms-1"></i>
                                                         </button>
                                                     </div>
@@ -722,15 +751,18 @@
 
                                                 <div>
                                                     <h6>Share Accounts</h6>
-                                                    <div id="shares-account-details" class="border p-3 rounded mb-2" style="min-height: 150px;">
+                                                    <div id="shares-account-details" class="border p-3 rounded mb-2"
+                                                        style="min-height: 150px;">
                                                         <!-- Shares details will be injected here -->
                                                     </div>
 
                                                     <div class="d-flex justify-content-between mt-2">
-                                                        <button id="shares-view-prev" class="btn btn-sm btn-outline-primary">
+                                                        <button id="shares-view-prev"
+                                                            class="btn btn-sm btn-outline-primary">
                                                             <i class="fa fa-arrow-left me-1"></i>Previous
                                                         </button>
-                                                        <button id="shares-view-next" class="btn btn-sm btn-outline-primary">
+                                                        <button id="shares-view-next"
+                                                            class="btn btn-sm btn-outline-primary">
                                                             Next<i class="fa fa-arrow-right ms-1"></i>
                                                         </button>
                                                     </div>
@@ -740,15 +772,18 @@
 
                                                 <div>
                                                     <h6>Loan Accounts</h6>
-                                                    <div id="loan-account-details" class="border p-3 rounded mb-2" style="min-height: 150px;">
+                                                    <div id="loan-account-details" class="border p-3 rounded mb-2"
+                                                        style="min-height: 150px;">
                                                         <!-- Loan details will be injected here -->
                                                     </div>
 
                                                     <div class="d-flex justify-content-between mt-2">
-                                                        <button id="loan-view-prev" class="btn btn-sm btn-outline-primary">
+                                                        <button id="loan-view-prev"
+                                                            class="btn btn-sm btn-outline-primary">
                                                             <i class="fa fa-arrow-left me-1"></i>Previous
                                                         </button>
-                                                        <button id="loan-view-next" class="btn btn-sm btn-outline-primary">
+                                                        <button id="loan-view-next"
+                                                            class="btn btn-sm btn-outline-primary">
                                                             Next<i class="fa fa-arrow-right ms-1"></i>
                                                         </button>
                                                     </div>
@@ -794,8 +829,8 @@
                                 }
 
                                 .card-header {
-                                    border-bottom: 1px solid rgba(0,0,0,.125);
-                                    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+                                    border-bottom: 1px solid rgba(0, 0, 0, .125);
+                                    box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
                                 }
 
                                 .input-group {
@@ -808,7 +843,7 @@
 
                                 .btn-success:hover {
                                     transform: translateY(-1px);
-                                    box-shadow: 0 4px 6px rgba(0,0,0,.1);
+                                    box-shadow: 0 4px 6px rgba(0, 0, 0, .1);
                                 }
 
                                 .card-title {
@@ -816,6 +851,65 @@
                                     letter-spacing: 0.5px;
                                 }
                             </style>
+
+                            <div class="modal fade" id="bulkEditModal" tabindex="-1" role="dialog"
+                                aria-labelledby="bulkEditModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="bulkEditTitle">Bulk Edit</h5>
+                                            <button type="button" class="close" data-dismiss="modal"
+                                                aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="form-group mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <label class="mb-0">Select Accounts to Edit</label>
+                                                    <div class="custom-control custom-checkbox">
+                                                        <input type="checkbox" class="custom-control-input"
+                                                            id="selectAllAccounts">
+                                                        <label class="custom-control-label"
+                                                            for="selectAllAccounts">Select All</label>
+                                                    </div>
+                                                </div>
+                                                <div id="bulkEditAccounts" class="border p-2 rounded"
+                                                    style="max-height: 200px; overflow-y: auto;">
+                                                    <!-- Account checkboxes will be populated here -->
+                                                </div>
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label>Approval Number</label>
+                                                <input type="text" class="form-control" id="bulkApprovalNo">
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label>Start Hold Date</label>
+                                                <input type="date" class="form-control" id="bulkStartHold">
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label>Expiry Date</label>
+                                                <input type="date" class="form-control" id="bulkExpiryDate">
+                                            </div>
+                                            <div class="form-group mb-3">
+                                                <label>Account Status</label>
+                                                <select class="form-control" id="bulkAccountStatus">
+                                                    <option value="">No Change</option>
+                                                    <option value="deduction">Deduction</option>
+                                                    <option value="non-deduction">Non-Deduction</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                onclick="closeBulkEdit()">Cancel</button>
+                                            <button type="button" class="btn btn-primary"
+                                                onclick="applyBulkEdit()">Apply Changes</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
 
                             <div class="d-flex flex-column align-items-center my-4">
                                 <div>
@@ -1749,141 +1843,66 @@
         }
     </script>
 
-    <div class="modal fade" id="bulkEditModal" tabindex="-1" role="dialog" aria-labelledby="bulkEditModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="bulkEditTitle">Bulk Edit</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="mb-0">Select Accounts to Edit</label>
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="selectAllAccounts">
-                                <label class="custom-control-label" for="selectAllAccounts">Select All</label>
-                            </div>
-                        </div>
-                        <div id="bulkEditAccounts" class="border p-2 rounded" style="max-height: 200px; overflow-y: auto;">
-                            <!-- Account checkboxes will be populated here -->
-                        </div>
-                    </div>
-                    <div class="form-group mb-3">
-                        <label>Approval Number</label>
-                        <input type="text" class="form-control" id="bulkApprovalNo">
-                    </div>
-                    <div class="form-group mb-3">
-                        <label>Start Hold Date</label>
-                        <input type="date" class="form-control" id="bulkStartHold">
-                    </div>
-                    <div class="form-group mb-3">
-                        <label>Expiry Date</label>
-                        <input type="date" class="form-control" id="bulkExpiryDate">
-                    </div>
-                    <div class="form-group mb-3">
-                        <label>Account Status</label>
-                        <select class="form-control" id="bulkAccountStatus">
-                            <option value="">No Change</option>
-                            <option value="deduction">Deduction</option>
-                            <option value="non-deduction">Non-Deduction</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeBulkEdit()">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="applyBulkEdit()">Apply Changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        #bulkEditModal {
-            z-index: 1060 !important;
-        }
-        .modal-backdrop.show:nth-child(2) {
-            z-index: 1055 !important;
-        }
-        .custom-control {
-            margin-bottom: 5px;
-            border-bottom: 1px solid #eee;
-        }
-        .custom-control:last-child {
-            border-bottom: none;
-        }
-        .custom-control-input {
-            margin-right: 10px;
-        }
-        #selectAllAccounts {
-            cursor: pointer;
-        }
-        .custom-control-label {
-            cursor: pointer;
-        }
-    </style>
 
     <script>
-    let currentBulkEditType = '';
+        let currentBulkEditType = '';
 
-    function showBulkEditModal(type) {
-        event.preventDefault();
-        event.stopPropagation();
+        function showBulkEditModal(type) {
+            event.preventDefault();
+            event.stopPropagation();
 
-        currentBulkEditType = type;
-        let accounts = [];
-        let title = '';
+            currentBulkEditType = type;
+            let accounts = [];
+            let title = '';
 
-        if (type === 'loans') {
-            accounts = loans;
-            title = 'Bulk Edit Loans';
-        } else if (type === 'savings') {
-            accounts = savings;
-            title = 'Bulk Edit Savings';
-        } else if (type === 'shares') {
-            accounts = shares;
-            title = 'Bulk Edit Shares';
-        }
-
-        $('#bulkEditTitle').text(title);
-
-        // Clear previous values
-        $('#bulkApprovalNo').val('');
-        $('#bulkStartHold').val('');
-        $('#bulkExpiryDate').val('');
-        $('#bulkAccountStatus').val('');
-        $('#selectAllAccounts').prop('checked', false);
-
-        // Populate accounts list
-        const accountsContainer = $('#bulkEditAccounts');
-        accountsContainer.empty();
-
-        let checkedCount = 0;
-        accounts.forEach((account, index) => {
-            const accountNo = type === 'loans' ? account.loan_acct_no : account.account_number;
-
-            // Check if account has non-deduction status or dates set
-            const hasNonDeduction = account.account_status === 'non-deduction';
-            const hasStartHold = account.start_hold && account.start_hold !== '';
-            const hasExpiryDate = account.expiry_date && account.expiry_date !== '';
-            const shouldBeChecked = hasNonDeduction || hasStartHold || hasExpiryDate;
-
-            if (shouldBeChecked) checkedCount++;
-
-            // Add status indicators for existing values
-            let statusInfo = '';
-            if (hasNonDeduction || hasStartHold || hasExpiryDate) {
-                statusInfo = '<small class="text-muted ml-2">(';
-                let statuses = [];
-                if (hasNonDeduction) statuses.push('Non-deduction');
-                if (hasStartHold) statuses.push(`Hold: ${account.start_hold}`);
-                if (hasExpiryDate) statuses.push(`Expiry: ${account.expiry_date}`);
-                statusInfo += statuses.join(', ') + ')</small>';
+            if (type === 'loans') {
+                accounts = loans;
+                title = 'Bulk Edit Loans';
+            } else if (type === 'savings') {
+                accounts = savings;
+                title = 'Bulk Edit Savings';
+            } else if (type === 'shares') {
+                accounts = shares;
+                title = 'Bulk Edit Shares';
             }
 
-            accountsContainer.append(`
+            $('#bulkEditTitle').text(title);
+
+            // Clear previous values
+            $('#bulkApprovalNo').val('');
+            $('#bulkStartHold').val('');
+            $('#bulkExpiryDate').val('');
+            $('#bulkAccountStatus').val('');
+            $('#selectAllAccounts').prop('checked', false);
+
+            // Populate accounts list
+            const accountsContainer = $('#bulkEditAccounts');
+            accountsContainer.empty();
+
+            let checkedCount = 0;
+            accounts.forEach((account, index) => {
+                const accountNo = type === 'loans' ? account.loan_acct_no : account.account_number;
+
+                // Check if account has non-deduction status or dates set
+                const hasNonDeduction = account.account_status === 'non-deduction';
+                const hasStartHold = account.start_hold && account.start_hold !== '';
+                const hasExpiryDate = account.expiry_date && account.expiry_date !== '';
+                const shouldBeChecked = hasNonDeduction || hasStartHold || hasExpiryDate;
+
+                if (shouldBeChecked) checkedCount++;
+
+                // Add status indicators for existing values
+                let statusInfo = '';
+                if (hasNonDeduction || hasStartHold || hasExpiryDate) {
+                    statusInfo = '<small class="text-muted ml-2">(';
+                    let statuses = [];
+                    if (hasNonDeduction) statuses.push('Non-deduction');
+                    if (hasStartHold) statuses.push(`Hold: ${account.start_hold}`);
+                    if (hasExpiryDate) statuses.push(`Expiry: ${account.expiry_date}`);
+                    statusInfo += statuses.join(', ') + ')</small>';
+                }
+
+                accountsContainer.append(`
                 <div class="custom-control custom-checkbox">
                     <input type="checkbox" class="custom-control-input account-checkbox"
                            id="bulk${type}${index}" data-index="${index}"
@@ -1893,40 +1912,40 @@
                     </label>
                 </div>
             `);
-        });
+            });
 
-        // Set select all checkbox state based on pre-checked items
-        const totalAccounts = accounts.length;
-        $('#selectAllAccounts').prop('checked', checkedCount === totalAccounts);
+            // Set select all checkbox state based on pre-checked items
+            const totalAccounts = accounts.length;
+            $('#selectAllAccounts').prop('checked', checkedCount === totalAccounts);
 
-        // Handle select all functionality
-        $('#selectAllAccounts').off('change').on('change', function() {
-            const isChecked = $(this).prop('checked');
-            $('.account-checkbox').prop('checked', isChecked);
-        });
+            // Handle select all functionality
+            $('#selectAllAccounts').off('change').on('change', function() {
+                const isChecked = $(this).prop('checked');
+                $('.account-checkbox').prop('checked', isChecked);
+            });
 
-        // Handle individual checkbox changes
-        $('.account-checkbox').off('change').on('change', function() {
-            const allChecked = $('.account-checkbox:checked').length === $('.account-checkbox').length;
-            $('#selectAllAccounts').prop('checked', allChecked);
-        });
+            // Handle individual checkbox changes
+            $('.account-checkbox').off('change').on('change', function() {
+                const allChecked = $('.account-checkbox:checked').length === $('.account-checkbox').length;
+                $('#selectAllAccounts').prop('checked', allChecked);
+            });
 
-        // Show summary of pre-selected accounts if any
-        // if (checkedCount > 0) {
-        //     const summaryHtml = `
+            // Show summary of pre-selected accounts if any
+            // if (checkedCount > 0) {
+            //     const summaryHtml = `
         //         <div class="alert alert-info mt-2">
         //             <small>${checkedCount} account(s) automatically selected due to existing non-deduction status or hold dates.</small>
         //         </div>
         //     `;
-        //     accountsContainer.after(summaryHtml);
-        // }
+            //     accountsContainer.after(summaryHtml);
+            // }
 
-        $('#bulkEditModal').modal('show');
-    }
+            $('#bulkEditModal').modal('show');
+        }
 
-    function closeBulkEdit() {
-        $('#bulkEditModal').modal('hide');
-    }
+        function closeBulkEdit() {
+            $('#bulkEditModal').modal('hide');
+        }
     </script>
 
 </body>

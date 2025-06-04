@@ -19447,3 +19447,26 @@ h5.member-profile {
     position: relative;
     bottom: 5px;
 }
+
+#bulkEditModal {
+    z-index: 1060 !important;
+}
+.modal-backdrop.show:nth-child(2) {
+    z-index: 1055 !important;
+}
+.custom-control {
+    margin-bottom: 5px;
+    border-bottom: 1px solid #eee;
+}
+.custom-control:last-child {
+    border-bottom: none;
+}
+.custom-control-input {
+    margin-right: 10px;
+}
+#selectAllAccounts {
+    cursor: pointer;
+}
+.custom-control-label {
+    cursor: pointer;
+}
