@@ -492,9 +492,14 @@
                                                 </div>
 
                                                 <div class="mb-4">
-                                                    <h6 class="section-title bg-light p-2 rounded">
-                                                        <i class="fa fa-piggy-bank me-2"></i>Savings Accounts
-                                                    </h6>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <h6 class="section-title bg-light p-2 rounded mb-0">
+                                                            <i class="fa fa-piggy-bank me-2"></i>Savings Accounts
+                                                        </h6>
+                                                        <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('savings')">
+                                                            Bulk Edit Savings
+                                                        </button>
+                                                    </div>
                                                     <div id="savings-counter" class="alert alert-info mb-3"></div>
                                                     <div id="edit-savings-container"></div>
                                                     <div class="d-flex justify-content-between mt-2">
@@ -508,9 +513,14 @@
                                                 </div>
 
                                                 <div class="mb-4">
-                                                    <h6 class="section-title bg-light p-2 rounded">
-                                                        <i class="fa fa-chart-pie me-2"></i>Share Accounts
-                                                    </h6>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <h6 class="section-title bg-light p-2 rounded mb-0">
+                                                            <i class="fa fa-chart-pie me-2"></i>Share Accounts
+                                                        </h6>
+                                                        <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('shares')">
+                                                            Bulk Edit Shares
+                                                        </button>
+                                                    </div>
                                                     <div id="shares-counter" class="alert alert-info mb-3"></div>
                                                     <div id="edit-shares-container"></div>
                                                     <div class="d-flex justify-content-between mt-2">
@@ -524,9 +534,14 @@
                                                 </div>
 
                                                 <div class="mb-4">
-                                                    <h6 class="section-title bg-light p-2 rounded">
-                                                        <i class="fa fa-file-invoice-dollar me-2"></i>Loan Information
-                                                    </h6>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <h6 class="section-title bg-light p-2 rounded mb-0">
+                                                            <i class="fa fa-file-invoice-dollar me-2"></i>Loan Information
+                                                        </h6>
+                                                        <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('loans')">
+                                                            Bulk Edit Loans
+                                                        </button>
+                                                    </div>
                                                     <div id="loan-counter" class="alert alert-info mb-3"></div>
                                                     <div id="edit-loan-forecast-container"></div>
                                                 </div>
@@ -1546,6 +1561,293 @@
                 });
             });
         });
+    </script>
+
+    <div class="modal fade" id="bulkEditModal" tabindex="-1" role="dialog" aria-labelledby="bulkEditModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkEditTitle">Bulk Edit</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="mb-0">Select Accounts to Edit</label>
+                            <div class="custom-control custom-checkbox">
+                                <input type="checkbox" class="custom-control-input" id="selectAllAccounts">
+                                <label class="custom-control-label" for="selectAllAccounts">Select All</label>
+                            </div>
+                        </div>
+                        <div id="bulkEditAccounts" class="border p-2 rounded" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Account checkboxes will be populated here -->
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Approval Number</label>
+                        <input type="text" class="form-control" id="bulkApprovalNo">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Start Hold Date</label>
+                        <input type="date" class="form-control" id="bulkStartHold">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Expiry Date</label>
+                        <input type="date" class="form-control" id="bulkExpiryDate">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label>Account Status</label>
+                        <select class="form-control" id="bulkAccountStatus">
+                            <option value="">No Change</option>
+                            <option value="deduction">Deduction</option>
+                            <option value="non-deduction">Non-Deduction</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeBulkEdit()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="applyBulkEdit()">Apply Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #bulkEditModal {
+            z-index: 1060 !important;
+        }
+        .modal-backdrop.show:nth-child(2) {
+            z-index: 1055 !important;
+        }
+        .custom-control {
+            padding: 8px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .custom-control:last-child {
+            border-bottom: none;
+        }
+        .custom-control-input {
+            margin-right: 10px;
+        }
+        #selectAllAccounts {
+            cursor: pointer;
+        }
+        .custom-control-label {
+            cursor: pointer;
+        }
+    </style>
+
+    <script>
+    let currentBulkEditType = '';
+
+    function showBulkEditModal(type) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        currentBulkEditType = type;
+        let accounts = [];
+        let title = '';
+
+        if (type === 'loans') {
+            accounts = loans;
+            title = 'Bulk Edit Loans';
+        } else if (type === 'savings') {
+            accounts = savings;
+            title = 'Bulk Edit Savings';
+        } else if (type === 'shares') {
+            accounts = shares;
+            title = 'Bulk Edit Shares';
+        }
+
+        $('#bulkEditTitle').text(title);
+
+        // Clear previous values
+        $('#bulkApprovalNo').val('');
+        $('#bulkStartHold').val('');
+        $('#bulkExpiryDate').val('');
+        $('#bulkAccountStatus').val('');
+        $('#selectAllAccounts').prop('checked', false);
+
+        // Populate accounts list
+        const accountsContainer = $('#bulkEditAccounts');
+        accountsContainer.empty();
+
+        let checkedCount = 0;
+        accounts.forEach((account, index) => {
+            const accountNo = type === 'loans' ? account.loan_acct_no : account.account_number;
+
+            // Check if account has non-deduction status or dates set
+            const hasNonDeduction = account.account_status === 'non-deduction';
+            const hasStartHold = account.start_hold && account.start_hold !== '';
+            const hasExpiryDate = account.expiry_date && account.expiry_date !== '';
+            const shouldBeChecked = hasNonDeduction || hasStartHold || hasExpiryDate;
+
+            if (shouldBeChecked) checkedCount++;
+
+            // Add status indicators for existing values
+            let statusInfo = '';
+            if (hasNonDeduction || hasStartHold || hasExpiryDate) {
+                statusInfo = '<small class="text-muted ml-2">(';
+                let statuses = [];
+                if (hasNonDeduction) statuses.push('Non-deduction');
+                if (hasStartHold) statuses.push(`Hold: ${account.start_hold}`);
+                if (hasExpiryDate) statuses.push(`Expiry: ${account.expiry_date}`);
+                statusInfo += statuses.join(', ') + ')</small>';
+            }
+
+            accountsContainer.append(`
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" class="custom-control-input account-checkbox"
+                           id="bulk${type}${index}" data-index="${index}"
+                           ${shouldBeChecked ? 'checked' : ''}>
+                    <label class="custom-control-label" for="bulk${type}${index}">
+                        ${accountNo}${statusInfo}
+                    </label>
+                </div>
+            `);
+        });
+
+        // Set select all checkbox state based on pre-checked items
+        const totalAccounts = accounts.length;
+        $('#selectAllAccounts').prop('checked', checkedCount === totalAccounts);
+
+        // Handle select all functionality
+        $('#selectAllAccounts').off('change').on('change', function() {
+            const isChecked = $(this).prop('checked');
+            $('.account-checkbox').prop('checked', isChecked);
+        });
+
+        // Handle individual checkbox changes
+        $('.account-checkbox').off('change').on('change', function() {
+            const allChecked = $('.account-checkbox:checked').length === $('.account-checkbox').length;
+            $('#selectAllAccounts').prop('checked', allChecked);
+        });
+
+        // Show summary of pre-selected accounts if any
+        if (checkedCount > 0) {
+            const summaryHtml = `
+                <div class="alert alert-info mt-2">
+                    <small>${checkedCount} account(s) automatically selected due to existing non-deduction status or hold dates.</small>
+                </div>
+            `;
+            accountsContainer.after(summaryHtml);
+        }
+
+        $('#bulkEditModal').modal('show');
+    }
+
+    function closeBulkEdit() {
+        $('#bulkEditModal').modal('hide');
+    }
+
+    function applyBulkEdit() {
+        const approvalNo = $('#bulkApprovalNo').val();
+        const startHold = $('#bulkStartHold').val();
+        const expiryDate = $('#bulkExpiryDate').val();
+        const accountStatus = $('#bulkAccountStatus').val();
+
+        // Get selected account indices
+        const selectedIndices = [];
+        $('#bulkEditAccounts input:checked').each(function() {
+            selectedIndices.push($(this).data('index'));
+        });
+
+        if (selectedIndices.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Accounts Selected',
+                text: 'Please select at least one account to edit.',
+            });
+            return;
+        }
+
+        // Apply changes to selected accounts
+        selectedIndices.forEach(index => {
+            if (currentBulkEditType === 'loans') {
+                if (approvalNo) loans[index].approval_no = approvalNo;
+                if (startHold) loans[index].start_hold = startHold;
+                if (expiryDate) loans[index].expiry_date = expiryDate;
+                if (accountStatus) loans[index].account_status = accountStatus;
+            } else if (currentBulkEditType === 'savings') {
+                if (approvalNo) savings[index].approval_no = approvalNo;
+                if (startHold) savings[index].start_hold = startHold;
+                if (expiryDate) savings[index].expiry_date = expiryDate;
+                if (accountStatus) savings[index].account_status = accountStatus;
+            } else if (currentBulkEditType === 'shares') {
+                if (approvalNo) shares[index].approval_no = approvalNo;
+                if (startHold) shares[index].start_hold = startHold;
+                if (expiryDate) shares[index].expiry_date = expiryDate;
+                if (accountStatus) shares[index].account_status = accountStatus;
+            }
+        });
+
+        // Re-render the current view
+        if (currentBulkEditType === 'loans') {
+            renderLoan(currentLoanIndex);
+        } else if (currentBulkEditType === 'savings') {
+            renderSavings(currentSavingsIndex);
+        } else if (currentBulkEditType === 'shares') {
+            renderShares(currentSharesIndex);
+        }
+
+        // Close the modal
+        $('#bulkEditModal').modal('hide');
+
+        // Show success message
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Bulk updates applied successfully!',
+            timer: 1500,
+            showConfirmButton: false
+        });
+    }
+
+    // Update the section headers in the edit modal
+    $(document).ready(function() {
+        // Replace the existing section headers with new ones that include bulk edit buttons
+        const updateSectionHeaders = function() {
+            const savingsHeader = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="section-title bg-light p-2 rounded mb-0">
+                        <i class="fa fa-piggy-bank me-2"></i>Savings Accounts
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('savings')">
+                        Bulk Edit Savings
+                    </button>
+                </div>`;
+
+            const sharesHeader = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="section-title bg-light p-2 rounded mb-0">
+                        <i class="fa fa-chart-pie me-2"></i>Share Accounts
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('shares')">
+                        Bulk Edit Shares
+                    </button>
+                </div>`;
+
+            const loansHeader = `
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="section-title bg-light p-2 rounded mb-0">
+                        <i class="fa fa-file-invoice-dollar me-2"></i>Loan Information
+                    </h6>
+                    <button type="button" class="btn btn-sm btn-primary" onclick="showBulkEditModal('loans')">
+                        Bulk Edit Loans
+                    </button>
+                </div>`;
+
+            $('#editModal').find('.section-title:contains("Savings Accounts")').parent().replaceWith(savingsHeader);
+            $('#editModal').find('.section-title:contains("Share Accounts")').parent().replaceWith(sharesHeader);
+            $('#editModal').find('.section-title:contains("Loan Information")').parent().replaceWith(loansHeader);
+        };
+
+        // Call when edit modal is shown
+        $('#editModal').on('shown.bs.modal', updateSectionHeaders);
+    });
     </script>
 </body>
 
