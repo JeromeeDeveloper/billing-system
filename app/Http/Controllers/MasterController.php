@@ -168,142 +168,203 @@ class MasterController extends Controller
 
     public function update(Request $request, $id)
     {
-        $request->validate([
-            // Member validation
-            'cid' => 'required|string|max:255',
-            'emp_id' => 'nullable|string|max:255',
-            'fname' => 'required|string|max:255',
-            'lname' => 'required|string|max:255',
-            'address' => 'nullable|string',
-            'savings_balance' => 'nullable|numeric',
-            'share_balance' => 'nullable|numeric',
-            'loan_balance' => 'nullable|numeric',
-            'birth_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date',
-            'date_registered' => 'nullable|date',
-            'gender' => 'nullable|string|in:male,female,other',
-            'customer_type' => 'nullable|string|max:255',
-            'customer_classification' => 'nullable|string|max:255',
-            'occupation' => 'nullable|string|max:255',
-            'industry' => 'nullable|string|max:255',
-            'area_officer' => 'nullable|string|max:255',
-            'area' => 'nullable|string|max:255',
-            'status' => 'nullable|string|in:active,merged',
-            'additional_address' => 'nullable|string',
-            'account_status' => 'nullable|string|in:deduction,non-deduction',
-            'branch_id' => 'nullable|exists:branches,id',
+        try {
+            $request->validate([
+                // Member validation
+                'cid' => 'required|string|max:255',
+                'emp_id' => 'nullable|string|max:255',
+                'fname' => 'required|string|max:255',
+                'lname' => 'required|string|max:255',
+                'address' => 'nullable|string',
+                'birth_date' => 'nullable|date',
+                'expiry_date' => 'nullable|date',
+                'date_registered' => 'nullable|date',
+                'gender' => 'nullable|string|in:male,female,other',
+                'customer_type' => 'nullable|string|max:255',
+                'customer_classification' => 'nullable|string|max:255',
+                'occupation' => 'nullable|string|max:255',
+                'industry' => 'nullable|string|max:255',
+                'area_officer' => 'nullable|string|max:255',
+                'area' => 'nullable|string|max:255',
+                'status' => 'nullable|string|in:active,merged',
+                'additional_address' => 'nullable|string',
+                'account_status' => 'nullable|string|in:deduction,non-deduction',
+                'branch_id' => 'nullable|exists:branches,id',
 
-            // LoanForecast validation example (optional, adjust keys as per your form input)
-            'loan_forecasts' => 'nullable|array',
-            'loan_forecasts.*.loan_acct_no' => 'required|string',
-            'loan_forecasts.*.amount_due' => 'required|numeric',
-            'loan_forecasts.*.open_date' => 'required|date',
-            'loan_forecasts.*.maturity_date' => 'required|date',
-            'loan_forecasts.*.amortization_due_date' => 'required|date',
-            'loan_forecasts.*.total_due' => 'required|numeric',
-            'loan_forecasts.*.principal_due' => 'required|numeric',
-            'loan_forecasts.*.interest_due' => 'required|numeric',
-            'loan_forecasts.*.penalty_due' => 'required|numeric',
-            'loan_forecasts.*.billing_period' => 'nullable|string',
-            'loan_forecasts.*.start_hold' => 'nullable|date',
-            'loan_forecasts.*.expiry_date' => 'nullable|date',
-            'loan_forecasts.*.account_status' => 'required|in:deduction,non-deduction',
-            'loan_forecasts.*.approval_no' => 'nullable|string',
-        ]);
+                // Savings validation
+                'savings' => 'nullable|array',
+                'savings.*.account_number' => 'required|string',
+                'savings.*.current_balance' => 'required|numeric',
+                'savings.*.approval_no' => 'nullable|string',
+                'savings.*.start_hold' => 'nullable|date',
+                'savings.*.expiry_date' => 'nullable|date',
+                'savings.*.account_status' => 'required|in:deduction,non-deduction',
 
-        $member = Member::findOrFail($id);
+                // Shares validation
+                'shares' => 'nullable|array',
+                'shares.*.account_number' => 'required|string',
+                'shares.*.current_balance' => 'required|numeric',
+                'shares.*.approval_no' => 'nullable|string',
+                'shares.*.start_hold' => 'nullable|date',
+                'shares.*.expiry_date' => 'nullable|date',
+                'shares.*.account_status' => 'required|in:deduction,non-deduction',
 
-        // Update member fields EXCEPT balances (remove 'savings_balance' and 'share_balance')
-        $member->update($request->except(['savings_balance', 'share_balance']));
+                // LoanForecast validation
+                'loan_forecasts' => 'nullable|array',
+                'loan_forecasts.*.loan_acct_no' => 'required|string',
+                'loan_forecasts.*.amount_due' => 'required|numeric',
+                'loan_forecasts.*.open_date' => 'required|date',
+                'loan_forecasts.*.maturity_date' => 'required|date',
+                'loan_forecasts.*.amortization_due_date' => 'required|date',
+                'loan_forecasts.*.total_due' => 'required|numeric',
+                'loan_forecasts.*.principal_due' => 'required|numeric',
+                'loan_forecasts.*.interest_due' => 'required|numeric',
+                'loan_forecasts.*.penalty_due' => 'required|numeric',
+                'loan_forecasts.*.billing_period' => 'nullable|string',
+                'loan_forecasts.*.start_hold' => 'nullable|date',
+                'loan_forecasts.*.expiry_date' => 'nullable|date',
+                'loan_forecasts.*.account_status' => 'required|in:deduction,non-deduction',
+                'loan_forecasts.*.approval_no' => 'nullable|string',
+            ]);
 
-        // Update savings balance if provided
-        if ($request->filled('savings_balance')) {
-            $savings = $member->savings()->first();
-            if ($savings) {
-                $savings->update(['current_balance' => $request->input('savings_balance')]);
-            }
-        }
+            $member = Member::findOrFail($id);
 
-        // Update shares balance if provided
-        if ($request->filled('share_balance')) {
-            $shares = $member->shares()->first();
-            if ($shares) {
-                $shares->update(['current_balance' => $request->input('share_balance')]);
-            }
-        }
+            // Update member fields
+            $member->update($request->except(['savings', 'shares', 'loan_forecasts']));
 
-        // Update or create loan forecasts if present
-        if ($request->has('loan_forecasts')) {
-            \Log::info('Updating loan forecasts for member: ' . $member->id);
+            // Update savings accounts
+            if ($request->has('savings')) {
+                Log::info('Processing savings updates for member: ' . $member->id);
+                foreach ($request->input('savings') as $index => $savingsData) {
+                    Log::info('Processing savings account: ' . json_encode($savingsData));
 
-            foreach ($request->input('loan_forecasts') as $loanData) {
-                \Log::info('Processing loan: ' . json_encode($loanData));
+                    try {
+                        $saving = $member->savings()
+                            ->where('account_number', $savingsData['account_number'])
+                            ->first();
 
-                // Check if loan should switch back to deduction based on expiry date
-                if (isset($loanData['account_status']) &&
-                    $loanData['account_status'] === 'non-deduction' &&
-                    !empty($loanData['expiry_date']) &&
-                    strtotime($loanData['expiry_date']) < time()) {
-                    $loanData['account_status'] = 'deduction';
-                    \Log::info('Loan switched to deduction due to expired date');
-                }
+                        if ($saving) {
+                            $updateData = [
+                                'current_balance' => $savingsData['current_balance'],
+                                'approval_no' => $savingsData['approval_no'],
+                                'start_hold' => $savingsData['start_hold'],
+                                'expiry_date' => $savingsData['expiry_date'],
+                                'account_status' => $savingsData['account_status']
+                            ];
 
-                // Ensure all fields are included in the update
-                $loanForecastData = [
-                    'loan_acct_no' => $loanData['loan_acct_no'],
-                    'amount_due' => $loanData['amount_due'],
-                    'open_date' => $loanData['open_date'],
-                    'maturity_date' => $loanData['maturity_date'],
-                    'amortization_due_date' => $loanData['amortization_due_date'],
-                    'total_due' => $loanData['total_due'],
-                    'principal_due' => $loanData['principal_due'],
-                    'interest_due' => $loanData['interest_due'],
-                    'penalty_due' => $loanData['penalty_due'],
-                    'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
-                    'start_hold' => $loanData['start_hold'] ?? null,
-                    'expiry_date' => $loanData['expiry_date'] ?? null,
-                    'account_status' => $loanData['account_status'],
-                    'approval_no' => $loanData['approval_no'] ?? null,
-                ];
-
-                \Log::info('Updating loan forecast with data: ' . json_encode($loanForecastData));
-
-                try {
-                    $result = $member->loanForecasts()->updateOrCreate(
-                        [
-                            'member_id' => $member->id,
-                            'loan_acct_no' => $loanData['loan_acct_no'],
-                        ],
-                        $loanForecastData
-                    );
-                    \Log::info('Loan forecast updated successfully: ' . $result->id);
-                } catch (\Exception $e) {
-                    \Log::error('Error updating loan forecast: ' . $e->getMessage());
-                    return redirect()->back()->with('error', 'Error updating loan: ' . $e->getMessage());
+                            Log::info('Updating savings account with data: ' . json_encode($updateData));
+                            $saving->update($updateData);
+                            Log::info('Successfully updated savings account: ' . $saving->id);
+                        } else {
+                            Log::error('Savings account not found: ' . $savingsData['account_number']);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error updating savings account: ' . $e->getMessage());
+                        throw $e;
+                    }
                 }
             }
 
-            // Recalculate loan balance excluding non-deduction loans within hold period
-            $now = now();
-            $loanBalance = $member->loanForecasts()
-                ->where(function ($query) use ($now) {
-                    $query->where('account_status', 'deduction')
-                        ->orWhere(function ($q) use ($now) {
-                            $q->where('account_status', 'non-deduction')
-                                ->where(function ($sq) use ($now) {
-                                    $sq->whereNull('start_hold')
-                                        ->orWhere('start_hold', '>', $now)
-                                        ->orWhere('expiry_date', '<', $now);
-                                });
-                        });
-                })
-                ->sum('total_due');
+            // Update shares accounts
+            if ($request->has('shares')) {
+                Log::info('Processing shares updates for member: ' . $member->id);
+                foreach ($request->input('shares') as $index => $sharesData) {
+                    Log::info('Processing shares account: ' . json_encode($sharesData));
 
-            \Log::info('Recalculated loan balance: ' . $loanBalance);
-            $member->update(['loan_balance' => $loanBalance]);
+                    try {
+                        $share = $member->shares()
+                            ->where('account_number', $sharesData['account_number'])
+                            ->first();
+
+                        if ($share) {
+                            $updateData = [
+                                'current_balance' => $sharesData['current_balance'],
+                                'approval_no' => $sharesData['approval_no'],
+                                'start_hold' => $sharesData['start_hold'],
+                                'expiry_date' => $sharesData['expiry_date'],
+                                'account_status' => $sharesData['account_status']
+                            ];
+
+                            Log::info('Updating shares account with data: ' . json_encode($updateData));
+                            $share->update($updateData);
+                            Log::info('Successfully updated shares account: ' . $share->id);
+                        } else {
+                            Log::error('Shares account not found: ' . $sharesData['account_number']);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error updating shares account: ' . $e->getMessage());
+                        throw $e;
+                    }
+                }
+            }
+
+            // Update loan forecasts
+            if ($request->has('loan_forecasts')) {
+                Log::info('Processing loan forecasts for member: ' . $member->id);
+                foreach ($request->input('loan_forecasts') as $loanData) {
+                    Log::info('Processing loan: ' . json_encode($loanData));
+
+                    try {
+                        $loan = $member->loanForecasts()
+                            ->where('loan_acct_no', $loanData['loan_acct_no'])
+                            ->first();
+
+                        if ($loan) {
+                            $updateData = [
+                                'amount_due' => $loanData['amount_due'],
+                                'open_date' => $loanData['open_date'],
+                                'maturity_date' => $loanData['maturity_date'],
+                                'amortization_due_date' => $loanData['amortization_due_date'],
+                                'total_due' => $loanData['total_due'],
+                                'principal_due' => $loanData['principal_due'],
+                                'interest_due' => $loanData['interest_due'],
+                                'penalty_due' => $loanData['penalty_due'],
+                                'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
+                                'start_hold' => $loanData['start_hold'],
+                                'expiry_date' => $loanData['expiry_date'],
+                                'account_status' => $loanData['account_status'],
+                                'approval_no' => $loanData['approval_no']
+                            ];
+
+                            Log::info('Updating loan forecast with data: ' . json_encode($updateData));
+                            $loan->update($updateData);
+                            Log::info('Successfully updated loan forecast: ' . $loan->id);
+                        } else {
+                            Log::error('Loan forecast not found: ' . $loanData['loan_acct_no']);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error updating loan forecast: ' . $e->getMessage());
+                        throw $e;
+                    }
+                }
+
+                // Recalculate loan balance
+                $now = now();
+                $loanBalance = $member->loanForecasts()
+                    ->where(function ($query) use ($now) {
+                        $query->where('account_status', 'deduction')
+                            ->orWhere(function ($q) use ($now) {
+                                $q->where('account_status', 'non-deduction')
+                                    ->where(function ($sq) use ($now) {
+                                        $sq->whereNull('start_hold')
+                                            ->orWhere('start_hold', '>', $now)
+                                            ->orWhere('expiry_date', '<', $now);
+                                    });
+                            });
+                    })
+                    ->sum('total_due');
+
+                Log::info('Recalculated loan balance: ' . $loanBalance);
+                $member->update(['loan_balance' => $loanBalance]);
+            }
+
+            return redirect()->back()->with('success', 'Member, savings, shares and loan forecast(s) updated successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error in update method: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error updating member data: ' . $e->getMessage())
+                ->withInput();
         }
-
-        return redirect()->back()->with('success', 'Member and loan forecast(s) updated successfully!');
     }
 
      public function update_branch(Request $request, $id)
@@ -374,10 +435,10 @@ class MasterController extends Controller
 
         // Update or create loan forecasts if present
         if ($request->has('loan_forecasts')) {
-            \Log::info('Updating loan forecasts for member: ' . $member->id);
+            Log::info('Updating loan forecasts for member: ' . $member->id);
 
             foreach ($request->input('loan_forecasts') as $loanData) {
-                \Log::info('Processing loan: ' . json_encode($loanData));
+                Log::info('Processing loan: ' . json_encode($loanData));
 
                 // Check if loan should switch back to deduction based on expiry date
                 if (isset($loanData['account_status']) &&
@@ -385,7 +446,7 @@ class MasterController extends Controller
                     !empty($loanData['expiry_date']) &&
                     strtotime($loanData['expiry_date']) < time()) {
                     $loanData['account_status'] = 'deduction';
-                    \Log::info('Loan switched to deduction due to expired date');
+                    Log::info('Loan switched to deduction due to expired date');
                 }
 
                 // Ensure all fields are included in the update
@@ -406,7 +467,7 @@ class MasterController extends Controller
                     'approval_no' => $loanData['approval_no'] ?? null,
                 ];
 
-                \Log::info('Updating loan forecast with data: ' . json_encode($loanForecastData));
+                Log::info('Updating loan forecast with data: ' . json_encode($loanForecastData));
 
                 try {
                     $result = $member->loanForecasts()->updateOrCreate(
@@ -416,9 +477,9 @@ class MasterController extends Controller
                         ],
                         $loanForecastData
                     );
-                    \Log::info('Loan forecast updated successfully: ' . $result->id);
+                    Log::info('Loan forecast updated successfully: ' . $result->id);
                 } catch (\Exception $e) {
-                    \Log::error('Error updating loan forecast: ' . $e->getMessage());
+                    Log::error('Error updating loan forecast: ' . $e->getMessage());
                     return redirect()->back()->with('error', 'Error updating loan: ' . $e->getMessage());
                 }
             }
@@ -439,7 +500,7 @@ class MasterController extends Controller
                 })
                 ->sum('total_due');
 
-            \Log::info('Recalculated loan balance: ' . $loanBalance);
+            Log::info('Recalculated loan balance: ' . $loanBalance);
             $member->update(['loan_balance' => $loanBalance]);
         }
 

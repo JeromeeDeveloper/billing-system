@@ -939,23 +939,13 @@
 
                 // Handle datetime format with timezone
                 if (dateString.includes('T')) {
-                    dateString = dateString.split('T')[0];
-                    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+                    // Extract just the date part without timezone conversion
+                    return dateString.split('T')[0];
                 }
 
-                // Parse the date
-                const date = new Date(dateString);
-                if (isNaN(date.getTime())) {
-                    console.log('Invalid date:', dateString);
-                    return '';
-                }
-
-                // Format to YYYY-MM-DD
-                const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const day = String(date.getDate()).padStart(2, '0');
-
-                return `${year}-${month}-${day}`;
+                // For other formats, parse without timezone conversion
+                const parts = new Date(dateString).toISOString().split('T')[0];
+                return parts;
             } catch (error) {
                 console.error('Error formatting date:', error);
                 return '';
@@ -1153,6 +1143,9 @@
             let saving = savings[index];
             if (!saving) return;
 
+            // Debug log
+            console.log('Rendering savings data:', saving);
+
             let html = `
             <div class="savings-item border p-3 mb-3 rounded">
                 <div class="form-row">
@@ -1162,27 +1155,27 @@
                     </div>
                     <div class="form-group col-md-6">
                         <label>Current Balance</label>
-                        <input type="number" step="0.01" name="savings[${index}][current_balance]" class="form-control" value="${saving.current_balance || ''}" readonly>
+                        <input type="number" step="0.01" name="savings[${index}][current_balance]" class="form-control" value="${saving.current_balance || '0.00'}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Open Date</label>
-                        <input type="date" name="savings[${index}][open_date]" class="form-control" value="${saving.open_date || ''}" readonly>
+                        <input type="date" name="savings[${index}][open_date]" class="form-control" value="${formatDate(saving.open_date)}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Approval Number</label>
-                        <input type="text" name="savings[${index}][approval_no]" class="form-control" value="${saving.approval_no || ''}" readonly>
+                        <input type="text" name="savings[${index}][approval_no]" class="form-control" value="${saving.approval_no || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
-                        <input type="date" name="savings[${index}][start_hold]" class="form-control" value="${saving.start_hold || ''}" readonly>
+                        <input type="date" name="savings[${index}][start_hold]" class="form-control" value="${formatDate(saving.start_hold)}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Expiry Date</label>
-                        <input type="date" name="savings[${index}][expiry_date]" class="form-control" value="${saving.expiry_date || ''}" readonly>
+                        <input type="date" name="savings[${index}][expiry_date]" class="form-control" value="${formatDate(saving.expiry_date)}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Account Status</label>
-                        <select name="savings[${index}][account_status]" class="form-control" disabled>
+                        <select name="savings[${index}][account_status]" class="form-control" required>
                             <option value="deduction" ${saving.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                             <option value="non-deduction" ${saving.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                         </select>
@@ -1192,6 +1185,11 @@
 
             $('#edit-savings-container').html(html);
             $('#savings-counter').text(`Savings Account ${index + 1} of ${savings.length}`);
+
+            // Add form submission debugging
+            $('#editForm').on('submit', function(e) {
+                console.log('Form data being submitted:', $(this).serializeArray());
+            });
         }
 
         function renderShares(index) {
@@ -1214,27 +1212,27 @@
                     </div>
                     <div class="form-group col-md-6">
                         <label>Current Balance</label>
-                        <input type="number" step="0.01" name="shares[${index}][current_balance]" class="form-control" value="${share.current_balance || ''}" readonly>
+                        <input type="number" step="0.01" name="shares[${index}][current_balance]" class="form-control" value="${share.current_balance || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Open Date</label>
-                        <input type="date" name="shares[${index}][open_date]" class="form-control" value="${share.open_date || ''}" readonly>
+                        <input type="date" name="shares[${index}][open_date]" class="form-control" value="${formatDate(share.open_date)}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Approval Number</label>
-                        <input type="text" name="shares[${index}][approval_no]" class="form-control" value="${share.approval_no || ''}" readonly>
+                        <input type="text" name="shares[${index}][approval_no]" class="form-control" value="${share.approval_no || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
-                        <input type="date" name="shares[${index}][start_hold]" class="form-control" value="${share.start_hold || ''}" readonly>
+                        <input type="date" name="shares[${index}][start_hold]" class="form-control" value="${formatDate(share.start_hold)}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Expiry Date</label>
-                        <input type="date" name="shares[${index}][expiry_date]" class="form-control" value="${share.expiry_date || ''}" readonly>
+                        <input type="date" name="shares[${index}][expiry_date]" class="form-control" value="${formatDate(share.expiry_date)}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Account Status</label>
-                        <select name="shares[${index}][account_status]" class="form-control" disabled>
+                        <select name="shares[${index}][account_status]" class="form-control">
                             <option value="deduction" ${share.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                             <option value="non-deduction" ${share.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                         </select>
@@ -1556,6 +1554,57 @@
                 var branchId = $(this).data('id');
                 $('#branchDropdownBtn').text(branchName);
                 $('#branch_id').val(branchId);
+            });
+
+            // Add form submission handler
+            $('#editForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = $(this).serializeArray();
+                console.log('Form data:', formData);
+
+                // Create a more readable version of the savings data
+                var savingsData = formData.filter(item => item.name.startsWith('savings'));
+                console.log('Savings data being submitted:', savingsData);
+
+                // Show loading state
+                Swal.fire({
+                    title: 'Saving changes...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Submit the form via AJAX
+                $.ajax({
+                    url: $(this).attr('action'),
+                    method: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Changes saved successfully!',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    },
+                    error: function(xhr) {
+                        console.error('Error response:', xhr);
+                        let errorMessage = 'An error occurred while saving changes.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: errorMessage
+                        });
+                    }
+                });
             });
         });
     </script>

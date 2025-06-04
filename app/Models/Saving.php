@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Saving extends Model
 {
@@ -20,14 +21,30 @@ class Saving extends Model
         'current_balance',
         'available_balance',
         'interest',
+        'approval_no',
+        'start_hold',
+        'expiry_date',
+        'account_status'
     ];
 
     protected $casts = [
-        'open_date' => 'date',
+        'open_date' => 'date:Y-m-d',
         'current_balance' => 'decimal:2',
         'available_balance' => 'decimal:2',
         'interest' => 'decimal:2',
+        'start_hold' => 'date:Y-m-d',
+        'expiry_date' => 'date:Y-m-d'
     ];
+
+    public function setStartHoldAttribute($value)
+    {
+        $this->attributes['start_hold'] = $value ? Carbon::parse($value)->format('Y-m-d') : null;
+    }
+
+    public function setExpiryDateAttribute($value)
+    {
+        $this->attributes['expiry_date'] = $value ? Carbon::parse($value)->format('Y-m-d') : null;
+    }
 
     /**
      * Relationship to the Member model.
