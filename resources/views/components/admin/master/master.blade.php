@@ -931,9 +931,35 @@
 
         // Add the date formatting helper function
         function formatDate(dateString) {
-            if (!dateString) return '';
-            // Handle both full datetime and date-only formats
-            return dateString.split(' ')[0];  // This will return YYYY-MM-DD part
+            if (!dateString || dateString === 'null' || dateString === 'undefined') return '';
+
+            try {
+                // If it's already in YYYY-MM-DD format, return it
+                if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+
+                // Handle datetime format with timezone
+                if (dateString.includes('T')) {
+                    dateString = dateString.split('T')[0];
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+                }
+
+                // Parse the date
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) {
+                    console.log('Invalid date:', dateString);
+                    return '';
+                }
+
+                // Format to YYYY-MM-DD
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+
+                return `${year}-${month}-${day}`;
+            } catch (error) {
+                console.error('Error formatting date:', error);
+                return '';
+            }
         }
 
         $('#editModal').on('show.bs.modal', function(event) {
@@ -1223,10 +1249,10 @@
         function renderLoan(index) {
             $('#edit-loan-forecast-container').empty();
 
-            let loan = loans.length > 0 ? loans[index] : {};
-
-            // Debug the loan data
+            let loan = loans[index] || {};
             console.log('Rendering loan data:', loan);
+            console.log('Start hold value:', loan.start_hold);
+            console.log('Expiry date value:', loan.expiry_date);
 
             let html = `
     <div class="loan-item border p-3 mb-3 rounded position-relative">
@@ -1247,15 +1273,15 @@
             </div>
             <div class="form-group col-md-6">
                 <label>Open Date</label>
-                <input type="date" name="loan_forecasts[${index}][open_date]" class="form-control" value="${loan.open_date || ''}" required>
+                <input type="date" name="loan_forecasts[${index}][open_date]" class="form-control" value="${formatDate(loan.open_date)}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Maturity Date</label>
-                <input type="date" name="loan_forecasts[${index}][maturity_date]" class="form-control" value="${loan.maturity_date || ''}" required>
+                <input type="date" name="loan_forecasts[${index}][maturity_date]" class="form-control" value="${formatDate(loan.maturity_date)}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Amortization Due Date</label>
-                <input type="date" name="loan_forecasts[${index}][amortization_due_date]" class="form-control" value="${loan.amortization_due_date || ''}" required>
+                <input type="date" name="loan_forecasts[${index}][amortization_due_date]" class="form-control" value="${formatDate(loan.amortization_due_date)}" required>
             </div>
             <div class="form-group col-md-6">
                 <label>Principal Due</label>
@@ -1275,11 +1301,11 @@
             </div>
             <div class="form-group col-md-6">
                 <label>Start Hold Date</label>
-                <input type="date" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
+                <input type="date" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${formatDate(loan.start_hold)}">
             </div>
             <div class="form-group col-md-6">
                 <label>Expiry Date</label>
-                <input type="date" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${loan.expiry_date || ''}">
+                <input type="date" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${formatDate(loan.expiry_date)}">
             </div>
             <div class="form-group col-md-6">
                 <label>Account Status</label>
