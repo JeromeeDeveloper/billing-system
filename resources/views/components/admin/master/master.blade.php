@@ -929,11 +929,20 @@
         let currentSavingsIndex = 0;
         let currentSharesIndex = 0;
 
+        // Add the date formatting helper function
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            // Handle both full datetime and date-only formats
+            return dateString.split(' ')[0];  // This will return YYYY-MM-DD part
+        }
+
         $('#editModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
 
             // Debug the data being passed
             console.log('Loan data:', button.data('loans'));
+            console.log('Savings data:', button.data('savings'));
+            console.log('Shares data:', button.data('shares'));
             console.log('Account Status:', button.data('account_status'));
             console.log('Start Hold:', button.data('start_hold'));
             console.log('Expiry Date:', button.data('expiry_date'));
@@ -982,7 +991,27 @@
                 }
             }
 
-            // Format dates for loans - ensure we handle both full datetime and date-only formats
+            // Handle savings
+            savings = button.data('savings') || [];
+            if (typeof savings === 'string') {
+                try {
+                    savings = JSON.parse(savings);
+                } catch {
+                    savings = [];
+                }
+            }
+
+            // Handle shares
+            shares = button.data('shares') || [];
+            if (typeof shares === 'string') {
+                try {
+                    shares = JSON.parse(shares);
+                } catch {
+                    shares = [];
+                }
+            }
+
+            // Format dates for all accounts
             loans = loans.map(loan => ({
                 ...loan,
                 open_date: formatDate(loan.open_date),
@@ -990,6 +1019,20 @@
                 amortization_due_date: formatDate(loan.amortization_due_date),
                 start_hold: formatDate(loan.start_hold),
                 expiry_date: formatDate(loan.expiry_date)
+            }));
+
+            savings = savings.map(saving => ({
+                ...saving,
+                open_date: formatDate(saving.open_date),
+                start_hold: formatDate(saving.start_hold),
+                expiry_date: formatDate(saving.expiry_date)
+            }));
+
+            shares = shares.map(share => ({
+                ...share,
+                open_date: formatDate(share.open_date),
+                start_hold: formatDate(share.start_hold),
+                expiry_date: formatDate(share.expiry_date)
             }));
 
             // Reset indices
@@ -1006,19 +1049,7 @@
             $('#editForm').attr('action', '/members/' + button.data('id'));
 
             updateNavButtons();
-
-            // Debug output to help troubleshoot
-            console.log('Account Status:', account_status);
-            console.log('Expiry Date:', expiry_date);
-            console.log('Start Hold:', start_hold);
         });
-
-        // Add helper function to format dates consistently
-        function formatDate(dateString) {
-            if (!dateString) return '';
-            // Handle both full datetime and date-only formats
-            return dateString.split(' ')[0];  // This will return YYYY-MM-DD part
-        }
 
         // Button click handlers for loans
         $('#btnNext').click(function() {
@@ -1101,47 +1132,31 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Account Number</label>
-                        <input type="text" class="form-control" value="${saving.account_number || ''}" readonly>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Product Code</label>
-                        <input type="text" class="form-control" value="${saving.product_code || ''}" readonly>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Product Name</label>
-                        <input type="text" class="form-control" value="${saving.product_name || ''}" readonly>
+                        <input type="text" name="savings[${index}][account_number]" class="form-control" value="${saving.account_number || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Current Balance</label>
-                        <input type="number" step="0.01" class="form-control" value="${saving.current_balance || ''}" readonly>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Available Balance</label>
-                        <input type="number" step="0.01" class="form-control" value="${saving.available_balance || ''}" readonly>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Interest</label>
-                        <input type="number" step="0.01" class="form-control" value="${saving.interest || ''}" readonly>
+                        <input type="number" step="0.01" name="savings[${index}][current_balance]" class="form-control" value="${saving.current_balance || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Open Date</label>
-                        <input type="date" class="form-control" value="${saving.open_date || ''}" readonly>
+                        <input type="date" name="savings[${index}][open_date]" class="form-control" value="${saving.open_date || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Approval Number</label>
-                        <input type="text" class="form-control" value="${saving.approval_no || ''}" readonly>
+                        <input type="text" name="savings[${index}][approval_no]" class="form-control" value="${saving.approval_no || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
-                        <input type="date" class="form-control" value="${saving.start_hold || ''}" readonly>
+                        <input type="date" name="savings[${index}][start_hold]" class="form-control" value="${saving.start_hold || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Expiry Date</label>
-                        <input type="date" class="form-control" value="${saving.expiry_date || ''}" readonly>
+                        <input type="date" name="savings[${index}][expiry_date]" class="form-control" value="${saving.expiry_date || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Account Status</label>
-                        <select class="form-control" disabled>
+                        <select name="savings[${index}][account_status]" class="form-control" disabled>
                             <option value="deduction" ${saving.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                             <option value="non-deduction" ${saving.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                         </select>
@@ -1169,47 +1184,31 @@
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Account Number</label>
-                        <input type="text" class="form-control" value="${share.account_number || ''}" readonly>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Product Code</label>
-                        <input type="text" class="form-control" value="${share.product_code || ''}" readonly>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Product Name</label>
-                        <input type="text" class="form-control" value="${share.product_name || ''}" readonly>
+                        <input type="text" name="shares[${index}][account_number]" class="form-control" value="${share.account_number || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Current Balance</label>
-                        <input type="number" step="0.01" class="form-control" value="${share.current_balance || ''}" readonly>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Available Balance</label>
-                        <input type="number" step="0.01" class="form-control" value="${share.available_balance || ''}" readonly>
-                    </div>
-                    <div class="form-group col-md-6">
-                        <label>Interest</label>
-                        <input type="number" step="0.01" class="form-control" value="${share.interest || ''}" readonly>
+                        <input type="number" step="0.01" name="shares[${index}][current_balance]" class="form-control" value="${share.current_balance || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Open Date</label>
-                        <input type="date" class="form-control" value="${share.open_date || ''}" readonly>
+                        <input type="date" name="shares[${index}][open_date]" class="form-control" value="${share.open_date || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Approval Number</label>
-                        <input type="text" class="form-control" value="${share.approval_no || ''}" readonly>
+                        <input type="text" name="shares[${index}][approval_no]" class="form-control" value="${share.approval_no || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
-                        <input type="date" class="form-control" value="${share.start_hold || ''}" readonly>
+                        <input type="date" name="shares[${index}][start_hold]" class="form-control" value="${share.start_hold || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Expiry Date</label>
-                        <input type="date" class="form-control" value="${share.expiry_date || ''}" readonly>
+                        <input type="date" name="shares[${index}][expiry_date]" class="form-control" value="${share.expiry_date || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Account Status</label>
-                        <select class="form-control" disabled>
+                        <select name="shares[${index}][account_status]" class="form-control" disabled>
                             <option value="deduction" ${share.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                             <option value="non-deduction" ${share.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                         </select>
