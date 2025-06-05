@@ -355,19 +355,20 @@
                                 <div class="modal-dialog modal-lg" role="document">
                                     <form id="editForm" method="POST">
                                         @csrf
-                                        @method('PUT')
                                         <div class="modal-content">
                                             <div class="modal-header text-dark">
                                                 <h5 class="modal-title">
                                                     <i class="fa fa-edit me-2"></i>Edit Member
                                                 </h5>
-
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
                                             </div>
 
                                             <div class="modal-body">
                                                 <div class="mb-4">
                                                     <h6 class="section-title bg-light p-2 rounded">
-                                                        <i class="fa fa-user me-2"></i>Member Profile
+                                                        <i class="fa fa-user me-2"></i> Member Profile
                                                     </h6>
                                                     <input type="hidden" name="id" id="edit-id">
 
@@ -411,7 +412,7 @@
 
                                                 <div class="mb-4">
                                                     <h6 class="section-title bg-light p-2 rounded">
-                                                        <i class="fa fa-info-circle me-2"></i>Additional Information
+                                                        <i class="fa fa-info-circle me-2"></i> Additional Information
                                                     </h6>
                                                     <div class="row g-3">
                                                         <div class="col-md-12">
@@ -507,7 +508,7 @@
                                                 <div class="mb-4">
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <h6 class="section-title bg-light p-2 rounded mb-0">
-                                                            <i class="fa fa-piggy-bank me-2"></i>Savings Accounts
+                                                            <i class="fa fa-piggy-bank me-2"></i> Savings Accounts
                                                         </h6>
                                                         <button type="button"
                                                             class="btn btn-sm btn-primary bulk-edit"
@@ -532,7 +533,7 @@
                                                 <div class="mb-4">
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <h6 class="section-title bg-light p-2 rounded mb-0">
-                                                            <i class="fa fa-chart-pie me-2"></i>Share Accounts
+                                                            <i class="fa fa-chart-pie me-2"></i> Share Accounts
                                                         </h6>
                                                         <button type="button"
                                                             class="btn btn-sm btn-primary bulk-edit"
@@ -557,7 +558,7 @@
                                                 <div class="mb-4">
                                                     <div class="d-flex justify-content-between align-items-center">
                                                         <h6 class="section-title bg-light p-2 rounded mb-0">
-                                                            <i class="fa fa-file-invoice-dollar me-2"></i>Loan
+                                                            <i class="fa fa-file-invoice-dollar me-2"></i> Loan
                                                             Information
                                                         </h6>
                                                         <button type="button"
@@ -589,10 +590,9 @@
 
                                                 </div>
                                                 <div>
-                                                    <button type="button" class="btn btn-light"
-                                                        data-dismiss="modal">Cancel</button>
+
                                                     <button type="submit" class="btn btn-primary">
-                                                        <i class="fa fa-save me-1"></i>Save Changes
+                                                        <i class="fa fa-save me-1"></i> Save Changes
                                                     </button>
                                                 </div>
                                             </div>
@@ -892,7 +892,7 @@
                                                 <input type="date" class="form-control" id="bulkExpiryDate">
                                             </div>
                                             <div class="form-group mb-3">
-                                                <label>Account Status</label>
+                                                <label>Request for Hold</label>
                                                 <select class="form-control" id="bulkAccountStatus">
                                                     <option value="">No Change</option>
                                                     <option value="deduction">Deduction</option>
@@ -1004,13 +1004,6 @@
         $('#editModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
 
-            // Debug the data being passed
-            console.log('Loan data:', button.data('loans'));
-            console.log('Savings data:', button.data('savings'));
-            console.log('Shares data:', button.data('shares'));
-            console.log('Account Status:', button.data('account_status'));
-            console.log('Start Hold:', button.data('start_hold'));
-            console.log('Expiry Date:', button.data('expiry_date'));
 
             // Fill member fields as before
             $('#edit-id').val(button.data('id'));
@@ -1202,11 +1195,11 @@
                         <label>Account Number</label>
                         <input type="text" name="savings[${index}][account_number]" class="form-control" value="${saving.account_number || ''}" readonly>
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-6" style="display: none;">
                         <label>Current Balance</label>
                         <input type="number" step="0.01" name="savings[${index}][current_balance]" class="form-control" value="${saving.current_balance || '0.00'}">
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-6" style="display: none;">
                         <label>Open Date</label>
                         <input type="date" name="savings[${index}][open_date]" class="form-control" value="${formatDate(saving.open_date)}" readonly>
                     </div>
@@ -1223,7 +1216,7 @@
                         <input type="date" name="savings[${index}][expiry_date]" class="form-control" value="${formatDate(saving.expiry_date)}">
                     </div>
                     <div class="form-group col-md-6">
-                        <label>Account Status</label>
+                        <label>Request for Hold</label>
                         <select name="savings[${index}][account_status]" class="form-control" required>
                             <option value="deduction" ${saving.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                             <option value="non-deduction" ${saving.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
@@ -1263,11 +1256,11 @@
                         <label>Account Number</label>
                         <input type="text" name="shares[${index}][account_number]" class="form-control" value="${share.account_number || ''}" readonly>
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-6" style="display: none;">
                         <label>Current Balance</label>
                         <input type="number" step="0.01" name="shares[${index}][current_balance]" class="form-control" value="${share.current_balance || ''}">
                     </div>
-                    <div class="form-group col-md-6">
+                    <div class="form-group col-md-6" style="display: none;">
                         <label>Open Date</label>
                         <input type="date" name="shares[${index}][open_date]" class="form-control" value="${formatDate(share.open_date)}" readonly>
                     </div>
@@ -1284,7 +1277,7 @@
                         <input type="date" name="shares[${index}][expiry_date]" class="form-control" value="${formatDate(share.expiry_date)}">
                     </div>
                     <div class="form-group col-md-6">
-                        <label>Account Status</label>
+                        <label>Request for Hold</label>
                         <select name="shares[${index}][account_status]" class="form-control">
                             <option value="deduction" ${share.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                             <option value="non-deduction" ${share.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
@@ -1318,35 +1311,35 @@
                 <label>Loan Account No.</label>
                 <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}" required>
             </div>
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-6" style="display: none;">
                 <label>Total Due</label>
                 <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || ''}" required>
             </div>
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-6" style="display: none;">
                 <label>Amount Due</label>
                 <input type="number" step="0.01" name="loan_forecasts[${index}][amount_due]" class="form-control" value="${loan.amount_due || ''}" required>
             </div>
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-6" style="display: none;">
                 <label>Open Date</label>
                 <input type="date" name="loan_forecasts[${index}][open_date]" class="form-control" value="${formatDate(loan.open_date)}" required>
             </div>
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-6" style="display: none;">
                 <label>Maturity Date</label>
                 <input type="date" name="loan_forecasts[${index}][maturity_date]" class="form-control" value="${formatDate(loan.maturity_date)}" required>
             </div>
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-6" style="display: none;">
                 <label>Amortization Due Date</label>
                 <input type="date" name="loan_forecasts[${index}][amortization_due_date]" class="form-control" value="${formatDate(loan.amortization_due_date)}" required>
             </div>
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-6" style="display: none;">
                 <label>Principal Due</label>
                 <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control" value="${loan.principal_due || ''}" required>
             </div>
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-6" style="display: none;">
                 <label>Interest Due</label>
                 <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control" value="${loan.interest_due || ''}" required>
             </div>
-            <div class="form-group col-md-6">
+            <div class="form-group col-md-6" style="display: none;">
                 <label>Penalty Due</label>
                 <input type="number" step="0.01" name="loan_forecasts[${index}][penalty_due]" class="form-control" value="${loan.penalty_due || ''}" required>
             </div>
@@ -1363,7 +1356,7 @@
                 <input type="date" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${formatDate(loan.expiry_date)}">
             </div>
             <div class="form-group col-md-6">
-                <label>Account Status</label>
+                <label>Request for Hold</label>
                 <select name="loan_forecasts[${index}][account_status]" class="form-control" required>
                     <option value="">Select Status</option>
                     <option value="deduction" ${loan.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
@@ -1953,7 +1946,21 @@
 
         function closeBulkEdit() {
             $('#bulkEditModal').modal('hide');
+            // Restore scrolling to the main edit modal
+            $('body').addClass('modal-open');
+            // Remove any inline styles that might have been added to body
+            $('body').css('overflow', '');
+            $('body').css('padding-right', '');
         }
+
+        // Add event handler for bulk edit modal hidden event
+        $('#bulkEditModal').on('hidden.bs.modal', function () {
+            // Restore scrolling to the main edit modal
+            $('body').addClass('modal-open');
+            // Remove any inline styles that might have been added to body
+            $('body').css('overflow', '');
+            $('body').css('padding-right', '');
+        });
     </script>
 
 </body>
