@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Branch;
 use App\Models\Member;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Exports\BillingExport;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
 
 class BillingController extends Controller
 {
@@ -54,8 +56,8 @@ class BillingController extends Controller
 
     public function index_branch(Request $request)
     {
-
-        $billingPeriod = auth()->user()->billing_period;
+        $billingPeriod = Auth::user()->billing_period;
+        $userBranchId = Auth::user()->branch_id;
         $search = $request->input('search');
         $perPage = $request->input('perPage', 10);
 
@@ -70,7 +72,8 @@ class BillingController extends Controller
 
         // Query with eager loading branch to avoid N+1 query problem
         $query = Member::with('branch')
-            ->where('billing_period', $billingPeriod);
+            ->where('billing_period', $billingPeriod)
+            ->where('branch_id', $userBranchId);
 
         if ($search) {
             $query->where(function ($q) use ($search) {

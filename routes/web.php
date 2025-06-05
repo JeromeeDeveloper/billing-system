@@ -109,9 +109,11 @@ Route::post('/Branch/dashboard/store', [DashboardController::class, 'store_branc
 
 
 //Master
+
 Route::get('/Branch/Master', [MasterController::class, 'index_branch'])->name('master.branch');
-Route::put('/Branch/members/{id}', [MasterController::class, 'update_branch']);
-Route::delete('/Branch/members/{id}', [MasterController::class, 'destroy_branch']);
+Route::put('/Branch/master/members/{id}', [MasterController::class, 'update_branch'])->name('master.member.update.branch');
+Route::delete('/Branch/master/members/{id}', [MasterController::class, 'destroy_branch'])->name('master.member.delete.branch');
+Route::post('Branch/master/add', [MasterController::class, 'store_branch'])->name('members.store.branch');
 
 //Billing
 Route::get('/Branch/Billing', [BillingController::class, 'index_branch'])->name('billing.branch');
