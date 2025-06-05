@@ -355,6 +355,7 @@
                                 <div class="modal-dialog modal-lg" role="document">
                                     <form id="editForm" method="POST">
                                         @csrf
+                                        @method('PUT')
                                         <div class="modal-content">
                                             <div class="modal-header text-dark">
                                                 <h5 class="modal-title">
