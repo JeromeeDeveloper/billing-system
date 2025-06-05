@@ -21,8 +21,9 @@ class BillingExport implements WithMultipleSheets
     public function sheets(): array
     {
         return [
-            'Loan Deductions' => new LoanDeductionsSheet($this->billingPeriod),
-            'SAVINGS' => new SavingsDeductionsSheet($this->billingPeriod),
+            'Billing Summary' => new LoanDeductionsSheet($this->billingPeriod),
+            'SAVINGS' => new RegularSavingsSheet($this->billingPeriod),
+            'RETIREMENT' => new RetirementSavingsSheet($this->billingPeriod),
             'SHARES' => new SharesDeductionsSheet($this->billingPeriod),
         ];
     }
@@ -92,7 +93,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
     }
 }
 
-class SavingsDeductionsSheet implements FromCollection, WithHeadings, WithTitle
+class RegularSavingsSheet implements FromCollection, WithHeadings, WithTitle
 {
     protected $billingPeriod;
 
@@ -109,10 +110,67 @@ class SavingsDeductionsSheet implements FromCollection, WithHeadings, WithTitle
     public function collection()
     {
         $members = Member::whereHas('savings', function ($query) {
-            $query->where('account_status', 'deduction');
+            $query->where('account_status', 'deduction')
+                ->whereHas('savingProduct', function($q) {
+                    $q->where('product_name', 'regular');
+                });
         })
         ->with(['savings' => function ($query) {
-            $query->where('account_status', 'deduction');
+            $query->where('account_status', 'deduction')
+                ->whereHas('savingProduct', function($q) {
+                    $q->where('product_name', 'regular');
+                });
+        }])
+        ->get();
+
+        return $members->map(function ($member) {
+            $savings = $member->savings->first();
+
+            return [
+                'emp_id'        => $member->emp_id ?? 'N/A',
+                'amortization'  => $member->loan_balance ?? 0,
+                'name'          => "{$member->fname} {$member->lname}",
+            ];
+        });
+    }
+
+    public function headings(): array
+    {
+        return [
+            'Employee #',
+            'amortization',
+            'Name',
+        ];
+    }
+}
+
+class RetirementSavingsSheet implements FromCollection, WithHeadings, WithTitle
+{
+    protected $billingPeriod;
+
+    public function __construct($billingPeriod)
+    {
+        $this->billingPeriod = $billingPeriod;
+    }
+
+    public function title(): string
+    {
+        return 'RETIREMENT';
+    }
+
+    public function collection()
+    {
+        $members = Member::whereHas('savings', function ($query) {
+            $query->where('account_status', 'deduction')
+                ->whereHas('savingProduct', function($q) {
+                    $q->where('product_name', 'retirement');
+                });
+        })
+        ->with(['savings' => function ($query) {
+            $query->where('account_status', 'deduction')
+                ->whereHas('savingProduct', function($q) {
+                    $q->where('product_name', 'retirement');
+                });
         }])
         ->get();
 

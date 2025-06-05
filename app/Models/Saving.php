@@ -55,4 +55,12 @@ class Saving extends Model
     {
         return $this->belongsTo(Member::class);
     }
+
+    /**
+     * Relationship to the SavingProduct model.
+     */
+    public function savingProduct()
+    {
+        return $this->belongsTo(SavingProduct::class, 'product_code', 'product_code');
+    }
 }
