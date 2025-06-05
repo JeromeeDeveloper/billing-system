@@ -224,25 +224,7 @@
                                         </div>
 
                                         <div class="input-group">
-                                            <select name="billing_period" class="form-control" style="height: 40px;">
-                                                <option value="">All Billing Periods</option>
-                                                @php
-                                                    $currentYear = date('Y');
-                                                    $startYear = $currentYear - 2; // Show 2 years back
-                                                    $endYear = $currentYear + 1; // Show 1 year ahead
-                                                @endphp
-                                                @for($year = $startYear; $year <= $endYear; $year++)
-                                                    @for($month = 1; $month <= 12; $month++)
-                                                        @php
-                                                            $period = sprintf('%04d-%02d', $year, $month);
-                                                            $selected = request('billing_period') == $period ? 'selected' : '';
-                                                        @endphp
-                                                        <option value="{{ $period }}" {{ $selected }}>
-                                                            {{ date('F Y', strtotime($period . '-01')) }}
-                                                        </option>
-                                                    @endfor
-                                                @endfor
-                                            </select>
+                                            <input type="month" name="billing_period" class="form-control" style="height: 40px;" value="{{ request('billing_period') }}">
                                         </div>
 
                                         <button type="submit" class="btn btn-primary d-flex align-items-center"

@@ -25,7 +25,7 @@ class MasterController extends Controller
             'branch'
         ])
             ->when($billingPeriod, function ($query, $billingPeriod) {
-                $query->where('billing_period', $billingPeriod);
+                $query->where('billing_period', 'like', $billingPeriod . '%');
             })
             ->when($search, function ($query, $search) {
                 $query->whereHas('member', function ($q) use ($search) {
