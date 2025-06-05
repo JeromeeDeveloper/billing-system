@@ -15,8 +15,8 @@ class MasterController extends Controller
 
     public function index(Request $request)
     {
-
         $search = $request->input('search');
+        $billingPeriod = $request->input('billing_period');
 
         $masterlists = MasterList::with([
             'member.loanForecasts',
@@ -24,7 +24,9 @@ class MasterController extends Controller
             'member.shares',
             'branch'
         ])
-
+            ->when($billingPeriod, function ($query, $billingPeriod) {
+                $query->where('billing_period', $billingPeriod);
+            })
             ->when($search, function ($query, $search) {
                 $query->whereHas('member', function ($q) use ($search) {
                     $q->where('cid', 'like', "%{$search}%")
@@ -36,7 +38,7 @@ class MasterController extends Controller
                 });
             })
             ->paginate(25)
-            ->appends(['search' => $search]);
+            ->appends(['search' => $search, 'billing_period' => $billingPeriod]);
 
         // Format the dates for JSON serialization
         $masterlists->getCollection()->transform(function ($item) {
