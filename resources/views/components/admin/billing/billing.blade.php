@@ -70,12 +70,12 @@
                         <div class="card">
 
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">Billing Datatable</h4>
+                                <h4 class="card-title mb-0 ps-3">Billing Datatable</h4>
 
-                                <div class="d-flex flex-column align-items-end">
-                                    <div class="d-flex mb-1">
+                                <div class="d-flex flex-column align-items-end pe-3">
+                                    <div class="d-flex mb-3">
                                         <a href="{{ $allBranchApproved ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
-                                            class="btn btn-rounded btn-primary text-white me-3 {{ !$allBranchApproved ? 'disabled' : '' }}"
+                                            class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved ? 'disabled' : '' }}"
                                             @if (!$allBranchApproved) onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;" @endif>
                                             <span class="btn-icon-left text-primary">
                                                 <i class="fa fa-file"></i>
@@ -99,6 +99,12 @@
                                 </div>
                             </div>
 
+                            <style>
+                                .card-header {
+                                    padding-top: 1.5rem !important;
+                                    padding-bottom: 1.5rem !important;
+                                }
+                            </style>
 
                             <form method="GET" action="{{ url()->current() }}"
                                 class="card-header d-flex justify-content-between align-items-center">
