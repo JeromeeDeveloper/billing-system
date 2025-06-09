@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Billing and Collection</title>
 
@@ -13,6 +14,20 @@
     <link href="./vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
 
     <link href="./css/style.css" rel="stylesheet">
+
+    <!-- Required JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Setup AJAX CSRF token
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+    </script>
 
 </head>
 
@@ -60,12 +75,19 @@
                                 <div class="d-flex flex-column align-items-end">
                                     <div class="d-flex mb-1">
                                         <a href="{{ $allBranchApproved ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
-                                            class="btn btn-rounded btn-primary text-white me-2 {{ !$allBranchApproved ? 'disabled' : '' }}"
+                                            class="btn btn-rounded btn-primary text-white me-3 {{ !$allBranchApproved ? 'disabled' : '' }}"
                                             @if (!$allBranchApproved) onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;" @endif>
                                             <span class="btn-icon-left text-primary">
                                                 <i class="fa fa-file"></i>
                                             </span>
                                             Generate Billing
+                                        </a>
+
+                                        <a href="{{ route('billing.exports') }}" class="btn btn-rounded btn-info text-white ms-2">
+                                            <span class="btn-icon-left text-info">
+                                                <i class="fa fa-history"></i>
+                                            </span>
+                                            View Export History
                                         </a>
                                     </div>
 
@@ -284,22 +306,6 @@
                                 </div>
                             </div>
 
-                            <style>
-                                p.small.text-muted {
-                                    display: none;
-                                }
-                            </style>
-
-                            <div class="d-flex flex-column align-items-center my-4">
-                                <div>
-                                    Showing {{ $billing->firstItem() }} to {{ $billing->lastItem() }} of
-                                    {{ $billing->total() }} results
-                                </div>
-                                <nav aria-label="Page navigation" class="mt-3">
-                                    {{ $billing->links('pagination::bootstrap-5') }}
-                                </nav>
-                            </div>
-
                         </div>
                     </div>
 
@@ -316,6 +322,8 @@
         </div>
 
     </div>
+
+
 
     <script src="./vendor/global/global.min.js"></script>
     <script src="./js/quixnav-init.js"></script>
@@ -378,6 +386,25 @@
         });
     </script>
 
+
+
+    <style>
+        p.small.text-muted {
+            display: none;
+        }
+    </style>
+
+    <div class="d-flex flex-column align-items-center my-4">
+        <div>
+            Showing {{ $billing->firstItem() }} to {{ $billing->lastItem() }} of
+            {{ $billing->total() }} results
+        </div>
+        <nav aria-label="Page navigation" class="mt-3">
+            {{ $billing->links('pagination::bootstrap-5') }}
+        </nav>
+    </div>
+
 </body>
 
 </html>
+

@@ -37,6 +37,13 @@ Route::post('/dashboard/store', [DashboardController::class, 'store'])->name('da
 //Billing
 Route::get('/Billing', [BillingController::class, 'index'])->name('billing');
 Route::get('/billing/export', [BillingController::class, 'export'])->name('billing.export');
+
+//Billing Export History
+Route::get('/billing/exports', [BillingController::class, 'viewExports'])->name('billing.exports');
+Route::get('/billing/exports/data', [BillingController::class, 'getExportsData'])->name('billing.exports.data');
+Route::get('/billing/exports/{id}/download', [BillingController::class, 'downloadExport'])->name('billing.download-export');
+
+//Billing Member Operations
 Route::put('/billing/{member}', [BillingController::class, 'update'])->name('billing.update');
 Route::delete('/billing/{member}', [BillingController::class, 'destroy'])->name('billing.destroy');
 

@@ -223,14 +223,10 @@
                                                 style="width: 250px; height: 40px;" />
                                         </div>
 
-                                        <div class="input-group">
-                                            <input type="month" name="billing_period" class="form-control" style="height: 40px;" value="{{ request('billing_period') }}">
-                                        </div>
-
                                         <button type="submit" class="btn btn-primary d-flex align-items-center"
                                             style="height: 40px;">
                                             <i class="fa fa-search me-2"></i>
-                                            Filter
+                                            Search
                                         </button>
                                     </form>
 
