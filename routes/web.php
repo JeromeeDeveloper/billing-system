@@ -17,12 +17,18 @@ use App\Http\Controllers\SavingsController;
 use App\Http\Controllers\SharesController;
 use App\Http\Controllers\ShareProductController;
 use App\Http\Controllers\SavingProductController;
+use App\Http\Controllers\ProfileController;
 
 //Login
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+// Profile routes - accessible to both admin and branch users
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+});
 
 Route::middleware([AdminMiddleware::class])->group(function () {
 //Users
