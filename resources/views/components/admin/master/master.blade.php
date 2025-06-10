@@ -246,9 +246,7 @@
                                                 <th>CID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-                                                <th>Savings</th>
-                                                <th>Share Balance</th>
-                                                <th>Loan Balance</th>
+
 
                                                 <th>Actions</th>
                                             </tr>
@@ -260,9 +258,7 @@
                                                     <td>{{ $item->member->lname ?? '' }},
                                                         {{ $item->member->fname ?? '' }}</td>
                                                     <td>{{ $item->branch->name ?? '' }}</td>
-                                                    <td>{{ $item->member->savings_balance ?? '' }}</td>
-                                                    <td>{{ $item->member->share_balance ?? 'N/A' }}</td>
-                                                    <td>{{ $item->member->loan_balance ?? 'N/A' }}</td>
+
 
 
                                                     <td>
@@ -341,9 +337,7 @@
                                                 <th>CID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-                                                <th>Savings</th>
-                                                <th>Share Balance</th>
-                                                <th>Loan Balance</th>
+
 
                                                 <th>Actions</th>
                                             </tr>
@@ -719,12 +713,7 @@
                                                         <p><strong>Status:</strong> <span id="view-status"></span></p>
                                                         <p><strong>Account Status:</strong> <span
                                                                 id="view-account_status"></span></p>
-                                                        <p><strong>Savings Balance:</strong> <span
-                                                                id="view-savings_balance"></span></p>
-                                                        <p><strong>Share Balance:</strong> <span
-                                                                id="view-share_balance"></span></p>
-                                                        <p><strong>Loan Balance:</strong> <span
-                                                                id="view-loan_balance"></span></p>
+
                                                     </div>
                                                 </div>
 
@@ -800,7 +789,6 @@
                                     </div>
                                 </div>
                             </div>
-
 
                             <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
                                 <div class="modal-dialog" role="document">
@@ -945,8 +933,6 @@
     <script src="./vendor/global/global.min.js"></script>
     <script src="./js/quixnav-init.js"></script>
     <script src="./js/custom.min.js"></script>
-    <script src="./vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="./js/plugins-init/datatables.init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     @if (session('success'))

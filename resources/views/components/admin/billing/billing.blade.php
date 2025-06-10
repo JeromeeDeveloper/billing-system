@@ -15,10 +15,6 @@
 
     <link href="./css/style.css" rel="stylesheet">
 
-    <!-- Required JavaScript Libraries -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         // Setup AJAX CSRF token
@@ -73,7 +69,7 @@
                                 <h4 class="card-title mb-0 ps-3">Billing Datatable</h4>
 
                                 <div class="d-flex flex-column align-items-end pe-3">
-                                    <div class="d-flex mb-3">
+                                    <div class="d-flex mb-3 gap-btn">
                                         <a href="{{ $allBranchApproved ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
                                             class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved ? 'disabled' : '' }}"
                                             @if (!$allBranchApproved) onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;" @endif>
@@ -312,6 +308,22 @@
                                 </div>
                             </div>
 
+                            <style>
+                                p.small.text-muted {
+                                    display: none;
+                                }
+                            </style>
+
+                            <div class="d-flex flex-column align-items-center my-4">
+                                <div>
+                                    Showing {{ $billing->firstItem() }} to {{ $billing->lastItem() }} of
+                                    {{ $billing->total() }} results
+                                </div>
+                                <nav aria-label="Page navigation" class="mt-3">
+                                    {{ $billing->links('pagination::bootstrap-5') }}
+                                </nav>
+                            </div>
+
                         </div>
                     </div>
 
@@ -331,11 +343,10 @@
 
 
 
-    <script src="./vendor/global/global.min.js"></script>
-    <script src="./js/quixnav-init.js"></script>
-    <script src="./js/custom.min.js"></script>
-    <script src="./vendor/datatables/js/jquery.dataTables.min.js"></script>
-    <script src="./js/plugins-init/datatables.init.js"></script>
+    <script src="{{ asset('vendor/global/global.min.js') }}"></script>
+    <script src="{{ asset('js/quixnav-init.js') }}"></script>
+    <script src="{{ asset('js/custom.min.js') }}"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -372,43 +383,6 @@
             $('#deleteForm').attr('action', `/billing/${id}`);
         });
     </script>
-
-    <script>
-        document.getElementById('generateBillingBtn').addEventListener('click', function(event) {
-            event.preventDefault(); // prevent default navigation
-
-            Swal.fire({
-                title: 'Processing Billing',
-                text: 'Please wait...',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                }
-            });
-
-            // Redirect to href after showing loader
-            window.location.href = this.href;
-        });
-    </script>
-
-
-
-    <style>
-        p.small.text-muted {
-            display: none;
-        }
-    </style>
-
-    <div class="d-flex flex-column align-items-center my-4">
-        <div>
-            Showing {{ $billing->firstItem() }} to {{ $billing->lastItem() }} of
-            {{ $billing->total() }} results
-        </div>
-        <nav aria-label="Page navigation" class="mt-3">
-            {{ $billing->links('pagination::bootstrap-5') }}
-        </nav>
-    </div>
 
 </body>
 

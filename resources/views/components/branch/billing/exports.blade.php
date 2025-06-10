@@ -37,8 +37,8 @@
                     </div>
                     <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('billing') }}">Billing</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard_branch') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('billing.branch') }}">Billing</a></li>
                             <li class="breadcrumb-item active">Export History</li>
                         </ol>
                     </div>
@@ -51,7 +51,7 @@
                                 <h4 class="card-title mb-0">Export History</h4>
 
                                 <div class="d-flex align-items-center">
-                                    <form method="GET" action="{{ route('billing.exports') }}" class="d-flex align-items-center mb-0">
+                                    <form method="GET" action="{{ route('billing.exports.branch') }}" class="d-flex align-items-center mb-0">
                                         <input type="month"
                                                name="billing_period"
                                                class="form-control form-control-sm mr-2"
@@ -62,15 +62,13 @@
                                         <button type="submit" class="btn btn-primary btn-sm mr-2">Filter</button>
 
                                         @if(request('billing_period'))
-                                            <a href="{{ route('billing.exports') }}" class="btn btn-secondary btn-sm mr-2">Clear</a>
+                                            <a href="{{ route('billing.exports.branch') }}" class="btn btn-secondary btn-sm mr-2">Clear</a>
                                         @endif
                                     </form>
 
-                                    <a href="{{ route('billing') }}" class="btn btn-primary btn-sm">Back to Billing</a>
+                                    <a href="{{ route('billing.branch') }}" class="btn btn-primary btn-sm">Back to Billing</a>
                                 </div>
                             </div>
-
-
 
                             <div class="card-body">
                                 @if($exports->isEmpty())
@@ -95,7 +93,7 @@
                                                         <td>{{ $export->created_at->format('M d, Y h:i A') }}</td>
                                                         <td>{{ optional($export->user)->name ?? 'Unknown' }}</td>
                                                         <td>
-                                                            <a href="{{ route('billing.download-export', $export->id) }}"
+                                                            <a href="{{ route('billing.download-export.branch', $export->id) }}"
                                                                class="btn btn-primary btn-sm">
                                                                 <i class="fa fa-download"></i> Download
                                                             </a>

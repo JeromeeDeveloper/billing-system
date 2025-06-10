@@ -125,6 +125,8 @@ Route::post('Branch/master/add', [MasterController::class, 'store_branch'])->nam
 //Billing
 Route::get('/Branch/Billing', [BillingController::class, 'index_branch'])->name('billing.branch');
 Route::get('/Branch/billing/export', [BillingController::class, 'export_branch'])->name('billing.export.branch');
+Route::get('/Branch/billing/exports', [BillingController::class, 'viewExports_branch'])->name('billing.exports.branch');
+Route::get('/Branch/billing/exports/{id}/download', [BillingController::class, 'downloadExport_branch'])->name('billing.download-export.branch');
 Route::put('/Branch/billing/{member}', [BillingController::class, 'update_branch'])->name('billing.update.branch');
 Route::delete('/Branch/billing/{member}', [BillingController::class, 'destroy_branch'])->name('billing.destroy.branch');
 Route::post('/Branch/billing/approve', [BillingController::class, 'approve'])->name('billing.approve');

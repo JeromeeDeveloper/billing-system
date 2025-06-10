@@ -57,20 +57,27 @@
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
                                             <tr>
-                                                <th>ID</th>
                                                 <th>Name</th>
                                                 <th>Code</th>
                                                 <th>Members</th>
+                                                <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach ($branches as $branch)
+                                                @php
+                                                    $branchUser = App\Models\User::where('branch_id', $branch->id)->first();
+                                                @endphp
                                                 <tr>
-                                                    <td>{{ $branch->id }}</td>
                                                     <td>{{ $branch->name }}</td>
                                                     <td>{{ $branch->code }}</td>
                                                     <td>{{ $branch->members->count() }}</td>
+                                                    <td>
+                                                        <span class="badge badge-{{ $branch->status === 'approved' ? 'success' : ($branch->status === 'N/A' ? 'secondary' : 'warning') }}">
+                                                            {{ $branch->status }}
+                                                        </span>
+                                                    </td>
                                                     <td>
                                                         <div class="action-buttons">
 
@@ -99,10 +106,10 @@
 
                                         <tfoot>
                                             <tr>
-                                                <th>ID</th>
                                                 <th>Name</th>
                                                 <th>Code</th>
                                                 <th>Members</th>
+                                                <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

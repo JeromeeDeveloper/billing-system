@@ -5,14 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Branch;
 use App\Models\Member;
+use App\Models\User;
 use Exception;
 
 class BranchController extends Controller
 {
     public function index()
     {
-        // Fetch all branches with related members data
-        $branches = Branch::with('members')->get(); // Adjust 'members' to the relation name in your Branch model
+        // Fetch all branches with related members and users data
+        $branches = Branch::with(['members', 'users'])->get()->map(function($branch) {
+            $branchUser = User::where('branch_id', $branch->id)->first();
+            $branch->status = $branchUser ? $branchUser->status : 'N/A';
+            return $branch;
+        });
 
         return view('components.admin.branch.branch', compact('branches'));
     }

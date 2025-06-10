@@ -19470,3 +19470,8 @@ h5.member-profile {
 .custom-control-label {
     cursor: pointer;
 }
+
+.gap-btn{
+    gap: 20px;
+    display: flex;
+}

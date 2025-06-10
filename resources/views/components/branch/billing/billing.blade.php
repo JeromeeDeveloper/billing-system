@@ -68,6 +68,13 @@
                                                 Approve Billing
                                             </button>
                                         </form>
+
+                                        <a href="{{ route('billing.exports.branch') }}" class="btn btn-rounded btn-info text-white ms-2">
+                                            <span class="btn-icon-left text-info">
+                                                <i class="fa fa-history"></i>
+                                            </span>
+                                            View Export History
+                                        </a>
                                     </div>
 
                                     @if (!$allBranchApproved)

@@ -120,12 +120,20 @@ class BillingController extends Controller
         return Excel::download($export, $filename);
     }
 
-    public function viewExports()
+    public function viewExports(Request $request)
     {
-        $exports = BillingExport::with('user')
+        $query = BillingExport::with('user')
             ->orderBy('billing_period', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->orderBy('created_at', 'desc');
+
+        if ($request->has('billing_period')) {
+            $billingPeriod = $request->billing_period;
+            // Convert YYYY-MM to YYYY-MM-01 format
+            $formattedPeriod = $billingPeriod . '-01';
+            $query->where('billing_period', $formattedPeriod);
+        }
+
+        $exports = $query->paginate(10)->withQueryString();
 
         return view('components.admin.billing.exports', compact('exports'));
     }
@@ -256,6 +264,56 @@ class BillingController extends Controller
                 ], 500);
             }
             throw $e;
+        }
+    }
+
+    public function viewExports_branch(Request $request)
+    {
+        $query = BillingExport::with('user')
+            ->orderBy('billing_period', 'desc')
+            ->orderBy('created_at', 'desc');
+
+        if ($request->has('billing_period')) {
+            $billingPeriod = $request->billing_period;
+            // Convert YYYY-MM to YYYY-MM-01 format
+            $formattedPeriod = $billingPeriod . '-01';
+            $query->where('billing_period', $formattedPeriod);
+        }
+
+        $exports = $query->paginate(10)->withQueryString();
+
+        return view('components.branch.billing.exports', compact('exports'));
+    }
+
+    public function downloadExport_branch($id)
+    {
+        try {
+            Log::info('Downloading export with ID: ' . $id);
+
+            $export = BillingExport::findOrFail($id);
+
+            Log::info('Found export:', $export->toArray());
+
+            $filePath = $export->filepath;
+            $fileName = $export->filename;
+
+            Log::info('Checking file existence:', [
+                'filepath' => $filePath,
+                'storage_path' => Storage::disk('public')->path($filePath),
+                'exists' => Storage::disk('public')->exists($filePath)
+            ]);
+
+            if (Storage::disk('public')->exists($filePath)) {
+                Log::info('File exists, downloading...');
+                return Storage::disk('public')->download($filePath, $fileName);
+            }
+
+            Log::error('Export file not found at path: ' . $filePath);
+            return back()->with('error', 'Export file not found.');
+        } catch (\Exception $e) {
+            Log::error('Error downloading export: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            return back()->with('error', 'Failed to download export: ' . $e->getMessage());
         }
     }
 }
