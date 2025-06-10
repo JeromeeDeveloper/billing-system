@@ -18,6 +18,7 @@ use App\Http\Controllers\SharesController;
 use App\Http\Controllers\ShareProductController;
 use App\Http\Controllers\SavingProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\NotificationController;
 
 //Login
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
@@ -28,6 +29,12 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Notification routes
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/latest', [NotificationController::class, 'getLatestNotifications'])->name('notifications.latest');
+    Route::get('/notifications/unread/count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread.count');
+    Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
 });
 
 Route::middleware([AdminMiddleware::class])->group(function () {

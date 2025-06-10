@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\NotificationController;
 
 class BillingController extends Controller
 {
@@ -109,12 +110,15 @@ class BillingController extends Controller
         Excel::store($export, 'exports/' . $filename, 'public');
 
         // Save export record
-        BillingExport::create([
+        $billingExport = BillingExport::create([
             'billing_period' => $billingPeriod,
             'filename' => $filename,
             'filepath' => 'exports/' . $filename,
             'generated_by' => Auth::id()
         ]);
+
+        // Add notification
+        NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
 
         // Download the file
         return Excel::download($export, $filename);

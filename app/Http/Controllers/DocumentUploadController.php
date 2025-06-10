@@ -13,6 +13,7 @@ use App\Imports\LoanForecastImport;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\NotificationController;
 
 class DocumentUploadController extends Controller
 {
@@ -57,7 +58,7 @@ class DocumentUploadController extends Controller
                 $newFileName = time() . '-' . $file->getClientOriginalName();
                 $path = $file->storeAs('uploads/documents', $newFileName, 'public');
 
-                DocumentUpload::create([
+                $documentUpload = DocumentUpload::create([
                     'document_type'  => $options['type'],
                     'filename'       => $newFileName,
                     'filepath'       => $path,
@@ -66,6 +67,9 @@ class DocumentUploadController extends Controller
                     'upload_date'    => now(),
                     'billing_period' => $billingPeriod,
                 ]);
+
+                // Add notification
+                NotificationController::createNotification('document_upload', Auth::id(), $documentUpload->id);
 
                 if (in_array($options['type'], ['CIF', 'Installment File', 'Savings', 'Shares', 'Loan'])) {
                     $importClass = new $options['import']($billingPeriod);
@@ -123,7 +127,7 @@ class DocumentUploadController extends Controller
                 $newFileName = time() . '-' . $file->getClientOriginalName();
                 $path = $file->storeAs('uploads/documents', $newFileName, 'public');
 
-                DocumentUpload::create([
+                $documentUpload = DocumentUpload::create([
                     'document_type'  => $options['type'],
                     'filename'       => $newFileName,
                     'filepath'       => $path,
@@ -132,6 +136,9 @@ class DocumentUploadController extends Controller
                     'upload_date'    => now(),
                     'billing_period' => $billingPeriod,
                 ]);
+
+                // Add notification
+                NotificationController::createNotification('document_upload', Auth::id(), $documentUpload->id);
 
                 if (in_array($options['type'], ['CIF', 'Installment File', 'Savings', 'Shares', 'Loan'])) {
                     $importClass = new $options['import']($billingPeriod);

@@ -41,63 +41,13 @@
                         <li class="nav-item dropdown notification_dropdown">
                             <a class="nav-link" href="#" role="button" data-toggle="dropdown">
                                 <i class="mdi mdi-bell"></i>
-                                <div class="pulse-css"></div>
+                                <div class="pulse-css" id="notification-pulse"></div>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
-                                <ul class="list-unstyled">
-                                    <li class="media dropdown-item">
-                                        <span class="success"><i class="ti-user"></i></span>
-                                        <div class="media-body">
-                                            <a href="#">
-                                                <p><strong>Martin</strong> has added a <strong>customer</strong>
-                                                    Successfully
-                                                </p>
-                                            </a>
-                                        </div>
-                                        <span class="notify-time">3:20 am</span>
-                                    </li>
-                                    <li class="media dropdown-item">
-                                        <span class="primary"><i class="ti-shopping-cart"></i></span>
-                                        <div class="media-body">
-                                            <a href="#">
-                                                <p><strong>Jennifer</strong> purchased Light Dashboard 2.0.</p>
-                                            </a>
-                                        </div>
-                                        <span class="notify-time">3:20 am</span>
-                                    </li>
-                                    <li class="media dropdown-item">
-                                        <span class="danger"><i class="ti-bookmark"></i></span>
-                                        <div class="media-body">
-                                            <a href="#">
-                                                <p><strong>Robin</strong> marked a <strong>ticket</strong> as unsolved.
-                                                </p>
-                                            </a>
-                                        </div>
-                                        <span class="notify-time">3:20 am</span>
-                                    </li>
-                                    <li class="media dropdown-item">
-                                        <span class="primary"><i class="ti-heart"></i></span>
-                                        <div class="media-body">
-                                            <a href="#">
-                                                <p><strong>David</strong> purchased Light Dashboard 1.0.</p>
-                                            </a>
-                                        </div>
-                                        <span class="notify-time">3:20 am</span>
-                                    </li>
-                                    <li class="media dropdown-item">
-                                        <span class="success"><i class="ti-image"></i></span>
-                                        <div class="media-body">
-                                            <a href="#">
-                                                <p><strong> James.</strong> has added a<strong>customer</strong>
-                                                    Successfully
-                                                </p>
-                                            </a>
-                                        </div>
-                                        <span class="notify-time">3:20 am</span>
-                                    </li>
+                                <ul class="list-unstyled" id="notification-list">
+                                    <!-- Notifications will be dynamically inserted here -->
                                 </ul>
-                                <a class="all-notification" href="#">See all notifications <i
-                                        class="ti-arrow-right"></i></a>
+                                <a class="all-notification" href="{{ route('notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
                             </div>
                         </li>
                         <li class="nav-item dropdown header-profile">
@@ -125,3 +75,76 @@
             </nav>
         </div>
     </div>
+
+@push('scripts')
+<script>
+function updateNotifications() {
+    $.get('{{ route("notifications.latest") }}', function(data) {
+        var notificationList = $('#notification-list');
+        notificationList.empty();
+
+        data.forEach(function(notification) {
+            var icon = notification.type === 'document_upload' ? 'ti-file' : 'ti-receipt';
+            var statusClass = notification.type === 'document_upload' ? 'success' : 'primary';
+
+            var html = `
+                <li class="media dropdown-item ${notification.is_read ? '' : 'unread'}" data-id="${notification.id}">
+                    <span class="${statusClass}"><i class="${icon}"></i></span>
+                    <div class="media-body">
+                        <a href="#">
+                            <p><strong>${notification.user_name}</strong> ${notification.message}</p>
+                        </a>
+                    </div>
+                    <span class="notify-time">${notification.time}</span>
+                </li>
+            `;
+            notificationList.append(html);
+        });
+    });
+
+    // Update unread count
+    $.get('{{ route("notifications.unread.count") }}', function(data) {
+        if (data.count > 0) {
+            $('#notification-pulse').show();
+        } else {
+            $('#notification-pulse').hide();
+        }
+    });
+}
+
+$(document).ready(function() {
+    // Initial load
+    updateNotifications();
+
+    // Update every 30 seconds
+    setInterval(updateNotifications, 30000);
+
+    // Mark as read when clicked
+    $('#notification-list').on('click', '.dropdown-item', function() {
+        var notificationId = $(this).data('id');
+        $.post('{{ route("notifications.mark-read") }}', {
+            _token: '{{ csrf_token() }}',
+            notification_id: notificationId
+        });
+        $(this).removeClass('unread');
+    });
+
+    // Mark all as read
+    $('.all-notification').click(function() {
+        $.post('{{ route("notifications.mark-read") }}', {
+            _token: '{{ csrf_token() }}'
+        });
+    });
+});
+</script>
+
+<style>
+.unread {
+    background-color: #f8f9fa;
+}
+.notify-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+</style>
+@endpush
