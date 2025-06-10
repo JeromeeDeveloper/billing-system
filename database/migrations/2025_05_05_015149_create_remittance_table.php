@@ -17,6 +17,9 @@ return new class extends Migration
             $table->unsignedBigInteger('member_id');  // Change to unsignedBigInteger
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
 
+            $table->unsignedBigInteger('branch_id');
+            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('cascade');
+
             $table->decimal('loan_payment', 12, 2)->default(0);
             $table->decimal('savings_dep', 12, 2)->default(0);
             $table->decimal('share_dep', 12, 2)->default(0);

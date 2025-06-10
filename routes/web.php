@@ -121,6 +121,10 @@ Route::put('/saving-products/{id}', [SavingProductController::class, 'update'])-
 Route::delete('/saving-products/{id}', [SavingProductController::class, 'destroy'])->name('saving-products.destroy');
 Route::post('/saving-products/{id}/assign-member', [SavingProductController::class, 'assignMember'])->name('saving-products.assign-member');
 
+// Remittance Routes
+Route::get('/admin/remittance', [RemittanceController::class, 'index'])->name('remittance.index');
+Route::post('/admin/remittance/upload', [RemittanceController::class, 'upload'])->name('remittance.upload');
+
 });
 
 Route::middleware([BranchMiddleware::class])->group(function () {
