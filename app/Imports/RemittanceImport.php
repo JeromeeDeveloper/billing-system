@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RemittanceImport implements ToCollection, WithHeadingRow
 {
@@ -118,15 +119,20 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                                 'open_date' => now(),
                                 'current_balance' => 0,
                                 'available_balance' => 0,
-                                'deduction_amount' => $amount // Set the deduction amount
+                                'deduction_amount' => $amount
                             ]
                         );
 
-                        // Update savings balance
+                        // Update savings balance and add to existing deduction amount
                         $savings->current_balance = $savings->current_balance + $amount;
                         $savings->available_balance = $savings->current_balance;
-                        $savings->deduction_amount = $amount; // Update the deduction amount
+                        $savings->deduction_amount = $savings->deduction_amount + $amount; // Add to existing deduction amount
                         $savings->save();
+
+                        Log::info('Updated savings for member: ' . $member->id .
+                                ', product: ' . $product->product_name .
+                                ', new amount: ' . $amount .
+                                ', total deduction amount: ' . $savings->deduction_amount);
                     }
                 }
 
