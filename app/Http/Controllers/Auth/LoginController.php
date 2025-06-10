@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Branch;
 
 class LoginController extends Controller
 {
@@ -56,16 +57,26 @@ class LoginController extends Controller
 
     public function userindex()
     {
-        // Fetch all members with related branch data
-        $users = User::all(); // or paginate() if you want pagination
-        return view('auth.users', compact('users'));
+        // Fetch all users with related branch data
+        $users = User::with('branch')->get();
+        $branches = Branch::all();
+        return view('auth.users', compact('users', 'branches'));
     }
 
     public function update(Request $request)
     {
         $user = User::findOrFail($request->id);
 
-        $data = $request->only(['name', 'email']);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|min:8',
+            'role' => 'nullable|in:admin,branch',
+            'status' => 'nullable|in:pending,approved',
+            'branch_id' => 'nullable|exists:branches,id'
+        ]);
+
+        $data = $request->only(['name', 'email', 'role', 'status', 'branch_id']);
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
@@ -80,5 +91,24 @@ class LoginController extends Controller
     {
         User::destroy($request->id);
         return redirect()->back()->with('success', 'User deleted successfully.');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|confirmed',
+            'role' => 'required|in:admin,branch',
+            'status' => 'required|in:pending,approved',
+            'branch_id' => 'nullable|exists:branches,id'
+        ]);
+
+        $data = $request->only(['name', 'email', 'role', 'status', 'branch_id']);
+        $data['password'] = Hash::make($request->password);
+
+        User::create($data);
+
+        return redirect()->back()->with('success', 'User created successfully.');
     }
 }

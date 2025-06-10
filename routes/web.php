@@ -35,6 +35,7 @@ Route::middleware([AdminMiddleware::class])->group(function () {
 Route::get('/users', [LoginController::class, 'userindex'])->name('users');
 Route::put('/users/update', [LoginController::class, 'update'])->name('users.update');
 Route::delete('/users/destroy', [LoginController::class, 'destroy'])->name('users.destroy');
+Route::post('/users/store', [LoginController::class, 'store'])->name('users.store');
 
 //Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

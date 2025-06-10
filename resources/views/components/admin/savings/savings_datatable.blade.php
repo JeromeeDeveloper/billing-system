@@ -50,17 +50,18 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            
+
 
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
                                             <tr>
+                                                <th>Account Number</th>
                                                 <th>Product Name</th>
                                                 <th>Product Code</th>
                                                 <th>Members Count</th>
-                                                <th>Account Number</th>
+
                                                 <th>Current Balance</th>
                                                 <th>Available Balance</th>
                                                 <th>Interest</th>
@@ -71,10 +72,11 @@
                                         <tbody>
                                             @foreach ($savings as $saving)
                                                 <tr>
+                                                    <td>{{ $saving->account_number }}</td>
                                                     <td>{{ $saving->product_name }}</td>
                                                     <td>{{ $saving->product_code }}</td>
                                                     <td>{{ $saving->member_count }}</td>
-                                                    <td>{{ $saving->account_number }}</td>
+
                                                     <td>₱{{ number_format($saving->current_balance, 2) }}</td>
                                                     <td>₱{{ number_format($saving->available_balance, 2) }}</td>
                                                     <td>₱{{ number_format($saving->interest, 2) }}</td>

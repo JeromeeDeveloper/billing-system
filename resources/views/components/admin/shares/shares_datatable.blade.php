@@ -50,17 +50,17 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            
+
 
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
                                             <tr>
+                                                <th>Account Number</th>
                                                 <th>Product Name</th>
                                                 <th>Product Code</th>
                                                 <th>Members Count</th>
-                                                <th>Account Number</th>
                                                 <th>Current Balance</th>
                                                 <th>Available Balance</th>
                                                 <th>Interest</th>
@@ -71,10 +71,10 @@
                                         <tbody>
                                             @foreach ($shares as $share)
                                                 <tr>
+                                                    <td>{{ $share->account_number }}</td>
                                                     <td>{{ $share->product_name }}</td>
                                                     <td>{{ $share->product_code }}</td>
                                                     <td>{{ $share->member_count }}</td>
-                                                    <td>{{ $share->account_number }}</td>
                                                     <td>₱{{ number_format($share->current_balance, 2) }}</td>
                                                     <td>₱{{ number_format($share->available_balance, 2) }}</td>
                                                     <td>₱{{ number_format($share->interest, 2) }}</td>
