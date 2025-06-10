@@ -45,7 +45,7 @@ class RemittanceExport implements FromCollection, WithHeadings
                     'branch',
                     'loanProductMembers.loanProduct',
                     'loanForecasts' => function($q) {
-                        $q->orderBy('total_due', 'desc'); // Prioritize by total due amount
+                        $q->get();
                     },
                     'savings'
                 ])->find($record['member_id']);
@@ -59,24 +59,41 @@ class RemittanceExport implements FromCollection, WithHeadings
                 if ($record['loans'] > 0) {
                     $remainingAmount = $record['loans'];
 
-                    // Get active loans ordered by forecast amount
-                    foreach ($member->loanForecasts as $forecast) {
+                    // Get all loan forecasts and sort them by product prioritization
+                    $forecasts = collect($member->loanForecasts)->map(function($forecast) use ($member) {
+                        // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
+                        $productCode = explode('-', $forecast->loan_acct_no)[2] ?? null;
+
+                        // Find the loan product member with matching product code
+                        $loanProductMember = $member->loanProductMembers()
+                            ->whereHas('loanProduct', function($query) use ($productCode) {
+                                $query->where('product_code', $productCode);
+                            })
+                            ->first();
+
+                        return [
+                            'forecast' => $forecast,
+                            'prioritization' => $loanProductMember ? $loanProductMember->prioritization : 999,
+                            'product_code' => $productCode
+                        ];
+                    })->sortBy('prioritization') // Sort by prioritization (1 being highest priority)
+                    ->pluck('forecast');
+
+                    foreach ($forecasts as $forecast) {
                         if ($remainingAmount <= 0) break;
 
                         $deductionAmount = min($remainingAmount, $forecast->total_due);
 
-                        // Get loan product code
-                        $loanProduct = $member->loanProductMembers()
-                            ->whereHas('loanProduct')
-                            ->first();
+                        // Get loan product code from loan_acct_no
+                        $productCode = explode('-', $forecast->loan_acct_no)[2] ?? null;
 
-                        if ($loanProduct) {
-                            Log::info('Adding loan row for member: ' . $member->id . ', amount: ' . $deductionAmount);
+                        if ($productCode) {
+                            Log::info('Adding loan row for member: ' . $member->id . ', amount: ' . $deductionAmount . ', product code: ' . $productCode);
 
                             // Add loan deduction row
                             $exportRows->push([
                                 'branch_code' => $member->branch->code ?? '',
-                                'product_code' => $loanProduct->loanProduct->product_code ?? '',
+                                'product_code' => $productCode,
                                 'dr' => '',
                                 'gl/sl cct no' => '',
                                 'amt' => '',
@@ -84,7 +101,7 @@ class RemittanceExport implements FromCollection, WithHeadings
                                 'amount' => number_format($deductionAmount, 2, '.', '')
                             ]);
                         } else {
-                            Log::warning('No loan product found for member: ' . $member->id);
+                            Log::warning('Could not extract product code from loan account number: ' . $forecast->loan_acct_no);
                         }
 
                         $remainingAmount -= $deductionAmount;
