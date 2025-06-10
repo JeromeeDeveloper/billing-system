@@ -4,10 +4,13 @@ namespace App\Imports;
 
 use App\Models\Member;
 use App\Models\Remittance;
+use App\Models\SavingProduct;
+use App\Models\Savings;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class RemittanceImport implements ToCollection, WithHeadingRow
 {
@@ -18,21 +21,33 @@ class RemittanceImport implements ToCollection, WithHeadingRow
         'total_amount' => 0
     ];
 
+    protected $savingProducts;
+
+    public function __construct()
+    {
+        // Load all saving products
+        $this->savingProducts = SavingProduct::all();
+    }
+
     public function collection(Collection $rows)
     {
         foreach ($rows as $row) {
             $result = $this->processRow($row);
             $this->results[] = $result;
 
-            // Update stats
             if ($result['status'] === 'success') {
                 $this->stats['matched']++;
             } else {
                 $this->stats['unmatched']++;
             }
 
-            // Update total amount
-            $this->stats['total_amount'] += $result['loans'] + $result['regular_savings'] + $result['savings_2'];
+            // Calculate total amount including all savings
+            $totalAmount = $row['loans'] ?? 0;
+            foreach ($this->savingProducts as $product) {
+                $columnName = strtolower(str_replace(' ', '_', $product->product_name));
+                $totalAmount += floatval($row[$columnName] ?? 0);
+            }
+            $this->stats['total_amount'] += $totalAmount;
         }
     }
 
@@ -42,47 +57,85 @@ class RemittanceImport implements ToCollection, WithHeadingRow
         $empId = trim($row['empid'] ?? '');
         $fullName = trim($row['name'] ?? '');
         $loans = floatval($row['loans'] ?? 0);
-        $regularSavings = floatval($row['regular_savings'] ?? 0);
-        $savings2 = floatval($row['savings_2'] ?? 0);
 
         // Try to find member by emp_id first
         $member = Member::where('emp_id', $empId)->first();
 
         // If not found by emp_id, try to match by name
         if (!$member && $fullName) {
-            // Split the full name into parts
             $nameParts = explode(' ', $fullName);
-
-            // Try different name combinations
             $member = $this->findMemberByName($nameParts);
         }
 
-        // Prepare result array
+        // Prepare result array with basic info
         $result = [
             'emp_id' => $empId,
             'name' => $fullName,
+            'member_id' => $member ? $member->id : null,
             'loans' => $loans,
-            'regular_savings' => $regularSavings,
-            'savings_2' => $savings2,
             'status' => 'error',
-            'message' => ''
+            'message' => '',
+            'savings' => []
         ];
 
-        // If member found, save remittance
+        // Add savings amounts to result for display
+        foreach ($this->savingProducts as $product) {
+            $columnName = strtolower(str_replace(' ', '_', $product->product_name));
+            $amount = floatval($row[$columnName] ?? 0);
+            $result['savings'][$product->product_name] = $amount;
+        }
+
+        // If member found, save remittance and savings
         if ($member) {
             try {
-                Remittance::create([
-                    'member_id' => $member->id,
-                    'branch_id' => $member->branch_id,
-                    'loan_payment' => $loans,
-                    'savings_dep' => $regularSavings,
-                    'share_dep' => $savings2
-                ]);
+                DB::beginTransaction();
 
+                // Create remittance record for loan payment
+                if ($loans > 0) {
+                    Remittance::create([
+                        'member_id' => $member->id,
+                        'branch_id' => $member->branch_id,
+                        'loan_payment' => $loans,
+                        'savings_dep' => 0, // We'll handle savings separately
+                        'share_dep' => 0
+                    ]);
+                }
+
+                // Process each saving product
+                foreach ($this->savingProducts as $product) {
+                    $columnName = strtolower(str_replace(' ', '_', $product->product_name));
+                    $amount = floatval($row[$columnName] ?? 0);
+
+                    if ($amount > 0) {
+                        // Find or create savings account for this product
+                        $savings = Savings::firstOrCreate(
+                            [
+                                'member_id' => $member->id,
+                                'product_code' => $product->product_code
+                            ],
+                            [
+                                'product_name' => $product->product_name,
+                                'open_date' => now(),
+                                'current_balance' => 0,
+                                'available_balance' => 0,
+                                'deduction_amount' => $amount // Set the deduction amount
+                            ]
+                        );
+
+                        // Update savings balance
+                        $savings->current_balance = $savings->current_balance + $amount;
+                        $savings->available_balance = $savings->current_balance;
+                        $savings->deduction_amount = $amount; // Update the deduction amount
+                        $savings->save();
+                    }
+                }
+
+                DB::commit();
                 $result['status'] = 'success';
                 $result['message'] = "Matched with member: {$member->fname} {$member->lname}";
             } catch (\Exception $e) {
-                $result['message'] = 'Error saving remittance: ' . $e->getMessage();
+                DB::rollBack();
+                $result['message'] = 'Error processing record: ' . $e->getMessage();
             }
         } else {
             $result['message'] = "Member not found. Tried matching: $fullName";
@@ -97,7 +150,6 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             return null;
         }
 
-        // Try different name combinations
         $possibleCombinations = $this->getNameCombinations($nameParts);
 
         foreach ($possibleCombinations as $combination) {

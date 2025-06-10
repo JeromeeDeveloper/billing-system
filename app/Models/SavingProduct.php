@@ -26,15 +26,21 @@ class SavingProduct extends Model
      */
     public function savings()
     {
-        return $this->hasMany(Saving::class, 'product_code', 'product_code');
+        return $this->hasMany(Savings::class, 'product_code', 'product_code');
     }
 
     /**
      * Relationship: A saving product can belong to many members.
      */
-    public function members(): BelongsToMany
+    public function members()
     {
-        return $this->belongsToMany(Member::class, 'member_saving_product')
-                    ->withTimestamps();
+        return $this->hasManyThrough(
+            Member::class,
+            Savings::class,
+            'product_code', // Foreign key on savings table
+            'id', // Foreign key on members table
+            'product_code', // Local key on saving_products table
+            'member_id' // Local key on savings table
+        );
     }
 }

@@ -44,15 +44,16 @@ class Member extends Model
     ];
 
     protected $casts = [
+        'birth_date' => 'date',
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'date_registered' => 'date',
+        'start_hold' => 'date',
+        'expiry_date' => 'date',
         'savings_balance' => 'decimal:2',
         'share_balance' => 'decimal:2',
         'loan_balance' => 'decimal:2',
-        'birth_date' => 'date',
-        'date_registered' => 'date',
-        'expiry_date' => 'date',
-        'start_hold' => 'date',
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'principal' => 'decimal:2'
     ];
 
     public function branch()
@@ -60,19 +61,29 @@ class Member extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function savings()
+    {
+        return $this->hasMany(Savings::class);
+    }
+
     public function loanForecasts()
     {
         return $this->hasMany(LoanForecast::class);
     }
 
+    public function loanProductMembers()
+    {
+        return $this->hasMany(LoanProductMember::class);
+    }
+
+    public function remittances()
+    {
+        return $this->hasMany(Remittance::class);
+    }
+
     public function loanProducts()
     {
         return $this->belongsToMany(LoanProduct::class, 'loan_product_member', 'member_id', 'loan_product_id')->withTimestamps();
-    }
-
-    public function savings()
-    {
-        return $this->hasMany(Saving::class);
     }
 
     public function shares()
@@ -128,5 +139,11 @@ class Member extends Model
         return Attribute::make(
             get: fn() => $this->shares->sum('current_balance')
         );
+    }
+
+    // Helper method to get full name
+    public function getFullNameAttribute()
+    {
+        return "{$this->fname} {$this->lname}";
     }
 }

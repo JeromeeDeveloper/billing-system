@@ -169,37 +169,21 @@
 
     <!-- View Members Modal -->
     <div class="modal fade" id="viewModal{{ $product->id }}" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Members with {{ $product->product_name }}</h5>
+                    <h5 class="modal-title">View Saving Product</h5>
                     <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                 </div>
                 <div class="modal-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Member Name</th>
-                                <th>Account Number</th>
-                                <th>Current Balance</th>
-                                <th>Available Balance</th>
-                                <th>Interest</th>
-                                <th>Open Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($product->members as $member)
-                            <tr>
-                                <td>{{ $member->name }}</td>
-                                <td>{{ $member->pivot->account_number }}</td>
-                                <td>₱{{ number_format($member->pivot->current_balance, 2) }}</td>
-                                <td>₱{{ number_format($member->pivot->available_balance, 2) }}</td>
-                                <td>{{ $member->pivot->interest }}%</td>
-                                <td>{{ $member->pivot->open_date }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" class="form-control" value="{{ $product->product_name }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Product Code</label>
+                        <input type="text" class="form-control" value="{{ $product->product_code }}" readonly>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
