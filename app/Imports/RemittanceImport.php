@@ -7,6 +7,7 @@ use App\Models\Remittance;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Illuminate\Support\Str;
 
 class RemittanceImport implements ToCollection, WithHeadingRow
 {
@@ -39,31 +40,27 @@ class RemittanceImport implements ToCollection, WithHeadingRow
     {
         // Extract and clean data
         $empId = trim($row['empid'] ?? '');
-        $name = trim($row['name'] ?? '');
+        $fullName = trim($row['name'] ?? '');
         $loans = floatval($row['loans'] ?? 0);
         $regularSavings = floatval($row['regular_savings'] ?? 0);
         $savings2 = floatval($row['savings_2'] ?? 0);
 
-        // Try to find member by emp_id
+        // Try to find member by emp_id first
         $member = Member::where('emp_id', $empId)->first();
 
         // If not found by emp_id, try to match by name
-        if (!$member && $name) {
-            $nameParts = explode(' ', $name);
-            if (count($nameParts) >= 2) {
-                $fname = $nameParts[0];
-                $lname = implode(' ', array_slice($nameParts, 1));
+        if (!$member && $fullName) {
+            // Split the full name into parts
+            $nameParts = explode(' ', $fullName);
 
-                $member = Member::where('fname', 'LIKE', "%{$fname}%")
-                    ->where('lname', 'LIKE', "%{$lname}%")
-                    ->first();
-            }
+            // Try different name combinations
+            $member = $this->findMemberByName($nameParts);
         }
 
         // Prepare result array
         $result = [
             'emp_id' => $empId,
-            'name' => $name,
+            'name' => $fullName,
             'loans' => $loans,
             'regular_savings' => $regularSavings,
             'savings_2' => $savings2,
@@ -83,15 +80,73 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 ]);
 
                 $result['status'] = 'success';
-                $result['message'] = 'Record processed successfully';
+                $result['message'] = "Matched with member: {$member->fname} {$member->lname}";
             } catch (\Exception $e) {
                 $result['message'] = 'Error saving remittance: ' . $e->getMessage();
             }
         } else {
-            $result['message'] = 'Member not found';
+            $result['message'] = "Member not found. Tried matching: $fullName";
         }
 
         return $result;
+    }
+
+    protected function findMemberByName($nameParts)
+    {
+        if (count($nameParts) < 2) {
+            return null;
+        }
+
+        // Try different name combinations
+        $possibleCombinations = $this->getNameCombinations($nameParts);
+
+        foreach ($possibleCombinations as $combination) {
+            $member = Member::where(function ($query) use ($combination) {
+                $query->whereRaw('LOWER(fname) LIKE ?', ['%' . strtolower($combination['fname']) . '%'])
+                    ->whereRaw('LOWER(lname) LIKE ?', ['%' . strtolower($combination['lname']) . '%']);
+            })->first();
+
+            if ($member) {
+                return $member;
+            }
+        }
+
+        return null;
+    }
+
+    protected function getNameCombinations($nameParts)
+    {
+        $combinations = [];
+
+        // Case 1: First word as fname, rest as lname
+        $combinations[] = [
+            'fname' => $nameParts[0],
+            'lname' => implode(' ', array_slice($nameParts, 1))
+        ];
+
+        // Case 2: First two words as fname, rest as lname (if applicable)
+        if (count($nameParts) >= 3) {
+            $combinations[] = [
+                'fname' => implode(' ', array_slice($nameParts, 0, 2)),
+                'lname' => implode(' ', array_slice($nameParts, 2))
+            ];
+        }
+
+        // Case 3: Last word as lname, rest as fname
+        $combinations[] = [
+            'fname' => implode(' ', array_slice($nameParts, 0, -1)),
+            'lname' => end($nameParts)
+        ];
+
+        // Case 4: Last two words as lname, rest as fname (if applicable)
+        if (count($nameParts) >= 3) {
+            $combinations[] = [
+                'fname' => implode(' ', array_slice($nameParts, 0, -2)),
+                'lname' => implode(' ', array_slice($nameParts, -2))
+            ];
+        }
+
+        return $combinations;
     }
 
     public function getResults()
