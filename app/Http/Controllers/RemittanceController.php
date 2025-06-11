@@ -8,59 +8,30 @@ use App\Models\Remittance;
 use App\Models\Savings;
 use App\Models\Member;
 use App\Models\LoanForecast;
+use App\Models\RemittancePreview;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class RemittanceController extends Controller
 {
     public function index(Request $request)
     {
-        // Get the preview data from session
-        $preview = session('preview');
-        $stats = session('stats');
+        // Get preview data from database for current user
+        $previewCollection = RemittancePreview::where('user_id', Auth::id())
+            ->where('type', 'admin')
+            ->get();
 
-        // Initialize empty stats if none exist
-        if (!$stats) {
-            $stats = [
-                'matched' => 0,
-                'unmatched' => 0,
-                'total_amount' => 0
-            ];
-        }
-
-        $previewCollection = collect([]);
-
-        // If no preview data in session, check if we have processed data
-        if (!$preview && session('remittance_data')) {
-            $processedData = session('remittance_data');
-            $unmatched = session('unmatched_data') ?? [];
-
-            // Reconstruct preview data from both processed and unmatched data
-            $previewCollection = collect($processedData)->map(function($record) {
-                $member = Member::find($record['member_id']);
-                return [
-                    'status' => 'success',
-                    'emp_id' => $member ? $member->emp_id : '',
-                    'name' => $member ? $member->fname . ' ' . $member->lname : '',
-                    'loans' => $record['loans'],
-                    'savings' => $record['savings'],
-                    'message' => 'Record processed successfully'
-                ];
-            })->concat(collect($unmatched)->map(function($record) {
-                return [
-                    'status' => 'error',
-                    'emp_id' => $record['emp_id'] ?? '',
-                    'name' => $record['name'] ?? '',
-                    'loans' => $record['loans'] ?? 0,
-                    'savings' => $record['savings'] ?? [],
-                    'message' => $record['message'] ?? 'Record could not be processed'
-                ];
-            }));
-        } elseif ($preview) {
-            $previewCollection = collect($preview);
-        }
+        // Calculate stats
+        $stats = [
+            'matched' => $previewCollection->where('status', 'success')->count(),
+            'unmatched' => $previewCollection->where('status', '!=', 'success')->count(),
+            'total_amount' => $previewCollection->sum(function ($record) {
+                return $record->loans + collect($record->savings)->sum();
+            })
+        ];
 
         // Get unique dates for the dropdown
         $dates = Remittance::select(DB::raw('DATE(created_at) as date'))
@@ -79,11 +50,11 @@ class RemittanceController extends Controller
             $filter = $request->get('filter');
             if ($filter === 'matched') {
                 $previewCollection = $previewCollection->filter(function($record) {
-                    return $record['status'] === 'success';
+                    return $record->status === 'success';
                 });
             } elseif ($filter === 'unmatched') {
                 $previewCollection = $previewCollection->filter(function($record) {
-                    return $record['status'] === 'error';
+                    return $record->status !== 'success';
                 });
             }
 
@@ -120,28 +91,25 @@ class RemittanceController extends Controller
 
             $results = $import->getResults();
 
-            // Separate matched and unmatched records
-            $processedData = collect($results)->filter(function($record) {
-                return $record['status'] === 'success';
-            })->map(function($record) {
-                return [
-                    'member_id' => $record['member_id'] ?? null,
-                    'loans' => $record['loans'] ?? 0,
-                    'savings' => $record['savings'] ?? []
-                ];
-            })->values()->all();
+            // Clear previous preview data for this user
+            RemittancePreview::where('user_id', Auth::id())
+                ->where('type', 'admin')
+                ->delete();
 
-            $unmatchedData = collect($results)->filter(function($record) {
-                return $record['status'] !== 'success';
-            })->values()->all();
-
-            // Store all data in session
-            session([
-                'remittance_data' => $processedData,
-                'unmatched_data' => $unmatchedData,
-                'preview' => $results,
-                'stats' => $import->getStats()
-            ]);
+            // Store new preview data
+            foreach ($results as $result) {
+                RemittancePreview::create([
+                    'user_id' => Auth::id(),
+                    'emp_id' => $result['emp_id'],
+                    'name' => $result['name'],
+                    'member_id' => $result['member_id'],
+                    'loans' => $result['loans'],
+                    'savings' => $result['savings'],
+                    'status' => $result['status'],
+                    'message' => $result['message'],
+                    'type' => 'admin'
+                ]);
+            }
 
             DB::commit();
 

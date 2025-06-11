@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Models\RemittancePreview;
 
 class BranchRemittanceController extends Controller
 {
@@ -22,75 +23,19 @@ class BranchRemittanceController extends Controller
         // Get the branch_id from the authenticated user
         $branch_id = Auth::user()->branch_id;
 
-        // Get the preview data from session
-        $preview = session('branch_preview');
-        $stats = session('branch_stats');
+        // Get preview data from database for current user
+        $previewCollection = RemittancePreview::where('user_id', Auth::id())
+            ->where('type', 'branch')
+            ->get();
 
-        // Initialize empty stats if none exist
-        if (!$stats) {
-            $stats = [
-                'matched' => 0,
-                'unmatched' => 0,
-                'total_amount' => 0
-            ];
-        }
-
-        $previewCollection = collect([]);
-
-        // If no preview data in session, check if we have processed data
-        if (!$preview && session('branch_remittance_data')) {
-            $processedData = session('branch_remittance_data');
-            $unmatched = session('branch_unmatched_data') ?? [];
-
-            // Reconstruct preview data from both processed and unmatched data
-            $previewCollection = collect($processedData)->map(function($record) {
-                $member = Member::find($record['member_id']);
-                return [
-                    'status' => 'success',
-                    'emp_id' => $member ? $member->emp_id : '',
-                    'name' => $member ? $member->fname . ' ' . $member->lname : '',
-                    'loans' => $record['loans'],
-                    'savings' => $record['savings'],
-                    'message' => 'Record processed successfully'
-                ];
-            })->concat(collect($unmatched)->map(function($record) {
-                return [
-                    'status' => 'error',
-                    'emp_id' => $record['emp_id'] ?? '',
-                    'name' => $record['name'] ?? '',
-                    'loans' => $record['loans'] ?? 0,
-                    'savings' => $record['savings'] ?? [],
-                    'message' => $record['message'] ?? 'Record could not be processed'
-                ];
-            }));
-        } elseif ($preview) {
-            $previewCollection = collect($preview);
-        }
-
-        // Filter preview data if filter is set
-        $filter = $request->get('filter');
-        if ($filter === 'matched') {
-            $previewCollection = $previewCollection->filter(function($record) {
-                return $record['status'] === 'success';
-            });
-        } elseif ($filter === 'unmatched') {
-            $previewCollection = $previewCollection->filter(function($record) {
-                return $record['status'] === 'error';
-            });
-        }
-
-        // Paginate the collection
-        $perPage = 10;
-        $currentPage = $request->get('page', 1);
-        $pagedData = $previewCollection->forPage($currentPage, $perPage);
-
-        $preview = new \Illuminate\Pagination\LengthAwarePaginator(
-            $pagedData,
-            $previewCollection->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        // Calculate stats
+        $stats = [
+            'matched' => $previewCollection->where('status', 'success')->count(),
+            'unmatched' => $previewCollection->where('status', '!=', 'success')->count(),
+            'total_amount' => $previewCollection->sum(function ($record) {
+                return $record->loans + collect($record->savings)->sum();
+            })
+        ];
 
         // Get unique dates for the dropdown (only for this branch)
         $dates = Remittance::where('branch_id', $branch_id)
@@ -104,6 +49,35 @@ class BranchRemittanceController extends Controller
                     'formatted' => Carbon::parse($item->date)->format('M d, Y')
                 ];
             });
+
+        // Filter preview data if filter is set
+        if ($previewCollection->isNotEmpty()) {
+            $filter = $request->get('filter');
+            if ($filter === 'matched') {
+                $previewCollection = $previewCollection->filter(function($record) {
+                    return $record->status === 'success';
+                });
+            } elseif ($filter === 'unmatched') {
+                $previewCollection = $previewCollection->filter(function($record) {
+                    return $record->status !== 'success';
+                });
+            }
+
+            // Paginate the filtered collection
+            $perPage = 10;
+            $currentPage = $request->get('page', 1);
+            $pagedData = $previewCollection->forPage($currentPage, $perPage);
+
+            $preview = new \Illuminate\Pagination\LengthAwarePaginator(
+                $pagedData,
+                $previewCollection->count(),
+                $perPage,
+                $currentPage,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } else {
+            $preview = null;
+        }
 
         return view('components.branch.remittance.remittance', compact('dates', 'preview', 'stats'));
     }
@@ -126,33 +100,25 @@ class BranchRemittanceController extends Controller
 
             $results = $import->getResults();
 
-            // Separate matched and unmatched records
-            $processedData = collect($results)->filter(function($record) {
-                return $record['status'] === 'success';
-            })->map(function($record) {
-                return [
-                    'member_id' => $record['member_id'] ?? null,
-                    'loans' => $record['loans'] ?? 0,
-                    'savings' => $record['savings'] ?? []
-                ];
-            })->values()->all();
+            // Clear previous preview data for this user
+            RemittancePreview::where('user_id', Auth::id())
+                ->where('type', 'branch')
+                ->delete();
 
-            $unmatchedData = collect($results)->filter(function($record) {
-                return $record['status'] !== 'success';
-            })->values()->all();
-
-            // Debug information
-            \Log::info('Upload - Branch ID: ' . $branch_id);
-            \Log::info('Upload - Processed Data Count: ' . count($processedData));
-            \Log::info('Upload - First Processed Record: ' . json_encode(reset($processedData)));
-
-            // Store all data in session with branch prefix
-            session([
-                'branch_remittance_data' => $processedData,
-                'branch_unmatched_data' => $unmatchedData,
-                'branch_preview' => $results,
-                'branch_stats' => $import->getStats()
-            ]);
+            // Store new preview data
+            foreach ($results as $result) {
+                RemittancePreview::create([
+                    'user_id' => Auth::id(),
+                    'emp_id' => $result['emp_id'],
+                    'name' => $result['name'],
+                    'member_id' => $result['member_id'],
+                    'loans' => $result['loans'],
+                    'savings' => $result['savings'],
+                    'status' => $result['status'],
+                    'message' => $result['message'],
+                    'type' => 'branch'
+                ]);
+            }
 
             DB::commit();
 
@@ -160,8 +126,8 @@ class BranchRemittanceController extends Controller
                 ->with('success', 'File processed successfully. Check the preview below.');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Upload Error: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Upload Error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return redirect()->back()
                 ->with('error', 'Error processing file: ' . $e->getMessage());
         }

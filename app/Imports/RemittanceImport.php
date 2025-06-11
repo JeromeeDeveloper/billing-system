@@ -108,25 +108,28 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             ],
                             [
                                 'product_name' => $product->product_name,
-
-                                'remittance_amount' => $amount
+                                'remittance_amount' => 0 // Initialize with 0
                             ]
                         );
 
-                        // Update savings balance and add to existing deduction amount
-
-                        $savings->remittance_amount = $savings->remittance_amount + $amount;
+                        // Update savings with the new amount (not adding to existing)
+                        $savings->remittance_amount = $amount;
                         $savings->save();
 
                         Log::info('Updated savings for member: ' . $member->id .
                                 ', product: ' . $product->product_name .
-                                ', new amount: ' . $amount .
-                                ', total deduction amount: ' . $savings->remittance_amount);
+                                ', new amount: ' . $amount);
                     }
                 }
 
                 // Create remittance record with both loans and total savings
                 if ($loans > 0 || $totalSavings > 0) {
+                    // Delete any existing remittance records for this member today
+                    Remittance::where('member_id', $member->id)
+                        ->whereDate('created_at', now()->toDateString())
+                        ->delete();
+
+                    // Create new remittance record
                     Remittance::create([
                         'member_id' => $member->id,
                         'branch_id' => $member->branch_id,
