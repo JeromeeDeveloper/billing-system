@@ -19475,3 +19475,10 @@ h5.member-profile {
     gap: 20px;
     display: flex;
 }
+
+.title-container{
+    display:flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 15px;
+}

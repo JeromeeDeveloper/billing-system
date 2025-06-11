@@ -15,7 +15,7 @@ use Carbon\Carbon;
 
 class RemittanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Get the preview data from session
         $preview = session('preview');
@@ -69,6 +69,35 @@ class RemittanceController extends Controller
                     'formatted' => Carbon::parse($item->date)->format('M d, Y')
                 ];
             });
+
+        // Filter preview data if filter is set
+        if ($preview) {
+            $filter = $request->get('filter');
+            $previewCollection = collect($preview);
+
+            if ($filter === 'matched') {
+                $previewCollection = $previewCollection->filter(function($record) {
+                    return $record['status'] === 'success';
+                });
+            } elseif ($filter === 'unmatched') {
+                $previewCollection = $previewCollection->filter(function($record) {
+                    return $record['status'] === 'error';
+                });
+            }
+
+            // Paginate the filtered collection
+            $perPage = 10;
+            $currentPage = $request->get('page', 1);
+            $pagedData = $previewCollection->forPage($currentPage, $perPage);
+
+            $preview = new \Illuminate\Pagination\LengthAwarePaginator(
+                $pagedData,
+                $previewCollection->count(),
+                $perPage,
+                $currentPage,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        }
 
         return view('components.admin.remittance.remittance', compact('dates', 'preview', 'stats'));
     }

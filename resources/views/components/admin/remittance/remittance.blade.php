@@ -17,17 +17,20 @@
             transition: transform 0.2s;
             cursor: pointer;
         }
+
         .stats-card:hover {
             transform: translateY(-5px);
         }
+
         .preview-table th {
             background-color: #f3f6f9;
         }
+
         .upload-section {
             background: #f8f9fa;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
@@ -66,41 +69,45 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex justify-content-between align-items-center title-container">
                                     <h4 class="card-title mb-0">Upload Remittance Excel File</h4>
-                                    <div class="d-flex align-items-center">
-                                        <button onclick="generateExport()" class="btn btn-success mr-3">
-                                            <i class="fa fa-file-excel"></i> Export
-                                        </button>
-                                       
-                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center ms-3">
+                                    <button onclick="generateExport()" class="btn btn-success">
+                                        <i class="fa fa-file-excel"></i> Export
+                                    </button>
                                 </div>
                             </div>
                             <div class="card-body">
-                                @if(session('success'))
+                                @if (session('success'))
                                     <div class="alert alert-success alert-dismissible fade show">
                                         <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                        <strong><i class="fa fa-check-circle"></i> Success!</strong> {{ session('success') }}
+                                        <strong><i class="fa fa-check-circle"></i> Success!</strong>
+                                        {{ session('success') }}
                                     </div>
                                 @endif
 
-                                @if(session('error'))
+                                @if (session('error'))
                                     <div class="alert alert-danger alert-dismissible fade show">
                                         <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                        <strong><i class="fa fa-exclamation-circle"></i> Error!</strong> {{ session('error') }}
+                                        <strong><i class="fa fa-exclamation-circle"></i> Error!</strong>
+                                        {{ session('error') }}
                                     </div>
                                 @endif
 
                                 <div class="row">
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">
-                                            <form action="{{ route('remittance.upload') }}" method="POST" enctype="multipart/form-data">
+                                            <form action="{{ route('remittance.upload') }}" method="POST"
+                                                enctype="multipart/form-data">
                                                 @csrf
                                                 <div class="form-group">
                                                     <label class="font-weight-bold">Select Excel File</label>
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" name="file" id="file" accept=".xlsx,.xls,.csv" required>
-                                                        <label class="custom-file-label" for="file">Choose file</label>
+                                                        <input type="file" class="custom-file-input" name="file"
+                                                            id="file" accept=".xlsx,.xls,.csv" required>
+                                                        <label class="custom-file-label" for="file">Choose
+                                                            file</label>
                                                     </div>
                                                     <div class="mt-3">
                                                         <h6 class="text-muted mb-2">File Requirements:</h6>
@@ -125,95 +132,131 @@
                                     </div>
 
                                     <div class="col-12">
-                                        @if(session('preview'))
-                                            <div class="preview-section">
-                                                <div class="row mb-4">
-                                                    <div class="col-md-4">
+                                        @if ($preview)
+                                            <div class="row mb-4">
+                                                <div class="col-md-4">
+                                                    <a href="{{ route('remittance.index', ['filter' => 'matched']) }}"
+                                                        class="text-decoration-none">
                                                         <div class="card stats-card bg-success-light">
                                                             <div class="card-body">
                                                                 <div class="media align-items-center">
                                                                     <div class="media-body mr-3">
-                                                                        <h2 class="text-success">{{ session('stats.matched') ?? 0 }}</h2>
-                                                                        <span class="text-success">Matched Records</span>
+                                                                        <h2 class="text-success">{{ $stats['matched'] }}
+                                                                        </h2>
+                                                                        <span class="text-success">Matched
+                                                                            Records</span>
                                                                     </div>
-                                                                    <i class="fa fa-check-circle fa-3x text-success"></i>
+                                                                    <i
+                                                                        class="fa fa-check-circle fa-3x text-success"></i>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="col-md-4">
+                                                    </a>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <a href="{{ route('remittance.index', ['filter' => 'unmatched']) }}"
+                                                        class="text-decoration-none">
                                                         <div class="card stats-card bg-danger-light">
                                                             <div class="card-body">
                                                                 <div class="media align-items-center">
                                                                     <div class="media-body mr-3">
-                                                                        <h2 class="text-danger">{{ session('stats.unmatched') ?? 0 }}</h2>
-                                                                        <span class="text-danger">Unmatched Records</span>
+                                                                        <h2 class="text-danger">
+                                                                            {{ $stats['unmatched'] }}</h2>
+                                                                        <span class="text-danger">Unmatched
+                                                                            Records</span>
                                                                     </div>
-                                                                    <i class="fa fa-exclamation-circle fa-3x text-danger"></i>
+                                                                    <i
+                                                                        class="fa fa-exclamation-circle fa-3x text-danger"></i>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <div class="card stats-card bg-info-light">
-                                                            <div class="card-body">
-                                                                <div class="media align-items-center">
-                                                                    <div class="media-body mr-3">
-                                                                        <h2 class="text-info">₱{{ number_format(session('stats.total_amount') ?? 0, 2) }}</h2>
-                                                                        <span class="text-info">Total Amount</span>
-                                                                    </div>
-                                                                    <i class="fa fa-money-bill fa-3x text-info"></i>
+                                                    </a>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="card stats-card bg-info-light">
+                                                        <div class="card-body">
+                                                            <div class="media align-items-center">
+                                                                <div class="media-body mr-3">
+                                                                    <h2 class="text-info">
+                                                                        ₱{{ number_format($stats['total_amount'], 2) }}
+                                                                    </h2>
+                                                                    <span class="text-info">Total Amount</span>
                                                                 </div>
+                                                                <i class="fa fa-money-bill fa-3x text-info"></i>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <div class="table-responsive">
-                                                    <table class="table table-striped table-bordered preview-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th style="width: 90px;">Status</th>
-                                                                <th>EmpId</th>
-                                                                <th>Name</th>
-                                                                <th class="text-right">Loans</th>
-                                                                @foreach(App\Models\SavingProduct::all() as $product)
-                                                                    <th class="text-right">{{ $product->product_name }}</th>
-                                                                @endforeach
-                                                                <th>Message</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach(session('preview') as $row)
-                                                                <tr>
-                                                                    <td>
-                                                                        @if($row['status'] === 'success')
-                                                                            <span class="badge badge-success">
-                                                                                <i class="fa fa-check"></i> Matched
-                                                                            </span>
-                                                                        @else
-                                                                            <span class="badge badge-danger">
-                                                                                <i class="fa fa-times"></i> Unmatched
-                                                                            </span>
-                                                                        @endif
-                                                                    </td>
-                                                                    <td>{{ $row['emp_id'] }}</td>
-                                                                    <td>{{ $row['name'] }}</td>
-                                                                    <td class="text-right">₱{{ number_format($row['loans'], 2) }}</td>
-                                                                    @foreach(App\Models\SavingProduct::all() as $product)
-                                                                        <td class="text-right">₱{{ number_format($row['savings'][$product->product_name] ?? 0, 2) }}</td>
-                                                                    @endforeach
-                                                                    <td>
-                                                                        @if($row['status'] !== 'success')
-                                                                            <i class="fa fa-exclamation-circle text-danger"></i>
-                                                                        @endif
-                                                                        {{ $row['message'] }}
-                                                                    </td>
-                                                                </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <div>
+                                                    <a href="{{ route('remittance.index') }}"
+                                                        class="btn {{ !request()->has('filter') ? 'btn-primary' : 'btn-outline-primary' }}">
+                                                        All Records
+                                                    </a>
+                                                    <a href="{{ route('remittance.index', ['filter' => 'matched']) }}"
+                                                        class="btn {{ request()->get('filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }}">
+                                                        Matched Only
+                                                    </a>
+                                                    <a href="{{ route('remittance.index', ['filter' => 'unmatched']) }}"
+                                                        class="btn {{ request()->get('filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }}">
+                                                        Unmatched Only
+                                                    </a>
                                                 </div>
+                                            </div>
+
+                                            <div class="table-responsive">
+                                                <table class="table table-striped table-bordered preview-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="width: 90px;">Status</th>
+                                                            <th>EmpId</th>
+                                                            <th>Name</th>
+                                                            <th class="text-right">Loans</th>
+                                                            @foreach (App\Models\SavingProduct::all() as $product)
+                                                                <th class="text-right">{{ $product->product_name }}
+                                                                </th>
+                                                            @endforeach
+                                                            <th>Message</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach ($preview as $row)
+                                                            <tr>
+                                                                <td>
+                                                                    @if ($row['status'] === 'success')
+                                                                        <span class="badge badge-success">
+                                                                            <i class="fa fa-check"></i> Matched
+                                                                        </span>
+                                                                    @else
+                                                                        <span class="badge badge-danger">
+                                                                            <i class="fa fa-times"></i> Unmatched
+                                                                        </span>
+                                                                    @endif
+                                                                </td>
+                                                                <td>{{ $row['emp_id'] }}</td>
+                                                                <td>{{ $row['name'] }}</td>
+                                                                <td class="text-right">
+                                                                    ₱{{ number_format($row['loans'], 2) }}</td>
+                                                                @foreach (App\Models\SavingProduct::all() as $product)
+                                                                    <td class="text-right">
+                                                                        ₱{{ number_format($row['savings'][$product->product_name] ?? 0, 2) }}
+                                                                    </td>
+                                                                @endforeach
+                                                                <td>
+                                                                    @if ($row['status'] !== 'success')
+                                                                        <i
+                                                                            class="fa fa-exclamation-circle text-danger"></i>
+                                                                    @endif
+                                                                    {{ $row['message'] }}
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+
+
                                             </div>
                                         @else
                                             <div class="text-center py-5">
@@ -223,6 +266,9 @@
                                         @endif
                                     </div>
                                 </div>
+                                <div class="d-flex justify-content-center mt-4 text-center">
+                                    {{ $preview->appends(request()->query())->links() }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -230,9 +276,16 @@
             </div>
         </div>
 
+        <style>
+            .flex.justify-between.flex-1.sm\:hidden {
+                display: none;
+            }
+        </style>
+
         <div class="footer">
             <div class="copyright">
-                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/" target="_blank">MASS-SPECC COOPERATIVE</a>2025</p>
+                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/"
+                        target="_blank">MASS-SPECC COOPERATIVE</a>2025</p>
             </div>
         </div>
     </div>
@@ -253,8 +306,8 @@
                     pageLength: 25,
                     ordering: true,
                     dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                         '<"row"<"col-sm-12"tr>>' +
-                         '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                        '<"row"<"col-sm-12"tr>>' +
+                        '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
                     buttons: ['copy', 'excel', 'pdf', 'print']
                 });
             }
@@ -266,9 +319,10 @@
         });
 
         function generateExport() {
-            let url = '{{ route("remittance.generateExport") }}';
+            let url = '{{ route('remittance.generateExport') }}';
             window.location.href = url;
         }
     </script>
 </body>
+
 </html>
