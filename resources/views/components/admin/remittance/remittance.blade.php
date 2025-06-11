@@ -72,9 +72,7 @@
                                         <button onclick="generateExport()" class="btn btn-success mr-3">
                                             <i class="fa fa-file-excel"></i> Export
                                         </button>
-                                        <a href="{{ route('remittance.list') }}" class="btn btn-info">
-                                            <i class="fa fa-list"></i> View Records
-                                        </a>
+                                       
                                     </div>
                                 </div>
                             </div>
@@ -94,7 +92,7 @@
                                 @endif
 
                                 <div class="row">
-                                    <div class="col-lg-4">
+                                    <div class="col-12 mb-4">
                                         <div class="upload-section">
                                             <form action="{{ route('remittance.upload') }}" method="POST" enctype="multipart/form-data">
                                                 @csrf
@@ -126,7 +124,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-lg-8">
+                                    <div class="col-12">
                                         @if(session('preview'))
                                             <div class="preview-section">
                                                 <div class="row mb-4">

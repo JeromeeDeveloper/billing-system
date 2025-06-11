@@ -123,7 +123,6 @@ Route::post('/saving-products/{id}/assign-member', [SavingProductController::cla
 
 // Remittance Routes
 Route::get('/admin/remittance', [RemittanceController::class, 'index'])->name('remittance.index');
-Route::get('/admin/remittance/list', [RemittanceController::class, 'list'])->name('remittance.list');
 Route::post('/admin/remittance/upload', [RemittanceController::class, 'upload'])->name('remittance.upload');
 Route::get('/admin/remittance/export/{filename}', [RemittanceController::class, 'export'])->name('remittance.export');
 Route::get('/admin/remittance/generate-export', [RemittanceController::class, 'generateExport'])->name('remittance.generateExport');

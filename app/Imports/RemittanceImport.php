@@ -114,7 +114,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         );
 
                         // Update savings balance and add to existing deduction amount
-                     
+
                         $savings->remittance_amount = $savings->remittance_amount + $amount;
                         $savings->save();
 
@@ -141,7 +141,11 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 $result['message'] = "Matched with member: {$member->fname} {$member->lname}";
             } catch (\Exception $e) {
                 DB::rollBack();
-                $result['message'] = 'Error processing record: ' . $e->getMessage();
+                if (str_contains($e->getMessage(), "Field 'account_number' doesn't have a default value")) {
+                    $result['message'] = "No savings account found for this member. Please create a savings account first.";
+                } else {
+                    $result['message'] = 'Error processing record: ' . $e->getMessage();
+                }
             }
         } else {
             $result['message'] = "Member not found. Tried matching: $fullName";

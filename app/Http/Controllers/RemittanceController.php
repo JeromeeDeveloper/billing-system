@@ -17,6 +17,47 @@ class RemittanceController extends Controller
 {
     public function index()
     {
+        // Get the preview data from session
+        $preview = session('preview');
+        $stats = session('stats');
+
+        // If no preview data in session, check if we have processed data
+        if (!$preview && session('remittance_data')) {
+            $processedData = session('remittance_data');
+            $unmatched = session('unmatched_data') ?? [];
+
+            // Reconstruct preview data from both processed and unmatched data
+            $preview = collect($processedData)->map(function($record) {
+                $member = Member::find($record['member_id']);
+                return [
+                    'status' => 'success',
+                    'emp_id' => $member ? $member->emp_id : '',
+                    'name' => $member ? $member->fname . ' ' . $member->lname : '',
+                    'loans' => $record['loans'],
+                    'savings' => $record['savings'],
+                    'message' => 'Record processed successfully'
+                ];
+            })->concat(collect($unmatched)->map(function($record) {
+                return [
+                    'status' => 'error',
+                    'emp_id' => $record['emp_id'] ?? '',
+                    'name' => $record['name'] ?? '',
+                    'loans' => $record['loans'] ?? 0,
+                    'savings' => $record['savings'] ?? [],
+                    'message' => $record['message'] ?? 'Record could not be processed'
+                ];
+            }))->all();
+
+            // Reconstruct stats
+            $stats = [
+                'matched' => count($processedData),
+                'unmatched' => count($unmatched),
+                'total_amount' => collect($processedData)->sum(function($record) {
+                    return $record['loans'] + collect($record['savings'])->sum();
+                })
+            ];
+        }
+
         // Get unique dates for the dropdown
         $dates = Remittance::select(DB::raw('DATE(created_at) as date'))
             ->distinct()
@@ -29,20 +70,7 @@ class RemittanceController extends Controller
                 ];
             });
 
-        return view('components.admin.remittance.remittance', compact('dates'));
-    }
-
-    public function list()
-    {
-        $remittances = Remittance::with(['member', 'branch'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $savings = Savings::with('member')
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
-        return view('components.admin.remittance.list', compact('remittances', 'savings'));
+        return view('components.admin.remittance.remittance', compact('dates', 'preview', 'stats'));
     }
 
     public function upload(Request $request)
@@ -57,8 +85,10 @@ class RemittanceController extends Controller
             $import = new RemittanceImport();
             Excel::import($import, $request->file('file'));
 
-            // Store the processed data in the session
-            $processedData = collect($import->getResults())->filter(function($record) {
+            $results = $import->getResults();
+
+            // Separate matched and unmatched records
+            $processedData = collect($results)->filter(function($record) {
                 return $record['status'] === 'success';
             })->map(function($record) {
                 return [
@@ -68,13 +98,21 @@ class RemittanceController extends Controller
                 ];
             })->values()->all();
 
-            session(['remittance_data' => $processedData]);
+            $unmatchedData = collect($results)->filter(function($record) {
+                return $record['status'] !== 'success';
+            })->values()->all();
+
+            // Store all data in session
+            session([
+                'remittance_data' => $processedData,
+                'unmatched_data' => $unmatchedData,
+                'preview' => $results,
+                'stats' => $import->getStats()
+            ]);
 
             DB::commit();
 
-            return redirect()->back()
-                ->with('preview', $import->getResults())
-                ->with('stats', $import->getStats())
+            return redirect()->route('remittance.index')
                 ->with('success', 'File processed successfully. Check the preview below.');
         } catch (\Exception $e) {
             DB::rollBack();
