@@ -43,10 +43,10 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             }
 
             // Calculate total amount including all savings
-            $totalAmount = $row['loans'] ?? 0;
+            $totalAmount = floatval(str_replace(',', '', $row['loans'] ?? 0));
             foreach ($this->savingProducts as $product) {
                 $columnName = strtolower(str_replace(' ', '_', $product->product_name));
-                $totalAmount += floatval($row[$columnName] ?? 0);
+                $totalAmount += floatval(str_replace(',', '', $row[$columnName] ?? 0));
             }
             $this->stats['total_amount'] += $totalAmount;
         }
@@ -57,7 +57,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
         // Extract and clean data
         $empId = trim($row['empid'] ?? '');
         $fullName = trim($row['name'] ?? '');
-        $loans = floatval($row['loans'] ?? 0);
+        $loans = floatval(str_replace(',', '', $row['loans'] ?? 0));
 
         // Try to find member by emp_id first
         $member = Member::where('emp_id', $empId)->first();
@@ -82,7 +82,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
         // Add savings amounts to result for display
         foreach ($this->savingProducts as $product) {
             $columnName = strtolower(str_replace(' ', '_', $product->product_name));
-            $amount = floatval($row[$columnName] ?? 0);
+            // Handle decimal numbers properly by removing commas and converting to float
+            $amount = floatval(str_replace(',', '', $row[$columnName] ?? 0));
             $result['savings'][$product->product_name] = $amount;
         }
 
@@ -95,7 +96,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 $totalSavings = 0; // Track total savings for this member
                 foreach ($this->savingProducts as $product) {
                     $columnName = strtolower(str_replace(' ', '_', $product->product_name));
-                    $amount = floatval($row[$columnName] ?? 0);
+                    // Handle decimal numbers properly by removing commas and converting to float
+                    $amount = floatval(str_replace(',', '', $row[$columnName] ?? 0));
 
                     if ($amount > 0) {
                         $totalSavings += $amount; // Add to total savings
@@ -111,6 +113,9 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                                 'remittance_amount' => 0 // Initialize with 0
                             ]
                         );
+
+                        // Log the amount before saving for debugging
+                        Log::info('Saving amount for member ' . $member->id . ': ' . $amount);
 
                         // Update savings with the new amount (not adding to existing)
                         $savings->remittance_amount = $amount;
