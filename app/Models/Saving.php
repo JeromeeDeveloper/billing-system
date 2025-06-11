@@ -25,7 +25,8 @@ class Saving extends Model
         'start_hold',
         'expiry_date',
         'account_status',
-        'deduction_amount'
+        'deduction_amount',
+        'remittance_amount'
     ];
 
     protected $casts = [

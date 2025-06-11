@@ -112,13 +112,13 @@ class RegularSavingsSheet implements FromCollection, WithHeadings, WithTitle
         $members = Member::whereHas('savings', function ($query) {
             $query->where('account_status', 'deduction')
                 ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'regular');
+                    $q->where('product_name', 'Regular Savings');
                 });
         })
         ->with(['savings' => function ($query) {
             $query->where('account_status', 'deduction')
                 ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'regular');
+                    $q->where('product_name', 'Regular Savings');
                 });
         }])
         ->get();
@@ -163,13 +163,13 @@ class RetirementSavingsSheet implements FromCollection, WithHeadings, WithTitle
         $members = Member::whereHas('savings', function ($query) {
             $query->where('account_status', 'deduction')
                 ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'retirement');
+                    $q->where('product_name', 'Savings 2');
                 });
         })
         ->with(['savings' => function ($query) {
             $query->where('account_status', 'deduction')
                 ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'retirement');
+                    $q->where('product_name', 'Savings 2');
                 });
         }])
         ->get();

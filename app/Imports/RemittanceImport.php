@@ -91,23 +91,15 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             try {
                 DB::beginTransaction();
 
-                // Create remittance record for loan payment
-                if ($loans > 0) {
-                    Remittance::create([
-                        'member_id' => $member->id,
-                        'branch_id' => $member->branch_id,
-                        'loan_payment' => $loans,
-                        'savings_dep' => 0, // We'll handle savings separately
-                        'share_dep' => 0
-                    ]);
-                }
-
                 // Process each saving product
+                $totalSavings = 0; // Track total savings for this member
                 foreach ($this->savingProducts as $product) {
                     $columnName = strtolower(str_replace(' ', '_', $product->product_name));
                     $amount = floatval($row[$columnName] ?? 0);
 
                     if ($amount > 0) {
+                        $totalSavings += $amount; // Add to total savings
+
                         // Find or create savings account for this product
                         $savings = Savings::firstOrCreate(
                             [
@@ -116,24 +108,32 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             ],
                             [
                                 'product_name' => $product->product_name,
-                                'open_date' => now(),
-                                'current_balance' => 0,
-                                'available_balance' => 0,
-                                'deduction_amount' => $amount
+
+                                'remittance_amount' => $amount
                             ]
                         );
 
                         // Update savings balance and add to existing deduction amount
-                        $savings->current_balance = $savings->current_balance + $amount;
-                        $savings->available_balance = $savings->current_balance;
-                        $savings->deduction_amount = $savings->deduction_amount + $amount; // Add to existing deduction amount
+                     
+                        $savings->remittance_amount = $savings->remittance_amount + $amount;
                         $savings->save();
 
                         Log::info('Updated savings for member: ' . $member->id .
                                 ', product: ' . $product->product_name .
                                 ', new amount: ' . $amount .
-                                ', total deduction amount: ' . $savings->deduction_amount);
+                                ', total deduction amount: ' . $savings->remittance_amount);
                     }
+                }
+
+                // Create remittance record with both loans and total savings
+                if ($loans > 0 || $totalSavings > 0) {
+                    Remittance::create([
+                        'member_id' => $member->id,
+                        'branch_id' => $member->branch_id,
+                        'loan_payment' => $loans,
+                        'savings_dep' => $totalSavings,
+                        'share_dep' => 0
+                    ]);
                 }
 
                 DB::commit();

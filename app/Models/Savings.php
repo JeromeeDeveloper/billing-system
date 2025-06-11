@@ -22,7 +22,8 @@ class Savings extends Model
         'start_hold',
         'expiry_date',
         'deduction_amount',
-        'account_status'
+        'account_status',
+        'remittance_amount'
     ];
 
     protected $casts = [
@@ -32,7 +33,8 @@ class Savings extends Model
         'current_balance' => 'decimal:2',
         'available_balance' => 'decimal:2',
         'interest' => 'decimal:2',
-        'deduction_amount' => 'decimal:2'
+        'deduction_amount' => 'decimal:2',
+        'remittance_amount' => 'decimal:2'
     ];
 
     public function member()

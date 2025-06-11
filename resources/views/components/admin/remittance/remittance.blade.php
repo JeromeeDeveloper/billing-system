@@ -101,13 +101,13 @@
                                                 <div class="form-group">
                                                     <label class="font-weight-bold">Select Excel File</label>
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" name="file" id="file" accept=".xlsx,.xls" required>
+                                                        <input type="file" class="custom-file-input" name="file" id="file" accept=".xlsx,.xls,.csv" required>
                                                         <label class="custom-file-label" for="file">Choose file</label>
                                                     </div>
                                                     <div class="mt-3">
                                                         <h6 class="text-muted mb-2">File Requirements:</h6>
                                                         <ul class="text-muted small pl-3">
-                                                            <li>Excel format (.xlsx, .xls)</li>
+                                                            <li>Excel format (.xlsx, .xls, .csv,)</li>
                                                             <li>Required headers:
                                                                 <ul class="pl-3">
                                                                     <li>EmpId</li>

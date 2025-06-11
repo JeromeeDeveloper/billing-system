@@ -93,11 +93,11 @@ class RemittanceExport implements FromCollection, WithHeadings
                             // Add loan deduction row
                             $exportRows->push([
                                 'branch_code' => $member->branch->code ?? '',
-                                'product_code' => $productCode,
+                                'product_code' => '4',
                                 'dr' => '',
                                 'gl/sl cct no' => '',
                                 'amt' => '',
-                                'account_number' => $forecast->loan_acct_no,
+                                'account_number' => str_replace('-', '', $forecast->loan_acct_no),
                                 'amount' => number_format($deductionAmount, 2, '.', '')
                             ]);
                         } else {
@@ -130,12 +130,12 @@ class RemittanceExport implements FromCollection, WithHeadings
                             // Add savings row
                             $exportRows->push([
                                 'branch_code' => $member->branch->code ?? '',
-                                'product_code' => $savings->product_code,
+                                'product_code' => '1',
                                 'dr' => '',
                                 'gl/sl cct no' => '',
                                 'amt' => '',
-                                'account_number' => $savings->getRawOriginal('account_number'), // Get raw value from database
-                                'amount' => number_format($amount, 2, '.', '')
+                                'account_number' => str_replace('-', '', $savings->getRawOriginal('account_number')),
+                                'amount' => number_format($amount, 2, '.', '') // Use the amount from record directly
                             ]);
                         }
                     }
@@ -149,6 +149,10 @@ class RemittanceExport implements FromCollection, WithHeadings
             throw $e;
         }
 
-        return $exportRows;
+        // Sort the collection by branch_code and product_code
+        return $exportRows->sortBy([
+            ['branch_code', 'asc'],
+            ['product_code', 'asc']
+        ]);
     }
 }
