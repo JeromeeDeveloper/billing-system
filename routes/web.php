@@ -19,6 +19,7 @@ use App\Http\Controllers\ShareProductController;
 use App\Http\Controllers\SavingProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\BranchRemittanceController;
 
 //Login
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
@@ -160,5 +161,10 @@ Route::get('/Branch/savings', [SavingsController::class, 'index_branch'])->name(
 
 //Shares
 Route::get('/Branch/shares', [SharesController::class, 'index_branch'])->name('shares.branch');
+
+// Branch Remittance Routes
+Route::get('/branch/remittance', [BranchRemittanceController::class, 'index'])->name('branch.remittance.index');
+Route::post('/branch/remittance/upload', [BranchRemittanceController::class, 'upload'])->name('branch.remittance.upload');
+Route::get('/branch/remittance/generate-export', [BranchRemittanceController::class, 'generateExport'])->name('branch.remittance.generateExport');
 
 });

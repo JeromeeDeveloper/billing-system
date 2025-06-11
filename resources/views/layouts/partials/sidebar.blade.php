@@ -126,7 +126,7 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('master.branch') }}">Master List Datatable</a></li>
-                      
+
                     </ul>
                 </li>
 
@@ -136,6 +136,15 @@
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('billing.branch') }}">Billing Datatable</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="icon icon-wallet-90"></i><span class="nav-text">Remittance</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('branch.remittance.index') }}">Remittance Datatable</a></li>
                     </ul>
                 </li>
 

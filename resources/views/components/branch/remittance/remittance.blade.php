@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Remittance Upload - Billing and Collection</title>
+    <title>Branch Remittance Upload - Billing and Collection</title>
 
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
     <link href="{{ asset('vendor/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet">
@@ -17,15 +17,12 @@
             transition: transform 0.2s;
             cursor: pointer;
         }
-
         .stats-card:hover {
             transform: translateY(-5px);
         }
-
         .preview-table th {
             background-color: #f3f6f9;
         }
-
         .upload-section {
             background: #f8f9fa;
             padding: 20px;
@@ -53,14 +50,14 @@
                 <div class="row page-titles mx-0 mb-3">
                     <div class="col-sm-6 p-md-0">
                         <div class="welcome-text">
-                            <h4>Remittance Upload</h4>
-                            <span class="ml-1">Upload and Process Remittance Data</span>
+                            <h4>Branch Remittance Upload</h4>
+                            <span class="ml-1">Upload and Process Branch Remittance Data</span>
                         </div>
                     </div>
                     <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
                         <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Remittance Upload</li>
+                            <li class="breadcrumb-item"><a href="{{ route('dashboard_branch') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Branch Remittance Upload</li>
                         </ol>
                     </div>
                 </div>
@@ -70,7 +67,7 @@
                         <div class="card">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center title-container">
-                                    <h4 class="card-title mb-0">Upload Remittance Excel File</h4>
+                                    <h4 class="card-title mb-0">Upload Branch Remittance Excel File</h4>
                                 </div>
                                 <div class="d-flex align-items-center ms-3">
                                     <button onclick="generateExport()" class="btn btn-success">
@@ -98,7 +95,7 @@
                                 <div class="row">
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">
-                                            <form action="{{ route('remittance.upload') }}" method="POST"
+                                            <form action="{{ route('branch.remittance.upload') }}" method="POST"
                                                 enctype="multipart/form-data">
                                                 @csrf
                                                 <div class="form-group">
@@ -112,7 +109,7 @@
                                                     <div class="mt-3">
                                                         <h6 class="text-muted mb-2">File Requirements:</h6>
                                                         <ul class="text-muted small pl-3">
-                                                            <li>Excel format (.xlsx, .xls, .csv,)</li>
+                                                            <li>Excel format (.xlsx, .xls, .csv)</li>
                                                             <li>Required headers:
                                                                 <ul class="pl-3">
                                                                     <li>EmpId</li>
@@ -135,7 +132,7 @@
                                         @if (isset($preview) && $preview)
                                             <div class="row mb-4">
                                                 <div class="col-md-4">
-                                                    <a href="{{ route('remittance.index', ['filter' => 'matched']) }}"
+                                                    <a href="{{ route('branch.remittance.index', ['filter' => 'matched']) }}"
                                                         class="text-decoration-none">
                                                         <div class="card stats-card bg-success-light">
                                                             <div class="card-body">
@@ -151,7 +148,7 @@
                                                     </a>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <a href="{{ route('remittance.index', ['filter' => 'unmatched']) }}"
+                                                    <a href="{{ route('branch.remittance.index', ['filter' => 'unmatched']) }}"
                                                         class="text-decoration-none">
                                                         <div class="card stats-card bg-danger-light">
                                                             <div class="card-body">
@@ -183,15 +180,15 @@
 
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <div>
-                                                    <a href="{{ route('remittance.index') }}"
+                                                    <a href="{{ route('branch.remittance.index') }}"
                                                         class="btn {{ !request()->has('filter') ? 'btn-primary' : 'btn-outline-primary' }}">
                                                         All Records
                                                     </a>
-                                                    <a href="{{ route('remittance.index', ['filter' => 'matched']) }}"
+                                                    <a href="{{ route('branch.remittance.index', ['filter' => 'matched']) }}"
                                                         class="btn {{ request()->get('filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }}">
                                                         Matched Only
                                                     </a>
-                                                    <a href="{{ route('remittance.index', ['filter' => 'unmatched']) }}"
+                                                    <a href="{{ route('branch.remittance.index', ['filter' => 'unmatched']) }}"
                                                         class="btn {{ request()->get('filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }}">
                                                         Unmatched Only
                                                     </a>
@@ -260,12 +257,6 @@
                                                     </tbody>
                                                 </table>
                                             </div>
-
-                                            @if(isset($preview) && $preview && method_exists($preview, 'appends'))
-                                                <div class="d-flex justify-content-center mt-4 text-center">
-                                                    {{ $preview->appends(request()->query())->links() }}
-                                                </div>
-                                            @endif
                                         @else
                                             <div class="text-center py-5">
                                                 <i class="fa fa-upload fa-4x text-muted mb-3"></i>
@@ -274,6 +265,11 @@
                                         @endif
                                     </div>
                                 </div>
+                                @if($preview && $preview->count() > 0)
+                                    <div class="d-flex justify-content-center mt-4 text-center">
+                                        {{ $preview->appends(request()->query())->links() }}
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -298,33 +294,21 @@
     @include('layouts.partials.footer')
 
     <script>
-        // Update custom file input label
-        $('.custom-file-input').on('change', function() {
-            let fileName = $(this).val().split('\\').pop();
-            $(this).next('.custom-file-label').addClass("selected").html(fileName);
-        });
-
-        // Initialize DataTable if preview exists
         $(document).ready(function() {
-            if ($('.table').length) {
-                $('.table').DataTable({
-                    pageLength: 25,
-                    ordering: true,
-                    dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                        '<"row"<"col-sm-12"tr>>' +
-                        '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-                    buttons: ['copy', 'excel', 'pdf', 'print']
-                });
-            }
-
             // Auto-hide alerts after 5 seconds
             setTimeout(function() {
                 $('.alert').alert('close');
             }, 5000);
+
+            // Update file input label
+            $('.custom-file-input').on('change', function() {
+                var fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').html(fileName);
+            });
         });
 
         function generateExport() {
-            let url = '{{ route('remittance.generateExport') }}';
+            let url = '{{ route('branch.remittance.generateExport') }}';
             window.location.href = url;
         }
     </script>
