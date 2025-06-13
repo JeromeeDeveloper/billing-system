@@ -109,6 +109,13 @@ class RemittanceExport implements FromCollection, WithHeadings
                             'amount' => number_format($deductionAmount, 2, '.', '')
                         ]);
 
+                        // Update the total_due in LoanForecast
+                        $newTotalDue = $totalDue - $deductionAmount;
+                        $forecast->update([
+                            'total_due' => max(0, $newTotalDue) // Ensure total_due doesn't go below 0
+                        ]);
+                        Log::info("- Updated Total Due: {$newTotalDue}");
+
                         // Subtract the deduction amount from remaining payment
                         $remainingPayment -= $deductionAmount;
                         Log::info("- Remaining Payment After: {$remainingPayment}");
