@@ -14,6 +14,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Imports\ShareRemittanceImport;
 
 class RemittanceController extends Controller
 {
@@ -119,6 +120,52 @@ class RemittanceController extends Controller
             DB::rollBack();
             return redirect()->back()
                 ->with('error', 'Error processing file: ' . $e->getMessage());
+        }
+    }
+
+    public function uploadShare(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240', // max 10MB
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $import = new ShareRemittanceImport();
+            Excel::import($import, $request->file('file'));
+
+            $results = $import->getResults();
+            $stats = $import->getStats();
+
+            // Clear previous preview data for this user
+            RemittancePreview::where('user_id', Auth::id())
+                ->where('type', 'admin')
+                ->delete();
+
+            // Store new preview data
+            foreach ($results as $result) {
+                RemittancePreview::create([
+                    'user_id' => Auth::id(),
+                    'emp_id' => $result['emp_id'],
+                    'name' => $result['name'],
+                    'member_id' => $result['member_id'],
+                    'loans' => 0,
+                    'savings' => [],
+                    'status' => $result['status'],
+                    'message' => $result['message'],
+                    'type' => 'admin'
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('remittance.index')
+                ->with('success', 'Share remittance file processed successfully. Check the preview below.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Error processing share remittance file: ' . $e->getMessage());
         }
     }
 

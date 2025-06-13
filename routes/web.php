@@ -123,10 +123,10 @@ Route::delete('/saving-products/{id}', [SavingProductController::class, 'destroy
 Route::post('/saving-products/{id}/assign-member', [SavingProductController::class, 'assignMember'])->name('saving-products.assign-member');
 
 // Remittance Routes
-Route::get('/admin/remittance', [RemittanceController::class, 'index'])->name('remittance.index');
-Route::post('/admin/remittance/upload', [RemittanceController::class, 'upload'])->name('remittance.upload');
-Route::get('/admin/remittance/export/{filename}', [RemittanceController::class, 'export'])->name('remittance.export');
-Route::get('/admin/remittance/generate-export', [RemittanceController::class, 'generateExport'])->name('remittance.generateExport');
+Route::get('/remittance', [RemittanceController::class, 'index'])->name('remittance.index');
+Route::post('/remittance/upload', [RemittanceController::class, 'upload'])->name('remittance.upload');
+Route::post('/remittance/upload/share', [RemittanceController::class, 'uploadShare'])->name('remittance.upload.share');
+Route::get('/remittance/generate-export', [RemittanceController::class, 'generateExport'])->name('remittance.generateExport');
 
 });
 

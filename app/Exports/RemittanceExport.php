@@ -159,6 +159,34 @@ class RemittanceExport implements FromCollection, WithHeadings
                         'amount' => number_format($savings->remittance_amount, 2, '.', '')
                     ]);
                 }
+
+                // Handle shares
+                $remittance = Remittance::where('member_id', $member->id)
+                    ->whereDate('created_at', now()->toDateString())
+                    ->first();
+
+                if ($remittance && $remittance->share_dep > 0) {
+                    // Get the member's share account
+                    $share = $member->shares()->first();
+
+                    if ($share) {
+                        Log::info('Processing shares for member: ' . $member->id . ', account: ' . $share->account_number);
+                        Log::info('Share amount from database: [' . $remittance->share_dep . ']');
+
+                        // Add share row
+                        $exportRows->push([
+                            'branch_code' => $member->branch->code ?? '',
+                            'product_code' => '2', // Assuming 2 is the product code for shares
+                            'dr' => '',
+                            'gl/sl cct no' => '',
+                            'amt' => '',
+                            'account_number' => str_replace('-', '', $share->getRawOriginal('account_number')),
+                            'amount' => number_format($remittance->share_dep, 2, '.', '')
+                        ]);
+                    } else {
+                        Log::warning('Member ' . $member->id . ' has share_dep but no share account found');
+                    }
+                }
             }
         }
 

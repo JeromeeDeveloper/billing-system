@@ -131,6 +131,37 @@
                                         </div>
                                     </div>
 
+                                    <div class="col-12 mb-4">
+                                        <div class="upload-section">
+                                            <form action="{{ route('remittance.upload.share') }}" method="POST" enctype="multipart/form-data">
+                                                @csrf
+                                                <div class="form-group">
+                                                    <label class="font-weight-bold">Upload Share Remittance</label>
+                                                    <div class="custom-file">
+                                                        <input type="file" class="custom-file-input" name="file" id="shareFile" accept=".xlsx,.xls,.csv" required>
+                                                        <label class="custom-file-label" for="shareFile">Choose file</label>
+                                                    </div>
+                                                    <div class="mt-3">
+                                                        <h6 class="text-muted mb-2">File Requirements:</h6>
+                                                        <ul class="text-muted small pl-3">
+                                                            <li>Excel format (.xlsx, .xls, .csv)</li>
+                                                            <li>Required headers:
+                                                                <ul class="pl-3">
+                                                                    <li>EmpId (can be null)</li>
+                                                                    <li>Name (format: LASTNAME, FIRSTNAME)</li>
+                                                                    <li>Share (amount)</li>
+                                                                </ul>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                                <button type="submit" class="btn btn-info btn-block">
+                                                    <i class="fa fa-upload"></i> Upload and Process Share Remittance
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
                                     <div class="col-12">
                                         @if (isset($preview) && $preview)
                                             <div class="row mb-4">
