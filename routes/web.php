@@ -165,6 +165,7 @@ Route::get('/Branch/shares', [SharesController::class, 'index_branch'])->name('s
 // Branch Remittance Routes
 Route::get('/branch/remittance', [BranchRemittanceController::class, 'index'])->name('branch.remittance.index');
 Route::post('/branch/remittance/upload', [BranchRemittanceController::class, 'upload'])->name('branch.remittance.upload');
+Route::post('/branch/remittance/upload/share', [BranchRemittanceController::class, 'uploadShare'])->name('branch.remittance.upload.share');
 Route::get('/branch/remittance/generate-export', [BranchRemittanceController::class, 'generateExport'])->name('branch.remittance.generateExport');
 
 });

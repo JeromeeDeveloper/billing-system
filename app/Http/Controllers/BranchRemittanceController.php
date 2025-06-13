@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\RemittancePreview;
+use App\Imports\ShareRemittanceImport;
 
 class BranchRemittanceController extends Controller
 {
@@ -165,7 +166,8 @@ class BranchRemittanceController extends Controller
                     return [
                         'member_id' => $remittance->member_id,
                         'loans' => $remittance->loan_payment,
-                        'savings' => $savingsData
+                        'savings' => $savingsData,
+                        'share_dep' => $remittance->share_dep
                     ];
                 })->all();
             }
@@ -188,6 +190,58 @@ class BranchRemittanceController extends Controller
             \Log::error('Export Error: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
+        }
+    }
+
+    public function uploadShare(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:10240', // max 10MB
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Get branch_id from authenticated user
+            $branch_id = Auth::user()->branch_id;
+
+            // Create import instance with branch_id
+            $import = new ShareRemittanceImport($branch_id);
+            Excel::import($import, $request->file('file'));
+
+            $results = $import->getResults();
+
+            // Clear previous preview data for this user
+            RemittancePreview::where('user_id', Auth::id())
+                ->where('type', 'branch_share')
+                ->delete();
+
+            // Store new preview data
+            foreach ($results as $result) {
+                RemittancePreview::create([
+                    'user_id' => Auth::id(),
+                    'emp_id' => $result['emp_id'],
+                    'name' => $result['name'],
+                    'member_id' => $result['member_id'],
+                    'loans' => 0,
+                    'savings' => [],
+                    'share_dep' => $result['share'],
+                    'status' => $result['status'],
+                    'message' => $result['message'],
+                    'type' => 'branch_share'
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('branch.remittance.index')
+                ->with('success', 'Share remittance file processed successfully. Check the preview below.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Share Upload Error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return redirect()->back()
+                ->with('error', 'Error processing share remittance file: ' . $e->getMessage());
         }
     }
 }
