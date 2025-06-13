@@ -122,36 +122,29 @@ class RemittanceExport implements FromCollection, WithHeadings
             }
 
             // Handle savings
-            if (!empty($record['savings'])) {
-                foreach ($record['savings'] as $productName => $amount) {
-                    if ($amount > 0) {
-                        Log::info('Processing savings for member: ' . $member->id . ', product: ' . $productName . ', amount: ' . $amount);
+            if ($member) {
+                // Get all savings accounts with remittance_amount
+                $savingsAccounts = $member->savings()
+                    ->where('remittance_amount', '>', 0)
+                    ->get();
 
-                        // Find savings account
-                        $savings = $member->savings()
-                            ->where('product_name', $productName)
-                            ->first();
+                foreach ($savingsAccounts as $savings) {
+                    Log::info('Processing savings for member: ' . $member->id . ', account: ' . $savings->account_number);
 
-                        if (!$savings) {
-                            Log::warning('Savings account not found for member: ' . $member->id . ', product: ' . $productName);
-                            continue;
-                        }
+                    // Debug log to see raw account number and amount
+                    Log::info('Raw account number from database: [' . $savings->account_number . ']');
+                    Log::info('Remittance amount from database: [' . $savings->remittance_amount . ']');
 
-                        // Debug log to see raw account number and amount
-                        Log::info('Raw account number from database: [' . $savings->account_number . ']');
-                        Log::info('Remittance amount from database: [' . $savings->remittance_amount . ']');
-
-                        // Add savings row
-                        $exportRows->push([
-                            'branch_code' => $member->branch->code ?? '',
-                            'product_code' => '1',
-                            'dr' => '',
-                            'gl/sl cct no' => '',
-                            'amt' => '',
-                            'account_number' => str_replace('-', '', $savings->getRawOriginal('account_number')),
-                            'amount' => number_format($savings->remittance_amount, 2, '.', '') // Use remittance_amount from savings
-                        ]);
-                    }
+                    // Add savings row
+                    $exportRows->push([
+                        'branch_code' => $member->branch->code ?? '',
+                        'product_code' => '1',
+                        'dr' => '',
+                        'gl/sl cct no' => '',
+                        'amt' => '',
+                        'account_number' => str_replace('-', '', $savings->getRawOriginal('account_number')),
+                        'amount' => number_format($savings->remittance_amount, 2, '.', '')
+                    ]);
                 }
             }
         }
