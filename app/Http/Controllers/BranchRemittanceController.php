@@ -180,7 +180,7 @@ class BranchRemittanceController extends Controller
             $filename = 'branch_remittance_export_' . now()->format('Y-m-d') . '.xlsx';
 
             Excel::store(
-                new BranchRemittanceExport($remittanceData),
+                new BranchRemittanceExport($remittanceData, $branch_id),
                 $filename,
                 'public'
             );
