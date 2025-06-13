@@ -5,6 +5,7 @@ namespace App\Imports;
 use Carbon\Carbon;
 use App\Models\Member;
 use App\Models\LoanProduct;
+use App\Models\LoanForecast;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 
@@ -61,6 +62,10 @@ class LoanImport implements ToCollection
             ) {
                 $cidLoans[$cid] = $loanData;
             }
+
+            // Update LoanForecast with principal amount
+            LoanForecast::where('loan_acct_no', $loanNumber)
+                ->update(['principal' => $principal]);
         }
 
         foreach ($cidLoans as $cid => $data) {

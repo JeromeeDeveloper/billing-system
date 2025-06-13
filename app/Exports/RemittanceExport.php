@@ -67,14 +67,18 @@ class RemittanceExport implements FromCollection, WithHeadings
                         'forecast' => $forecast,
                         'prioritization' => $loanProductMember ? $loanProductMember->prioritization : 999,
                         'product_code' => $productCode,
-                        'total_due' => $forecast->total_due
+                        'total_due' => $forecast->total_due,
+                        'principal' => $forecast->principal ?? 0
                     ];
-                })->sortBy('prioritization'); // Sort by prioritization (1 being highest priority)
+                })->sortBy([
+                    ['prioritization', 'asc'],
+                    ['principal', 'desc']
+                ]); // Sort by prioritization first, then by principal amount (descending) for same priority
 
                 // Log the sorted forecasts for debugging
                 Log::info('Sorted forecasts for member ' . $member->id . ':');
                 foreach ($forecasts as $f) {
-                    Log::info("Loan Account: {$f['forecast']->loan_acct_no}, Priority: {$f['prioritization']}, Total Due: {$f['total_due']}");
+                    Log::info("Loan Account: {$f['forecast']->loan_acct_no}, Priority: {$f['prioritization']}, Principal: {$f['principal']}, Total Due: {$f['total_due']}");
                 }
 
                 foreach ($forecasts as $forecastData) {
