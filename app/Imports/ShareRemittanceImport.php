@@ -42,10 +42,19 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
         $fullName = trim($row['name'] ?? '');
         $share = floatval(str_replace(',', '', $row['share'] ?? 0));
 
+        Log::info('Processing share remittance row:', [
+            'emp_id' => $empId,
+            'name' => $fullName,
+            'share' => $share
+        ]);
+
         // Try to find member by emp_id first if provided
         $member = null;
         if ($empId) {
             $member = Member::where('emp_id', $empId)->first();
+            if ($member) {
+                Log::info('Found member by emp_id: ' . $empId);
+            }
         }
 
         // If not found by emp_id or emp_id not provided, try to match by name
@@ -56,10 +65,19 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
                 $lastName = trim($nameParts[0]);
                 $firstName = trim($nameParts[1]);
 
+                Log::info('Attempting name match:', [
+                    'lastName' => $lastName,
+                    'firstName' => $firstName
+                ]);
+
                 $member = Member::where(function($query) use ($lastName, $firstName) {
                     $query->whereRaw('LOWER(lname) LIKE ?', ['%' . strtolower($lastName) . '%'])
                           ->whereRaw('LOWER(fname) LIKE ?', ['%' . strtolower($firstName) . '%']);
                 })->first();
+
+                if ($member) {
+                    Log::info('Found member by name match: ' . $member->fname . ' ' . $member->lname);
+                }
             }
         }
 
@@ -84,13 +102,26 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
                     ->first();
 
                 if ($existingRemittance) {
+                    // Log the update
+                    Log::info('Updating existing share remittance:', [
+                        'member_id' => $member->id,
+                        'old_share_dep' => $existingRemittance->share_dep,
+                        'new_share_dep' => $share
+                    ]);
+
                     // Update existing record
                     $existingRemittance->update([
                         'share_dep' => $share
                     ]);
-                    Log::info('Updated existing share remittance for member: ' . $member->id .
-                            ' - New share amount: ' . $share);
+
+                    $result['message'] = "Updated share amount for member: {$member->fname} {$member->lname}";
                 } else {
+                    // Log the creation
+                    Log::info('Creating new share remittance:', [
+                        'member_id' => $member->id,
+                        'share_dep' => $share
+                    ]);
+
                     // Create new remittance record
                     Remittance::create([
                         'member_id' => $member->id,
@@ -99,16 +130,25 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
                         'savings_dep' => 0,
                         'share_dep' => $share
                     ]);
+
+                    $result['message'] = "Created new share record for member: {$member->fname} {$member->lname}";
                 }
 
                 DB::commit();
                 $result['status'] = 'success';
-                $result['message'] = "Matched with member: {$member->fname} {$member->lname}";
             } catch (\Exception $e) {
                 DB::rollBack();
+                Log::error('Error processing share remittance:', [
+                    'member_id' => $member->id,
+                    'error' => $e->getMessage()
+                ]);
                 $result['message'] = 'Error processing record: ' . $e->getMessage();
             }
         } else {
+            Log::warning('Member not found for share remittance:', [
+                'emp_id' => $empId,
+                'name' => $fullName
+            ]);
             $result['message'] = "Member not found. Tried matching: $fullName";
         }
 
