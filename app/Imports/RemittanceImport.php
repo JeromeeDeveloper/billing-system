@@ -129,19 +129,35 @@ class RemittanceImport implements ToCollection, WithHeadingRow
 
                 // Create remittance record with both loans and total savings
                 if ($loans > 0 || $totalSavings > 0) {
-                    // Delete any existing remittance records for this member today
-                    Remittance::where('member_id', $member->id)
+                    // Find existing remittance record for this member today
+                    $existingRemittance = Remittance::where('member_id', $member->id)
                         ->whereDate('created_at', now()->toDateString())
-                        ->delete();
+                        ->first();
 
-                    // Create new remittance record
-                    Remittance::create([
-                        'member_id' => $member->id,
-                        'branch_id' => $member->branch_id,
-                        'loan_payment' => $loans,
-                        'savings_dep' => $totalSavings,
-                        'share_dep' => 0
-                    ]);
+                    if ($existingRemittance) {
+                        // Update existing record if amounts are different
+                        if ($existingRemittance->loan_payment != $loans || $existingRemittance->savings_dep != $totalSavings) {
+                            $existingRemittance->update([
+                                'loan_payment' => $loans,
+                                'savings_dep' => $totalSavings,
+                                'share_dep' => 0
+                            ]);
+                            Log::info('Updated existing remittance for member: ' . $member->id .
+                                    ' - Old loan: ' . $existingRemittance->loan_payment .
+                                    ', New loan: ' . $loans .
+                                    ' - Old savings: ' . $existingRemittance->savings_dep .
+                                    ', New savings: ' . $totalSavings);
+                        }
+                    } else {
+                        // Create new remittance record if none exists
+                        Remittance::create([
+                            'member_id' => $member->id,
+                            'branch_id' => $member->branch_id,
+                            'loan_payment' => $loans,
+                            'savings_dep' => $totalSavings,
+                            'share_dep' => 0
+                        ]);
+                    }
                 }
 
                 DB::commit();
@@ -150,7 +166,49 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             } catch (\Exception $e) {
                 DB::rollBack();
                 if (str_contains($e->getMessage(), "Field 'account_number' doesn't have a default value")) {
-                    $result['message'] = "No savings account found for this member. Please create a savings account first.";
+                    // If there's a loan payment, still create the remittance record
+                    if ($loans > 0) {
+                        try {
+                            DB::beginTransaction();
+
+                            // Find existing remittance record for this member today
+                            $existingRemittance = Remittance::where('member_id', $member->id)
+                                ->whereDate('created_at', now()->toDateString())
+                                ->first();
+
+                            if ($existingRemittance) {
+                                // Update existing record if loan amount is different
+                                if ($existingRemittance->loan_payment != $loans) {
+                                    $existingRemittance->update([
+                                        'loan_payment' => $loans,
+                                        'savings_dep' => 0,
+                                        'share_dep' => 0
+                                    ]);
+                                    Log::info('Updated existing loan-only remittance for member: ' . $member->id .
+                                            ' - Old loan: ' . $existingRemittance->loan_payment .
+                                            ', New loan: ' . $loans);
+                                }
+                            } else {
+                                // Create new remittance record if none exists
+                                Remittance::create([
+                                    'member_id' => $member->id,
+                                    'branch_id' => $member->branch_id,
+                                    'loan_payment' => $loans,
+                                    'savings_dep' => 0,
+                                    'share_dep' => 0
+                                ]);
+                            }
+
+                            DB::commit();
+                            $result['status'] = 'success';
+                            $result['message'] = "Matched with member: {$member->fname} {$member->lname} (Loan payment only - No savings account found)";
+                        } catch (\Exception $innerException) {
+                            DB::rollBack();
+                            $result['message'] = 'Error processing loan payment: ' . $innerException->getMessage();
+                        }
+                    } else {
+                        $result['message'] = "No savings account found for this member. Please create a savings account first.";
+                    }
                 } else {
                     $result['message'] = 'Error processing record: ' . $e->getMessage();
                 }
