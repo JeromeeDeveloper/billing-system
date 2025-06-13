@@ -98,7 +98,7 @@ class RemittanceExport implements FromCollection, WithHeadings
                         Log::info("- Payment Amount: {$deductionAmount}");
                         Log::info("- Remaining Payment Before: {$remainingPayment}");
 
-                        // Add loan deduction row
+                        // Add loan deduction row with the actual deduction amount
                         $exportRows->push([
                             'branch_code' => $member->branch->code ?? '',
                             'product_code' => '4',
@@ -106,7 +106,7 @@ class RemittanceExport implements FromCollection, WithHeadings
                             'gl/sl cct no' => '',
                             'amt' => '',
                             'account_number' => str_replace('-', '', $forecast->loan_acct_no),
-                            'amount' => number_format($deductionAmount, 2, '.', '')
+                            'amount' => number_format($deductionAmount, 2, '.', '') // Use actual deduction amount
                         ]);
 
                         // Update the total_due in LoanForecast
@@ -119,6 +119,12 @@ class RemittanceExport implements FromCollection, WithHeadings
                         // Subtract the deduction amount from remaining payment
                         $remainingPayment -= $deductionAmount;
                         Log::info("- Remaining Payment After: {$remainingPayment}");
+
+                        // If this loan is fully paid, break the loop
+                        if ($newTotalDue <= 0) {
+                            Log::info("- Loan fully paid, moving to next loan");
+                            continue;
+                        }
                     }
                 }
 
