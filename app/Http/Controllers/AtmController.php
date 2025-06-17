@@ -7,6 +7,12 @@ use App\Models\Member;
 use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use App\Exports\ListOfProfileExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AtmController extends Controller
 {
@@ -123,5 +129,10 @@ class AtmController extends Controller
             ->groupBy('branch.name');
 
         return view('components.admin.atm.branch-report', compact('branches'));
+    }
+
+    public function exportListOfProfile()
+    {
+        return Excel::download(new ListOfProfileExport, 'List_of_Profile_' . now()->format('Y-m-d') . '.xlsx');
     }
 }

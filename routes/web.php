@@ -42,6 +42,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/atm/update-balance', [AtmController::class, 'updateBalance'])->name('atm.update-balance');
     Route::get('/atm/summary-report', [AtmController::class, 'generateSummaryReport'])->name('atm.summary-report');
     Route::get('/atm/branch-report', [AtmController::class, 'generateBranchReport'])->name('atm.branch-report');
+    Route::get('/atm/export-list-of-profile', [AtmController::class, 'exportListOfProfile'])->name('atm.export-list-of-profile');
 });
 
 Route::middleware([AdminMiddleware::class])->group(function () {
