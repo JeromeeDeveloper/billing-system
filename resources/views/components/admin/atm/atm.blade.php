@@ -52,19 +52,22 @@
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label>Member Name</label>
-                                            <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Enter member name">
+                                            <input type="text" class="form-control" name="name"
+                                                value="{{ request('name') }}" placeholder="Enter member name">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label>EMP ID</label>
-                                            <input type="text" class="form-control" name="emp_id" value="{{ request('emp_id') }}" placeholder="Enter EMP ID">
+                                            <input type="text" class="form-control" name="emp_id"
+                                                value="{{ request('emp_id') }}" placeholder="Enter EMP ID">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label>CID</label>
-                                            <input type="text" class="form-control" name="cid" value="{{ request('cid') }}" placeholder="Enter CID">
+                                            <input type="text" class="form-control" name="cid"
+                                                value="{{ request('cid') }}" placeholder="Enter CID">
                                         </div>
                                     </div>
                                     <div class="col-md-12 text-right">
@@ -96,180 +99,257 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($members as $member)
-                                            <tr>
-                                                <td>{{ $member->cid }}</td>
-                                                <td>{{ $member->lname }}, {{ $member->fname }}</td>
-                                                <td>{{ $member->branch ? $member->branch->name : 'N/A' }}</td>
-                                                <td>
-                                                    @foreach($member->savings as $saving)
-                                                        <div>{{ $saving->account_number }}: ₱{{ number_format($saving->current_balance, 2) }}</div>
-                                                    @endforeach
-                                                </td>
-                                                <td>
-                                                    @foreach($member->shares as $share)
-                                                        <div>{{ $share->account_number }}: ₱{{ number_format($share->current_balance, 2) }}</div>
-                                                    @endforeach
-                                                </td>
-                                                <td>
-                                                    @foreach($member->loanForecasts as $loan)
-                                                        <div>{{ $loan->loan_acct_no }}: ₱{{ number_format($loan->total_due, 2) }}</div>
-                                                    @endforeach
-                                                </td>
-                                                <td>
-                                                    <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editBalanceModal{{ $member->id }}">
-                                                        <i class="fa fa-edit"></i> Edit Balance
-                                                    </button>
-                                                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#viewModal{{ $member->id }}">
-                                                        <i class="fa fa-eye"></i> View
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                            @foreach ($members as $member)
+                                                <tr>
+                                                    <td>{{ $member->cid }}</td>
+                                                    <td>{{ $member->lname }}, {{ $member->fname }}</td>
+                                                    <td>{{ $member->branch ? $member->branch->name : 'N/A' }}</td>
+                                                    <td>
+                                                        @foreach ($member->savings as $saving)
+                                                            <div>{{ $saving->account_number }}:
+                                                                ₱{{ number_format($saving->current_balance, 2) }}</div>
+                                                        @endforeach
+                                                    </td>
+                                                    <td>
+                                                        @foreach ($member->shares as $share)
+                                                            <div>{{ $share->account_number }}:
+                                                                ₱{{ number_format($share->current_balance, 2) }}</div>
+                                                        @endforeach
+                                                    </td>
+                                                    <td>
+                                                        @foreach ($member->loanForecasts as $loan)
+                                                            <div>{{ $loan->loan_acct_no }}:
+                                                                ₱{{ number_format($loan->total_due, 2) }}</div>
+                                                        @endforeach
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-primary btn-sm"
+                                                            data-toggle="modal"
+                                                            data-target="#editBalanceModal{{ $member->id }}">
+                                                            <i class="fa fa-edit"></i> Edit Balance
+                                                        </button>
+                                                        <button type="button" class="btn btn-info btn-sm"
+                                                            data-toggle="modal"
+                                                            data-target="#viewModal{{ $member->id }}">
+                                                            <i class="fa fa-eye"></i> View
+                                                        </button>
+                                                    </td>
+                                                </tr>
 
-                                            <!-- Edit Balance Modal -->
-                                            <div class="modal fade" id="editBalanceModal{{ $member->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                                <div class="modal-dialog modal-lg" role="document">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">Edit Account Balance - {{ $member->lname }}, {{ $member->fname }}</h5>
-                                                            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                                                <!-- Edit Balance Modal -->
+                                                <div class="modal fade" id="editBalanceModal{{ $member->id }}"
+                                                    tabindex="-1" role="dialog" aria-hidden="true">
+                                                    <div class="modal-dialog modal-lg" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Edit Account Balance -
+                                                                    {{ $member->lname }}, {{ $member->fname }}</h5>
+                                                                <button type="button" class="close"
+                                                                    data-dismiss="modal"><span>&times;</span></button>
+                                                            </div>
+                                                            <form action="{{ route('atm.update-balance') }}"
+                                                                method="POST">
+                                                                @csrf
+                                                                <input type="hidden" name="member_id"
+                                                                    value="{{ $member->id }}">
+                                                                <div class="modal-body">
+                                                                    <div class="row">
+                                                                        <div class="col-md-12">
+                                                                            <h6
+                                                                                class="section-title bg-light p-2 rounded mb-3">
+                                                                                <i class="fa fa-piggy-bank me-2"></i>
+                                                                                Savings Accounts
+                                                                            </h6>
+                                                                            @foreach ($member->savings as $index => $saving)
+                                                                                <div class="form-group">
+                                                                                    <label>{{ $saving->account_number }}</label>
+                                                                                    <input type="number"
+                                                                                        step="0.01"
+                                                                                        class="form-control"
+                                                                                        name="savings[{{ $index }}][balance]"
+                                                                                        value="{{ $saving->current_balance }}"
+                                                                                        required>
+                                                                                    <input type="hidden"
+                                                                                        name="savings[{{ $index }}][account_number]"
+                                                                                        value="{{ $saving->account_number }}">
+                                                                                </div>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row mt-4">
+                                                                        <div class="col-md-12">
+                                                                            <h6
+                                                                                class="section-title bg-light p-2 rounded mb-3">
+                                                                                <i class="fa fa-chart-pie me-2"></i>
+                                                                                Share Accounts
+                                                                            </h6>
+                                                                            @foreach ($member->shares as $index => $share)
+                                                                                <div class="form-group">
+                                                                                    <label>{{ $share->account_number }}</label>
+                                                                                    <input type="number"
+                                                                                        step="0.01"
+                                                                                        class="form-control"
+                                                                                        name="shares[{{ $index }}][balance]"
+                                                                                        value="{{ $share->current_balance }}"
+                                                                                        required>
+                                                                                    <input type="hidden"
+                                                                                        name="shares[{{ $index }}][account_number]"
+                                                                                        value="{{ $share->account_number }}">
+                                                                                </div>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="row mt-4">
+                                                                        <div class="col-md-12">
+                                                                            <h6
+                                                                                class="section-title bg-light p-2 rounded mb-3">
+                                                                                <i class="fa fa-money-bill me-2"></i>
+                                                                                Loan Accounts
+                                                                            </h6>
+                                                                            @foreach ($member->loanForecasts as $index => $loan)
+                                                                                <div class="form-group">
+                                                                                    <label>{{ $loan->loan_acct_no }}</label>
+                                                                                    <input type="number"
+                                                                                        step="0.01"
+                                                                                        class="form-control"
+                                                                                        name="loans[{{ $index }}][balance]"
+                                                                                        value="{{ $loan->total_due }}"
+                                                                                        required>
+                                                                                    <input type="hidden"
+                                                                                        name="loans[{{ $index }}][account_number]"
+                                                                                        value="{{ $loan->loan_acct_no }}">
+                                                                                </div>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary"
+                                                                        data-dismiss="modal">Close</button>
+                                                                    <button type="submit"
+                                                                        class="btn btn-primary">Save changes</button>
+                                                                </div>
+                                                            </form>
                                                         </div>
-                                                        <form action="{{ route('atm.update-balance') }}" method="POST">
-                                                            @csrf
-                                                            <input type="hidden" name="member_id" value="{{ $member->id }}">
+                                                    </div>
+                                                </div>
+
+                                                <!-- View Modal -->
+                                                <div class="modal fade" id="viewModal{{ $member->id }}"
+                                                    tabindex="-1" role="dialog" aria-hidden="true">
+                                                    <div class="modal-dialog modal-lg" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">View Account Details -
+                                                                    {{ $member->lname }}, {{ $member->fname }}</h5>
+                                                                <button type="button" class="close"
+                                                                    data-dismiss="modal"><span>&times;</span></button>
+                                                            </div>
                                                             <div class="modal-body">
                                                                 <div class="row">
-                                                                    <div class="col-md-12">
-                                                                        <h6 class="section-title bg-light p-2 rounded mb-3">
-                                                                            <i class="fa fa-piggy-bank me-2"></i> Savings Accounts
-                                                                        </h6>
-                                                                        @foreach($member->savings as $index => $saving)
-                                                                        <div class="form-group">
-                                                                            <label>{{ $saving->account_number }}</label>
-                                                                            <input type="number" step="0.01" class="form-control" name="savings[{{ $index }}][balance]" value="{{ $saving->current_balance }}" required>
-                                                                            <input type="hidden" name="savings[{{ $index }}][account_number]" value="{{ $saving->account_number }}">
-                                                                        </div>
-                                                                        @endforeach
+                                                                    <div class="col-md-6">
+                                                                        <h6>Member Information</h6>
+                                                                        <p><strong>CID:</strong> {{ $member->cid }}
+                                                                        </p>
+                                                                        <p><strong>EMP ID:</strong>
+                                                                            {{ $member->emp_id }}</p>
+                                                                        <p><strong>Branch:</strong>
+                                                                            {{ $member->branch ? $member->branch->name : 'N/A' }}
+                                                                        </p>
                                                                     </div>
                                                                 </div>
 
-                                                                <div class="row mt-4">
-                                                                    <div class="col-md-12">
-                                                                        <h6 class="section-title bg-light p-2 rounded mb-3">
-                                                                            <i class="fa fa-chart-pie me-2"></i> Share Accounts
-                                                                        </h6>
-                                                                        @foreach($member->shares as $index => $share)
-                                                                        <div class="form-group">
-                                                                            <label>{{ $share->account_number }}</label>
-                                                                            <input type="number" step="0.01" class="form-control" name="shares[{{ $index }}][balance]" value="{{ $share->current_balance }}" required>
-                                                                            <input type="hidden" name="shares[{{ $index }}][account_number]" value="{{ $share->account_number }}">
+                                                                <hr>
+
+                                                                <div>
+                                                                    <h6>Savings Accounts</h6>
+                                                                    @foreach ($member->savings as $saving)
+                                                                        <div class="border p-3 rounded mb-2">
+                                                                            <p><strong>Account Number:</strong>
+                                                                                {{ $saving->account_number }}</p>
+                                                                            <p><strong>Current Balance:</strong>
+                                                                                ₱{{ number_format($saving->current_balance, 2) }}
+                                                                            </p>
+                                                                            <p><strong>Available Balance:</strong>
+                                                                                ₱{{ number_format($saving->available_balance, 2) }}
+                                                                            </p>
+                                                                            <p><strong>Open Date:</strong>
+                                                                                {{ $saving->open_date }}</p>
                                                                         </div>
-                                                                        @endforeach
-                                                                    </div>
+                                                                    @endforeach
                                                                 </div>
 
-                                                                <div class="row mt-4">
-                                                                    <div class="col-md-12">
-                                                                        <h6 class="section-title bg-light p-2 rounded mb-3">
-                                                                            <i class="fa fa-money-bill me-2"></i> Loan Accounts
-                                                                        </h6>
-                                                                        @foreach($member->loanForecasts as $index => $loan)
-                                                                        <div class="form-group">
-                                                                            <label>{{ $loan->loan_acct_no }}</label>
-                                                                            <input type="number" step="0.01" class="form-control" name="loans[{{ $index }}][balance]" value="{{ $loan->total_due }}" required>
-                                                                            <input type="hidden" name="loans[{{ $index }}][account_number]" value="{{ $loan->loan_acct_no }}">
+                                                                <hr>
+
+                                                                <div>
+                                                                    <h6>Share Accounts</h6>
+                                                                    @foreach ($member->shares as $share)
+                                                                        <div class="border p-3 rounded mb-2">
+                                                                            <p><strong>Account Number:</strong>
+                                                                                {{ $share->account_number }}</p>
+                                                                            <p><strong>Current Balance:</strong>
+                                                                                ₱{{ number_format($share->current_balance, 2) }}
+                                                                            </p>
+                                                                            <p><strong>Available Balance:</strong>
+                                                                                ₱{{ number_format($share->available_balance, 2) }}
+                                                                            </p>
+                                                                            <p><strong>Open Date:</strong>
+                                                                                {{ $share->open_date }}</p>
                                                                         </div>
-                                                                        @endforeach
-                                                                    </div>
+                                                                    @endforeach
+                                                                </div>
+
+                                                                <hr>
+
+                                                                <div>
+                                                                    <h6>Loan Accounts</h6>
+                                                                    @foreach ($member->loanForecasts as $loan)
+                                                                        <div class="border p-3 rounded mb-2">
+                                                                            <p><strong>Loan Account No:</strong>
+                                                                                {{ $loan->loan_acct_no }}</p>
+                                                                            <p><strong>Total Due:</strong>
+                                                                                ₱{{ number_format($loan->total_due, 2) }}
+                                                                            </p>
+                                                                            <p><strong>Principal Due:</strong>
+                                                                                ₱{{ number_format($loan->principal_due, 2) }}
+                                                                            </p>
+                                                                            <p><strong>Interest Due:</strong>
+                                                                                ₱{{ number_format($loan->interest_due, 2) }}
+                                                                            </p>
+                                                                            <p><strong>Penalty Due:</strong>
+                                                                                ₱{{ number_format($loan->penalty_due, 2) }}
+                                                                            </p>
+                                                                            <p><strong>Open Date:</strong>
+                                                                                {{ $loan->open_date }}</p>
+                                                                            <p><strong>Maturity Date:</strong>
+                                                                                {{ $loan->maturity_date }}</p>
+                                                                        </div>
+                                                                    @endforeach
                                                                 </div>
                                                             </div>
                                                             <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                                <button type="submit" class="btn btn-primary">Save changes</button>
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">Close</button>
                                                             </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- View Modal -->
-                                            <div class="modal fade" id="viewModal{{ $member->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                                <div class="modal-dialog modal-lg" role="document">
-                                                    <div class="modal-content">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title">View Account Details - {{ $member->lname }}, {{ $member->fname }}</h5>
-                                                            <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            <div class="row">
-                                                                <div class="col-md-6">
-                                                                    <h6>Member Information</h6>
-                                                                    <p><strong>CID:</strong> {{ $member->cid }}</p>
-                                                                    <p><strong>EMP ID:</strong> {{ $member->emp_id }}</p>
-                                                                    <p><strong>Branch:</strong> {{ $member->branch ? $member->branch->name : 'N/A' }}</p>
-                                                                </div>
-                                                            </div>
-
-                                                            <hr>
-
-                                                            <div>
-                                                                <h6>Savings Accounts</h6>
-                                                                @foreach($member->savings as $saving)
-                                                                <div class="border p-3 rounded mb-2">
-                                                                    <p><strong>Account Number:</strong> {{ $saving->account_number }}</p>
-                                                                    <p><strong>Current Balance:</strong> ₱{{ number_format($saving->current_balance, 2) }}</p>
-                                                                    <p><strong>Available Balance:</strong> ₱{{ number_format($saving->available_balance, 2) }}</p>
-                                                                    <p><strong>Open Date:</strong> {{ $saving->open_date }}</p>
-                                                                </div>
-                                                                @endforeach
-                                                            </div>
-
-                                                            <hr>
-
-                                                            <div>
-                                                                <h6>Share Accounts</h6>
-                                                                @foreach($member->shares as $share)
-                                                                <div class="border p-3 rounded mb-2">
-                                                                    <p><strong>Account Number:</strong> {{ $share->account_number }}</p>
-                                                                    <p><strong>Current Balance:</strong> ₱{{ number_format($share->current_balance, 2) }}</p>
-                                                                    <p><strong>Available Balance:</strong> ₱{{ number_format($share->available_balance, 2) }}</p>
-                                                                    <p><strong>Open Date:</strong> {{ $share->open_date }}</p>
-                                                                </div>
-                                                                @endforeach
-                                                            </div>
-
-                                                            <hr>
-
-                                                            <div>
-                                                                <h6>Loan Accounts</h6>
-                                                                @foreach($member->loanForecasts as $loan)
-                                                                <div class="border p-3 rounded mb-2">
-                                                                    <p><strong>Loan Account No:</strong> {{ $loan->loan_acct_no }}</p>
-                                                                    <p><strong>Total Due:</strong> ₱{{ number_format($loan->total_due, 2) }}</p>
-                                                                    <p><strong>Principal Due:</strong> ₱{{ number_format($loan->principal_due, 2) }}</p>
-                                                                    <p><strong>Interest Due:</strong> ₱{{ number_format($loan->interest_due, 2) }}</p>
-                                                                    <p><strong>Penalty Due:</strong> ₱{{ number_format($loan->penalty_due, 2) }}</p>
-                                                                    <p><strong>Open Date:</strong> {{ $loan->open_date }}</p>
-                                                                    <p><strong>Maturity Date:</strong> {{ $loan->maturity_date }}</p>
-                                                                </div>
-                                                                @endforeach
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
                                             @endforeach
                                         </tbody>
                                     </table>
                                 </div>
 
+                                <style>
+                                    .flex.justify-between.flex-1.sm\:hidden {
+                                        display: none;
+                                    }
+                                </style>
                                 <!-- Pagination -->
-                                <div class="d-flex justify-content-center mt-4">
-                                    {{ $members->appends(request()->query())->links() }}
-                                </div>
+                            </div>
+                            <div class="d-flex text-center justify-content-center mt-4">
+                                {{ $members->appends(request()->query())->links() }}
                             </div>
                         </div>
                     </div>
@@ -285,12 +365,14 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <a href="{{ route('atm.summary-report') }}" class="btn btn-primary btn-block mb-3">
+                                        <a href="{{ route('atm.summary-report') }}"
+                                            class="btn btn-primary btn-block mb-3">
                                             Generate Summary Remittance Report
                                         </a>
                                     </div>
                                     <div class="col-md-6">
-                                        <a href="{{ route('atm.branch-report') }}" class="btn btn-info btn-block mb-3">
+                                        <a href="{{ route('atm.branch-report') }}"
+                                            class="btn btn-info btn-block mb-3">
                                             Generate Branch-wise Report
                                         </a>
                                     </div>
@@ -304,7 +386,8 @@
 
         <div class="footer">
             <div class="copyright">
-                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/" target="_blank">MASS-SPECC COOPERATIVE</a> 2025</p>
+                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/"
+                        target="_blank">MASS-SPECC COOPERATIVE</a> 2025</p>
             </div>
         </div>
     </div>
@@ -336,4 +419,5 @@
         </script>
     @endif
 </body>
+
 </html>
