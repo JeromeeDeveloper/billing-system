@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use App\Exports\ListOfProfileExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\RemittanceReportConsolidatedExport;
 
 class AtmController extends Controller
 {
@@ -134,5 +135,10 @@ class AtmController extends Controller
     public function exportListOfProfile()
     {
         return Excel::download(new ListOfProfileExport, 'List_of_Profile_' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    public function exportRemittanceReportConsolidated()
+    {
+        return Excel::download(new RemittanceReportConsolidatedExport, 'Remittance_Report_Consolidated_' . now()->format('Y-m-d') . '.xlsx');
     }
 }

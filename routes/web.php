@@ -37,12 +37,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifications/unread/count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread.count');
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
 
-    // ATM Management Routes
-    Route::get('/atm', [AtmController::class, 'index'])->name('atm');
-    Route::post('/atm/update-balance', [AtmController::class, 'updateBalance'])->name('atm.update-balance');
-    Route::get('/atm/summary-report', [AtmController::class, 'generateSummaryReport'])->name('atm.summary-report');
-    Route::get('/atm/branch-report', [AtmController::class, 'generateBranchReport'])->name('atm.branch-report');
-    Route::get('/atm/export-list-of-profile', [AtmController::class, 'exportListOfProfile'])->name('atm.export-list-of-profile');
 });
 
 Route::middleware([AdminMiddleware::class])->group(function () {
@@ -84,8 +78,13 @@ Route::delete('/loans/{loan}', [LoansController::class, 'destroy'])->name('loans
 Route::post('/upload', [DocumentUploadController::class, 'store'])->name('document.upload');
 Route::get('/Documents', [DocumentUploadController::class, 'index'])->name('documents');
 
-//Atm
-Route::get('/Atm', [AtmController::class, 'index'])->name('atm');
+//atm
+Route::get('/atm', [AtmController::class, 'index'])->name('atm');
+    Route::post('/atm/update-balance', [AtmController::class, 'updateBalance'])->name('atm.update-balance');
+    Route::get('/atm/summary-report', [AtmController::class, 'generateSummaryReport'])->name('atm.summary-report');
+    Route::get('/atm/branch-report', [AtmController::class, 'generateBranchReport'])->name('atm.branch-report');
+    Route::get('/atm/export-list-of-profile', [AtmController::class, 'exportListOfProfile'])->name('atm.export.list-of-profile');
+    Route::get('/atm/export-remittance-report-consolidated', [AtmController::class, 'exportRemittanceReportConsolidated'])->name('atm.export.remittance-report-consolidated');
 
 //Branch
 Route::get('/Branch', [BranchController::class, 'index'])->name('branch');

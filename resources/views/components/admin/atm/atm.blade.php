@@ -50,13 +50,19 @@
                                 <h5 class="card-title">Generate Reports</h5>
                             </div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <a href="{{ route('atm.export-list-of-profile') }}" class="btn btn-success btn-block mb-3">
-                                            <i class="fa fa-file-excel"></i> Export List of Profile
-                                        </a>
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ route('atm.export.list-of-profile') }}" class="btn btn-success">
+                                                <i class="fas fa-file-excel me-1"></i> Export List of Profile
+                                            </a>
+                                            <a href="{{ route('atm.export.remittance-report-consolidated') }}" class="btn btn-primary">
+                                                <i class="fas fa-file-excel me-1"></i> Export Remittance Report Consolidated
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
