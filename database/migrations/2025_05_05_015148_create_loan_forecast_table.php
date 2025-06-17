@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('approval_no')->nullable();
             $table->date('start_hold')->nullable();
             $table->date('expiry_date')->nullable();
+            $table->decimal('total_due_after_remittance', 12, 2)->default(0);
             $table->enum('account_status', ['deduction', 'non-deduction'])->default('deduction');
             $table->timestamps();
         });

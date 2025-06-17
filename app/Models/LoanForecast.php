@@ -27,7 +27,8 @@ class LoanForecast extends Model
         'start_hold',
         'expiry_date',
         'account_status',
-        'approval_no'
+        'approval_no',
+        'total_due_after_remittance'
     ];
 
     protected $casts = [

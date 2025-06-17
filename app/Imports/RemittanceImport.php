@@ -181,7 +181,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             // Update the total_due in LoanForecast
                             $newTotalDue = $totalDue - $deductionAmount;
                             $forecast->update([
-                                'total_due' => max(0, $newTotalDue) // Ensure total_due doesn't go below 0
+                                'total_due' => max(0, $newTotalDue), // Ensure total_due doesn't go below 0
+                                'total_due_after_remittance' => max(0, $newTotalDue) // Store the remaining amount after remittance
                             ]);
                             Log::info("- Updated Total Due: {$newTotalDue}");
 
