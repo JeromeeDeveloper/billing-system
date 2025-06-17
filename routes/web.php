@@ -36,6 +36,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifications/latest', [NotificationController::class, 'getLatestNotifications'])->name('notifications.latest');
     Route::get('/notifications/unread/count', [NotificationController::class, 'getUnreadCount'])->name('notifications.unread.count');
     Route::post('/notifications/mark-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+
+    // ATM Management Routes
+    Route::get('/atm', [AtmController::class, 'index'])->name('atm');
+    Route::post('/atm/update-balance', [AtmController::class, 'updateBalance'])->name('atm.update-balance');
+    Route::get('/atm/summary-report', [AtmController::class, 'generateSummaryReport'])->name('atm.summary-report');
+    Route::get('/atm/branch-report', [AtmController::class, 'generateBranchReport'])->name('atm.branch-report');
 });
 
 Route::middleware([AdminMiddleware::class])->group(function () {
