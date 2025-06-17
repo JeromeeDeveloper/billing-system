@@ -131,6 +131,14 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 if ($loans > 0) {
                     $remainingPayment = $loans;
 
+                    // Reset total_due_after_remittance to 0 for all forecasts
+                    // This ensures we start fresh when re-uploading
+                    foreach ($member->loanForecasts as $forecast) {
+                        $forecast->update([
+                            'total_due_after_remittance' => 0
+                        ]);
+                    }
+
                     // Get all loan forecasts and sort them by product prioritization
                     $forecasts = collect($member->loanForecasts)->map(function($forecast) use ($member) {
                         // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
@@ -182,9 +190,10 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             $newTotalDue = $totalDue - $deductionAmount;
                             $forecast->update([
                                 'total_due' => max(0, $newTotalDue), // Ensure total_due doesn't go below 0
-                                'total_due_after_remittance' => max(0, $newTotalDue) // Store the remaining amount after remittance
+                                'total_due_after_remittance' => $deductionAmount // Store the actual amount remitted
                             ]);
                             Log::info("- Updated Total Due: {$newTotalDue}");
+                            Log::info("- Stored Remittance Amount: {$deductionAmount}");
 
                             // Subtract the deduction amount from remaining payment
                             $remainingPayment -= $deductionAmount;

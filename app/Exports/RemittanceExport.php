@@ -53,11 +53,8 @@ class RemittanceExport implements FromCollection, WithHeadings
                 $forecasts = $member->loanForecasts;
 
                 foreach ($forecasts as $forecast) {
-                    // Calculate the actual amount paid (difference between total_due and total_due_after_remittance)
-                    $amountPaid = $forecast->total_due - $forecast->total_due_after_remittance;
-
-                    if ($amountPaid > 0) {
-                        // Add loan deduction row with the actual amount paid
+                    if ($forecast->total_due_after_remittance > 0) {
+                        // Add loan deduction row
                         $exportRows->push([
                             'branch_code' => $member->branch->code ?? '',
                             'product_code' => '4',
@@ -65,7 +62,7 @@ class RemittanceExport implements FromCollection, WithHeadings
                             'gl/sl cct no' => '',
                             'amt' => '',
                             'account_number' => str_replace('-', '', $forecast->loan_acct_no),
-                            'amount' => number_format($amountPaid, 2, '.', '')
+                            'amount' => number_format($forecast->total_due_after_remittance, 2, '.', '')
                         ]);
                     }
                 }
