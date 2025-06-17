@@ -153,6 +153,11 @@
                                                             data-target="#editBalanceModal{{ $member->id }}">
                                                             <i class="fa fa-edit"></i> Edit Balance
                                                         </button>
+                                                        <button type="button" class="btn btn-success btn-sm"
+                                                            data-toggle="modal"
+                                                            data-target="#postPaymentModal{{ $member->id }}">
+                                                            <i class="fa fa-money-bill"></i> Post Payment
+                                                        </button>
                                                         <button type="button" class="btn btn-info btn-sm"
                                                             data-toggle="modal"
                                                             data-target="#viewModal{{ $member->id }}">
@@ -362,6 +367,73 @@
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                <!-- Post Payment Modal -->
+                                                <div class="modal fade" id="postPaymentModal{{ $member->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                                    <div class="modal-dialog modal-lg">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Post Loan Payment - {{ $member->lname }}, {{ $member->fname }}</h5>
+                                                                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                                                            </div>
+                                                            <form action="{{ route('atm.post-payment') }}" method="POST">
+                                                                @csrf
+                                                                <input type="hidden" name="member_id" value="{{ $member->id }}">
+                                                                <div class="modal-body">
+                                                                    <div class="row">
+                                                                        <div class="col-md-6">
+                                                                            <div class="form-group">
+                                                                                <label>Payment Amount</label>
+                                                                                <input type="number" step="0.01" class="form-control" name="payment_amount" required>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="form-group">
+                                                                                <label>Payment Date</label>
+                                                                                <input type="date" class="form-control" name="payment_date" value="{{ date('Y-m-d') }}" required>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row">
+                                                                        <div class="col-md-6">
+                                                                            <div class="form-group">
+                                                                                <label>Payment Reference</label>
+                                                                                <input type="text" class="form-control" name="payment_reference" required>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-6">
+                                                                            <div class="form-group">
+                                                                                <label>Notes</label>
+                                                                                <textarea class="form-control" name="notes" rows="1"></textarea>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="row mt-3">
+                                                                        <div class="col-12">
+                                                                            <div class="card">
+                                                                                <div class="card-header">
+                                                                                    <h6 class="mb-0">Current Loan Balances</h6>
+                                                                                </div>
+                                                                                <div class="card-body">
+                                                                                    @foreach ($member->loanForecasts as $loan)
+                                                                                    <div class="loan-info mb-2">
+                                                                                        <strong>{{ $loan->loan_acct_no }}:</strong>
+                                                                                        <span class="float-right">₱{{ number_format($loan->total_due, 2) }}</span>
+                                                                                    </div>
+                                                                                    @endforeach
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                                    <button type="submit" class="btn btn-primary">Post Payment</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             @endforeach
                                         </tbody>
                                     </table>
@@ -381,7 +453,42 @@
                     </div>
                 </div>
 
-
+                <!-- Post Payment Modal -->
+                <div class="modal fade" id="postPaymentModal" tabindex="-1" aria-labelledby="postPaymentModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="postPaymentModalLabel">Post Loan Payment</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ route('atm.post-payment') }}" method="POST">
+                                @csrf
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="payment_amount" class="form-label">Payment Amount</label>
+                                        <input type="number" step="0.01" class="form-control" id="payment_amount" name="payment_amount" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="payment_date" class="form-label">Payment Date</label>
+                                        <input type="date" class="form-control" id="payment_date" name="payment_date" value="{{ date('Y-m-d') }}" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="payment_reference" class="form-label">Payment Reference</label>
+                                        <input type="text" class="form-control" id="payment_reference" name="payment_reference" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="payment_notes" class="form-label">Notes</label>
+                                        <textarea class="form-control" id="payment_notes" name="payment_notes" rows="3"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary">Post Payment</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>

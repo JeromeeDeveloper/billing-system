@@ -14,6 +14,8 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use App\Exports\ListOfProfileExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\RemittanceReportConsolidatedExport;
+use App\Models\LoanPayment;
+use Illuminate\Support\Facades\Log;
 
 class AtmController extends Controller
 {
@@ -140,5 +142,115 @@ class AtmController extends Controller
     public function exportRemittanceReportConsolidated()
     {
         return Excel::download(new RemittanceReportConsolidatedExport, 'Remittance_Report_Consolidated_' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    public function postPayment(Request $request)
+    {
+        $request->validate([
+            'payment_amount' => 'required|numeric|min:0.01',
+            'payment_date' => 'required|date',
+            'payment_reference' => 'required|string',
+            'payment_notes' => 'nullable|string'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $member = Member::findOrFail($request->member_id);
+            $paymentAmount = $request->payment_amount;
+            $remainingPayment = $paymentAmount;
+
+            // Get all loan forecasts and sort them by product prioritization
+            $forecasts = collect($member->loanForecasts)->map(function($forecast) use ($member) {
+                // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
+                $productCode = explode('-', $forecast->loan_acct_no)[2] ?? null;
+
+                // Find the loan product member with matching product code
+                $loanProductMember = $member->loanProductMembers()
+                    ->whereHas('loanProduct', function($query) use ($productCode) {
+                        $query->where('product_code', $productCode);
+                    })
+                    ->first();
+
+                return [
+                    'forecast' => $forecast,
+                    'prioritization' => $loanProductMember ? $loanProductMember->prioritization : 999,
+                    'product_code' => $productCode,
+                    'total_due' => $forecast->total_due,
+                    'principal' => $forecast->principal ?? 0
+                ];
+            })->sortBy([
+                ['prioritization', 'asc'],
+                ['principal', 'desc']
+            ]);
+
+            // Log the sorted forecasts for debugging
+            Log::info('Sorted forecasts for member ' . $member->id . ':');
+            foreach ($forecasts as $f) {
+                Log::info("Loan Account: {$f['forecast']->loan_acct_no}, Priority: {$f['prioritization']}, Principal: {$f['principal']}, Total Due: {$f['total_due']}");
+            }
+
+            foreach ($forecasts as $forecastData) {
+                if ($remainingPayment <= 0) break;
+
+                $forecast = $forecastData['forecast'];
+                $totalDue = $forecastData['total_due'];
+                $productCode = $forecastData['product_code'];
+
+                // Calculate how much to pay for this loan
+                $deductionAmount = min($remainingPayment, $totalDue);
+
+                if ($productCode && $deductionAmount > 0) {
+                    Log::info("Processing payment for member {$member->id}:");
+                    Log::info("- Loan Account: {$forecast->loan_acct_no}");
+                    Log::info("- Total Due: {$totalDue}");
+                    Log::info("- Payment Amount: {$deductionAmount}");
+                    Log::info("- Remaining Payment Before: {$remainingPayment}");
+
+                    // Create loan payment record
+                    LoanPayment::create([
+                        'member_id' => $member->id,
+                        'loan_forecast_id' => $forecast->id,
+                        'amount' => $deductionAmount,
+                        'payment_date' => $request->payment_date,
+                        'reference_number' => $request->payment_reference,
+                        'notes' => $request->payment_notes
+                    ]);
+
+                    // Update the total_due in LoanForecast
+                    $newTotalDue = $totalDue - $deductionAmount;
+                    $forecast->update([
+                        'total_due' => max(0, $newTotalDue) // Ensure total_due doesn't go below 0
+                    ]);
+                    Log::info("- Updated Total Due: {$newTotalDue}");
+
+                    // Subtract the deduction amount from remaining payment
+                    $remainingPayment -= $deductionAmount;
+                    Log::info("- Remaining Payment After: {$remainingPayment}");
+
+                    // If this loan is fully paid, continue to next loan
+                    if ($newTotalDue <= 0) {
+                        Log::info("- Loan fully paid, moving to next loan");
+                        continue;
+                    }
+                }
+            }
+
+            // If there's still remaining payment, log it as unused
+            if ($remainingPayment > 0) {
+                Log::warning("Member {$member->id} has unused loan payment: {$remainingPayment}");
+            }
+
+            // Update member's loan balance
+            $totalLoanBalance = $member->loanForecasts->sum('total_due');
+            $member->update(['loan_balance' => $totalLoanBalance]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Payment posted successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error posting payment: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error posting payment: ' . $e->getMessage());
+        }
     }
 }

@@ -28,7 +28,8 @@ class LoanForecast extends Model
         'expiry_date',
         'account_status',
         'approval_no',
-        'total_due_after_remittance'
+        'total_due_after_remittance',
+        'loan_payment'
     ];
 
     protected $casts = [
@@ -41,7 +42,8 @@ class LoanForecast extends Model
         'total_due' => 'decimal:2',
         'principal_due' => 'decimal:2',
         'interest_due' => 'decimal:2',
-        'penalty_due' => 'decimal:2'
+        'penalty_due' => 'decimal:2',
+        'loan_payment' => 'decimal:2'
     ];
 
     public function setStartHoldAttribute($value)
