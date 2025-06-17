@@ -25,11 +25,11 @@ class RemittanceExport implements FromCollection, WithHeadings
     {
         return [
             'branch_code',
-            'product_code',
-            'dr',
+            'product_code/dr',
             'gl/sl cct no',
             'amt',
-            'account_number',
+            'product_code/cr',
+            'gl/sl acct no',
             'amount'
         ];
     }
@@ -57,11 +57,13 @@ class RemittanceExport implements FromCollection, WithHeadings
                         // Add loan deduction row
                         $exportRows->push([
                             'branch_code' => $member->branch->code ?? '',
-                            'product_code' => '4',
-                            'dr' => '',
+                            'product_code/dr' => '',
+
+
                             'gl/sl cct no' => '',
                             'amt' => '',
-                            'account_number' => str_replace('-', '', $forecast->loan_acct_no),
+                            'product_code/cr' => '4',
+                            'gl/sl acct no' => str_replace('-', '', $forecast->loan_acct_no),
                             'amount' => number_format($forecast->total_due_after_remittance, 2, '.', '')
                         ]);
                     }
@@ -85,11 +87,13 @@ class RemittanceExport implements FromCollection, WithHeadings
                     // Add savings row
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
-                        'product_code' => '1',
-                        'dr' => '',
+                        'product_code/dr' => '',
+
                         'gl/sl cct no' => '',
                         'amt' => '',
-                        'account_number' => str_replace('-', '', $savings->getRawOriginal('account_number')),
+
+                        'product_code/cr' => '1',
+                        'gl/sl acct no' => str_replace('-', '', $savings->getRawOriginal('account_number')),
                         'amount' => number_format($savings->remittance_amount, 2, '.', '')
                     ]);
                 }
@@ -110,11 +114,12 @@ class RemittanceExport implements FromCollection, WithHeadings
                         // Add share row
                         $exportRows->push([
                             'branch_code' => $member->branch->code ?? '',
-                            'product_code' => '2', // Assuming 2 is the product code for shares
-                            'dr' => '',
+                            'product_code/dr' => '',
                             'gl/sl cct no' => '',
                             'amt' => '',
-                            'account_number' => str_replace('-', '', $share->getRawOriginal('account_number')),
+
+                            'product_code/cr' => '2',
+                            'gl/sl acct no' => str_replace('-', '', $share->getRawOriginal('account_number')),
                             'amount' => number_format($remittance->share_dep, 2, '.', '')
                         ]);
                     } else {
