@@ -27,7 +27,8 @@ class User extends Authenticatable
         'role',
         'branch_id',
         'status',
-        'billing_period'
+        'billing_period',
+        'remittance_exported'
     ];
 
     /**

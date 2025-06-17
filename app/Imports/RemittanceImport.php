@@ -127,6 +127,82 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                     }
                 }
 
+                // Process loan payments and deductions
+                if ($loans > 0) {
+                    $remainingPayment = $loans;
+
+                    // Get all loan forecasts and sort them by product prioritization
+                    $forecasts = collect($member->loanForecasts)->map(function($forecast) use ($member) {
+                        // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
+                        $productCode = explode('-', $forecast->loan_acct_no)[2] ?? null;
+
+                        // Find the loan product member with matching product code
+                        $loanProductMember = $member->loanProductMembers()
+                            ->whereHas('loanProduct', function($query) use ($productCode) {
+                                $query->where('product_code', $productCode);
+                            })
+                            ->first();
+
+                        return [
+                            'forecast' => $forecast,
+                            'prioritization' => $loanProductMember ? $loanProductMember->prioritization : 999,
+                            'product_code' => $productCode,
+                            'total_due' => $forecast->total_due,
+                            'principal' => $forecast->principal ?? 0
+                        ];
+                    })->sortBy([
+                        ['prioritization', 'asc'],
+                        ['principal', 'desc']
+                    ]);
+
+                    // Log the sorted forecasts for debugging
+                    Log::info('Sorted forecasts for member ' . $member->id . ':');
+                    foreach ($forecasts as $f) {
+                        Log::info("Loan Account: {$f['forecast']->loan_acct_no}, Priority: {$f['prioritization']}, Principal: {$f['principal']}, Total Due: {$f['total_due']}");
+                    }
+
+                    foreach ($forecasts as $forecastData) {
+                        if ($remainingPayment <= 0) break;
+
+                        $forecast = $forecastData['forecast'];
+                        $totalDue = $forecastData['total_due'];
+                        $productCode = $forecastData['product_code'];
+
+                        // Calculate how much to pay for this loan
+                        $deductionAmount = min($remainingPayment, $totalDue);
+
+                        if ($productCode && $deductionAmount > 0) {
+                            Log::info("Processing payment for member {$member->id}:");
+                            Log::info("- Loan Account: {$forecast->loan_acct_no}");
+                            Log::info("- Total Due: {$totalDue}");
+                            Log::info("- Payment Amount: {$deductionAmount}");
+                            Log::info("- Remaining Payment Before: {$remainingPayment}");
+
+                            // Update the total_due in LoanForecast
+                            $newTotalDue = $totalDue - $deductionAmount;
+                            $forecast->update([
+                                'total_due' => max(0, $newTotalDue) // Ensure total_due doesn't go below 0
+                            ]);
+                            Log::info("- Updated Total Due: {$newTotalDue}");
+
+                            // Subtract the deduction amount from remaining payment
+                            $remainingPayment -= $deductionAmount;
+                            Log::info("- Remaining Payment After: {$remainingPayment}");
+
+                            // If this loan is fully paid, continue to next loan
+                            if ($newTotalDue <= 0) {
+                                Log::info("- Loan fully paid, moving to next loan");
+                                continue;
+                            }
+                        }
+                    }
+
+                    // If there's still remaining payment, log it as unused
+                    if ($remainingPayment > 0) {
+                        Log::warning("Member {$member->id} has unused loan payment: {$remainingPayment}");
+                    }
+                }
+
                 // Create remittance record with both loans and total savings
                 if ($loans > 0 || $totalSavings > 0) {
                     // Find existing remittance record for this member today

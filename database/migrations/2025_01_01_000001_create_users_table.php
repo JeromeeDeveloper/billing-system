@@ -24,6 +24,7 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
             $table->string('billing_period')->nullable();
+            $table->string('remittance_exported')->nullable();
 
             $table->enum('role', ['admin', 'branch'])->default('admin');
             $table->enum('status', ['pending', 'approved'])->default('pending');
