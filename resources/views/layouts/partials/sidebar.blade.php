@@ -148,6 +148,15 @@
                     </ul>
                 </li>
 
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="icon icon-wallet-90"></i><span class="nav-text">ATM</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('branch.atm') }}">ATM Datatable</a></li>
+                    </ul>
+                </li>
+
             @endif
         </ul>
     </div>
