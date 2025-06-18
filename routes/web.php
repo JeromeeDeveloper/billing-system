@@ -87,6 +87,7 @@ Route::get('/atm', [AtmController::class, 'index'])->name('atm');
     Route::get('/atm/export-list-of-profile', [AtmController::class, 'exportListOfProfile'])->name('atm.export.list-of-profile');
     Route::get('/atm/export-remittance-report-consolidated', [AtmController::class, 'exportRemittanceReportConsolidated'])->name('atm.export.remittance-report-consolidated');
     Route::post('/atm/post-payment', [AtmController::class, 'postPayment'])->name('atm.post-payment');
+    Route::get('/atm/export-posted-payments', [AtmController::class, 'exportPostedPayments'])->name('atm.export-posted-payments');
 
 //Branch
 Route::get('/Branch', [BranchController::class, 'index'])->name('branch');

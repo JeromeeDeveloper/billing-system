@@ -69,6 +69,7 @@
                                     </div>
                                 </div>
 
+
                             </div>
                         </div>
                     </div>
@@ -103,7 +104,11 @@
                                     </div>
                                     <div class="col-md-12 text-right">
                                         <button type="submit" class="btn btn-primary">Search</button>
-                                        <a href="{{ route('atm') }}" class="btn btn-secondary">Reset</a>
+                                        <a href="{{ route('atm') }}" class="btn btn-secondary">Reset</a> <div class="d-flex align-items-center ms-3">
+                                            <a href="{{ route('atm.export-posted-payments') }}" class="btn btn-success me-2">
+                                                <i class="fa fa-file-excel"></i> Export Posted Payments
+                                            </a>
+                                        </div>
                                     </div>
                                 </form>
                             </div>

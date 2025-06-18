@@ -16,6 +16,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\RemittanceReportConsolidatedExport;
 use App\Models\LoanPayment;
 use Illuminate\Support\Facades\Log;
+use App\Exports\PostedPaymentsExport;
 
 class AtmController extends Controller
 {
@@ -236,6 +237,39 @@ class AtmController extends Controller
             DB::rollBack();
             Log::error('Error processing payment: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to process payment: ' . $e->getMessage());
+        }
+    }
+
+    public function exportPostedPayments()
+    {
+        try {
+            // Get all loan payments for today
+            $payments = LoanPayment::with(['member.branch', 'loanForecast'])
+                ->whereDate('payment_date', now()->toDateString())
+                ->get()
+                ->groupBy('member_id')
+                ->map(function($memberPayments) {
+                    return [
+                        'member_id' => $memberPayments->first()->member_id,
+                        'payment_date' => $memberPayments->first()->payment_date
+                    ];
+                })->values()->all();
+
+            if (empty($payments)) {
+                return redirect()->back()->with('error', 'No posted payments found for today.');
+            }
+
+            $filename = 'posted_payments_' . now()->format('Y-m-d') . '.xlsx';
+
+            Excel::store(
+                new PostedPaymentsExport($payments),
+                $filename,
+                'public'
+            );
+
+            return response()->download(storage_path('app/public/' . $filename))->deleteFileAfterSend();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
     }
 }
