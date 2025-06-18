@@ -342,24 +342,59 @@
                                                                     <div class="col-12">
                                                                         <div class="card">
                                                                             <div class="card-header">
-                                                                                <h6 class="mb-0">Loan Accounts</h6>
+                                                                                <h6 class="mb-0">Loan Information</h6>
                                                                             </div>
                                                                             <div class="card-body">
-                                                                                <div class="row">
-                                                                                    @foreach ($member->loanForecasts as $loan)
+                                                                                <div class="row mb-3">
                                                                                     <div class="col-md-4">
-                                                                                        <div class="account-details mb-3">
-                                                                                            <p><strong>Loan Account No:</strong> {{ $loan->loan_acct_no }}</p>
-                                                                                            <p><strong>Total Due:</strong> ₱{{ number_format($loan->total_due, 2) }}</p>
-                                                                                            <p><strong>Principal Due:</strong> ₱{{ number_format($loan->principal_due, 2) }}</p>
-                                                                                            <p><strong>Interest Due:</strong> ₱{{ number_format($loan->interest_due, 2) }}</p>
-                                                                                            <p><strong>Penalty Due:</strong> ₱{{ number_format($loan->penalty_due, 2) }}</p>
-                                                                                            <p><strong>Open Date:</strong> {{ $loan->open_date }}</p>
-                                                                                            <p><strong>Maturity Date:</strong> {{ $loan->maturity_date }}</p>
+                                                                                        <div class="card bg-light">
+                                                                                            <div class="card-body">
+                                                                                                <h6 class="card-title">Total Loan Balance</h6>
+                                                                                                <h4 class="text-primary">₱{{ number_format($member->loan_balance ?? 0, 2) }}</h4>
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
-                                                                                    @endforeach
+                                                                                    <div class="col-md-4">
+                                                                                        <div class="card bg-light">
+                                                                                            <div class="card-body">
+                                                                                                <h6 class="card-title">Total Remittance</h6>
+                                                                                                <h4 class="text-success">₱{{ number_format($member->loanForecasts->sum('total_due_after_remittance'), 2) }}</h4>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="col-md-4">
+                                                                                        <div class="card bg-light">
+                                                                                            <div class="card-body">
+                                                                                                <h6 class="card-title">Total Payments</h6>
+                                                                                                <h4 class="text-info">₱{{ number_format($member->loanPayments ? $member->loanPayments->sum('amount') : 0, 2) }}</h4>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </div>
+                                                                                <h6 class="mb-3">Loan Details</h6>
+                                                                                @foreach ($member->loanForecasts as $loan)
+                                                                                <div class="loan-info mb-2">
+                                                                                    <div class="d-flex justify-content-between align-items-center">
+                                                                                        <div>
+                                                                                            <strong>{{ $loan->loan_acct_no }}</strong>
+                                                                                            <span class="badge {{ $loan->prioritization == 1 ? 'bg-danger' : ($loan->prioritization == 2 ? 'bg-warning' : 'bg-info') }} ms-2">
+                                                                                                Priority {{ $loan->prioritization }}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                        <span class="float-right">₱{{ number_format($loan->total_due, 2) }}</span>
+                                                                                    </div>
+                                                                                    <small class="text-muted">
+                                                                                        Principal: ₱{{ number_format($loan->principal_due, 2) }} |
+                                                                                        Interest: ₱{{ number_format($loan->interest_due, 2) }} |
+                                                                                        Penalty: ₱{{ number_format($loan->penalty_due, 2) }}
+                                                                                    </small>
+                                                                                    <div class="mt-1">
+                                                                                        <small class="text-success">
+                                                                                            Remittance: ₱{{ number_format($loan->total_due_after_remittance, 2) }}
+                                                                                        </small>
+                                                                                    </div>
+                                                                                </div>
+                                                                                @endforeach
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -381,20 +416,49 @@
                                                                 <h5 class="modal-title">Post Loan Payment - {{ $member->lname }}, {{ $member->fname }}</h5>
                                                                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                                                             </div>
-                                                            <form action="{{ route('atm.post-payment') }}" method="POST">
+                                                            <form id="postPaymentForm{{ $member->id }}" action="{{ route('atm.post-payment') }}" method="POST">
                                                                 @csrf
                                                                 <input type="hidden" name="member_id" value="{{ $member->id }}">
                                                                 <div class="modal-body">
+                                                                    <!-- Loan Summary Cards -->
+                                                                    <div class="row mb-4">
+                                                                        <div class="col-md-4">
+                                                                            <div class="card bg-light">
+                                                                                <div class="card-body">
+                                                                                    <h6 class="card-title">Total Loan Balance</h6>
+                                                                                    <h4 class="text-primary">₱{{ number_format($member->loan_balance ?? 0, 2) }}</h4>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <div class="card bg-light">
+                                                                                <div class="card-body">
+                                                                                    <h6 class="card-title">Total Remittance</h6>
+                                                                                    <h4 class="text-success">₱{{ number_format($member->loanForecasts->sum('total_due_after_remittance'), 2) }}</h4>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <div class="card bg-light">
+                                                                                <div class="card-body">
+                                                                                    <h6 class="card-title">Total Payments</h6>
+                                                                                    <h4 class="text-info">₱{{ number_format($member->loanPayments ? $member->loanPayments->sum('amount') : 0, 2) }}</h4>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <!-- Payment Details Form -->
                                                                     <div class="row">
                                                                         <div class="col-md-6">
                                                                             <div class="form-group">
-                                                                                <label>Payment Amount</label>
+                                                                                <label class="form-label">Payment Amount</label>
                                                                                 <input type="number" step="0.01" class="form-control" name="payment_amount" required>
                                                                             </div>
                                                                         </div>
                                                                         <div class="col-md-6">
                                                                             <div class="form-group">
-                                                                                <label>Payment Date</label>
+                                                                                <label class="form-label">Payment Date</label>
                                                                                 <input type="date" class="form-control" name="payment_date" value="{{ date('Y-m-d') }}" required>
                                                                             </div>
                                                                         </div>
@@ -402,22 +466,24 @@
                                                                     <div class="row">
                                                                         <div class="col-md-6">
                                                                             <div class="form-group">
-                                                                                <label>Payment Reference</label>
+                                                                                <label class="form-label">Payment Reference</label>
                                                                                 <input type="text" class="form-control" name="payment_reference" required>
                                                                             </div>
                                                                         </div>
                                                                         <div class="col-md-6">
                                                                             <div class="form-group">
-                                                                                <label>Notes</label>
+                                                                                <label class="form-label">Notes</label>
                                                                                 <textarea class="form-control" name="notes" rows="1"></textarea>
                                                                             </div>
                                                                         </div>
                                                                     </div>
+
+                                                                    <!-- Loan Details Table -->
                                                                     <div class="row mt-3">
                                                                         <div class="col-12">
                                                                             <div class="card">
                                                                                 <div class="card-header">
-                                                                                    <h6 class="mb-0">Current Loan Balances</h6>
+                                                                                    <h6 class="mb-0">Loan Details</h6>
                                                                                 </div>
                                                                                 <div class="card-body">
                                                                                     @foreach ($member->loanForecasts as $loan)
@@ -436,6 +502,11 @@
                                                                                             Interest: ₱{{ number_format($loan->interest_due, 2) }} |
                                                                                             Penalty: ₱{{ number_format($loan->penalty_due, 2) }}
                                                                                         </small>
+                                                                                        <div class="mt-1">
+                                                                                            <small class="text-success">
+                                                                                                Remittance: ₱{{ number_format($loan->total_due_after_remittance, 2) }}
+                                                                                            </small>
+                                                                                        </div>
                                                                                     </div>
                                                                                     @endforeach
                                                                                 </div>
@@ -451,6 +522,49 @@
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                <script>
+                                                    $(document).ready(function() {
+                                                        $('#postPaymentForm{{ $member->id }}').on('submit', function(e) {
+                                                            e.preventDefault();
+
+                                                            $.ajax({
+                                                                url: $(this).attr('action'),
+                                                                method: 'POST',
+                                                                data: $(this).serialize(),
+                                                                success: function(response) {
+                                                                    try {
+                                                                        const result = JSON.parse(response);
+                                                                        if (result.success) {
+                                                                            Swal.fire({
+                                                                                icon: 'success',
+                                                                                title: 'Success!',
+                                                                                text: result.message,
+                                                                                showConfirmButton: false,
+                                                                                timer: 1500
+                                                                            }).then(function() {
+                                                                                location.reload();
+                                                                            });
+                                                                        } else {
+                                                                            Swal.fire({
+                                                                                icon: 'error',
+                                                                                title: 'Error!',
+                                                                                text: result.message
+                                                                            });
+                                                                        }
+                                                                    } catch (e) {
+                                                                        // If response is not JSON, just submit the form normally
+                                                                        $('#postPaymentForm{{ $member->id }}')[0].submit();
+                                                                    }
+                                                                },
+                                                                error: function() {
+                                                                    // If AJAX fails, submit the form normally
+                                                                    $('#postPaymentForm{{ $member->id }}')[0].submit();
+                                                                }
+                                                            });
+                                                        });
+                                                    });
+                                                </script>
                                             @endforeach
                                         </tbody>
                                     </table>
@@ -527,10 +641,10 @@
         <script>
             Swal.fire({
                 icon: 'success',
-                title: 'Success',
+                title: 'Success!',
                 text: '{{ session('success') }}',
-                timer: 2000,
-                showConfirmButton: false
+                showConfirmButton: false,
+                timer: 1500
             });
         </script>
     @endif
@@ -539,11 +653,27 @@
         <script>
             Swal.fire({
                 icon: 'error',
-                title: 'Error',
+                title: 'Error!',
                 text: '{{ session('error') }}'
             });
         </script>
     @endif
+
+    @push('scripts')
+    <script>
+        $(document).ready(function() {
+            // Handle payment amount input
+            $('input[name="payment_amount"]').on('input', function() {
+                var amount = parseFloat($(this).val()) || 0;
+                var memberId = $(this).closest('form').find('input[name="member_id"]').val();
+                var totalDue = parseFloat($('#totalDue' + memberId).text().replace(/[^0-9.-]+/g, '')) || 0;
+
+                // Update total remittance display
+                $(this).closest('.modal').find('.text-success').text('₱' + amount.toFixed(2));
+            });
+        });
+    </script>
+    @endpush
 </body>
 
 </html>

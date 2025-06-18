@@ -207,6 +207,11 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         }
                     }
 
+                    // Recalculate and update member's total loan balance
+                    $totalLoanBalance = $member->loanForecasts()->sum('total_due');
+                    $member->update(['loan_balance' => $totalLoanBalance]);
+                    Log::info("Updated member {$member->id} total loan balance to: {$totalLoanBalance}");
+
                     // If there's still remaining payment, log it as unused
                     if ($remainingPayment > 0) {
                         Log::warning("Member {$member->id} has unused loan payment: {$remainingPayment}");

@@ -21,24 +21,20 @@ class AtmController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Member::with(['branch', 'savings', 'shares', 'loanForecasts'])
-            ->select('members.*');
-
-        // Apply search filters
-        if ($request->filled('name')) {
-            $query->where(function($q) use ($request) {
-                $q->where('fname', 'like', '%' . $request->name . '%')
-                  ->orWhere('lname', 'like', '%' . $request->name . '%');
+        $query = Member::query()
+            ->with(['branch', 'savings', 'shares', 'loanForecasts', 'loanPayments'])
+            ->when($request->filled('name'), function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('fname', 'like', '%' . $request->name . '%')
+                        ->orWhere('lname', 'like', '%' . $request->name . '%');
+                });
+            })
+            ->when($request->filled('emp_id'), function ($query) use ($request) {
+                $query->where('emp_id', 'like', '%' . $request->emp_id . '%');
+            })
+            ->when($request->filled('cid'), function ($query) use ($request) {
+                $query->where('cid', 'like', '%' . $request->cid . '%');
             });
-        }
-
-        if ($request->filled('emp_id')) {
-            $query->where('emp_id', 'like', '%' . $request->emp_id . '%');
-        }
-
-        if ($request->filled('cid')) {
-            $query->where('cid', 'like', '%' . $request->cid . '%');
-        }
 
         $members = $query->paginate(10);
 
@@ -146,19 +142,20 @@ class AtmController extends Controller
 
     public function postPayment(Request $request)
     {
-        $request->validate([
-            'payment_amount' => 'required|numeric|min:0.01',
-            'payment_date' => 'required|date',
-            'payment_reference' => 'required|string',
-            'payment_notes' => 'nullable|string'
-        ]);
-
         try {
-            DB::beginTransaction();
+            $validated = $request->validate([
+                'member_id' => 'required|exists:members,id',
+                'payment_amount' => 'required|numeric|min:0',
+                'payment_date' => 'required|date',
+                'payment_reference' => 'required|string',
+                'notes' => 'nullable|string'
+            ]);
 
-            $member = Member::findOrFail($request->member_id);
-            $paymentAmount = $request->payment_amount;
+            $member = Member::with(['loanForecasts'])->findOrFail($validated['member_id']);
+            $paymentAmount = $validated['payment_amount'];
             $remainingPayment = $paymentAmount;
+
+            DB::beginTransaction();
 
             // Get all loan forecasts and sort them by product prioritization
             $forecasts = collect($member->loanForecasts)->map(function($forecast) use ($member) {
@@ -184,12 +181,6 @@ class AtmController extends Controller
                 ['principal', 'desc']
             ]);
 
-            // Log the sorted forecasts for debugging
-            Log::info('Sorted forecasts for member ' . $member->id . ':');
-            foreach ($forecasts as $f) {
-                Log::info("Loan Account: {$f['forecast']->loan_acct_no}, Priority: {$f['prioritization']}, Principal: {$f['principal']}, Total Due: {$f['total_due']}");
-            }
-
             foreach ($forecasts as $forecastData) {
                 if ($remainingPayment <= 0) break;
 
@@ -201,56 +192,50 @@ class AtmController extends Controller
                 $deductionAmount = min($remainingPayment, $totalDue);
 
                 if ($productCode && $deductionAmount > 0) {
-                    Log::info("Processing payment for member {$member->id}:");
-                    Log::info("- Loan Account: {$forecast->loan_acct_no}");
-                    Log::info("- Total Due: {$totalDue}");
-                    Log::info("- Payment Amount: {$deductionAmount}");
-                    Log::info("- Remaining Payment Before: {$remainingPayment}");
+                    // Update the total_due in LoanForecast
+                    $newTotalDue = $totalDue - $deductionAmount;
+                    $forecast->update([
+                        'total_due' => max(0, $newTotalDue) // Ensure total_due doesn't go below 0
+                    ]);
 
                     // Create loan payment record
                     LoanPayment::create([
                         'member_id' => $member->id,
                         'loan_forecast_id' => $forecast->id,
                         'amount' => $deductionAmount,
-                        'payment_date' => $request->payment_date,
-                        'reference_number' => $request->payment_reference,
-                        'notes' => $request->payment_notes
+                        'payment_date' => $validated['payment_date'],
+                        'reference_number' => $validated['payment_reference'],
+                        'notes' => $validated['notes']
                     ]);
-
-                    // Update the total_due in LoanForecast
-                    $newTotalDue = $totalDue - $deductionAmount;
-                    $forecast->update([
-                        'total_due' => max(0, $newTotalDue) // Ensure total_due doesn't go below 0
-                    ]);
-                    Log::info("- Updated Total Due: {$newTotalDue}");
 
                     // Subtract the deduction amount from remaining payment
                     $remainingPayment -= $deductionAmount;
-                    Log::info("- Remaining Payment After: {$remainingPayment}");
 
                     // If this loan is fully paid, continue to next loan
                     if ($newTotalDue <= 0) {
-                        Log::info("- Loan fully paid, moving to next loan");
                         continue;
                     }
                 }
             }
+
+            // Recalculate and update member's total loan balance
+            $totalLoanBalance = $member->loanForecasts ? $member->loanForecasts->sum('total_due') : 0;
+            $member->update(['loan_balance' => $totalLoanBalance]);
+            Log::info("Updated member {$member->id} total loan balance to: {$totalLoanBalance}");
 
             // If there's still remaining payment, log it as unused
             if ($remainingPayment > 0) {
                 Log::warning("Member {$member->id} has unused loan payment: {$remainingPayment}");
             }
 
-            // Update member's loan balance
-            $totalLoanBalance = $member->loanForecasts->sum('total_due');
-            $member->update(['loan_balance' => $totalLoanBalance]);
-
             DB::commit();
-            return redirect()->back()->with('success', 'Payment posted successfully.');
+
+            return redirect()->back()->with('success', 'Payment processed successfully');
+
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error posting payment: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error posting payment: ' . $e->getMessage());
+            Log::error('Error processing payment: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to process payment: ' . $e->getMessage());
         }
     }
 }
