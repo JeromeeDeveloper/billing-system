@@ -52,12 +52,18 @@
                             <div class="card-body">
                                 <div class="row mb-3">
                                     <div class="col-12">
-                                        <div class="d-flex justify-content-end gap-2">
+                                        <div class="d-flex justify-content-between align-items-center">
                                             <a href="{{ route('atm.export.list-of-profile') }}" class="btn btn-success">
                                                 <i class="fas fa-file-excel me-1"></i> Export List of Profile
                                             </a>
                                             <a href="{{ route('atm.export.remittance-report-consolidated') }}" class="btn btn-primary">
                                                 <i class="fas fa-file-excel me-1"></i> Export Remittance Report Consolidated
+                                            </a>
+                                            <a href="" class="btn btn-primary">
+                                                <i class="fas fa-file-excel me-1"></i> Remittance Report Per Branch
+                                            </a>
+                                            <a href="" class="btn btn-primary">
+                                                <i class="fas fa-file-excel me-1"></i> Remittance Report Per Branch
                                             </a>
                                         </div>
                                     </div>
@@ -148,21 +154,20 @@
                                                         @endforeach
                                                     </td>
                                                     <td>
-                                                        <button type="button" class="btn btn-primary btn-sm"
-                                                            data-toggle="modal"
-                                                            data-target="#editBalanceModal{{ $member->id }}">
-                                                            <i class="fa fa-edit"></i> Edit Balance
-                                                        </button>
-                                                        <button type="button" class="btn btn-success btn-sm"
-                                                            data-toggle="modal"
-                                                            data-target="#postPaymentModal{{ $member->id }}">
-                                                            <i class="fa fa-money-bill"></i> Post Payment
-                                                        </button>
-                                                        <button type="button" class="btn btn-info btn-sm"
-                                                            data-toggle="modal"
-                                                            data-target="#viewModal{{ $member->id }}">
-                                                            <i class="fa fa-eye"></i> View
-                                                        </button>
+                                                        <div class="d-flex flex-column flex-md-row align-items-stretch">
+                                                            <button type="button" class="btn btn-success btn-sm mb-2 mb-md-0 mr-md-2 w-100" style="min-width: 120px;"
+                                                                data-toggle="modal" data-target="#postPaymentModal{{ $member->id }}">
+                                                                <i class="fa fa-money-bill"></i> Post Payment
+                                                            </button>
+                                                            <button type="button" class="btn btn-primary btn-sm mb-2 mb-md-0 mr-md-2 w-100" style="min-width: 120px;"
+                                                                data-toggle="modal" data-target="#editBalanceModal{{ $member->id }}">
+                                                                <i class="fa fa-edit"></i> Edit Balance
+                                                            </button>
+                                                            <button type="button" class="btn btn-info btn-sm w-100" style="min-width: 120px;"
+                                                                data-toggle="modal" data-target="#viewModal{{ $member->id }}">
+                                                                <i class="fa fa-eye"></i> View
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
 
