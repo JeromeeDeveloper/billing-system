@@ -80,32 +80,33 @@
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-body">
-                                <form method="GET" action="{{ route('atm') }}" class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label>Member Name</label>
-                                            <input type="text" class="form-control" name="name"
-                                                value="{{ request('name') }}" placeholder="Enter member name">
+                                <form method="GET" action="{{ route('atm') }}">
+                                    <div class="form-row align-items-end">
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-0">
+                                                <label>Member Name</label>
+                                                <input type="text" class="form-control" name="name"
+                                                    value="{{ request('name') }}" placeholder="Enter member name">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label>EMP ID</label>
-                                            <input type="text" class="form-control" name="emp_id"
-                                                value="{{ request('emp_id') }}" placeholder="Enter EMP ID">
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-0">
+                                                <label>EMP ID</label>
+                                                <input type="text" class="form-control" name="emp_id"
+                                                    value="{{ request('emp_id') }}" placeholder="Enter EMP ID">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group">
-                                            <label>CID</label>
-                                            <input type="text" class="form-control" name="cid"
-                                                value="{{ request('cid') }}" placeholder="Enter CID">
+                                        <div class="col-md-3">
+                                            <div class="form-group mb-0">
+                                                <label>CID</label>
+                                                <input type="text" class="form-control" name="cid"
+                                                    value="{{ request('cid') }}" placeholder="Enter CID">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-12 text-right">
-                                        <button type="submit" class="btn btn-primary">Search</button>
-                                        <a href="{{ route('atm') }}" class="btn btn-secondary">Reset</a> <div class="d-flex align-items-center ms-3">
-                                            <a href="{{ route('atm.export-posted-payments') }}" class="btn btn-success me-2">
+                                        <div class="col-md-3 d-flex align-items-end">
+                                            <button type="submit" class="btn btn-primary mr-2">Search</button>
+                                            <a href="{{ route('atm') }}" class="btn btn-secondary mr-2">Reset</a>
+                                            <a href="{{ route('atm.export-posted-payments') }}" class="btn btn-success">
                                                 <i class="fa fa-file-excel"></i> Export Posted Payments
                                             </a>
                                         </div>
@@ -115,6 +116,7 @@
                         </div>
                     </div>
                 </div>
+
 
                 <!-- Account Balances Table -->
                 <div class="row">

@@ -48,6 +48,15 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="icon icon-payment"></i><span class="nav-text">ATM</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('atm') }}">ATM Module</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
                         <i class="icon icon-chart-pie-36"></i><span class="nav-text">Products</span>
                     </a>
                     <ul aria-expanded="false">
@@ -68,14 +77,7 @@
                     </ul>
                 </li>
 
-                <li>
-                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-payment"></i><span class="nav-text">Atm</span>
-                    </a>
-                    <ul aria-expanded="false">
-                        <li><a href="{{ route('atm') }}">Atm Module</a></li>
-                    </ul>
-                </li>
+
 
                 <li class="nav-label">Groups</li>
 
