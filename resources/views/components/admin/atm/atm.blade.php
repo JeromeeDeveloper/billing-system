@@ -384,6 +384,7 @@
                                                                                         <span class="float-right">₱{{ number_format($loan->total_due, 2) }}</span>
                                                                                     </div>
                                                                                     <small class="text-muted">
+                                                                                        Total Due: ₱{{ number_format($loan->total_due, 2) }} |
                                                                                         Principal: ₱{{ number_format($loan->principal_due, 2) }} |
                                                                                         Interest: ₱{{ number_format($loan->interest_due, 2) }} |
                                                                                         Penalty: ₱{{ number_format($loan->penalty_due, 2) }}
@@ -498,6 +499,7 @@
                                                                                             <span class="float-right">₱{{ number_format($loan->total_due, 2) }}</span>
                                                                                         </div>
                                                                                         <small class="text-muted">
+                                                                                            Total Due: ₱{{ number_format($loan->total_due, 2) }} |
                                                                                             Principal: ₱{{ number_format($loan->principal_due, 2) }} |
                                                                                             Interest: ₱{{ number_format($loan->interest_due, 2) }} |
                                                                                             Penalty: ₱{{ number_format($loan->penalty_due, 2) }}
