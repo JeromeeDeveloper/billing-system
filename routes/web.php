@@ -181,5 +181,6 @@ Route::get('/branch/remittance/generate-export', [BranchRemittanceController::cl
     Route::get('/branch/atm', [BranchAtmController::class, 'index'])->name('branch.atm');
     Route::post('/branch/atm/update-balance', [BranchAtmController::class, 'updateBalance'])->name('branch.atm.update-balance');
     Route::post('/branch/atm/post-payment', [BranchAtmController::class, 'postPayment'])->name('branch.atm.post-payment');
+    Route::get('/branch/atm/export-posted-payments', [BranchAtmController::class, 'exportPostedPayments'])->name('branch.atm.export-posted-payments');
 
 });

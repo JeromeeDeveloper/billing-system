@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PostedPaymentsExport;
 
 class BranchAtmController extends Controller
 {
@@ -206,6 +208,45 @@ class BranchAtmController extends Controller
             DB::rollBack();
             Log::error('Error posting payment: ' . $e->getMessage());
             return back()->with('error', 'Failed to post payment.');
+        }
+    }
+
+    public function exportPostedPayments()
+    {
+        try {
+            // Get branch_id from authenticated user
+            $branch_id = Auth::user()->branch_id;
+
+            // Get all loan payments for today from this branch
+            $payments = LoanPayment::with(['member.branch', 'loanForecast'])
+                ->whereHas('member', function($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                })
+                ->whereDate('payment_date', now()->toDateString())
+                ->get()
+                ->groupBy('member_id')
+                ->map(function($memberPayments) {
+                    return [
+                        'member_id' => $memberPayments->first()->member_id,
+                        'payment_date' => $memberPayments->first()->payment_date
+                    ];
+                })->values()->all();
+
+            if (empty($payments)) {
+                return redirect()->back()->with('error', 'No posted payments found for today.');
+            }
+
+            $filename = 'branch_posted_payments_' . now()->format('Y-m-d') . '.xlsx';
+
+            Excel::store(
+                new PostedPaymentsExport($payments),
+                $filename,
+                'public'
+            );
+
+            return response()->download(storage_path('app/public/' . $filename))->deleteFileAfterSend();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
     }
 }
