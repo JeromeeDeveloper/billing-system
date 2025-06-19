@@ -23,7 +23,8 @@ class Savings extends Model
         'expiry_date',
         'deduction_amount',
         'account_status',
-        'remittance_amount'
+        'remittance_amount',
+        'remarks'
     ];
 
     protected $casts = [

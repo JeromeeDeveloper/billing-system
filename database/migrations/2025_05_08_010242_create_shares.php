@@ -26,6 +26,7 @@ return new class extends Migration
             $table->date('expiry_date')->nullable();
             $table->decimal('deduction_amount', 15, 2)->nullable();
             $table->enum('account_status', ['deduction', 'non-deduction'])->default('non-deduction');
+            $table->text('remarks')->nullable();
             $table->timestamps();
         });
     }

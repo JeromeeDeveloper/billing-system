@@ -173,6 +173,10 @@
                             <label>Open Date</label>
                             <input type="date" class="form-control" name="open_date" id="edit-open_date" required>
                         </div>
+                        <div class="form-group">
+                            <label>Remarks</label>
+                            <textarea class="form-control" name="remarks" id="edit-remarks" rows="2" placeholder="Remarks"></textarea>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -267,6 +271,7 @@
             $('#edit-available_balance').val(button.data('available_balance'));
             $('#edit-interest').val(button.data('interest'));
             $('#edit-open_date').val(button.data('open_date'));
+            $('#edit-remarks').val(button.data('remarks'));
 
             $('#editForm').attr('action', '/shares/' + id);
         });

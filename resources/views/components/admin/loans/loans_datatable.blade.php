@@ -117,7 +117,7 @@
                                                     <th>Product</th>
                                                     <th>Product Code</th>
                                                     <th>Prioritization</th>
-                                                 
+
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
@@ -205,6 +205,10 @@
                                                         id="edit-prioritization">
                                                 </div>
 
+                                                <div class="form-group col-md-12">
+                                                    <label for="edit-remarks">Remarks</label>
+                                                    <textarea class="form-control" name="remarks" id="edit-remarks" rows="2" placeholder="Remarks"></textarea>
+                                                </div>
 
                                             </div>
 
@@ -320,6 +324,7 @@
             $('#edit-product').val(button.data('product'));
             $('#edit-product_code').val(button.data('product_code'));
             $('#edit-prioritization').val(button.data('prioritization'));
+            $('#edit-remarks').val(button.data('remarks'));
 
 
             // Update form action URL (adjust if needed)

@@ -191,6 +191,13 @@
                                                 </div>
                                             </div>
 
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label class="form-label">Remarks</label>
+                                                    <textarea name="remarks" class="form-control" rows="2" placeholder="Remarks"></textarea>
+                                                </div>
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -1214,6 +1221,10 @@
                         <label>Deduction Amount</label>
                         <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount || '0.00'}">
                     </div>
+                    <div class="form-group col-md-12">
+                        <label>Remarks</label>
+                        <textarea name="savings[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${saving.remarks || ''}</textarea>
+                    </div>
                 </div>
             </div>`;
 
@@ -1274,6 +1285,10 @@
                     <div class="form-group col-md-6">
                         <label>Deduction Amount</label>
                         <input type="number" step="0.01" name="shares[${index}][deduction_amount]" class="form-control" value="${share.deduction_amount || '0.00'}">
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label>Remarks</label>
+                        <textarea name="shares[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${share.remarks || ''}</textarea>
                     </div>
                 </div>
             </div>`;
@@ -1350,6 +1365,10 @@
                     <option value="deduction" ${loan.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                     <option value="non-deduction" ${loan.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                 </select>
+            </div>
+            <div class="form-group col-md-12">
+                <label>Remarks</label>
+                <textarea name="loan_forecasts[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${loan.remarks || ''}</textarea>
             </div>
         </div>
     </div>`;

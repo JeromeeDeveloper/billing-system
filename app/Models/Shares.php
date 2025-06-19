@@ -25,7 +25,8 @@ class Shares extends Model
         'start_hold',
         'expiry_date',
         'account_status',
-        'deduction_amount'
+        'deduction_amount',
+        'remarks'
     ];
 
     protected $casts = [

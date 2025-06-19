@@ -29,7 +29,8 @@ class LoanForecast extends Model
         'account_status',
         'approval_no',
         'total_due_after_remittance',
-        'loan_payment'
+        'loan_payment',
+        'remarks'
     ];
 
     protected $casts = [
