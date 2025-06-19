@@ -175,6 +175,7 @@ class MasterController extends Controller
                 'savings.*.expiry_date' => 'nullable|date',
                 'savings.*.account_status' => 'required|in:deduction,non-deduction',
                 'savings.*.deduction_amount' => 'nullable|numeric',
+                'savings.*.remarks' => 'nullable|string',
 
                 // Shares validation
                 'shares' => 'nullable|array',
@@ -185,23 +186,18 @@ class MasterController extends Controller
                 'shares.*.expiry_date' => 'nullable|date',
                 'shares.*.account_status' => 'required|in:deduction,non-deduction',
                 'shares.*.deduction_amount' => 'nullable|numeric',
+                'shares.*.remarks' => 'nullable|string',
 
                 // LoanForecast validation
                 'loan_forecasts' => 'nullable|array',
                 'loan_forecasts.*.loan_acct_no' => 'required|string',
-                'loan_forecasts.*.amount_due' => 'required|numeric',
-                'loan_forecasts.*.open_date' => 'required|date',
-                'loan_forecasts.*.maturity_date' => 'required|date',
-                'loan_forecasts.*.amortization_due_date' => 'required|date',
                 'loan_forecasts.*.total_due' => 'required|numeric',
-                'loan_forecasts.*.principal_due' => 'required|numeric',
-                'loan_forecasts.*.interest_due' => 'required|numeric',
-                'loan_forecasts.*.penalty_due' => 'required|numeric',
                 'loan_forecasts.*.billing_period' => 'nullable|string',
                 'loan_forecasts.*.start_hold' => 'nullable|date',
                 'loan_forecasts.*.expiry_date' => 'nullable|date',
                 'loan_forecasts.*.account_status' => 'required|in:deduction,non-deduction',
                 'loan_forecasts.*.approval_no' => 'nullable|string',
+                'loan_forecasts.*.remarks' => 'nullable|string',
             ]);
 
             $member = Member::findOrFail($id);
@@ -231,7 +227,8 @@ class MasterController extends Controller
                                     'start_hold' => $savingsData['start_hold'],
                                     'expiry_date' => $savingsData['expiry_date'],
                                     'account_status' => $savingsData['account_status'],
-                                    'deduction_amount' => $savingsData['deduction_amount']
+                                    'deduction_amount' => $savingsData['deduction_amount'],
+                                    'remarks' => $savingsData['remarks'],
                                 ];
 
                                 Log::info('Updating savings account with data: ' . json_encode($updateData));
@@ -266,7 +263,8 @@ class MasterController extends Controller
                                     'start_hold' => $sharesData['start_hold'],
                                     'expiry_date' => $sharesData['expiry_date'],
                                     'account_status' => $sharesData['account_status'],
-                                    'deduction_amount' => $sharesData['deduction_amount']
+                                    'deduction_amount' => $sharesData['deduction_amount'],
+                                    'remarks' => $sharesData['remarks'],
                                 ];
 
                                 Log::info('Updating shares account with data: ' . json_encode($updateData));
@@ -296,19 +294,18 @@ class MasterController extends Controller
 
                             if ($loan) {
                                 $updateData = [
-                                    'amount_due' => $loanData['amount_due'],
-                                    'open_date' => $loanData['open_date'],
-                                    'maturity_date' => $loanData['maturity_date'],
-                                    'amortization_due_date' => $loanData['amortization_due_date'],
+
+                                   
+
+
                                     'total_due' => $loanData['total_due'],
-                                    'principal_due' => $loanData['principal_due'],
-                                    'interest_due' => $loanData['interest_due'],
-                                    'penalty_due' => $loanData['penalty_due'],
+
                                     'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
                                     'start_hold' => $loanData['start_hold'],
                                     'expiry_date' => $loanData['expiry_date'],
                                     'account_status' => $loanData['account_status'],
-                                    'approval_no' => $loanData['approval_no']
+                                    'approval_no' => $loanData['approval_no'],
+                                    'remarks' => $loanData['remarks'],
                                 ];
 
                                 Log::info('Updating loan forecast with data: ' . json_encode($updateData));
@@ -575,14 +572,14 @@ class MasterController extends Controller
                 // LoanForecast validation
                 'loan_forecasts' => 'nullable|array',
                 'loan_forecasts.*.loan_acct_no' => 'required|string',
-                'loan_forecasts.*.amount_due' => 'required|numeric',
-                'loan_forecasts.*.open_date' => 'required|date',
-                'loan_forecasts.*.maturity_date' => 'required|date',
-                'loan_forecasts.*.amortization_due_date' => 'required|date',
+                'loan_forecasts.*.amount_due' => 'nullable|numeric',
+                'loan_forecasts.*.open_date' => 'nullable|date',
+                'loan_forecasts.*.maturity_date' => 'nullable|date',
+                'loan_forecasts.*.amortization_due_date' => 'nullable|date',
                 'loan_forecasts.*.total_due' => 'required|numeric',
-                'loan_forecasts.*.principal_due' => 'required|numeric',
-                'loan_forecasts.*.interest_due' => 'required|numeric',
-                'loan_forecasts.*.penalty_due' => 'required|numeric',
+                'loan_forecasts.*.principal_due' => 'nullable|numeric',
+                'loan_forecasts.*.interest_due' => 'nullable|numeric',
+                'loan_forecasts.*.penalty_due' => 'nullable|numeric',
                 'loan_forecasts.*.billing_period' => 'nullable|string',
                 'loan_forecasts.*.start_hold' => 'nullable|date',
                 'loan_forecasts.*.expiry_date' => 'nullable|date',

@@ -1300,72 +1300,56 @@
         function renderLoan(index) {
             $('#edit-loan-forecast-container').empty();
 
-            let loan = loans[index] || {};
+            if (loans.length === 0) {
+                $('#loan-counter').text('No loans found.');
+                return;
+            }
+
+            let loan = loans[index];
+            if (!loan) return;
+
             console.log('Rendering loan data:', loan);
-            console.log('Start hold value:', loan.start_hold);
-            console.log('Expiry date value:', loan.expiry_date);
 
             let html = `
-    <div class="loan-item border p-3 mb-3 rounded position-relative">
+    <div class="loan-item border p-3 mb-3 rounded">
         <input type="hidden" name="loan_forecasts[${index}][id]" value="${loan.id || ''}">
+        <input type="hidden" name="loan_forecasts[${index}][loan_acct_no]" value="${loan.loan_acct_no || ''}">
         <input type="hidden" name="loan_forecasts[${index}][billing_period]" value="${loan.billing_period || ''}">
+
         <div class="form-row">
             <div class="form-group col-md-6">
-                <label>Loan Account No.</label>
-                <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}" required>
+                <label>Loan Account Number</label>
+                <input type="text" class="form-control" value="${loan.loan_acct_no || ''}" readonly>
             </div>
-            <div class="form-group col-md-6" style="display: none;">
+
+            <div class="form-group col-md-6">
                 <label>Total Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || ''}" required>
+                <input type="number" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || 0}" step="0.01">
             </div>
-            <div class="form-group col-md-6" style="display: none;">
-                <label>Amount Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][amount_due]" class="form-control" value="${loan.amount_due || ''}" required>
-            </div>
-            <div class="form-group col-md-6" style="display: none;">
-                <label>Open Date</label>
-                <input type="date" name="loan_forecasts[${index}][open_date]" class="form-control" value="${formatDate(loan.open_date)}" required>
-            </div>
-            <div class="form-group col-md-6" style="display: none;">
-                <label>Maturity Date</label>
-                <input type="date" name="loan_forecasts[${index}][maturity_date]" class="form-control" value="${formatDate(loan.maturity_date)}" required>
-            </div>
-            <div class="form-group col-md-6" style="display: none;">
-                <label>Amortization Due Date</label>
-                <input type="date" name="loan_forecasts[${index}][amortization_due_date]" class="form-control" value="${formatDate(loan.amortization_due_date)}" required>
-            </div>
-            <div class="form-group col-md-6" style="display: none;">
-                <label>Principal Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control" value="${loan.principal_due || ''}" required>
-            </div>
-            <div class="form-group col-md-6" style="display: none;">
-                <label>Interest Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control" value="${loan.interest_due || ''}" required>
-            </div>
-            <div class="form-group col-md-6" style="display: none;">
-                <label>Penalty Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][penalty_due]" class="form-control" value="${loan.penalty_due || ''}" required>
-            </div>
+
             <div class="form-group col-md-6">
-                <label>Approval Number</label>
-                <input type="text" name="loan_forecasts[${index}][approval_no]" class="form-control" value="${loan.approval_no || ''}">
+                <label>Start Hold</label>
+                <input type="date" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
             </div>
-            <div class="form-group col-md-6">
-                <label>Start Hold Date</label>
-                <input type="date" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${formatDate(loan.start_hold)}">
-            </div>
+
             <div class="form-group col-md-6">
                 <label>Expiry Date</label>
-                <input type="date" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${formatDate(loan.expiry_date)}">
+                <input type="date" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${loan.expiry_date || ''}">
             </div>
+
             <div class="form-group col-md-6">
-                <label>Request for Hold</label>
-                <select name="loan_forecasts[${index}][account_status]" class="form-control" required>
-                    <option value="">Select Status</option>
+                <label>Account Status</label>
+                <select name="loan_forecasts[${index}][account_status]" class="form-control">
                     <option value="deduction" ${loan.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                     <option value="non-deduction" ${loan.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                 </select>
             </div>
+
+            <div class="form-group col-md-6">
+                <label>Approval Number</label>
+                <input type="text" name="loan_forecasts[${index}][approval_no]" class="form-control" value="${loan.approval_no || ''}">
+            </div>
+
             <div class="form-group col-md-12">
                 <label>Remarks</label>
                 <textarea name="loan_forecasts[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${loan.remarks || ''}</textarea>
@@ -1374,12 +1358,7 @@
     </div>`;
 
             $('#edit-loan-forecast-container').html(html);
-
-            if (loans.length === 0) {
-                $('#loan-counter').text('No loans. You can add one.');
-            } else {
-                $('#loan-counter').text(`Loan ${index + 1} of ${loans.length}`);
-            }
+            $('#loan-counter').text(`Loan ${index + 1} of ${loans.length}`);
         }
 
         $('#viewModal').on('show.bs.modal', function(event) {

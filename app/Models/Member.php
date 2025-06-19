@@ -126,7 +126,9 @@ class Member extends Model
                     'start_hold' => $loan->start_hold ? Carbon::parse($loan->start_hold)->format('Y-m-d') : null,
                     'expiry_date' => $loan->expiry_date ? Carbon::parse($loan->expiry_date)->format('Y-m-d') : null,
                     'account_status' => $loan->account_status,
-                    'approval_no' => $loan->approval_no
+                    'approval_no' => $loan->approval_no,
+                    'remarks' => $loan->remarks,
+                    'id' => $loan->id
                 ];
             })->toArray()
         );
