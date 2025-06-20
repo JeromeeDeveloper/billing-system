@@ -175,10 +175,10 @@ class MasterController extends Controller
                 'savings.*.approval_no' => 'nullable|string',
                 'savings.*.start_hold' => 'nullable|date',
                 'savings.*.expiry_date' => 'nullable|date',
-                'savings.*.account_status' => 'required|in:deduction,non-deduction',
+                'savings.*.account_status' => 'nullable|in:deduction,non-deduction',
                 'savings.*.deduction_amount' => 'nullable|numeric',
                 'savings.*.remarks' => 'nullable|string',
-                'savings.*.deduction_type' => 'nullable|in:yes,no',
+
                 // Shares validation
                 'shares' => 'nullable|array',
                 'shares.*.account_number' => 'required|string',
@@ -229,7 +229,6 @@ class MasterController extends Controller
                                     'start_hold' => $savingsData['start_hold'],
                                     'expiry_date' => $savingsData['expiry_date'],
                                     'account_status' => $savingsData['account_status'],
-                                    'deduction_type' => $savingsData['deduction_type'],
                                     'deduction_amount' => $savingsData['deduction_amount'],
                                     'remarks' => $savingsData['remarks'],
                                 ];
@@ -560,8 +559,9 @@ class MasterController extends Controller
                 'savings.*.approval_no' => 'nullable|string',
                 'savings.*.start_hold' => 'nullable|date',
                 'savings.*.expiry_date' => 'nullable|date',
-                'savings.*.account_status' => 'required|in:deduction,non-deduction',
+                'savings.*.account_status' => 'nullable|in:deduction,non-deduction',
                 'savings.*.deduction_amount' => 'nullable|numeric',
+                'savings.*.remarks' => 'nullable|string',
 
                 // Shares validation
                 'shares' => 'nullable|array',
@@ -572,6 +572,7 @@ class MasterController extends Controller
                 'shares.*.expiry_date' => 'nullable|date',
                 'shares.*.account_status' => 'required|in:deduction,non-deduction',
                 'shares.*.deduction_amount' => 'nullable|numeric',
+                'shares.*.remarks' => 'nullable|string',
 
                 // LoanForecast validation
                 'loan_forecasts' => 'nullable|array',

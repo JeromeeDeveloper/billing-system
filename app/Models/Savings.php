@@ -27,7 +27,6 @@ class Savings extends Model
         'account_status',
         'remittance_amount',
         'remarks',
-        'deduction_type'
     ];
 
     protected $casts = [

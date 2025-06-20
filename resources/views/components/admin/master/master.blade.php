@@ -1235,13 +1235,6 @@
                     </div>
                     ${isCurrentMortuary ? `
                     <div class="form-group col-md-6">
-                        <label>Mortuary Deduction</label>
-                        <select name="savings[${index}][deduction_type]" class="form-control">
-                            <option value="no" ${saving.deduction_type === 'no' ? 'selected' : ''}>No</option>
-                            <option value="yes" ${saving.deduction_type === 'yes' ? 'selected' : ''}>Yes</option>
-                        </select>
-                    </div>
-                    <div class="form-group col-md-6">
                         <label>Deduction Amount</label>
                         <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount || mortuaryProduct.amount_to_deduct || '0.00'}">
                     </div>
@@ -1514,7 +1507,6 @@
                             <strong>Product:</strong> ${mortuaryProduct.product_name}<br>
                             <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
                             <strong>Prioritization:</strong> ${mortuaryProduct.prioritization}<br>
-                            <strong>Deduction Type:</strong> ${saving.deduction_type || 'Not set'}<br>
                             <strong>Deduction Amount:</strong> ${saving.deduction_amount || '0.00'}
                         </div>
                         ` : ''}

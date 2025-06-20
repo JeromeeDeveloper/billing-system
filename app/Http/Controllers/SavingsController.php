@@ -7,6 +7,7 @@ use App\Models\Saving;
 use Illuminate\Http\Request;
 use App\Models\SavingProduct;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Savings;
 
 class SavingsController extends Controller
 {
@@ -48,59 +49,55 @@ class SavingsController extends Controller
     {
         $request->validate([
             'member_id' => 'required|exists:members,id',
-            'account_number' => 'required|string|unique:savings',
-            'product_code' => 'required|exists:saving_products,product_code',
+            'account_number' => 'required|string',
+            'product_code' => 'required|string',
             'product_name' => 'required|string',
-            'open_date' => 'required|date',
-            'current_balance' => 'required|numeric|min:0',
-            'available_balance' => 'nullable|numeric|min:0',
+            'open_date' => 'nullable|date',
+            'current_balance' => 'nullable|numeric',
+            'available_balance' => 'nullable|numeric',
             'interest' => 'nullable|numeric',
+            'approval_no' => 'nullable|string',
+            'start_hold' => 'nullable|date',
+            'expiry_date' => 'nullable|date',
             'amount_to_deduct' => 'nullable|numeric',
-            'priotization' => 'nullable|string',
-            'deduction_type' => 'nullable|string',
+            'priotization' => 'nullable|integer',
+            'deduction_amount' => 'nullable|numeric',
+            'account_status' => 'nullable|string',
+            'remittance_amount' => 'nullable|numeric',
+            'remarks' => 'nullable|string',
         ]);
 
-        // Get product details
-        $product = SavingProduct::where('product_code', $request->product_code)->first();
+        Savings::create($request->all());
 
-        // Create saving with product details
-        $data = $request->all();
-        $data['product_name'] = $product->product_name;
-        $data['interest'] = $product->interest;
-
-        Saving::create($data);
-
-        return redirect()->back()->with('success', 'Savings account created successfully');
+        return redirect()->back()->with('success', 'Savings record created successfully.');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, string $id)
     {
         $request->validate([
-            'account_number' => 'required|string|unique:savings,account_number,' . $id,
-            'product_code' => 'required|exists:saving_products,product_code',
+            'member_id' => 'required|exists:members,id',
+            'account_number' => 'required|string',
+            'product_code' => 'required|string',
             'product_name' => 'required|string',
-            'open_date' => 'required|date',
-            'current_balance' => 'required|numeric|min:0',
-            'available_balance' => 'nullable|numeric|min:0',
+            'open_date' => 'nullable|date',
+            'current_balance' => 'nullable|numeric',
+            'available_balance' => 'nullable|numeric',
             'interest' => 'nullable|numeric',
+            'approval_no' => 'nullable|string',
+            'start_hold' => 'nullable|date',
+            'expiry_date' => 'nullable|date',
             'amount_to_deduct' => 'nullable|numeric',
-            'priotization' => 'nullable|string',
-            'deduction_type' => 'nullable|string',
+            'priotization' => 'nullable|integer',
+            'deduction_amount' => 'nullable|numeric',
+            'account_status' => 'nullable|string',
+            'remittance_amount' => 'nullable|numeric',
+            'remarks' => 'nullable|string',
         ]);
 
-        $saving = Saving::findOrFail($id);
+        $saving = Savings::findOrFail($id);
+        $saving->update($request->all());
 
-        // Get product details
-        $product = SavingProduct::where('product_code', $request->product_code)->first();
-
-        // Update saving with product details
-        $data = $request->all();
-        $data['product_name'] = $product->product_name;
-        $data['interest'] = $product->interest;
-
-        $saving->update($data);
-
-        return redirect()->back()->with('success', 'Savings account updated successfully');
+        return redirect()->back()->with('success', 'Savings record updated successfully.');
     }
 
     public function destroy($id)
