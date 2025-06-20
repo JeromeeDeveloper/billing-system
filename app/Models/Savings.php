@@ -21,6 +21,8 @@ class Savings extends Model
         'approval_no',
         'start_hold',
         'expiry_date',
+        'amount_to_deduct',
+        'priotization',
         'deduction_amount',
         'account_status',
         'remittance_amount',

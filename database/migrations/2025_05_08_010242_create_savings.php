@@ -24,6 +24,8 @@ return new class extends Migration
             $table->string('approval_no')->nullable();
             $table->date('start_hold')->nullable();
             $table->date('expiry_date')->nullable();
+            $table->decimal('amount_to_deduct', 15, 2)->nullable();
+            $table->string('priotization')->nullable();
             $table->decimal('deduction_amount', 15, 2)->nullable();
             $table->decimal('remittance_amount', 15, 2)->nullable();
             $table->enum('account_status', ['deduction', 'non-deduction'])->default('non-deduction');

@@ -72,7 +72,7 @@
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">Branch</label>
-                                                    <select class="form-control" name="branch_id" required>
+                                                    <select class="form-control" name="branch_id">
                                                         <option value="">Select Branch</option>
                                                         @foreach ($branches as $branch)
                                                             <option value="{{ $branch->id }}">{{ $branch->name }}
@@ -99,14 +99,14 @@
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label class="form-label">First Name</label>
-                                                    <input type="text" name="fname" class="form-control" required>
+                                                    <input type="text" name="fname" class="form-control">
                                                 </div>
                                             </div>
 
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label class="form-label">Last Name</label>
-                                                    <input type="text" name="lname" class="form-control" required>
+                                                    <input type="text" name="lname" class="form-control">
                                                 </div>
                                             </div>
 
@@ -264,7 +264,7 @@
                                                     <td>{{ $item->member->cid ?? '' }}</td>
                                                     <td>{{ $item->member->lname ?? '' }},
                                                         {{ $item->member->fname ?? '' }}</td>
-                                                    <td>{{ $item->branch->name ?? '' }}</td>
+                                                    <td>{{ $item->member->branch ? $item->member->branch->name : 'N/A' }}</td>
 
 
 
@@ -309,7 +309,7 @@
                                                             data-cid="{{ $item->member->cid }}"
                                                             data-emp_id="{{ $item->member->emp_id }}"
                                                             data-address="{{ e($item->member->address) }}"
-                                                            data-branch="{{ $item->branch->name }}"
+                                                            data-branch="{{ $item->member->branch ? $item->member->branch->name : 'N/A' }}"
                                                             data-birth_date="{{ optional($item->member->birth_date)->format('Y-m-d') }}"
                                                             data-date_registered="{{ optional($item->member->date_registered)->format('Y-m-d') }}"
                                                             data-gender="{{ $item->member->gender }}"

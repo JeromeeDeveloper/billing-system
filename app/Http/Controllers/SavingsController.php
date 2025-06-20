@@ -55,6 +55,8 @@ class SavingsController extends Controller
             'current_balance' => 'required|numeric|min:0',
             'available_balance' => 'nullable|numeric|min:0',
             'interest' => 'nullable|numeric',
+            'amount_to_deduct' => 'nullable|numeric',
+            'priotization' => 'nullable|string',
         ]);
 
         // Get product details
@@ -80,6 +82,8 @@ class SavingsController extends Controller
             'current_balance' => 'required|numeric|min:0',
             'available_balance' => 'nullable|numeric|min:0',
             'interest' => 'nullable|numeric',
+            'amount_to_deduct' => 'nullable|numeric',
+            'priotization' => 'nullable|string',
         ]);
 
         $saving = Saving::findOrFail($id);

@@ -20,8 +20,8 @@ return new class extends Migration
 
             $table->string('cid')->unique();
             $table->string('emp_id')->unique()->nullable();
-            $table->string('fname');
-            $table->string('lname');
+            $table->string('fname')->nullable();
+            $table->string('lname')->nullable();
             $table->text('address')->nullable();
             $table->decimal('savings_balance', 12, 2)->default(0);
             $table->decimal('share_balance', 12, 2)->default(0);

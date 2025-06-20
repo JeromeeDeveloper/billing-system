@@ -22,6 +22,7 @@ class MasterController extends Controller
             'member.loanForecasts',
             'member.savings',
             'member.shares',
+            'member.branch',
             'branch'
         ])
             ->when($billingPeriod, function ($query, $billingPeriod) {
@@ -69,8 +70,8 @@ class MasterController extends Controller
     $request->validate([
         'cid' => 'required|string|unique:members|max:255',
         'emp_id' => 'nullable|string|unique:members|max:255',
-        'fname' => 'required|string|max:255',
-        'lname' => 'required|string|max:255',
+        'fname' => 'nullable|string|max:255',
+        'lname' => 'nullable|string|max:255',
         'address' => 'nullable|string',
         'savings_balance' => 'nullable|numeric',
         'share_balance' => 'nullable|numeric',
@@ -89,7 +90,7 @@ class MasterController extends Controller
         'approval_no' => 'nullable|string',
         'start_hold' => 'nullable|date',
         'account_status' => 'nullable|in:deduction,non-deduction',
-        'branch_id' => 'required|exists:branches,id',
+        'branch_id' => 'nullable|exists:branches,id',
     ]);
 
     // Get current billing period from authenticated user
@@ -110,16 +111,12 @@ class MasterController extends Controller
 
     if ($request->filled('savings_balance')) {
         $member->savings()->create([
-            'account_number' => 'SAV-' . $member->id,
-            'open_date' => now(),
             'current_balance' => $request->savings_balance,
         ]);
     }
 
     if ($request->filled('share_balance')) {
         $member->shares()->create([
-            'account_number' => 'SHR-' . $member->id,
-            'open_date' => now(),
             'current_balance' => $request->share_balance,
         ]);
     }
@@ -127,7 +124,7 @@ class MasterController extends Controller
     // Create master list entry for the new member
     MasterList::create([
         'member_id' => $member->id,
-        'branches_id' => $member->branch_id,
+        'branches_id' => $member->branch_id ?? null,
         'billing_period' => $billingPeriod,
         'status' => 'deduction'
     ]);
@@ -294,12 +291,7 @@ class MasterController extends Controller
 
                             if ($loan) {
                                 $updateData = [
-
-                                   
-
-
                                     'total_due' => $loanData['total_due'],
-
                                     'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
                                     'start_hold' => $loanData['start_hold'],
                                     'expiry_date' => $loanData['expiry_date'],
@@ -404,10 +396,11 @@ class MasterController extends Controller
             'member.loanForecasts',
             'member.savings',
             'member.shares',
+            'member.branch',
             'branch'
         ])
-        ->whereHas('branch', function($query) use ($userBranchId) {
-            $query->where('id', $userBranchId);
+        ->whereHas('member', function($query) use ($userBranchId) {
+            $query->where('branch_id', $userBranchId);
         })
         ->when($search, function ($query, $search) {
             $query->whereHas('member', function ($q) use ($search) {
@@ -415,7 +408,7 @@ class MasterController extends Controller
                     ->orWhere('lname', 'like', "%{$search}%")
                     ->orWhere('fname', 'like', "%{$search}%");
             })
-            ->orWhereHas('branch', function ($q) use ($search) {
+            ->orWhereHas('member.branch', function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%");
             });
         })
@@ -452,8 +445,8 @@ class MasterController extends Controller
     $request->validate([
         'cid' => 'required|string|unique:members|max:255',
         'emp_id' => 'nullable|string|unique:members|max:255',
-        'fname' => 'required|string|max:255',
-        'lname' => 'required|string|max:255',
+        'fname' => 'nullable|string|max:255',
+        'lname' => 'nullable|string|max:255',
         'address' => 'nullable|string',
         'savings_balance' => 'nullable|numeric',
         'share_balance' => 'nullable|numeric',
@@ -472,7 +465,7 @@ class MasterController extends Controller
         'approval_no' => 'nullable|string',
         'start_hold' => 'nullable|date',
         'account_status' => 'nullable|in:deduction,non-deduction',
-        'branch_id' => 'required|exists:branches,id',
+        'branch_id' => 'nullable|exists:branches,id',
     ]);
 
     // Get current billing period from authenticated user
@@ -510,7 +503,7 @@ class MasterController extends Controller
     // Create master list entry for the new member
     MasterList::create([
         'member_id' => $member->id,
-        'branches_id' => $member->branch_id,
+        'branches_id' => $member->branch_id ?? null,
         'billing_period' => $billingPeriod,
         'status' => 'deduction'
     ]);
