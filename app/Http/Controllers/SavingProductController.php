@@ -20,7 +20,8 @@ class SavingProductController extends Controller
         $request->validate([
             'product_name' => 'required|string',
             'product_code' => 'required|string|unique:saving_products',
-            'prioritization' => 'nullable|integer'
+            'amount_to_deduct' => 'nullable|numeric|min:0',
+            'prioritization' => 'nullable|integer|min:1'
         ]);
 
         SavingProduct::create($request->all());
@@ -32,7 +33,8 @@ class SavingProductController extends Controller
         $request->validate([
             'product_name' => 'required|string',
             'product_code' => 'required|string|unique:saving_products,product_code,' . $id,
-            'prioritization' => 'nullable|integer'
+            'amount_to_deduct' => 'nullable|numeric|min:0',
+            'prioritization' => 'nullable|integer|min:1'
         ]);
 
         $savingProduct = SavingProduct::findOrFail($id);

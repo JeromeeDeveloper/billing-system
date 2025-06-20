@@ -65,7 +65,7 @@
                                                 <th>Product Name</th>
                                                 <th>Product Code</th>
                                                 <th>Amount to Deduct</th>
-                                                <th>Priotization</th>
+                                                <th>Prioritization</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -75,7 +75,7 @@
                                                 <td>{{ $product->product_name }}</td>
                                                 <td>{{ $product->product_code }}</td>
                                                 <td>{{ $product->amount_to_deduct }}</td>
-                                                <td>{{ $product->priotization }}</td>
+                                                <td>{{ $product->prioritization }}</td>
                                                 <td>
                                                     <button type="button" class="btn btn-rounded btn-info"
                                                         data-toggle="modal" data-target="#viewModal{{ $product->id }}">
@@ -135,8 +135,8 @@
                             <input type="number" class="form-control" name="amount_to_deduct" required>
                         </div>
                         <div class="form-group">
-                            <label>Priotization</label>
-                            <input type="text" class="form-control" name="priotization" required>
+                            <label>Prioritization</label>
+                            <input type="number" class="form-control" name="prioritization" required>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -174,8 +174,8 @@
                             <input type="number" class="form-control" name="amount_to_deduct" value="{{ $product->amount_to_deduct }}" required>
                         </div>
                         <div class="form-group">
-                            <label>Priotization</label>
-                            <input type="text" class="form-control" name="priotization" value="{{ $product->priotization }}" required>
+                            <label>Prioritization</label>
+                            <input type="number" class="form-control" name="prioritization" value="{{ $product->prioritization }}" required>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -209,8 +209,8 @@
                         <input type="number" class="form-control" value="{{ $product->amount_to_deduct }}" readonly>
                     </div>
                     <div class="form-group">
-                        <label>Priotization</label>
-                        <input type="text" class="form-control" value="{{ $product->priotization }}" readonly>
+                        <label>Prioritization</label>
+                        <input type="number" class="form-control" value="{{ $product->prioritization }}" readonly>
                     </div>
                 </div>
                 <div class="modal-footer">

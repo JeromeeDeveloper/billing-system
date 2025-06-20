@@ -28,6 +28,7 @@ return new class extends Migration
             $table->string('priotization')->nullable();
             $table->decimal('deduction_amount', 15, 2)->nullable();
             $table->decimal('remittance_amount', 15, 2)->nullable();
+            $table->enum('deduction_type', ['yes', 'no'])->default('no');
             $table->enum('account_status', ['deduction', 'non-deduction'])->default('non-deduction');
             $table->text('remarks')->nullable();
             $table->timestamps();

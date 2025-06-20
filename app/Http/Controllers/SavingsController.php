@@ -57,6 +57,7 @@ class SavingsController extends Controller
             'interest' => 'nullable|numeric',
             'amount_to_deduct' => 'nullable|numeric',
             'priotization' => 'nullable|string',
+            'deduction_type' => 'nullable|string',
         ]);
 
         // Get product details
@@ -84,6 +85,7 @@ class SavingsController extends Controller
             'interest' => 'nullable|numeric',
             'amount_to_deduct' => 'nullable|numeric',
             'priotization' => 'nullable|string',
+            'deduction_type' => 'nullable|string',
         ]);
 
         $saving = Saving::findOrFail($id);

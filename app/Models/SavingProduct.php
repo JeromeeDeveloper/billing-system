@@ -14,11 +14,15 @@ class SavingProduct extends Model
 
     protected $fillable = [
         'product_name',
-        'product_code'
+        'product_code',
+        'amount_to_deduct',
+        'prioritization'
     ];
 
     protected $casts = [
-        'interest' => 'decimal:2'
+        'interest' => 'decimal:2',
+        'amount_to_deduct' => 'decimal:2',
+        'prioritization' => 'integer'
     ];
 
     /**

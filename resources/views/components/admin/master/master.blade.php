@@ -1218,6 +1218,13 @@
                         </select>
                     </div>
                     <div class="form-group col-md-6">
+                        <label>Mortuary Deduction</label>
+                        <select name="savings[${index}][deduction_type]" class="form-control">
+                            <option value="no" ${saving.deduction_type === 'no' ? 'selected' : ''}>No</option>
+                            <option value="yes" ${saving.deduction_type === 'yes' ? 'selected' : ''}>Yes</option>
+                        </select>
+                    </div>
+                    <div class="form-group col-md-6">
                         <label>Deduction Amount</label>
                         <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount || '0.00'}">
                     </div>

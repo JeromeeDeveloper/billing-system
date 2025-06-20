@@ -173,7 +173,7 @@ class MasterController extends Controller
                 'savings.*.account_status' => 'required|in:deduction,non-deduction',
                 'savings.*.deduction_amount' => 'nullable|numeric',
                 'savings.*.remarks' => 'nullable|string',
-
+                'savings.*.deduction_type' => 'nullable|in:yes,no',
                 // Shares validation
                 'shares' => 'nullable|array',
                 'shares.*.account_number' => 'required|string',
@@ -224,6 +224,7 @@ class MasterController extends Controller
                                     'start_hold' => $savingsData['start_hold'],
                                     'expiry_date' => $savingsData['expiry_date'],
                                     'account_status' => $savingsData['account_status'],
+                                    'deduction_type' => $savingsData['deduction_type'],
                                     'deduction_amount' => $savingsData['deduction_amount'],
                                     'remarks' => $savingsData['remarks'],
                                 ];
