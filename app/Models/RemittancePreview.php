@@ -16,6 +16,7 @@ class RemittancePreview extends Model
         'member_id',
         'loans',
         'savings',
+        'share_amount',
         'status',
         'message',
         'type'
@@ -23,7 +24,8 @@ class RemittancePreview extends Model
 
     protected $casts = [
         'savings' => 'array',
-        'loans' => 'decimal:2'
+        'loans' => 'decimal:2',
+        'share_amount' => 'decimal:2'
     ];
 
     public function user()

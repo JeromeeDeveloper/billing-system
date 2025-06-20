@@ -73,9 +73,15 @@
                                     <h4 class="card-title mb-0">Upload Remittance Excel File</h4>
                                 </div>
                                 <div class="d-flex align-items-center ms-3">
-                                    <button onclick="generateExport()" class="btn btn-success">
-                                        <i class="fa fa-file-excel"></i> Export
-                                    </button>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa fa-file-excel"></i> Export
+                                        </button>
+                                        {{-- <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="javascript:void(0);" onclick="generateExport('loans_savings')">Loans & Savings</a>
+                                            <a class="dropdown-item" href="javascript:void(0);" onclick="generateExport('shares')">Shares</a>
+                                        </div> --}}
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -124,9 +130,14 @@
                                                         </ul>
                                                     </div>
                                                 </div>
-                                                <button type="submit" class="btn btn-primary btn-block">
-                                                    <i class="fa fa-upload"></i> Upload and Process
+                                                <button type="submit" class="btn btn-info btn-block">
+                                                    <i class="fa fa-upload"></i> Upload and Process Loans & Savings Remittance
                                                 </button>
+
+                                                <a href="javascript:void(0);" class="btn btn-primary btn-block" onclick="generateExport('loans_savings')">
+                                                    Collection file for Loans & Savings
+                                                </a>
+
                                             </form>
                                         </div>
                                     </div>
@@ -158,6 +169,10 @@
                                                 <button type="submit" class="btn btn-info btn-block">
                                                     <i class="fa fa-upload"></i> Upload and Process Share Remittance
                                                 </button>
+
+                                                <a href="javascript:void(0);" class="btn btn-primary btn-block" onclick="generateExport('shares')">
+                                                    Collection file for Shares
+                                                </a>
                                             </form>
                                         </div>
                                     </div>
@@ -354,9 +369,9 @@
             }, 5000);
         });
 
-        function generateExport() {
+        function generateExport(type) {
             let url = '{{ route('remittance.generateExport') }}';
-            window.location.href = url;
+            window.location.href = url + '?type=' + type;
         }
     </script>
 </body>

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Imports\ShareRemittanceImport;
+use Illuminate\Support\Facades\Log;
 
 class RemittanceController extends Controller
 {
@@ -106,6 +107,7 @@ class RemittanceController extends Controller
                     'member_id' => $result['member_id'],
                     'loans' => $result['loans'],
                     'savings' => $result['savings'],
+                    'share_amount' => 0,
                     'status' => $result['status'],
                     'message' => $result['message'],
                     'type' => 'admin'
@@ -152,6 +154,7 @@ class RemittanceController extends Controller
                     'member_id' => $result['member_id'],
                     'loans' => 0,
                     'savings' => [],
+                    'share_amount' => $result['share'],
                     'status' => $result['status'],
                     'message' => $result['message'],
                     'type' => 'admin'
@@ -172,45 +175,28 @@ class RemittanceController extends Controller
     public function generateExport(Request $request)
     {
         try {
-            // If we have uploaded data in session, use that
-            $remittanceData = session('remittance_data');
+            $remittanceData = RemittancePreview::where('user_id', Auth::id())
+                ->where('type', 'admin')
+                ->get();
 
-            // If no session data, get all records from database
-            if (empty($remittanceData)) {
-                $query = Remittance::with(['member.branch', 'member.loanProductMembers.loanProduct', 'member.savings'])
-                    ->whereHas('member'); // Only get records with valid members
-
-                $remittances = $query->get();
-
-                if ($remittances->isEmpty()) {
-                    return redirect()->back()->with('error', 'No remittance records found.');
-                }
-
-                $remittanceData = $remittances->map(function($remittance) {
-                    // Get savings data for this member
-                    $savingsData = [];
-                    foreach ($remittance->member->savings as $saving) {
-                        $savingsData[$saving->product_name] = $saving->deduction_amount ?? 0;
-                    }
-
-                    return [
-                        'member_id' => $remittance->member_id,
-                        'loans' => $remittance->loan_payment,
-                        'savings' => $savingsData
-                    ];
-                })->all();
+            if ($remittanceData->isEmpty()) {
+                return redirect()->back()->with('error', 'No remittance data to export. Please upload a file first.');
             }
 
-            $filename = 'remittance_export_' . now()->format('Y-m-d') . '.xlsx';
+            $type = $request->input('type', 'loans_savings');
 
-            Excel::store(
-                new RemittanceExport($remittanceData),
-                $filename,
-                'public'
-            );
+            if ($type === 'shares') {
+                $export = new \App\Exports\SharesExport($remittanceData);
+                $filename = 'shares_export_' . now()->format('Y-m-d') . '.xlsx';
+            } else {
+                $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
+                $filename = 'loans_and_savings_export_' . now()->format('Y-m-d') . '.xlsx';
+            }
 
-            return response()->download(storage_path('app/public/' . $filename))->deleteFileAfterSend();
+            return Excel::download($export, $filename);
+
         } catch (\Exception $e) {
+            Log::error('Error generating export: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
     }
