@@ -67,17 +67,17 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
             if (!empty($record['savings'])) {
                 $totalRemittedSavings = collect($record['savings'])->sum();
                 $totalDeducted = 0;
-                $regularSavingsAccountNumber = '';
-                $regularSavingsProductCode = '';
 
-                // First pass: handle all non-regular savings and find regular savings account
+                // Find Regular Savings account details for later use
+                $regularSaving = $member->savings->first(function ($s) {
+                    return str_contains(strtolower($s->savingProduct->product_name), 'regular');
+                });
+                $regularSavingsAccountNumber = $regularSaving ? $regularSaving->account_number : '';
+                $regularSavingsProductCode = $regularSaving && $regularSaving->savingProduct ? $regularSaving->savingProduct->product_code : '';
+
+
+                // Process deductions for ALL savings products, including Regular Savings
                 foreach ($member->savings as $saving) {
-                    if (str_contains(strtolower($saving->savingProduct->product_name), 'regular')) {
-                         $regularSavingsAccountNumber = $saving->account_number;
-                         $regularSavingsProductCode = $saving->savingProduct->product_code;
-                         continue;
-                    }
-
                     if (isset($record['savings'][$saving->savingProduct->product_name])) {
                         $deductionAmount = $saving->deduction_amount ?? 0;
                         if ($deductionAmount > 0) {
