@@ -64,13 +64,13 @@ class SharesExport implements FromCollection, WithHeadings
             $mortuaryDeduction = 0;
             if ($mortuarySaving) {
                 $mortuaryDeduction = $mortuarySaving->deduction_amount ?? 0;
-                if ($amountToDistribute >= $mortuaryDeduction) {
+                if ($mortuaryDeduction > 0 && $amountToDistribute >= $mortuaryDeduction) {
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
-                        'product_code/cr' => $mortuarySaving->savingProduct->product_code,
+                        'product_code/cr' => '1',
                         'gl/sl acct no' => str_replace('-', '', $mortuarySaving->account_number),
                         'amount' => number_format($mortuaryDeduction, 2, '.', '')
                     ]);
