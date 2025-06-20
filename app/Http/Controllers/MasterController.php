@@ -62,7 +62,12 @@ class MasterController extends Controller
 
         $branches = Branch::all();
 
-        return view('components.admin.master.master', compact('masterlists', 'branches'));
+        // Load mortuary products for JavaScript access
+        $mortuaryProducts = \App\Models\SavingProduct::where('product_name', 'like', '%mortuary%')
+            ->orWhere('product_name', 'like', '%Mortuary%')
+            ->get();
+
+        return view('components.admin.master.master', compact('masterlists', 'branches', 'mortuaryProducts'));
     }
 
    public function store(Request $request)
@@ -438,7 +443,12 @@ class MasterController extends Controller
         // Only get the branch of the logged-in user
         $branches = Branch::where('id', $userBranchId)->get();
 
-        return view('components.branch.master.master', compact('masterlists', 'branches'));
+        // Load mortuary products for JavaScript access
+        $mortuaryProducts = \App\Models\SavingProduct::where('product_name', 'like', '%mortuary%')
+            ->orWhere('product_name', 'like', '%Mortuary%')
+            ->get();
+
+        return view('components.branch.master.master', compact('masterlists', 'branches', 'mortuaryProducts'));
     }
 
    public function store_branch(Request $request)

@@ -1183,8 +1183,24 @@
             // Debug log
             console.log('Rendering savings data:', saving);
 
+            // Count mortuary savings
+            let mortuaryCount = countMortuarySavings(savings);
+            let isCurrentMortuary = isMortuarySavings(saving);
+            let mortuaryProduct = null;
+
+            if (isCurrentMortuary && saving.account_number) {
+                let segments = saving.account_number.split('-');
+                let productCode = segments[2];
+                mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
+            }
+
             let html = `
             <div class="savings-item border p-3 mb-3 rounded">
+                ${mortuaryCount > 0 ? `
+                <div class="alert alert-info mb-3">
+                    <strong>🏥 Mortuary Savings Summary:</strong> This member has ${mortuaryCount} mortuary savings account(s)
+                </div>
+                ` : ''}
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Account Number</label>
@@ -1217,6 +1233,7 @@
                             <option value="non-deduction" ${saving.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                         </select>
                     </div>
+                    ${isCurrentMortuary ? `
                     <div class="form-group col-md-6">
                         <label>Mortuary Deduction</label>
                         <select name="savings[${index}][deduction_type]" class="form-control">
@@ -1226,8 +1243,22 @@
                     </div>
                     <div class="form-group col-md-6">
                         <label>Deduction Amount</label>
+                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount || mortuaryProduct.amount_to_deduct || '0.00'}">
+                    </div>
+                    <div class="form-group col-md-12">
+                        <div class="alert alert-warning">
+                            <strong>🏥 Mortuary Product Detected!</strong><br>
+                            <strong>Product:</strong> ${mortuaryProduct.product_name} (Code: ${mortuaryProduct.product_code})<br>
+                            <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
+                            <strong>Prioritization:</strong> ${mortuaryProduct.prioritization}
+                        </div>
+                    </div>
+                    ` : `
+                    <div class="form-group col-md-6">
+                        <label>Deduction Amount</label>
                         <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount || '0.00'}">
                     </div>
+                    `}
                     <div class="form-group col-md-12">
                         <label>Remarks</label>
                         <textarea name="savings[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${saving.remarks || ''}</textarea>
@@ -1448,8 +1479,24 @@
                 var saving = savings[index];
                 if (!saving) return;
 
+                // Count mortuary savings
+                let mortuaryCount = countMortuarySavings(savings);
+                let isCurrentMortuary = isMortuarySavings(saving);
+                let mortuaryProduct = null;
+
+                if (isCurrentMortuary && saving.account_number) {
+                    let segments = saving.account_number.split('-');
+                    let productCode = segments[2];
+                    mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
+                }
+
                 var html = `
                     <div class="savings-details">
+                        ${mortuaryCount > 0 ? `
+                        <div class="alert alert-info mb-3">
+                            <strong>🏥 Mortuary Savings Summary:</strong> This member has ${mortuaryCount} mortuary savings account(s)
+                        </div>
+                        ` : ''}
                         <p><strong>Account Number:</strong> ${saving.account_number || 'N/A'}</p>
                         <p><strong>Product Code:</strong> ${saving.product_code || 'N/A'}</p>
                         <p><strong>Product Name:</strong> ${saving.product_name || 'N/A'}</p>
@@ -1461,6 +1508,16 @@
                         <p><strong>Start Hold:</strong> ${saving.start_hold || 'N/A'}</p>
                         <p><strong>Expiry Date:</strong> ${saving.expiry_date || 'N/A'}</p>
                         <p><strong>Account Status:</strong> ${saving.account_status || 'N/A'}</p>
+                        ${isCurrentMortuary ? `
+                        <div class="alert alert-warning">
+                            <strong>🏥 Mortuary Product Detected!</strong><br>
+                            <strong>Product:</strong> ${mortuaryProduct.product_name}<br>
+                            <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
+                            <strong>Prioritization:</strong> ${mortuaryProduct.prioritization}<br>
+                            <strong>Deduction Type:</strong> ${saving.deduction_type || 'Not set'}<br>
+                            <strong>Deduction Amount:</strong> ${saving.deduction_amount || '0.00'}
+                        </div>
+                        ` : ''}
                         <p><em>Savings Account ${index + 1} of ${savings.length}</em></p>
                     </div>`;
 
@@ -1954,6 +2011,43 @@
             $('body').css('overflow', '');
             $('body').css('padding-right', '');
         });
+    </script>
+
+    <script>
+        // Pass mortuary products data from PHP to JavaScript
+        window.mortuaryProducts = @json($mortuaryProducts ?? []);
+
+        // Function to count mortuary savings for a member
+        function countMortuarySavings(savings) {
+            if (!savings || !window.mortuaryProducts) return 0;
+
+            let count = 0;
+            savings.forEach(saving => {
+                if (saving.account_number) {
+                    let segments = saving.account_number.split('-');
+                    if (segments.length >= 3) {
+                        let productCode = segments[2];
+                        let mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
+                        if (mortuaryProduct && mortuaryProduct.product_name.toLowerCase().includes('mortuary')) {
+                            count++;
+                        }
+                    }
+                }
+            });
+            return count;
+        }
+
+        // Function to check if a savings account is a mortuary product
+        function isMortuarySavings(saving) {
+            if (!saving.account_number || !window.mortuaryProducts) return false;
+
+            let segments = saving.account_number.split('-');
+            if (segments.length < 3) return false;
+
+            let productCode = segments[2];
+            let mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
+            return mortuaryProduct && mortuaryProduct.product_name.toLowerCase().includes('mortuary');
+        }
     </script>
 
 </body>
