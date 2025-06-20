@@ -34,7 +34,6 @@ class SharesExport implements FromCollection, WithHeadings
     public function collection()
     {
         $exportRows = new Collection();
-        $shareDeduction = 50.00; // As per example, assuming fixed.
 
         foreach ($this->remittanceData as $record) {
             if (empty($record['member_id']) || $record['share_amount'] <= 0) {
@@ -42,56 +41,62 @@ class SharesExport implements FromCollection, WithHeadings
             }
 
             $member = Member::with(['branch', 'savings.savingProduct', 'shares'])->find($record['member_id']);
+            if (!$member) continue;
 
-            if (!$member) {
-                Log::warning('Member not found for record: ' . json_encode($record));
-                continue;
-            }
+            $remitted = $record['share_amount'];
 
-            $totalRemitted = $record['share_amount'];
-            $amountToDistribute = $totalRemitted;
-
-            $mortuarySaving = $member->savings->first(function ($s) {
-                return str_contains(strtolower($s->savingProduct->product_name), 'mortuary');
-            });
-
-            $regularSaving = $member->savings->first(function ($s) {
-                return str_contains(strtolower($s->savingProduct->product_name), 'regular');
-            });
-
-            $shareAccount = $member->shares->first();
-
-            $mortuaryDeduction = 0;
-            if ($mortuarySaving) {
-                $mortuaryDeduction = $mortuarySaving->deduction_amount ?? 0;
-                if ($mortuaryDeduction > 0 && $amountToDistribute >= $mortuaryDeduction) {
+            // 1. Mortuary rows: all savings with product_name 'Mortuary' and deduction_amount > 0
+            $totalMortuaryDeduction = 0;
+            foreach ($member->savings as $saving) {
+                if (
+                    $saving->savingProduct &&
+                    strtolower($saving->savingProduct->product_name) === 'mortuary' &&
+                    ($saving->deduction_amount ?? 0) > 0
+                ) {
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
-                        'product_code/cr' => '1',
-                        'gl/sl acct no' => str_replace('-', '', $mortuarySaving->account_number),
-                        'amount' => number_format($mortuaryDeduction, 2, '.', '')
+                        'product_code/cr' => $saving->savingProduct->product_code ?? '1',
+                        'gl/sl acct no' => str_replace('-', '', $saving->account_number),
+                        'amount' => number_format($saving->deduction_amount, 2, '.', '')
                     ]);
-                    $amountToDistribute -= $mortuaryDeduction;
+                    $remitted -= $saving->deduction_amount;
+                    $totalMortuaryDeduction += $saving->deduction_amount;
                 }
             }
 
-            if ($shareAccount && $amountToDistribute >= $shareDeduction) {
-                $exportRows->push([
-                    'branch_code' => $member->branch->code ?? '',
-                    'product_code/dr' => '',
-                    'gl/sl cct no' => '',
-                    'amt' => '',
-                    'product_code/cr' => '2', // Assuming '2' is for Share Capital
-                    'gl/sl acct no' => str_replace('-', '', $shareAccount->account_number),
-                    'amount' => number_format($shareDeduction, 2, '.', '')
-                ]);
-                $amountToDistribute -= $shareDeduction;
+            $shareSaving = $member->savings->first(function ($s) {
+                return str_contains(strtolower($s->savingProduct->product_name), 'share');
+            });
+            $regularSaving = $member->savings->first(function ($s) {
+                return str_contains(strtolower($s->savingProduct->product_name), 'regular');
+            });
+            $shareAccount = $member->shares->first();
+
+            $shareDeduction = $shareSaving ? ($shareSaving->deduction_amount ?? 0) : 0;
+
+            // 2. Share row (mortuary deduction + share deduction)
+            $shareRowAmount = 0;
+            if ($shareAccount) {
+                $shareRowAmount = $totalMortuaryDeduction + $shareDeduction;
+                if ($shareRowAmount > 0 && $remitted >= $shareRowAmount) {
+                    $exportRows->push([
+                        'branch_code' => $member->branch->code ?? '',
+                        'product_code/dr' => '',
+                        'gl/sl cct no' => '',
+                        'amt' => '',
+                        'product_code/cr' => '2', // or $shareAccount->savingProduct->product_code if you have it
+                        'gl/sl acct no' => str_replace('-', '', $shareAccount->account_number),
+                        'amount' => number_format($shareRowAmount, 2, '.', '')
+                    ]);
+                    $remitted -= $shareRowAmount;
+                }
             }
 
-            if ($regularSaving && $amountToDistribute > 0) {
+            // 3. Remaining to Regular Savings
+            if ($regularSaving && $remitted > 0) {
                 $exportRows->push([
                     'branch_code' => $member->branch->code ?? '',
                     'product_code/dr' => '',
@@ -99,7 +104,7 @@ class SharesExport implements FromCollection, WithHeadings
                     'amt' => '',
                     'product_code/cr' => '1',
                     'gl/sl acct no' => str_replace('-', '', $regularSaving->account_number),
-                    'amount' => number_format($amountToDistribute, 2, '.', '')
+                    'amount' => number_format($remitted, 2, '.', '')
                 ]);
             }
         }

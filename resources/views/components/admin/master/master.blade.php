@@ -1236,7 +1236,7 @@
                     ${isCurrentMortuary ? `
                     <div class="form-group col-md-6">
                         <label>Deduction Amount</label>
-                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount || mortuaryProduct.amount_to_deduct || '0.00'}">
+                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount !== undefined && saving.deduction_amount !== null ? saving.deduction_amount : ''}" placeholder="${mortuaryProduct && mortuaryProduct.amount_to_deduct ? mortuaryProduct.amount_to_deduct : ''}">
                     </div>
                     <div class="form-group col-md-12">
                         <div class="alert alert-warning">
@@ -1249,7 +1249,7 @@
                     ` : `
                     <div class="form-group col-md-6">
                         <label>Deduction Amount</label>
-                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount || '0.00'}">
+                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount !== undefined && saving.deduction_amount !== null ? saving.deduction_amount : ''}">
                     </div>
                     `}
                     <div class="form-group col-md-12">
