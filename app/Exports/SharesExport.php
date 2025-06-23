@@ -75,13 +75,13 @@ class SharesExport implements FromCollection, WithHeadings
             });
             $shareAccount = $member->shares->first();
 
-            $shareDeduction = $shareSaving ? ($shareSaving->deduction_amount ?? 0) : 0;
+            // Calculate the total deduction amount from all of the member's share accounts
+            $shareDeduction = $member->shares->sum('deduction_amount');
 
-            // 2. Share row (mortuary deduction + share deduction)
-            $shareRowAmount = 0;
+            // 2. Share row
             if ($shareAccount) {
-                $shareRowAmount = $totalMortuaryDeduction + $shareDeduction;
-                if ($shareRowAmount > 0 && $remitted >= $shareRowAmount) {
+                // The amount for this row is the total of all share deduction_amounts
+                if ($shareDeduction > 0 && $remitted >= $shareDeduction) {
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
                         'product_code/dr' => '',
@@ -89,9 +89,9 @@ class SharesExport implements FromCollection, WithHeadings
                         'amt' => '',
                         'product_code/cr' => '2',
                         'gl/sl acct no' => str_replace('-', '', $shareAccount->account_number),
-                        'amount' => number_format($shareRowAmount, 2, '.', '')
+                        'amount' => number_format($shareDeduction, 2, '.', '')
                     ]);
-                    $remitted -= $shareRowAmount;
+                    $remitted -= $shareDeduction;
                 }
             }
 
