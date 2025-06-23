@@ -66,56 +66,54 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
 
             // Handle savings
             if (!empty($record['savings'])) {
-                $totalRemittedSavings = collect($record['savings'])->sum();
-                $totalDeducted = 0;
-
-                // Find Regular Savings account details for later use
-                $regularSaving = $member->savings->first(function ($s) {
-                    return str_contains(strtolower($s->savingProduct->product_name), 'regular');
-                });
-                $regularSavingsAccountNumber = $regularSaving ? $regularSaving->account_number : '';
-                $regularSavingsProductCode = $regularSaving && $regularSaving->savingProduct ? $regularSaving->savingProduct->product_code : '';
-
-
-                // Process deductions for ALL savings products, including Regular Savings
-                foreach ($member->savings as $saving) {
-                    // Exclude savings products named 'Mortuary'
-                    if (
-                        $saving->savingProduct &&
-                        strtolower($saving->savingProduct->product_name) === 'mortuary'
-                    ) {
+                // Iterate through each savings type from the imported record
+                foreach ($record['savings'] as $productName => $amountFromImport) {
+                    if ($amountFromImport <= 0) {
                         continue;
                     }
 
-                    if (isset($record['savings'][$saving->savingProduct->product_name])) {
-                        $deductionAmount = $saving->deduction_amount ?? 0;
+                    // Exclude savings products named 'Mortuary'
+                    if (strtolower($productName) === 'mortuary') {
+                        continue;
+                    }
+
+                    // Find the specific savings account for this member and product name
+                    $savingAccount = $member->savings->first(function ($s) use ($productName) {
+                        return $s->savingProduct && strtolower($s->savingProduct->product_name) === strtolower($productName);
+                    });
+
+                    if ($savingAccount) {
+                        $deductionAmount = $savingAccount->deduction_amount ?? 0;
+
+                        // Add a row for the deduction amount, if it exists
                         if ($deductionAmount > 0) {
-                             $exportRows->push([
+                            $exportRows->push([
                                 'branch_code' => $member->branch->code ?? '',
                                 'product_code/dr' => '',
                                 'gl/sl cct no' => '',
                                 'amt' => '',
                                 'product_code/cr' => '1',
-                                'gl/sl acct no' => str_replace('-', '', $saving->account_number),
+                                'gl/sl acct no' => str_replace('-', '', $savingAccount->account_number),
                                 'amount' => number_format($deductionAmount, 2, '.', '')
                             ]);
-                            $totalDeducted += $deductionAmount;
                         }
-                    }
-                }
 
-                // Second pass: add remainder to regular savings
-                $remainingForRegular = $totalRemittedSavings - $totalDeducted;
-                if ($remainingForRegular > 0 && !empty($regularSavingsAccountNumber)) {
-                    $exportRows->push([
-                        'branch_code' => $member->branch->code ?? '',
-                        'product_code/dr' => '',
-                        'gl/sl cct no' => '',
-                        'amt' => '',
-                        'product_code/cr' => '1',
-                        'gl/sl acct no' => str_replace('-', '', $regularSavingsAccountNumber),
-                        'amount' => number_format($remainingForRegular, 2, '.', '')
-                    ]);
+                        // Add a row for the remaining amount from the import
+                        $remainingAmount = $amountFromImport - $deductionAmount;
+                        if ($remainingAmount > 0) {
+                            $exportRows->push([
+                                'branch_code' => $member->branch->code ?? '',
+                                'product_code/dr' => '',
+                                'gl/sl cct no' => '',
+                                'amt' => '',
+                                'product_code/cr' => '1',
+                                'gl/sl acct no' => str_replace('-', '', $savingAccount->account_number),
+                                'amount' => number_format($remainingAmount, 2, '.', '')
+                            ]);
+                        }
+                    } else {
+                        Log::warning("No savings account found for member {$member->id} with product name '{$productName}'");
+                    }
                 }
             }
         }

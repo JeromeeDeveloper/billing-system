@@ -58,7 +58,7 @@ class SharesExport implements FromCollection, WithHeadings
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
-                        'product_code/cr' => $saving->savingProduct->product_code ?? '1',
+                        'product_code/cr' => '1',
                         'gl/sl acct no' => str_replace('-', '', $saving->account_number),
                         'amount' => number_format($saving->deduction_amount, 2, '.', '')
                     ]);
