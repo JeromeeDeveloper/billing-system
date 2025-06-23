@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\SavingProduct;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Savings;
+use Illuminate\Support\Facades\Log;
 
 class SavingsController extends Controller
 {
@@ -98,6 +99,48 @@ class SavingsController extends Controller
         $saving->update($request->all());
 
         return redirect()->back()->with('success', 'Savings record updated successfully.');
+    }
+
+    public function updateDeductionByProduct(Request $request)
+    {
+        $request->validate([
+            'product_code' => 'required|string',
+            'deduction_amount' => 'required|numeric|min:0',
+        ]);
+
+        $productCode = $request->input('product_code');
+        $deductionAmount = $request->input('deduction_amount');
+
+        // As you suggested, we will update Savings records by directly matching their 'product_code'
+        // with the 'product_code' of the SavingProduct being edited.
+        $updatedCount = Savings::where('product_code', $productCode)
+            ->update(['deduction_amount' => $deductionAmount]);
+
+        if ($updatedCount > 0) {
+            return response()->json(['success' => true, 'message' => "Successfully updated deduction amount for {$updatedCount} members."]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'No member savings accounts found with a matching product code.'], 404);
+    }
+
+    public function bulkUpdateDeduction(Request $request)
+    {
+        $request->validate([
+            'product_code' => 'required|string',
+            'amount_to_deduct' => 'required|numeric|min:0',
+        ]);
+
+        $productCode = $request->input('product_code');
+        $deductionAmount = $request->input('amount_to_deduct');
+
+        $updatedCount = Savings::where('product_code', $productCode)
+            ->update(['deduction_amount' => $deductionAmount]);
+
+        if ($updatedCount > 0) {
+            return redirect()->back()->with('success', "Successfully updated deduction amount for {$updatedCount} members.");
+        }
+
+        return redirect()->back()->with('error', 'No member savings accounts were found with a matching product code.');
     }
 
     public function destroy($id)

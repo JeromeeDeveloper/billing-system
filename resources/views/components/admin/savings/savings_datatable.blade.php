@@ -61,7 +61,7 @@
                                                 <th>Product Name</th>
                                                 <th>Product Code</th>
                                                 <th>Members Count</th>
-                                                    
+
                                                 <th>Current Balance</th>
                                                 <th>Available Balance</th>
                                                 <th>Interest</th>
@@ -91,7 +91,8 @@
                                                             data-current_balance="{{ $saving->current_balance }}"
                                                             data-available_balance="{{ $saving->available_balance }}"
                                                             data-interest="{{ $saving->interest }}"
-                                                            data-open_date="{{ $saving->open_date }}">
+                                                            data-open_date="{{ $saving->open_date }}"
+                                                            data-amount_to_deduct="{{ $saving->amount_to_deduct }}">
                                                             Edit
                                                         </button>
 
@@ -174,6 +175,16 @@
                         <div class="form-group">
                             <label>Open Date</label>
                             <input type="date" class="form-control" name="open_date" id="edit-open_date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount to Deduct</label>
+                            <input type="number" step="0.01" class="form-control" name="amount_to_deduct" id="edit-amount_to_deduct" placeholder="Enter amount">
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="applyToAllCheckbox">
+                            <label class="form-check-label" for="applyToAllCheckbox">
+                                Apply this deduction amount to all members under this product code.
+                            </label>
                         </div>
                         <div class="form-group">
                             <label>Remarks</label>
@@ -265,17 +276,35 @@
         $('#editModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
             var id = button.data('id');
+            var productName = button.data('product_name');
+            var productCode = button.data('product_code');
+            var accountNumber = button.data('account_number');
+            var currentBalance = button.data('current_balance');
+            var availableBalance = button.data('available_balance');
+            var interest = button.data('interest');
+            var openDate = button.data('open_date');
+            var amountToDeduct = button.data('amount_to_deduct');
 
-            $('#edit-product_name').val(button.data('product_name'));
-            $('#edit-product_code').val(button.data('product_code'));
-            $('#edit-account_number').val(button.data('account_number'));
-            $('#edit-current_balance').val(button.data('current_balance'));
-            $('#edit-available_balance').val(button.data('available_balance'));
-            $('#edit-interest').val(button.data('interest'));
-            $('#edit-open_date').val(button.data('open_date'));
-            $('#edit-remarks').val(button.data('remarks'));
+            var modal = $(this);
+            modal.find('#edit-product_name').val(productName);
+            modal.find('#edit-product_code').val(productCode);
+            modal.find('#edit-account_number').val(accountNumber);
+            modal.find('#edit-current_balance').val(currentBalance);
+            modal.find('#edit-available_balance').val(availableBalance);
+            modal.find('#edit-interest').val(interest);
+            modal.find('#edit-open_date').val(openDate);
+            modal.find('#edit-amount_to_deduct').val(amountToDeduct);
 
-            $('#editForm').attr('action', '/savings/' + id);
+            var form = modal.find('#editForm');
+            form.attr('action', '/savings/' + id);
+        });
+
+        $('#editForm').on('submit', function(e) {
+            if ($('#applyToAllCheckbox').is(':checked')) {
+                var form = $(this);
+                form.attr('action', '{{ route('savings.bulkUpdateDeduction') }}');
+                form.find('input[name="_method"]').remove();
+            }
         });
 
         $('#viewModal').on('show.bs.modal', function(event) {

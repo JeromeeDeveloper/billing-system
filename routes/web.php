@@ -110,6 +110,8 @@ Route::get('/savings', [SavingsController::class, 'index'])->name('savings');
 Route::post('/savings', [SavingsController::class, 'store'])->name('savings.store');
 Route::put('/savings/{id}', [SavingsController::class, 'update'])->name('savings.update');
 Route::delete('/savings/{id}', [SavingsController::class, 'destroy'])->name('savings.destroy');
+Route::post('/savings/update-deduction-by-product', [SavingsController::class, 'updateDeductionByProduct'])->name('savings.updateDeductionByProduct');
+Route::post('/savings/bulk-update-deduction', [SavingsController::class, 'bulkUpdateDeduction'])->name('savings.bulkUpdateDeduction');
 
 //Shares
 Route::get('/shares', [SharesController::class, 'index'])->name('shares');

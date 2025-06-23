@@ -171,7 +171,7 @@
                         </div>
                         <div class="form-group">
                             <label>Amount to Deduct</label>
-                            <input type="number" class="form-control" name="amount_to_deduct" value="{{ $product->amount_to_deduct }}" required>
+                            <input type="number" step="0.01" class="form-control" name="amount_to_deduct" value="{{ $product->amount_to_deduct > 0 ? $product->amount_to_deduct : '' }}" placeholder="Enter amount (optional)">
                         </div>
                         <div class="form-group">
                             <label>Prioritization</label>
