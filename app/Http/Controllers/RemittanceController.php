@@ -179,16 +179,17 @@ class RemittanceController extends Controller
                 ->where('type', 'admin')
                 ->get();
 
-            if ($remittanceData->isEmpty()) {
-                return redirect()->back()->with('error', 'No remittance data to export. Please upload a file first.');
-            }
-
             $type = $request->input('type', 'loans_savings');
 
             if ($type === 'shares') {
+                // For shares export, we don't need remittance data to be empty
+                // as it will include all shares with deduction amounts
                 $export = new \App\Exports\SharesExport($remittanceData);
                 $filename = 'shares_export_' . now()->format('Y-m-d') . '.xlsx';
             } else {
+                if ($remittanceData->isEmpty()) {
+                    return redirect()->back()->with('error', 'No remittance data to export. Please upload a file first.');
+                }
                 $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
                 $filename = 'loans_and_savings_export_' . now()->format('Y-m-d') . '.xlsx';
             }
