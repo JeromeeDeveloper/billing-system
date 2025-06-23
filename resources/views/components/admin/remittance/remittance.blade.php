@@ -294,11 +294,7 @@
                                                                     @endforeach
                                                                 @endif
                                                                 <td>
-                                                                    @if (str_contains($record->message, 'Added savings do not match'))
-                                                                        One or more savings products in the file were not found for this member.
-                                                                    @else
-                                                                        {{ $record->message }}
-                                                                    @endif
+                                                                    {{ $record->message }}
                                                                 </td>
                                                             </tr>
                                                         @endforeach

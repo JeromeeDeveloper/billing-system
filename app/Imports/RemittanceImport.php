@@ -89,8 +89,35 @@ class RemittanceImport implements ToCollection, WithHeadingRow
 
         // If member found, save remittance and savings
         if ($member) {
+            $result['status'] = 'success';
+            $result['message'] = 'Successfully processed.'; // Default success message
+
             try {
                 DB::beginTransaction();
+
+                $mismatchedSavings = [];
+                // First, validate that all provided savings products exist for the member
+                foreach ($this->savingProducts as $product) {
+                    $columnName = strtolower(str_replace(' ', '_', $product->product_name));
+                    $amount = floatval(str_replace(',', '', $row[$columnName] ?? 0));
+
+                    if ($amount > 0) {
+                        $savingsAccountExists = $member->savings()
+                            ->where('product_code', $product->product_code)
+                            ->exists();
+
+                        if (!$savingsAccountExists) {
+                            $mismatchedSavings[] = $product->product_name;
+                        }
+                    }
+                }
+
+                // If a mismatch is found, update the message and do not process this row's financials
+                if (!empty($mismatchedSavings)) {
+                    $result['message'] = 'Mismatched savings: ' . implode(', ', $mismatchedSavings);
+                    DB::rollBack();
+                    return $result; // Return with success status but error message
+                }
 
                 // Process each saving product
                 $totalSavings = 0; // Track total savings for this member
@@ -252,8 +279,6 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 }
 
                 DB::commit();
-                $result['status'] = 'success';
-                $result['message'] = "Matched with member: {$member->fname} {$member->lname}";
             } catch (\Exception $e) {
                 DB::rollBack();
                 if (str_contains($e->getMessage(), "Field 'account_number' doesn't have a default value")) {
@@ -305,7 +330,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 }
             }
         } else {
-            $result['message'] = "Member not found. Tried matching: $fullName";
+            $result['status'] = 'error';
+            $result['message'] = 'Member not found.';
         }
 
         return $result;
