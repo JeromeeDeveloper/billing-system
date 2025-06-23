@@ -21,6 +21,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BranchRemittanceController;
 use App\Http\Controllers\BranchAtmController;
+use App\Http\Controllers\SpecialBillingController;
 
 //Login
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
@@ -139,6 +140,12 @@ Route::post('/remittance/upload', [RemittanceController::class, 'upload'])->name
 Route::post('/remittance/upload/share', [RemittanceController::class, 'uploadShare'])->name('remittance.upload.share');
 Route::get('/remittance/generate-export', [RemittanceController::class, 'generateExport'])->name('remittance.generateExport');
 
+//special billing
+
+Route::get('/special-billing', [SpecialBillingController::class, 'index'])->name('special-billing.index');
+Route::post('/special-billing/import', [SpecialBillingController::class, 'import'])->name('special-billing.import');
+Route::get('/special-billing/export', [SpecialBillingController::class, 'export'])->name('special-billing.export');
+
 });
 
 Route::middleware([BranchMiddleware::class])->group(function () {
@@ -186,3 +193,5 @@ Route::get('/branch/remittance/generate-export', [BranchRemittanceController::cl
     Route::get('/branch/atm/export-posted-payments', [BranchAtmController::class, 'exportPostedPayments'])->name('branch.atm.export-posted-payments');
 
 });
+
+
