@@ -4,7 +4,6 @@ namespace App\Exports;
 
 use App\Models\Member;
 use App\Models\SavingProduct;
-use App\Models\Shares;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -36,43 +35,6 @@ class SharesExport implements FromCollection, WithHeadings
     {
         $exportRows = new Collection();
 
-        // First, get ALL shares with deduction_amount > 0 from the Shares model
-        $allSharesWithDeductions = Shares::with(['member.branch'])
-            ->where('deduction_amount', '>', 0)
-            ->get();
-
-        Log::info('Found ' . $allSharesWithDeductions->count() . ' shares accounts with deduction amounts');
-
-        // Debug: Let's log the first few records to see what we're getting
-        foreach ($allSharesWithDeductions->take(5) as $share) {
-            Log::info('Sample share record - ID: ' . $share->id . ', Account: ' . $share->account_number . ', Deduction: ' . $share->deduction_amount);
-        }
-
-        foreach ($allSharesWithDeductions as $share) {
-            $member = $share->member;
-            if (!$member) {
-                Log::warning('No member found for share account: ' . $share->account_number);
-                continue;
-            }
-
-            Log::info('Processing shares deduction for member: ' . $member->id . ', account: ' . $share->account_number);
-            Log::info('Deduction amount: ' . $share->deduction_amount);
-
-            // Add shares deduction row
-            $exportRows->push([
-                'branch_code' => $member->branch->code ?? '',
-                'product_code/dr' => '',
-                'gl/sl cct no' => '',
-                'amt' => '',
-                'product_code/cr' => '2',
-                'gl/sl acct no' => str_replace('-', '', $share->account_number),
-                'amount' => number_format($share->deduction_amount, 2, '.', '')
-            ]);
-        }
-
-        Log::info('Total export rows created for shares deductions: ' . $exportRows->count());
-
-        // Then process the existing remittance data
         foreach ($this->remittanceData as $record) {
             if (empty($record['member_id']) || $record['share_amount'] <= 0) {
                 continue;
@@ -96,7 +58,7 @@ class SharesExport implements FromCollection, WithHeadings
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
-                        'product_code/cr' => '1',
+                        'product_code/cr' => $saving->savingProduct->product_code ?? '1',
                         'gl/sl acct no' => str_replace('-', '', $saving->account_number),
                         'amount' => number_format($saving->deduction_amount, 2, '.', '')
                     ]);
@@ -125,7 +87,7 @@ class SharesExport implements FromCollection, WithHeadings
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
-                        'product_code/cr' => '2', // or $shareAccount->savingProduct->product_code if you have it
+                        'product_code/cr' => '2',
                         'gl/sl acct no' => str_replace('-', '', $shareAccount->account_number),
                         'amount' => number_format($shareRowAmount, 2, '.', '')
                     ]);
@@ -147,7 +109,6 @@ class SharesExport implements FromCollection, WithHeadings
             }
         }
 
-        Log::info('Final total export rows: ' . $exportRows->count());
         return $exportRows;
     }
 }
