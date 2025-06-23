@@ -58,12 +58,31 @@ class SharesExport implements FromCollection, WithHeadings
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
-                        'product_code/cr' => $saving->savingProduct->product_code ?? '1',
+                        'product_code/cr' => '1',
                         'gl/sl acct no' => str_replace('-', '', $saving->account_number),
                         'amount' => number_format($saving->deduction_amount, 2, '.', '')
                     ]);
                     $remitted -= $saving->deduction_amount;
                     $totalMortuaryDeduction += $saving->deduction_amount;
+                }
+            }
+
+            // 2. Process shares with deduction_amount > 0
+            foreach ($member->shares as $share) {
+                if (($share->deduction_amount ?? 0) > 0) {
+                    Log::info('Processing shares deduction for member: ' . $member->id . ', account: ' . $share->account_number);
+                    Log::info('Share deduction amount from database: [' . $share->deduction_amount . ']');
+
+                    $exportRows->push([
+                        'branch_code' => $member->branch->code ?? '',
+                        'product_code/dr' => '',
+                        'gl/sl cct no' => '',
+                        'amt' => '',
+                        'product_code/cr' => '2',
+                        'gl/sl acct no' => str_replace('-', '', $share->account_number),
+                        'amount' => number_format($share->deduction_amount, 2, '.', '')
+                    ]);
+                    $remitted -= $share->deduction_amount;
                 }
             }
 
@@ -77,7 +96,7 @@ class SharesExport implements FromCollection, WithHeadings
 
             $shareDeduction = $shareSaving ? ($shareSaving->deduction_amount ?? 0) : 0;
 
-            // 2. Share row (mortuary deduction + share deduction)
+            // 3. Share row (mortuary deduction + share deduction)
             $shareRowAmount = 0;
             if ($shareAccount) {
                 $shareRowAmount = $totalMortuaryDeduction + $shareDeduction;
@@ -95,7 +114,7 @@ class SharesExport implements FromCollection, WithHeadings
                 }
             }
 
-            // 3. Remaining to Regular Savings
+            // 4. Remaining to Regular Savings
             if ($regularSaving && $remitted > 0) {
                 $exportRows->push([
                     'branch_code' => $member->branch->code ?? '',
