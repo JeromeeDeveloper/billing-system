@@ -456,6 +456,56 @@
                                                                         </div>
                                                                     </div>
 
+                                                                    <!-- Loan Details Table -->
+                                                                    {{-- <div class="row mt-3">
+                                                                        <div class="col-12">
+                                                                            <div class="card">
+                                                                                <div class="card-header">
+                                                                                    <h6 class="mb-0">Loan Details</h6>
+                                                                                </div>
+                                                                                <div class="card-body">
+                                                                                    @foreach ($member->loanForecasts as $loan)
+                                                                                    <div class="loan-info mb-2">
+                                                                                        <div class="d-flex justify-content-between align-items-center">
+                                                                                            <div>
+                                                                                                <strong>{{ $loan->loan_acct_no }}</strong>
+                                                                                                <span class="badge {{ $loan->prioritization == 1 ? 'bg-danger' : ($loan->prioritization == 2 ? 'bg-warning' : 'bg-info') }} ms-2">
+                                                                                                    Priority {{ $loan->prioritization }}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                            <span class="float-right">₱{{ number_format($loan->total_due, 2) }}</span>
+                                                                                        </div>
+                                                                                        <small class="text-muted">
+
+                                                                                            Principal: ₱{{ number_format($loan->principal_due, 2) }} |
+                                                                                            Interest: ₱{{ number_format($loan->interest_due, 2) }} |
+                                                                                            Penalty: ₱{{ number_format($loan->penalty_due, 2) }}
+                                                                                        </small>
+                                                                                        <div class="mt-1">
+                                                                                            <small class="text-success">
+                                                                                                Remittance: ₱{{ number_format($loan->total_due_after_remittance, 2) }}
+                                                                                            </small>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    @endforeach
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div> --}}
+
+                                                                    <!-- Loan Account Selector -->
+                                                                    <div class="form-group mt-3">
+                                                                        <label for="loan_acct_no">Select Loan Account to Pay</label>
+                                                                        <select name="loan_acct_no" class="form-control" required>
+                                                                            <option value="">-- Select Loan Account --</option>
+                                                                            @foreach ($member->loanForecasts as $loan)
+                                                                                <option value="{{ $loan->loan_acct_no }}">
+                                                                                    {{ $loan->loan_acct_no }} (₱{{ number_format($loan->total_due, 2) }})
+                                                                                </option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+
                                                                     <!-- Payment Details Form -->
                                                                     <div class="row">
                                                                         <div class="col-md-6">
@@ -482,43 +532,6 @@
                                                                             <div class="form-group">
                                                                                 <label class="form-label">Notes</label>
                                                                                 <textarea class="form-control" name="notes" rows="1"></textarea>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <!-- Loan Details Table -->
-                                                                    <div class="row mt-3">
-                                                                        <div class="col-12">
-                                                                            <div class="card">
-                                                                                <div class="card-header">
-                                                                                    <h6 class="mb-0">Loan Details</h6>
-                                                                                </div>
-                                                                                <div class="card-body">
-                                                                                    @foreach ($member->loanForecasts as $loan)
-                                                                                    <div class="loan-info mb-2">
-                                                                                        <div class="d-flex justify-content-between align-items-center">
-                                                                                            <div>
-                                                                                                <strong>{{ $loan->loan_acct_no }}</strong>
-                                                                                                <span class="badge {{ $loan->prioritization == 1 ? 'bg-danger' : ($loan->prioritization == 2 ? 'bg-warning' : 'bg-info') }} ms-2">
-                                                                                                    Priority {{ $loan->prioritization }}
-                                                                                                </span>
-                                                                                            </div>
-                                                                                            <span class="float-right">₱{{ number_format($loan->total_due, 2) }}</span>
-                                                                                        </div>
-                                                                                        <small class="text-muted">
-                                                                                          
-                                                                                            Principal: ₱{{ number_format($loan->principal_due, 2) }} |
-                                                                                            Interest: ₱{{ number_format($loan->interest_due, 2) }} |
-                                                                                            Penalty: ₱{{ number_format($loan->penalty_due, 2) }}
-                                                                                        </small>
-                                                                                        <div class="mt-1">
-                                                                                            <small class="text-success">
-                                                                                                Remittance: ₱{{ number_format($loan->total_due_after_remittance, 2) }}
-                                                                                            </small>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                    @endforeach
-                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
