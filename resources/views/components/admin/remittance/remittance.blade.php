@@ -248,61 +248,60 @@
                                                 <table class="table table-striped table-bordered preview-table">
                                                     <thead>
                                                         <tr>
-                                                            <th style="width: 90px;">Status</th>
+                                                            <th>Status</th>
                                                             <th>EmpId</th>
                                                             <th>Name</th>
-                                                            <th class="text-right">Loans</th>
-                                                            @if(isset($preview[0]['savings']) && is_array($preview[0]['savings']))
-                                                                @foreach (array_keys($preview[0]['savings']) as $productName)
-                                                                    <th class="text-right">{{ $productName }}</th>
+                                                            @if(isset($preview[0]) && $preview[0]->share_amount > 0)
+                                                                <th>Share Amount</th>
+                                                            @else
+                                                                <th>Loans</th>
+                                                                @php
+                                                                    $savingsHeaders = [];
+                                                                    if (isset($preview)) {
+                                                                        foreach ($preview as $record) {
+                                                                            if (!empty($record->savings)) {
+                                                                                $savingsHeaders = array_merge($savingsHeaders, array_keys($record->savings));
+                                                                            }
+                                                                        }
+                                                                        $savingsHeaders = array_unique($savingsHeaders);
+                                                                    }
+                                                                @endphp
+                                                                @foreach($savingsHeaders as $header)
+                                                                    <th>{{ $header }}</th>
                                                                 @endforeach
                                                             @endif
                                                             <th>Message</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        @forelse ($preview as $row)
+                                                        @foreach ($preview as $record)
                                                             <tr>
                                                                 <td>
-                                                                    @if ($row['status'] === 'success')
-                                                                        <span class="badge badge-success">
-                                                                            <i class="fa fa-check"></i> Matched
-                                                                        </span>
+                                                                    @if ($record->status === 'success')
+                                                                        <span class="badge badge-success">Matched</span>
                                                                     @else
-                                                                        <span class="badge badge-danger">
-                                                                            <i class="fa fa-times"></i> Unmatched
-                                                                        </span>
+                                                                        <span class="badge badge-danger">Not Matched</span>
                                                                     @endif
                                                                 </td>
-                                                                <td>{{ $row['emp_id'] }}</td>
-                                                                <td>{{ $row['name'] }}</td>
-                                                                <td class="text-right">
-                                                                    ₱{{ number_format($row['loans'] ?? 0, 2) }}
-                                                                </td>
-                                                                @if(isset($row['savings']) && is_array($row['savings']))
-                                                                    @foreach ($row['savings'] as $amount)
-                                                                        <td class="text-right">
-                                                                            ₱{{ number_format($amount ?? 0, 2) }}
-                                                                        </td>
+                                                                <td>{{ $record->emp_id ?? 'N/A' }}</td>
+                                                                <td>{{ $record->name }}</td>
+                                                                @if(isset($preview[0]) && $preview[0]->share_amount > 0)
+                                                                    <td>₱{{ number_format($record->share_amount ?? 0, 2) }}</td>
+                                                                @else
+                                                                    <td>₱{{ number_format($record->loans ?? 0, 2) }}</td>
+                                                                    @foreach($savingsHeaders as $header)
+                                                                        <td>₱{{ number_format($record->savings[$header] ?? 0, 2) }}</td>
                                                                     @endforeach
                                                                 @endif
                                                                 <td>
-                                                                    @if ($row['status'] !== 'success')
-                                                                        <i class="fa fa-exclamation-circle text-danger"></i>
+                                                                    @if (str_contains($record->message, 'Added savings do not match'))
+                                                                        One or more savings products in the file were not found for this member.
+                                                                    @else
+                                                                        {{ $record->message }}
                                                                     @endif
-                                                                    {{ $row['message'] }}
                                                                 </td>
                                                             </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="6" class="text-center">
-                                                                    <div class="py-4">
-                                                                        <i class="fa fa-info-circle fa-2x text-muted mb-2"></i>
-                                                                        <p class="text-muted">No records found.</p>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        @endforelse
+                                                        @endforeach
                                                     </tbody>
                                                 </table>
                                             </div>
