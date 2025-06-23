@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Facades\Log;
+use App\Models\Savings;
 
 class LoansAndSavingsExport implements FromCollection, WithHeadings
 {
@@ -78,6 +79,14 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
 
                 // Process deductions for ALL savings products, including Regular Savings
                 foreach ($member->savings as $saving) {
+                    // Exclude savings products named 'Mortuary'
+                    if (
+                        $saving->savingProduct &&
+                        strtolower($saving->savingProduct->product_name) === 'mortuary'
+                    ) {
+                        continue;
+                    }
+
                     if (isset($record['savings'][$saving->savingProduct->product_name])) {
                         $deductionAmount = $saving->deduction_amount ?? 0;
                         if ($deductionAmount > 0) {
