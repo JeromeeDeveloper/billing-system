@@ -71,6 +71,31 @@
                                         <i class="fa fa-upload"></i> Upload and Process Special Billing
                                     </button>
                                 </form>
+
+                                <!-- Search Form -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <form action="{{ route('special-billing.index') }}" method="GET" class="form-inline">
+                                            <div class="input-group">
+                                                <input type="text" name="search" class="form-control" placeholder="Search by Employee ID, Name, or CID..." value="{{ request('search') }}">
+                                                <div class="input-group-append">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fa fa-search"></i> Search
+                                                    </button>
+                                                    @if(request('search'))
+                                                        <a href="{{ route('special-billing.index') }}" class="btn btn-secondary">
+                                                            <i class="fa fa-times"></i> Clear
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <span class="text-muted">Showing {{ $specialBillings->firstItem() ?? 0 }} to {{ $specialBillings->lastItem() ?? 0 }} of {{ $specialBillings->total() }} entries</span>
+                                    </div>
+                                </div>
+
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered">
                                         <thead>
@@ -85,7 +110,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($specialBillings as $billing)
+                                            @forelse ($specialBillings as $billing)
                                             <tr>
                                                 <td>{{ $billing->employee_id }}</td>
                                                 <td>{{ $billing->name }}</td>
@@ -95,10 +120,21 @@
                                                 <td>{{ number_format($billing->gross, 2) }}</td>
                                                 <td>{{ $billing->office }}</td>
                                             </tr>
-                                            @endforeach
+                                            @empty
+                                            <tr>
+                                                <td colspan="7" class="text-center">No special billing records found.</td>
+                                            </tr>
+                                            @endforelse
                                         </tbody>
                                     </table>
                                 </div>
+
+                                <!-- Pagination -->
+                                @if($specialBillings->hasPages())
+                                    <div class="d-flex justify-content-center mt-3">
+                                        {{ $specialBillings->appends(request()->query())->links() }}
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -115,6 +151,26 @@
     <script src="{{ asset('js/quixnav-init.js') }}"></script>
     <script src="{{ asset('js/custom.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- File Input Display Script -->
+    <script>
+        // Update file input labels to show selected filenames
+        document.addEventListener('DOMContentLoaded', function() {
+            const forecastFile = document.getElementById('forecast_file');
+            const detailFile = document.getElementById('detail_file');
+
+            forecastFile.addEventListener('change', function() {
+                const fileName = this.files[0] ? this.files[0].name : 'Choose forecast file';
+                this.nextElementSibling.textContent = fileName;
+            });
+
+            detailFile.addEventListener('change', function() {
+                const fileName = this.files[0] ? this.files[0].name : 'Choose detail file';
+                this.nextElementSibling.textContent = fileName;
+            });
+        });
+    </script>
+
     @if (session('success'))
         <script>
             Swal.fire({

@@ -14,9 +14,23 @@ use Carbon\Carbon;
 
 class SpecialBillingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $specialBillings = SpecialBilling::all();
+        $query = SpecialBilling::query();
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('employee_id', 'LIKE', "%{$search}%")
+                  ->orWhere('name', 'LIKE', "%{$search}%")
+                  ->orWhere('cid', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Pagination
+        $specialBillings = $query->orderBy('created_at', 'desc')->paginate(15);
+
         return view('components.admin.special_billing', compact('specialBillings'));
     }
 
