@@ -19,6 +19,7 @@ class LoanProductSeeder extends Seeder
             ['product_code' => '43304', 'product' => 'Agri ACPC-Anyo Flat', 'prioritization' => 4],
             ['product_code' => '43302', 'product' => 'Agri Loan-Flat', 'prioritization' => 5],
             ['product_code' => '40208', 'product' => 'SAlary Loan-Diminishing APDS', 'prioritization' => 6],
+            ['product_code' => 'BONUS', 'product' => 'Bonus', 'prioritization' => 7],
         ];
 
         foreach ($loanProducts as $product) {

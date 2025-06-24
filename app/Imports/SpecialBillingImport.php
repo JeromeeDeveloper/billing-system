@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\SpecialBilling;
+use App\Models\LoanProduct;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Collection;
@@ -11,7 +12,21 @@ class SpecialBillingImport implements ToCollection, WithHeadingRow
 {
     public function collection(Collection $rows)
     {
-        $grouped = $rows->groupBy(function ($row) {
+        // Get all loan products with prioritization
+        $loanProducts = LoanProduct::pluck('prioritization', 'product_code')->toArray();
+
+        // Filter rows to only include those with loan prioritization and Bonus products
+        $filteredRows = $rows->filter(function ($row) use ($loanProducts) {
+            // Check if the row has a product code that exists in loan products
+            $productCode = $row['product_code'] ?? $row['product'] ?? null;
+
+            // Only include if product code exists in loan products (has prioritization)
+            // AND the product is "Bonus"
+            return isset($loanProducts[$productCode]) &&
+                   ($row['product'] ?? '') === 'Bonus';
+        });
+
+        $grouped = $filteredRows->groupBy(function ($row) {
             return $row['employee_id'] ?? $row['emp_id'] ?? null;
         });
 

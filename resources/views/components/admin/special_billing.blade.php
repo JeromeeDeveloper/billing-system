@@ -39,6 +39,20 @@
                                 </a>
                             </div>
                             <div class="card-body">
+                                <!-- Information Note -->
+                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h5><i class="fa fa-info-circle"></i> Special Billing Import Information</h5>
+                                    <p class="mb-2"><strong>What this import does:</strong></p>
+                                    <ul class="mb-2">
+                                        <li><strong>Loan Prioritization Filter:</strong> Only imports data for loans that have prioritization settings in the system</li>
+                                        <li><strong>Bonus Products Only:</strong> Filters to include only "Bonus" product types</li>
+                                        <li><strong>Data Processing:</strong> Groups data by employee ID and calculates total amortization</li>
+                                        <li><strong>Duplicate Handling:</strong> Updates existing records or creates new ones based on employee ID</li>
+                                    </ul>
+                                    <p class="mb-0"><small><strong>Note:</strong> This ensures only properly categorized loans with Bonus products are processed for special billing.</small></p>
+                                </div>
+
                                 @if (session('success'))
                                     <div class="alert alert-success alert-dismissible fade show">
                                         <button type="button" class="close" data-dismiss="alert">&times;</button>
