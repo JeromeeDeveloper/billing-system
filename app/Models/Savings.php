@@ -36,6 +36,7 @@ class Savings extends Model
         'current_balance' => 'decimal:2',
         'available_balance' => 'decimal:2',
         'interest' => 'decimal:2',
+        'amount_to_deduct' => 'decimal:2',
         'deduction_amount' => 'decimal:2',
         'remittance_amount' => 'decimal:2'
     ];

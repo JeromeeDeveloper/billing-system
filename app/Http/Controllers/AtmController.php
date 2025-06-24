@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\Branch;
+use App\Models\AtmPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -146,92 +147,158 @@ class AtmController extends Controller
         try {
             $validated = $request->validate([
                 'member_id' => 'required|exists:members,id',
-                'payment_amount' => 'required|numeric|min:0',
+                'withdrawal_amount' => 'required|numeric|min:0',
+                'selected_loans' => 'required|array|min:1',
+                'selected_loans.*' => 'string',
+                'loan_amounts' => 'required|array',
                 'payment_date' => 'required|date',
                 'payment_reference' => 'required|string',
                 'notes' => 'nullable|string'
             ]);
 
-            $member = Member::with(['loanForecasts'])->findOrFail($validated['member_id']);
-            $paymentAmount = $validated['payment_amount'];
-            $remainingPayment = $paymentAmount;
+            $member = Member::with(['loanForecasts', 'savings'])->findOrFail($validated['member_id']);
+            $withdrawalAmount = $validated['withdrawal_amount'];
+            $selectedLoans = $validated['selected_loans'];
+            $loanAmounts = $validated['loan_amounts'];
+
+            // Validate loan amounts for selected loans only
+            foreach ($selectedLoans as $loanAcctNo) {
+                if (!isset($loanAmounts[$loanAcctNo])) {
+                    return redirect()->back()->with('error', "Payment amount is required for loan {$loanAcctNo}");
+                }
+
+                if (!is_numeric($loanAmounts[$loanAcctNo]) || $loanAmounts[$loanAcctNo] < 0) {
+                    return redirect()->back()->with('error', "Invalid payment amount for loan {$loanAcctNo}");
+                }
+            }
+
+            // Calculate total loan payment
+            $totalLoanPayment = 0;
+            foreach ($selectedLoans as $loanAcctNo) {
+                if (isset($loanAmounts[$loanAcctNo])) {
+                    $totalLoanPayment += $loanAmounts[$loanAcctNo];
+                }
+            }
+
+            // Calculate remaining amount for savings
+            $remainingToSavings = $withdrawalAmount - $totalLoanPayment;
+
+            // Validate that total loan payment doesn't exceed withdrawal amount
+            if ($totalLoanPayment > $withdrawalAmount) {
+                return redirect()->back()->with('error', 'Total loan payment amount cannot exceed withdrawal amount');
+            }
 
             DB::beginTransaction();
 
-            // Get all loan forecasts and sort them by product prioritization
-            $forecasts = collect($member->loanForecasts)->map(function($forecast) use ($member) {
-                // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
-                $productCode = explode('-', $forecast->loan_acct_no)[2] ?? null;
+            // Process loan payments
+            foreach ($selectedLoans as $loanAcctNo) {
+                if (!isset($loanAmounts[$loanAcctNo]) || $loanAmounts[$loanAcctNo] <= 0) {
+                    continue;
+                }
 
-                // Find the loan product member with matching product code
-                $loanProductMember = $member->loanProductMembers()
-                    ->whereHas('loanProduct', function($query) use ($productCode) {
-                        $query->where('product_code', $productCode);
-                    })
+                $paymentAmount = $loanAmounts[$loanAcctNo];
+
+                // Find the loan forecast
+                $forecast = $member->loanForecasts()->where('loan_acct_no', $loanAcctNo)->first();
+
+                if (!$forecast) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', "Loan account {$loanAcctNo} not found");
+                }
+
+                // Validate payment amount doesn't exceed total due
+                if ($paymentAmount > $forecast->total_due) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', "Payment amount for loan {$loanAcctNo} cannot exceed total due");
+                }
+
+                // Update the total_due in LoanForecast
+                $newTotalDue = $forecast->total_due - $paymentAmount;
+                $forecast->update([
+                    'total_due' => max(0, $newTotalDue)
+                ]);
+
+                // Create loan payment record
+                LoanPayment::create([
+                    'member_id' => $member->id,
+                    'loan_forecast_id' => $forecast->id,
+                    'withdrawal_amount' => $withdrawalAmount,
+                    'amount' => $paymentAmount,
+                    'payment_date' => $validated['payment_date'],
+                    'reference_number' => $validated['payment_reference'],
+                    'notes' => $validated['notes']
+                ]);
+            }
+
+            // Add remaining amount to Regular Savings if available
+            $savingsAccountNumber = null;
+            if ($remainingToSavings > 0) {
+                // Debug: Log all savings accounts for this member
+                $allSavings = $member->savings;
+                Log::info("Member {$member->id} has {$allSavings->count()} savings accounts:");
+                foreach ($allSavings as $saving) {
+                    Log::info("- Account: {$saving->account_number}, Product: {$saving->product_name}, Product Code: {$saving->product_code}");
+                }
+
+                // First try to find Regular Savings
+                $regularSavings = $member->savings()
+                    ->where('product_name', 'Regular Savings')
                     ->first();
 
-                return [
-                    'forecast' => $forecast,
-                    'prioritization' => $loanProductMember ? $loanProductMember->prioritization : 999,
-                    'product_code' => $productCode,
-                    'total_due' => $forecast->total_due,
-                    'principal' => $forecast->principal ?? 0
-                ];
-            })->sortBy([
-                ['prioritization', 'asc'],
-                ['principal', 'desc']
+                // If not found, try to find any savings account
+                if (!$regularSavings) {
+                    $regularSavings = $member->savings()->first();
+                    Log::info("Member {$member->id} has no Regular Savings, using first available savings account");
+                }
+
+                if ($regularSavings) {
+                    // Update the amount_to_deduct field in savings
+                    $regularSavings->update([
+                        'amount_to_deduct' => $remainingToSavings
+                    ]);
+
+                    $savingsAccountNumber = $regularSavings->account_number;
+                    Log::info("Added remaining amount {$remainingToSavings} to savings account {$savingsAccountNumber} for member {$member->id}");
+                    Log::info("Savings account details: Product: {$regularSavings->product_name}, Account: {$regularSavings->account_number}");
+                } else {
+                    Log::warning("Member {$member->id} has no savings accounts at all for remaining amount {$remainingToSavings}");
+                }
+            } else {
+                Log::info("No remaining amount to allocate to savings for member {$member->id}");
+            }
+
+            // Create ATM payment record to track the complete transaction
+            $atmPayment = AtmPayment::create([
+                'member_id' => $member->id,
+                'withdrawal_amount' => $withdrawalAmount,
+                'total_loan_payment' => $totalLoanPayment,
+                'savings_allocation' => $remainingToSavings,
+                'savings_account_number' => $savingsAccountNumber,
+                'payment_date' => $validated['payment_date'],
+                'reference_number' => $validated['payment_reference'],
+                'notes' => $validated['notes']
             ]);
 
-            foreach ($forecasts as $forecastData) {
-                if ($remainingPayment <= 0) break;
-
-                $forecast = $forecastData['forecast'];
-                $totalDue = $forecastData['total_due'];
-                $productCode = $forecastData['product_code'];
-
-                // Calculate how much to pay for this loan
-                $deductionAmount = min($remainingPayment, $totalDue);
-
-                if ($productCode && $deductionAmount > 0) {
-                    // Update the total_due in LoanForecast
-                    $newTotalDue = $totalDue - $deductionAmount;
-                    $forecast->update([
-                        'total_due' => max(0, $newTotalDue) // Ensure total_due doesn't go below 0
-                    ]);
-
-                    // Create loan payment record
-                    LoanPayment::create([
-                        'member_id' => $member->id,
-                        'loan_forecast_id' => $forecast->id,
-                        'amount' => $deductionAmount,
-                        'payment_date' => $validated['payment_date'],
-                        'reference_number' => $validated['payment_reference'],
-                        'notes' => $validated['notes']
-                    ]);
-
-                    // Subtract the deduction amount from remaining payment
-                    $remainingPayment -= $deductionAmount;
-
-                    // If this loan is fully paid, continue to next loan
-                    if ($newTotalDue <= 0) {
-                        continue;
-                    }
-                }
-            }
+            Log::info("Created ATM payment record: ID {$atmPayment->id}, Savings allocation: {$atmPayment->savings_allocation}, Account: {$atmPayment->savings_account_number}");
 
             // Recalculate and update member's total loan balance
             $totalLoanBalance = $member->loanForecasts ? $member->loanForecasts->sum('total_due') : 0;
             $member->update(['loan_balance' => $totalLoanBalance]);
-            Log::info("Updated member {$member->id} total loan balance to: {$totalLoanBalance}");
 
-            // If there's still remaining payment, log it as unused
-            if ($remainingPayment > 0) {
-                Log::warning("Member {$member->id} has unused loan payment: {$remainingPayment}");
-            }
+            Log::info("Updated member {$member->id} total loan balance to: {$totalLoanBalance}");
+            Log::info("Processed withdrawal: {$withdrawalAmount}, Loan payments: {$totalLoanPayment}, Remaining to savings: {$remainingToSavings}");
 
             DB::commit();
 
-            return redirect()->back()->with('success', 'Payment processed successfully');
+            $message = "Payment processed successfully. ";
+            $message .= "Withdrawal: ₱" . number_format($withdrawalAmount, 2) . ", ";
+            $message .= "Loan payments: ₱" . number_format($totalLoanPayment, 2);
+
+            if ($remainingToSavings > 0) {
+                $message .= ", Remaining to savings: ₱" . number_format($remainingToSavings, 2);
+            }
+
+            return redirect()->back()->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -243,32 +310,33 @@ class AtmController extends Controller
     public function exportPostedPayments()
     {
         try {
-            // Get all loan payments for today
-            $payments = LoanPayment::with(['member.branch', 'loanForecast'])
+            // Get all ATM payments for today
+            $atmPayments = AtmPayment::with(['member.branch'])
                 ->whereDate('payment_date', now()->toDateString())
-                ->get()
-                ->groupBy('member_id')
-                ->map(function($memberPayments) {
-                    return [
-                        'member_id' => $memberPayments->first()->member_id,
-                        'payment_date' => $memberPayments->first()->payment_date
-                    ];
-                })->values()->all();
+                ->get();
 
-            if (empty($payments)) {
+            Log::info("Found {$atmPayments->count()} ATM payments for today");
+
+            if ($atmPayments->isEmpty()) {
                 return redirect()->back()->with('error', 'No posted payments found for today.');
+            }
+
+            // Log details of each ATM payment
+            foreach ($atmPayments as $atmPayment) {
+                Log::info("ATM Payment ID: {$atmPayment->id}, Member: {$atmPayment->member_id}, Withdrawal: {$atmPayment->withdrawal_amount}, Loan Payment: {$atmPayment->total_loan_payment}, Savings: {$atmPayment->savings_allocation}, Account: {$atmPayment->savings_account_number}");
             }
 
             $filename = 'posted_payments_' . now()->format('Y-m-d') . '.xlsx';
 
             Excel::store(
-                new PostedPaymentsExport($payments),
+                new PostedPaymentsExport($atmPayments),
                 $filename,
                 'public'
             );
 
             return response()->download(storage_path('app/public/' . $filename))->deleteFileAfterSend();
         } catch (\Exception $e) {
+            Log::error('Error in exportPostedPayments: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
     }

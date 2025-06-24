@@ -76,6 +76,11 @@ class Member extends Model
         return $this->hasMany(LoanPayment::class);
     }
 
+    public function atmPayments()
+    {
+        return $this->hasMany(AtmPayment::class);
+    }
+
     public function loanProductMembers()
     {
         return $this->hasMany(LoanProductMember::class);
