@@ -83,7 +83,22 @@ class SpecialBillingController extends Controller
         foreach ($detailRows as $row) {
             $cid = strval(trim($row['cid'] ?? ''));
             $accountNo = strval(trim($row['account no'] ?? ''));
-            $principalRelease = floatval($row['principal release'] ?? 0);
+
+            // Clean principal release value (remove commas and format properly)
+            $principalReleaseRaw = $row['principal release'] ?? 0;
+            $principalRelease = 0;
+            if (!empty($principalReleaseRaw)) {
+                $principalRelease = preg_replace('/[^0-9.]/', '', str_replace(',', '', $principalReleaseRaw));
+                $principalRelease = floatval($principalRelease);
+
+                // Log the cleaning process for debugging
+                Log::info("Principal Release cleaning for CID {$cid}:", [
+                    'original' => $principalReleaseRaw,
+                    'cleaned' => $principalRelease,
+                    'account_no' => $accountNo
+                ]);
+            }
+
             $openDateRaw = $row['open date'] ?? null;
             $maturityDateRaw = $row['maturity date'] ?? null;
 
