@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Member;
 use App\Models\SavingProduct;
+use App\Models\Savings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -38,7 +39,23 @@ class SavingProductController extends Controller
         ]);
 
         $savingProduct = SavingProduct::findOrFail($id);
+        $oldAmountToDeduct = $savingProduct->amount_to_deduct;
+
         $savingProduct->update($request->all());
+
+        // Update deduction_amount in all related Savings records
+        if ($request->has('amount_to_deduct') && $request->amount_to_deduct != $oldAmountToDeduct) {
+            $updatedCount = Savings::where('product_code', $savingProduct->product_code)
+                ->update(['deduction_amount' => $request->amount_to_deduct]);
+
+            $message = 'Saving product updated successfully';
+            if ($updatedCount > 0) {
+                $message .= " and deduction amount updated for {$updatedCount} savings account(s)";
+            }
+
+            return redirect()->back()->with('success', $message);
+        }
+
         return redirect()->back()->with('success', 'Saving product updated successfully');
     }
 
