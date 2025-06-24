@@ -26,8 +26,21 @@ class SpecialBillingController extends Controller
             'detail_file' => 'required|mimes:xlsx,xls,csv|max:10240',
         ]);
 
-        // 1. Process forecast file (group by cid, sum total_due)
-        $forecastRows = Excel::toCollection(null, $request->file('forecast_file'))[0];
+        // 1. Process forecast file (CSV: skip first 4 rows, row 5 is header, row 6+ is data)
+        $forecastRowsRaw = Excel::toCollection(null, $request->file('forecast_file'))[0];
+        $forecastRows = collect();
+        $headerRow = [];
+        foreach ($forecastRowsRaw as $i => $row) {
+            if ($i == 4) {
+                $headerRow = $row->toArray();
+            } elseif ($i > 4) {
+                $assoc = [];
+                foreach ($headerRow as $k => $header) {
+                    $assoc[strtolower(trim($header))] = $row[$k] ?? null;
+                }
+                $forecastRows->push($assoc);
+            }
+        }
         $forecastGrouped = $forecastRows->groupBy(function ($row) {
             return strval(trim($row['cid'] ?? ''));
         });
@@ -35,68 +48,70 @@ class SpecialBillingController extends Controller
         foreach ($forecastGrouped as $cid => $rows) {
             if (empty($cid)) continue;
             $totalDue = $rows->sum(function ($row) {
-                return floatval($row['total_due'] ?? 0);
+                $value = $row['total due'] ?? 0;
+                $value = preg_replace('/[^0-9.]/', '', str_replace(',', '', $value));
+                return floatval($value);
             });
             $name = $rows->first()['name'] ?? null;
-            $office = $rows->first()['office'] ?? null;
             $forecastData[$cid] = [
                 'cid' => $cid,
                 'name' => $name,
                 'amortization' => $totalDue,
-                'office' => $office,
                 'total_due' => $totalDue,
             ];
         }
 
-        Log::info('Forecast rows count: ' . $forecastRows->count());
-        Log::info('Forecast rows sample:', $forecastRows->take(3)->toArray());
-
-        // 2. Process detail file (find highest principal per cid)
-        $detailRows = Excel::toCollection(null, $request->file('detail_file'))[0];
+        // 2. Process detail file (CSV: skip first 5 rows, row 6 is header, row 7+ is data)
+        $detailRowsRaw = Excel::toCollection(null, $request->file('detail_file'))[0];
+        $detailRows = collect();
+        $headerRow = [];
+        foreach ($detailRowsRaw as $i => $row) {
+            if ($i == 5) {
+                $headerRow = $row->toArray();
+            } elseif ($i > 5) {
+                $assoc = [];
+                foreach ($headerRow as $k => $header) {
+                    $assoc[strtolower(trim($header))] = $row[$k] ?? null;
+                }
+                $detailRows->push($assoc);
+            }
+        }
         $detailByCid = [];
         foreach ($detailRows as $row) {
-            $cid = strval(trim($row[0] ?? ''));
-            $principal = floatval($row[11] ?? 0); // Column L (index 11) is principal
-            $openDateRaw = $row[6] ?? null; // Column 7 (index 6)
-            $endDateRaw = $row[7] ?? null; // Column 8 (index 7)
-            $gross = $row[10] ?? null; // Column 11 (index 10)
-            $openDate = null;
+            $cid = strval(trim($row['cid'] ?? ''));
+            $gross = floatval($row['gross'] ?? 0);
+            $startDateRaw = $row['start_date'] ?? null;
+            $endDateRaw = $row['end_date'] ?? null;
+            $startDate = null;
             $endDate = null;
             try {
-                if ($openDateRaw) $openDate = Carbon::createFromFormat('m/d/Y', $openDateRaw)->format('Y-m-d');
+                if ($startDateRaw) $startDate = Carbon::createFromFormat('m/d/Y', $startDateRaw)->format('Y-m-d');
             } catch (\Exception $e) {}
             try {
                 if ($endDateRaw) $endDate = Carbon::createFromFormat('m/d/Y', $endDateRaw)->format('Y-m-d');
             } catch (\Exception $e) {}
             if (empty($cid)) continue;
-            if (!isset($detailByCid[$cid]) || $principal > $detailByCid[$cid]['principal']) {
+            if (!isset($detailByCid[$cid]) || $gross > $detailByCid[$cid]['gross']) {
                 $detailByCid[$cid] = [
-                    'open_date' => $openDate,
+                    'start_date' => $startDate,
                     'end_date' => $endDate,
                     'gross' => $gross,
-                    'principal' => $principal,
                 ];
             }
         }
 
-        Log::info('Detail rows count: ' . $detailRows->count());
-        Log::info('Detail rows sample:', $detailRows->take(3)->toArray());
-        Log::info('ForecastData keys:', array_keys($forecastData));
-        Log::info('DetailByCid keys:', array_keys($detailByCid));
-
         // 3. Merge and store in special_billings
         foreach ($forecastData as $cid => $data) {
             $detail = $detailByCid[$cid] ?? null;
-            Log::info('Attempting to store:', ['cid' => $cid, 'data' => $data, 'detail' => $detail]);
             \App\Models\SpecialBilling::updateOrCreate(
                 ['cid' => $cid],
                 [
+                    'employee_id' => 'N/A',
                     'name' => $data['name'],
                     'amortization' => $data['amortization'],
-                    'start_date' => $detail['open_date'] ?? null,
+                    'start_date' => $detail['start_date'] ?? null,
                     'end_date' => $detail['end_date'] ?? null,
                     'gross' => $detail['gross'] ?? 0,
-                    'office' => $data['office'] ?? null,
                     'total_due' => $data['total_due'],
                 ]
             );
