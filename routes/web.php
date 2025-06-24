@@ -22,6 +22,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\BranchRemittanceController;
 use App\Http\Controllers\BranchAtmController;
 use App\Http\Controllers\SpecialBillingController;
+use App\Http\Controllers\BranchSpecialBillingController;
 
 //Login
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
@@ -191,6 +192,11 @@ Route::get('/branch/remittance/generate-export', [BranchRemittanceController::cl
     Route::post('/branch/atm/update-balance', [BranchAtmController::class, 'updateBalance'])->name('branch.atm.update-balance');
     Route::post('/branch/atm/post-payment', [BranchAtmController::class, 'postPayment'])->name('branch.atm.post-payment');
     Route::get('/branch/atm/export-posted-payments', [BranchAtmController::class, 'exportPostedPayments'])->name('branch.atm.export-posted-payments');
+
+// Branch Special Billing
+Route::get('/branch/special-billing', [BranchSpecialBillingController::class, 'index'])->name('special-billing.index.branch');
+Route::post('/branch/special-billing/import', [BranchSpecialBillingController::class, 'import'])->name('special-billing.import.branch');
+Route::get('/branch/special-billing/export', [BranchSpecialBillingController::class, 'export'])->name('special-billing.export.branch');
 
 });
 

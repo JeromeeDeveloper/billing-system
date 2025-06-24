@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Branch Remittance Upload - Billing and Collection</title>
+    <title>Remittance Upload - Billing and Collection</title>
 
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
     <link href="{{ asset('vendor/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet">
@@ -50,14 +50,14 @@
                 <div class="row page-titles mx-0 mb-3">
                     <div class="col-sm-6 p-md-0">
                         <div class="welcome-text">
-                            <h4>Branch Remittance Upload</h4>
-                            <span class="ml-1">Upload and Process Branch Remittance Data</span>
+                            <h4>Remittance Upload</h4>
+                            <span class="ml-1">Upload and Process Remittance Data</span>
                         </div>
                     </div>
                     <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard_branch') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active">Branch Remittance Upload</li>
+                            <li class="breadcrumb-item active">Remittance Upload</li>
                         </ol>
                     </div>
                 </div>
@@ -67,29 +67,34 @@
                         <div class="card">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center title-container">
-                                    <h4 class="card-title mb-0">Upload Branch Remittance Excel File</h4>
+                                    <h4 class="card-title mb-0">Upload Remittance Excel File</h4>
                                 </div>
                                 <div class="d-flex align-items-center ms-3">
-                                    <button onclick="generateExport()" class="btn btn-success">
-                                        <i class="fa fa-file-excel"></i> Export
-                                    </button>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa fa-file-excel"></i> Export
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}">Loans & Savings</a>
+                                            <a class="dropdown-item" href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}">Shares</a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-body">
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Branch Remittance Import Information</h5>
+                                    <h5><i class="fa fa-info-circle"></i> Remittance Import Information</h5>
                                     <p class="mb-2"><strong>What this import does:</strong></p>
                                     <ul class="mb-2">
                                         <li><strong>Loan Prioritization:</strong> Processes loans based on product prioritization settings (lower numbers = higher priority)</li>
                                         <li><strong>Smart Allocation:</strong> Automatically allocates payments to highest priority loans first</li>
-                                        <li><strong>Branch-Specific:</strong> Processes remittance data for your specific branch only</li>
                                         <li><strong>Data Matching:</strong> Matches employee IDs with existing loan records in the system</li>
                                         <li><strong>Payment Processing:</strong> Handles both loan payments and savings contributions</li>
                                         <li><strong>Share Management:</strong> Processes share capital contributions separately</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> The system ensures payments are applied to the most important loans first based on your prioritization settings.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> The system ensures payments are applied to the most important loans first based on your prioritization settings. All data and exports are limited to your branch.</small></p>
                                 </div>
 
                                 @if (session('success'))
@@ -125,7 +130,7 @@
                                                     <div class="mt-3">
                                                         <h6 class="text-muted mb-2">File Requirements:</h6>
                                                         <ul class="text-muted small pl-3">
-                                                            <li>Excel format (.xlsx, .xls, .csv)</li>
+                                                            <li>Excel format (.xlsx, .xls, .csv,)</li>
                                                             <li>Required headers:
                                                                 <ul class="pl-3">
                                                                     <li>EmpId</li>
@@ -137,25 +142,27 @@
                                                         </ul>
                                                     </div>
                                                 </div>
-                                                <button type="submit" class="btn btn-primary btn-block">
-                                                    <i class="fa fa-upload"></i> Upload and Process
+                                                <button type="submit" class="btn btn-info btn-block">
+                                                    <i class="fa fa-upload"></i> Upload and Process Loans & Savings Remittance
                                                 </button>
+
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block">
+                                                    Collection file for Loans & Savings
+                                                </a>
+
                                             </form>
                                         </div>
                                     </div>
 
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">
-                                            <form action="{{ route('branch.remittance.upload.share') }}" method="POST"
-                                                enctype="multipart/form-data">
+                                            <form action="{{ route('branch.remittance.upload.share') }}" method="POST" enctype="multipart/form-data">
                                                 @csrf
                                                 <div class="form-group">
                                                     <label class="font-weight-bold">Upload Share Remittance</label>
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" name="file"
-                                                            id="shareFile" accept=".xlsx,.xls,.csv" required>
-                                                        <label class="custom-file-label" for="shareFile">Choose
-                                                            file</label>
+                                                        <input type="file" class="custom-file-input" name="file" id="shareFile" accept=".xlsx,.xls,.csv" required>
+                                                        <label class="custom-file-label" for="shareFile">Choose file</label>
                                                     </div>
                                                     <div class="mt-3">
                                                         <h6 class="text-muted mb-2">File Requirements:</h6>
@@ -172,8 +179,12 @@
                                                     </div>
                                                 </div>
                                                 <button type="submit" class="btn btn-info btn-block">
-                                                    <i class="fa fa-upload"></i> Upload Share Remittance
+                                                    <i class="fa fa-upload"></i> Upload and Process Share Remittance
                                                 </button>
+
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-primary btn-block">
+                                                    Collection file for Shares
+                                                </a>
                                             </form>
                                         </div>
                                     </div>

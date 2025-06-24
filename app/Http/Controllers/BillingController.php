@@ -320,4 +320,22 @@ class BillingController extends Controller
             return back()->with('error', 'Failed to download export: ' . $e->getMessage());
         }
     }
+
+    public function export_branch(Request $request)
+    {
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+        $branchId = Auth::user()->branch_id;
+
+        // Generate the Excel file for the branch only
+        $export = new \App\Exports\BranchBillingExport($billingPeriod, $branchId);
+        $filename = 'billing_export_branch_' . $billingPeriod . '.xlsx';
+
+        // Store the file
+        \Maatwebsite\Excel\Facades\Excel::store($export, 'exports/' . $filename, 'public');
+
+        // Optionally, you can save an export record or notification here if needed
+
+        // Download the file
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
+    }
 }

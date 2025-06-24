@@ -21,4 +21,9 @@ class SpecialBilling extends Model
         'gross',
         'office',
     ];
+
+    public function member()
+    {
+        return $this->belongsTo(Member::class, 'cid', 'cid');
+    }
 }
