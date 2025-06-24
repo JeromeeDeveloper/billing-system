@@ -98,18 +98,26 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                             ]);
                         }
 
-                        // Add a row for the remaining amount from the import
+                        // Add a row for the remaining amount from the import to Regular Savings
                         $remainingAmount = $amountFromImport - $deductionAmount;
                         if ($remainingAmount > 0) {
-                            $exportRows->push([
-                                'branch_code' => $member->branch->code ?? '',
-                                'product_code/dr' => '',
-                                'gl/sl cct no' => '',
-                                'amt' => '',
-                                'product_code/cr' => '1',
-                                'gl/sl acct no' => str_replace('-', '', $savingAccount->account_number),
-                                'amount' => number_format($remainingAmount, 2, '.', '')
-                            ]);
+                            // Find Regular Savings account for this member
+                            $regularSavings = $member->savings->first(function ($s) {
+                                return $s->savingProduct && strtolower($s->savingProduct->product_name) === 'regular savings';
+                            });
+                            if ($regularSavings) {
+                                $exportRows->push([
+                                    'branch_code' => $member->branch->code ?? '',
+                                    'product_code/dr' => '',
+                                    'gl/sl cct no' => '',
+                                    'amt' => '',
+                                    'product_code/cr' => '1',
+                                    'gl/sl acct no' => str_replace('-', '', $regularSavings->account_number),
+                                    'amount' => number_format($remainingAmount, 2, '.', '')
+                                ]);
+                            } else {
+                                Log::warning("No Regular Savings account found for member {$member->id}");
+                            }
                         }
                     } else {
                         Log::warning("No savings account found for member {$member->id} with product name '{$productName}'");
