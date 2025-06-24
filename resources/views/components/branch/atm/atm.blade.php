@@ -52,6 +52,22 @@
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-body">
+                                <!-- Information Note -->
+                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h5><i class="fa fa-info-circle"></i> Branch ATM Management Information</h5>
+                                    <p class="mb-2"><strong>What this page does:</strong></p>
+                                    <ul class="mb-2">
+                                        <li><strong>Branch Account Overview:</strong> View account balances for members in your branch only</li>
+                                        <li><strong>Payment Processing:</strong> Post loan payments with automatic prioritization (highest priority loans first)</li>
+                                        <li><strong>Balance Management:</strong> Edit account balances for corrections and adjustments within your branch</li>
+                                        <li><strong>Search & Filter:</strong> Find members by name, employee ID, or CID within your branch</li>
+                                        <li><strong>Payment History:</strong> Track and export posted payment records for your branch</li>
+                                        <li><strong>Branch-Specific Data:</strong> All operations are limited to your branch's member data</li>
+                                    </ul>
+                                    <p class="mb-0"><small><strong>Note:</strong> This page allows you to manage member accounts and process payments specifically for your branch.</small></p>
+                                </div>
+
                                 <form method="GET" action="{{ route('branch.atm') }}">
                                     <div class="form-row align-items-end">
                                         <div class="col-md-3">

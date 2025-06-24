@@ -115,6 +115,23 @@
 
 
                             <div class="card-body">
+                                <!-- Information Note -->
+                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h5><i class="fa fa-info-circle"></i> Branch Billing Management Information</h5>
+                                    <p class="mb-2"><strong>What this page does:</strong></p>
+                                    <ul class="mb-2">
+                                        <li><strong>Branch Billing Overview:</strong> View billing records for members in your branch only</li>
+                                        <li><strong>Data Management:</strong> Edit member billing information including loan balances, principal amounts, and dates</li>
+                                        <li><strong>Branch Approval:</strong> Approve billing data for your branch before admin can generate final reports</li>
+                                        <li><strong>Billing Generation:</strong> Generate billing reports for your branch (requires approval from all branches)</li>
+                                        <li><strong>Export History:</strong> Track and download previously generated billing reports for your branch</li>
+                                        <li><strong>Search & Filter:</strong> Find specific members or billing records within your branch</li>
+                                        <li><strong>Record Management:</strong> Add, edit, or delete billing records for your branch members</li>
+                                    </ul>
+                                    <p class="mb-0"><small><strong>Note:</strong> This page manages your branch's billing data and ensures accuracy before approval for final billing generation.</small></p>
+                                </div>
+
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered display">
                                         <thead>
