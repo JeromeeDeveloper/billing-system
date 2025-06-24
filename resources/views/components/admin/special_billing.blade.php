@@ -82,7 +82,6 @@
                                                 <th>End Date</th>
                                                 <th>Gross</th>
                                                 <th>Office</th>
-                                                <th>Total Due</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -95,7 +94,6 @@
                                                 <td>{{ $billing->end_date }}</td>
                                                 <td>{{ number_format($billing->gross, 2) }}</td>
                                                 <td>{{ $billing->office }}</td>
-                                                <td>{{ number_format($billing->total_due, 2) }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>

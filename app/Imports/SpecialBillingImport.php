@@ -36,7 +36,6 @@ class SpecialBillingImport implements ToCollection, WithHeadingRow
                     'end_date'     => $first['end_date'] ?? null,
                     'gross'        => $first['gross'] ?? 0,
                     'office'       => $first['office'] ?? null,
-                    'total_due'    => $totalAmortization,
                 ]
             );
         }

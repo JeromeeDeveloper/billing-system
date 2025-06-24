@@ -20,6 +20,5 @@ class SpecialBilling extends Model
         'end_date',
         'gross',
         'office',
-        'total_due',
     ];
 }

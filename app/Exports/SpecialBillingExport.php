@@ -18,7 +18,6 @@ class SpecialBillingExport implements FromCollection, WithHeadings
             'end_date',
             'gross',
             'office',
-            'total_due',
         ]);
     }
 
@@ -32,7 +31,6 @@ class SpecialBillingExport implements FromCollection, WithHeadings
             'End Date',
             'Gross',
             'Office',
-            'Total Due',
         ];
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\SpecialBilling;
+use App\Models\Member;
+use App\Models\LoanProduct;
 use Illuminate\Http\Request;
 use App\Imports\SpecialBillingImport;
 use App\Exports\SpecialBillingExport;
@@ -57,7 +59,6 @@ class SpecialBillingController extends Controller
                 'cid' => $cid,
                 'name' => $name,
                 'amortization' => $totalDue,
-                'total_due' => $totalDue,
             ];
         }
 
@@ -76,31 +77,88 @@ class SpecialBillingController extends Controller
                 $detailRows->push($assoc);
             }
         }
+
+        // Group detail rows by CID and process with prioritization logic
         $detailByCid = [];
         foreach ($detailRows as $row) {
             $cid = strval(trim($row['cid'] ?? ''));
-            $gross = floatval($row['gross'] ?? 0);
-            $startDateRaw = $row['start_date'] ?? null;
-            $endDateRaw = $row['end_date'] ?? null;
-            $startDate = null;
-            $endDate = null;
+            $accountNo = strval(trim($row['account no'] ?? ''));
+            $principalRelease = floatval($row['principal release'] ?? 0);
+            $openDateRaw = $row['open date'] ?? null;
+            $maturityDateRaw = $row['maturity date'] ?? null;
+
+            if (empty($cid) || empty($accountNo)) continue;
+
+            // Parse dates (mm/dd/yyyy format)
+            $openDate = null;
+            $maturityDate = null;
             try {
-                if ($startDateRaw) $startDate = Carbon::createFromFormat('m/d/Y', $startDateRaw)->format('Y-m-d');
-            } catch (\Exception $e) {}
-            try {
-                if ($endDateRaw) $endDate = Carbon::createFromFormat('m/d/Y', $endDateRaw)->format('Y-m-d');
-            } catch (\Exception $e) {}
-            if (empty($cid)) continue;
-            if (!isset($detailByCid[$cid]) || $gross > $detailByCid[$cid]['gross']) {
-                $detailByCid[$cid] = [
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
-                    'gross' => $gross,
-                ];
+                if ($openDateRaw) $openDate = Carbon::createFromFormat('m/d/Y', $openDateRaw)->format('Y-m-d');
+            } catch (\Exception $e) {
+                Log::warning("Invalid open date format for CID {$cid}: {$openDateRaw}");
             }
+            try {
+                if ($maturityDateRaw) $maturityDate = Carbon::createFromFormat('m/d/Y', $maturityDateRaw)->format('Y-m-d');
+            } catch (\Exception $e) {
+                Log::warning("Invalid maturity date format for CID {$cid}: {$maturityDateRaw}");
+            }
+
+            // Extract product code from account number (e.g., 40102 from 0304-001-40102-000002-7)
+            $accountSegments = explode('-', $accountNo);
+            $productCode = $accountSegments[2] ?? null;
+
+            // Get loan product prioritization
+            $loanProduct = LoanProduct::where('product_code', $productCode)->first();
+            $prioritization = $loanProduct ? $loanProduct->prioritization : 999;
+
+            $loanData = [
+                'account_no' => $accountNo,
+                'product_code' => $productCode,
+                'prioritization' => $prioritization,
+                'principal_release' => $principalRelease,
+                'open_date' => $openDate,
+                'maturity_date' => $maturityDate,
+            ];
+
+            // Store loan data for this CID
+            if (!isset($detailByCid[$cid])) {
+                $detailByCid[$cid] = [];
+            }
+            $detailByCid[$cid][] = $loanData;
         }
 
-        // 3. Merge and store in special_billings
+        // 3. Process each CID to find the best loan based on prioritization and principal release
+        foreach ($detailByCid as $cid => $loans) {
+            // Sort loans by prioritization first, then by principal release (descending)
+            usort($loans, function($a, $b) {
+                if ($a['prioritization'] !== $b['prioritization']) {
+                    return $a['prioritization'] - $b['prioritization']; // Lower prioritization number = higher priority
+                }
+                return $b['principal_release'] - $a['principal_release']; // Higher principal release = better
+            });
+
+            // Get the best loan (first after sorting)
+            $bestLoan = $loans[0];
+
+            Log::info("Selected loan for CID {$cid}:", [
+                'account_no' => $bestLoan['account_no'],
+                'product_code' => $bestLoan['product_code'],
+                'prioritization' => $bestLoan['prioritization'],
+                'principal_release' => $bestLoan['principal_release'],
+                'open_date' => $bestLoan['open_date'],
+                'maturity_date' => $bestLoan['maturity_date'],
+            ]);
+
+            $detailByCid[$cid] = [
+                'start_date' => $bestLoan['open_date'],
+                'end_date' => $bestLoan['maturity_date'],
+                'gross' => $bestLoan['principal_release'],
+                'account_no' => $bestLoan['account_no'],
+                'product_code' => $bestLoan['product_code'],
+            ];
+        }
+
+        // 4. Merge and store in special_billings
         foreach ($forecastData as $cid => $data) {
             $detail = $detailByCid[$cid] ?? null;
             \App\Models\SpecialBilling::updateOrCreate(
@@ -112,12 +170,12 @@ class SpecialBillingController extends Controller
                     'start_date' => $detail['start_date'] ?? null,
                     'end_date' => $detail['end_date'] ?? null,
                     'gross' => $detail['gross'] ?? 0,
-                    'total_due' => $data['total_due'],
+                    'office' => null,
                 ]
             );
         }
 
-        return redirect()->route('special-billing.index')->with('success', 'Special billing files imported and merged successfully.');
+        return redirect()->route('special-billing.index')->with('success', 'Special billing files imported and merged successfully with prioritization logic.');
     }
 
     public function export()
