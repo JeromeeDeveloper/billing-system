@@ -132,11 +132,11 @@
                         </div>
                         <div class="form-group">
                             <label>Amount to Deduct</label>
-                            <input type="number" class="form-control" name="amount_to_deduct" required>
+                            <input type="number" class="form-control" name="amount_to_deduct">
                         </div>
                         <div class="form-group">
                             <label>Prioritization</label>
-                            <input type="number" class="form-control" name="prioritization" required>
+                            <input type="number" class="form-control" name="prioritization">
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -175,7 +175,7 @@
                         </div>
                         <div class="form-group">
                             <label>Prioritization</label>
-                            <input type="number" class="form-control" name="prioritization" value="{{ $product->prioritization }}" required>
+                            <input type="number" class="form-control" name="prioritization" value="{{ $product->prioritization }}">
                         </div>
                     </div>
                     <div class="modal-footer">

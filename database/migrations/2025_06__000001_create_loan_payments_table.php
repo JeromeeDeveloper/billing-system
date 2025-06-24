@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('member_id')->constrained()->onDelete('cascade');
             $table->foreignId('loan_forecast_id')->constrained('loan_forecast')->onDelete('cascade');
+            $table->decimal('withdrawal_amount', 12, 2);
             $table->decimal('amount', 12, 2);
             $table->date('payment_date');
             $table->string('reference_number')->nullable();

@@ -12,6 +12,7 @@ class LoanPayment extends Model
     protected $fillable = [
         'member_id',
         'loan_forecast_id',
+        'withdrawal_amount',
         'amount',
         'payment_date',
         'reference_number',
