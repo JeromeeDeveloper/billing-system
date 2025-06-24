@@ -29,9 +29,10 @@ class LoansController extends Controller
             'product' => 'required|string|max:255',
             'product_code' => 'required|string|max:255',
             'prioritization' => 'required|string|max:255',
+            'billing_type' => 'nullable|string|in:regular,special',
         ]);
 
-        $loan->update($request->only(['product', 'prioritization', 'product_code']));
+        $loan->update($request->only(['product', 'prioritization', 'product_code', 'billing_type']));
 
         return redirect()->route('loans')->with('success', 'Loan updated successfully.');
     }
@@ -44,16 +45,17 @@ class LoansController extends Controller
     }
 
     public function store(Request $request)
-{
-    $request->validate([
-        'product' => 'required|string|max:255',
-        'product_code' => 'required|string|max:255',
-        'prioritization' => 'required|string|max:255',
-    ]);
+    {
+        $request->validate([
+            'product' => 'required|string|max:255',
+            'product_code' => 'required|string|max:255',
+            'prioritization' => 'required|string|max:255',
+            'billing_type' => 'nullable|string|in:regular,special',
+        ]);
 
-    LoanProduct::create($request->only(['product', 'prioritization', 'product_code']));
+        LoanProduct::create($request->only(['product', 'prioritization', 'product_code', 'billing_type']));
 
-    return redirect()->route('loans')->with('success', 'Loan added successfully.');
-}
+        return redirect()->route('loans')->with('success', 'Loan added successfully.');
+    }
 
 }

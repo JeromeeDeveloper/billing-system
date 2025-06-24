@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('loans_product', function (Blueprint $table) {
             $table->id();
-      
+
             $table->string('product');
             $table->string('product_code')->nullable();
             $table->integer('prioritization')->nullable();
             $table->string('Status')->nullable();
+            $table->string('billing_type')->nullable();
 
             $table->timestamps();
         });

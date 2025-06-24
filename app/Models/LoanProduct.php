@@ -18,7 +18,7 @@ class LoanProduct extends Model
         'product',
         'product_code',
         'prioritization',
-
+        'billing_type',
     ];
 
     /**

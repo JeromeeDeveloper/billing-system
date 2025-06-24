@@ -95,6 +95,14 @@
                                                         id="add-prioritization" required>
                                                 </div>
 
+                                                <div class="form-group">
+                                                    <label for="add-billing_type">Billing Type</label>
+                                                    <select class="form-control" name="billing_type" id="add-billing_type">
+                                                        <option value="">Select Billing Type</option>
+                                                        <option value="regular">Regular</option>
+                                                        <option value="special">Special</option>
+                                                    </select>
+                                                </div>
 
                                             </div>
 
@@ -117,7 +125,7 @@
                                                     <th>Product</th>
                                                     <th>Product Code</th>
                                                     <th>Prioritization</th>
-
+                                                    <th>Billing Type</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
@@ -127,7 +135,7 @@
                                                         <td>{{ $loan->product ?? '' }}</td>
                                                         <td>{{ $loan->product_code ?? '' }}</td>
                                                         <td>{{ $loan->prioritization ?? '' }}</td>
-
+                                                        <td>{{ $loan->billing_type ?? '' }}</td>
                                                         <td>
                                                             <button type="button" class="btn btn-rounded btn-primary"
                                                                 data-toggle="modal" data-target="#editModal"
@@ -135,6 +143,7 @@
                                                                 data-product="{{ $loan->product }}"
                                                                 data-product_code="{{ $loan->product_code }}"
                                                                 data-prioritization="{{ $loan->prioritization }}"
+                                                                data-billing_type="{{ $loan->billing_type }}"
                                                                >
                                                                 Edit
                                                             </button>
@@ -144,6 +153,7 @@
                                                                 data-id="{{ $loan->id }}"
                                                                 data-product="{{ $loan->product }}"
                                                                 data-prioritization="{{ $loan->prioritization }}"
+                                                                data-billing_type="{{ $loan->billing_type }}"
                                                                >
                                                                 View
                                                             </button>
@@ -162,7 +172,7 @@
                                                    <th>Product</th>
                                                     <th>Product Code</th>
                                                     <th>Prioritization</th>
-
+                                                    <th>Billing Type</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </tfoot>
@@ -203,6 +213,15 @@
                                                     <label for="edit-prioritization">Prioritization</label>
                                                     <input type="text" class="form-control" name="prioritization"
                                                         id="edit-prioritization">
+                                                </div>
+
+                                                <div class="form-group col-md-6">
+                                                    <label for="edit-billing_type">Billing Type</label>
+                                                    <select class="form-control" name="billing_type" id="edit-billing_type">
+                                                        <option value="">Select Billing Type</option>
+                                                        <option value="regular">Regular</option>
+                                                        <option value="special">Special</option>
+                                                    </select>
                                                 </div>
 
                                                 <div class="form-group col-md-12">
@@ -324,6 +343,7 @@
             $('#edit-product').val(button.data('product'));
             $('#edit-product_code').val(button.data('product_code'));
             $('#edit-prioritization').val(button.data('prioritization'));
+            $('#edit-billing_type').val(button.data('billing_type'));
             $('#edit-remarks').val(button.data('remarks'));
 
 
@@ -338,6 +358,7 @@
             $('#view-product').text(button.data('product'));
             $('#view-product-code').text(button.data('product'));
             $('#view-prioritization').text(button.data('prioritization'));
+            $('#view-billing_type').text(button.data('billing_type'));
 
         });
 
