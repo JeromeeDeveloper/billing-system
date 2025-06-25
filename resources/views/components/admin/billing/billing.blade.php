@@ -170,7 +170,7 @@
                                                     <td>{{ $member->fname }} {{ $member->lname }}</td>
                                                     <td>{{ optional($member->start_date)->format('Y-m-d') }}</td>
                                                     <td>{{ optional($member->end_date)->format('Y-m-d') }}</td>
-                                                    <td>{{ number_format($member->principal, 2) }}</td>
+                                                    <td>{{ number_format($member->regular_principal, 2) }}</td>
                                                     <td>{{ $member->area ?? '' }}</td>
                                                     <td>
                                                         <button class="btn btn-rounded btn-primary edit-btn"
@@ -180,7 +180,7 @@
                                                             data-fname="{{ $member->fname }}"
                                                             data-lname="{{ $member->lname }}"
                                                             data-loan_balance="{{ $member->loan_balance }}"
-                                                            data-principal="{{ $member->principal }}"
+                                                            data-principal="{{ $member->regular_principal }}"
                                                             data-area="{{ $member->area }}"
                                                             data-start_date="{{ optional($member->start_date)->format('Y-m-d') }}"
                                                             data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}">Edit</button>
@@ -192,7 +192,7 @@
                                                             data-loan_balance="{{ $member->loan_balance }}"
                                                             data-start_date="{{ optional($member->start_date)->format('Y-m-d') }}"
                                                             data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}"
-                                                            data-principal="{{ $member->principal }}"
+                                                            data-principal="{{ $member->regular_principal }}"
                                                             data-office="{{ $member->area }}">View</button>
 
                                                         <button class="btn btn-rounded btn-danger delete-btn"
