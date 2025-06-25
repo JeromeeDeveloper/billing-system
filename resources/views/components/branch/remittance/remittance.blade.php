@@ -67,26 +67,34 @@
                         <div class="card">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center title-container">
-                                    <h4 class="card-title mb-0">Upload Remittance Excel File</h4>
+                                    <h4 class="card-title mb-0">Remittance Collection Files (Branch)</h4>
                                 </div>
                                 <div class="d-flex align-items-center ms-3">
-                                    
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa fa-file-excel"></i> Export Collection Files
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a class="dropdown-item" href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}">Loans & Savings</a>
+                                            <a class="dropdown-item" href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}">Shares</a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-body">
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Remittance Import Information</h5>
-                                    <p class="mb-2"><strong>What this import does:</strong></p>
+                                    <h5><i class="fa fa-info-circle"></i> Branch Remittance Collection Information</h5>
+                                    <p class="mb-2"><strong>What this page does:</strong></p>
                                     <ul class="mb-2">
-                                        <li><strong>Loan Prioritization:</strong> Processes loans based on product prioritization settings (lower numbers = higher priority)</li>
-                                        <li><strong>Smart Allocation:</strong> Automatically allocates payments to highest priority loans first</li>
-                                        <li><strong>Data Matching:</strong> Matches employee IDs with existing loan records in the system</li>
-                                        <li><strong>Payment Processing:</strong> Handles both loan payments and savings contributions</li>
-                                        <li><strong>Share Management:</strong> Processes share capital contributions separately</li>
+                                        <li><strong>Export Only:</strong> Branch users can only export collection files, not upload remittance data</li>
+                                        <li><strong>Branch-Specific:</strong> Only shows data for members in your branch</li>
+                                        <li><strong>Collection Files:</strong> Generate collection files for loans & savings or shares</li>
+                                        <li><strong>Preview Data:</strong> View preview of uploaded data filtered by your branch</li>
+                                        <li><strong>Same Format:</strong> Uses the same export format and logic as admin exports</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> The system ensures payments are applied to the most important loans first based on your prioritization settings. All data and exports are limited to your branch.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> Remittance data is uploaded by admin and automatically filtered to show only your branch's members. You can export this data even if you didn't upload it.</small></p>
                                 </div>
 
                                 @if (session('success'))
@@ -105,88 +113,38 @@
                                     </div>
                                 @endif
 
-                                <div class="row">
-                                    <div class="col-12 mb-4">
-                                        <div class="upload-section">
-                                            <form action="{{ route('branch.remittance.upload') }}" method="POST"
-                                                enctype="multipart/form-data">
-                                                @csrf
-                                                <div class="form-group">
-                                                    <label class="font-weight-bold">Select Excel File</label>
-                                                    <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" name="file"
-                                                            id="file" accept=".xlsx,.xls,.csv" required>
-                                                        <label class="custom-file-label" for="file">Choose
-                                                            file</label>
-                                                    </div>
-                                                    <div class="mt-3">
-                                                        <h6 class="text-muted mb-2">File Requirements:</h6>
-                                                        <ul class="text-muted small pl-3">
-                                                            <li>Excel format (.xlsx, .xls, .csv,)</li>
-                                                            <li>Required headers:
-                                                                <ul class="pl-3">
-                                                                    <li>EmpId</li>
-                                                                    <li>Name</li>
-                                                                    <li>Loans</li>
-                                                                    <li>Savings Product Names</li>
-                                                                </ul>
-                                                            </li>
-                                                        </ul>
-                                                        <button type="button" class="btn btn-outline-info btn-sm" data-toggle="modal" data-target="#loansSavingsFormatModal">
-                                                            <i class="fa fa-eye"></i> View Expected Format
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <button type="submit" class="btn btn-info btn-block">
-                                                    <i class="fa fa-upload"></i> Upload and Process Loans & Savings Remittance
-                                                </button>
-
+                                <!-- Export Section -->
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <div class="card border-primary">
+                                            <div class="card-header bg-primary text-white">
+                                                <h6 class="mb-0"><i class="fa fa-file-excel"></i> Loans & Savings Collection</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="text-muted small">Generate collection file for loans and savings remittance data.</p>
                                                 <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block">
-                                                    Collection file for Loans & Savings
+                                                    <i class="fa fa-download"></i> Export Loans & Savings
                                                 </a>
-
-                                            </form>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div class="col-12 mb-4">
-                                        <div class="upload-section">
-                                            <form action="{{ route('branch.remittance.upload.share') }}" method="POST" enctype="multipart/form-data">
-                                                @csrf
-                                                <div class="form-group">
-                                                    <label class="font-weight-bold">Upload Share Remittance</label>
-                                                    <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" name="file" id="shareFile" accept=".xlsx,.xls,.csv" required>
-                                                        <label class="custom-file-label" for="shareFile">Choose file</label>
-                                                    </div>
-                                                    <div class="mt-3">
-                                                        <h6 class="text-muted mb-2">File Requirements:</h6>
-                                                        <ul class="text-muted small pl-3">
-                                                            <li>Excel format (.xlsx, .xls, .csv)</li>
-                                                            <li>Required headers:
-                                                                <ul class="pl-3">
-                                                                    <li>EmpId (can be null)</li>
-                                                                    <li>Name (format: LASTNAME, FIRSTNAME)</li>
-                                                                    <li>Share (amount)</li>
-                                                                </ul>
-                                                            </li>
-                                                        </ul>
-                                                        <button type="button" class="btn btn-outline-info btn-sm" data-toggle="modal" data-target="#sharesFormatModal">
-                                                            <i class="fa fa-eye"></i> View Expected Format
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <button type="submit" class="btn btn-info btn-block">
-                                                    <i class="fa fa-upload"></i> Upload and Process Share Remittance
-                                                </button>
-
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-primary btn-block">
-                                                    Collection file for Shares
+                                    <div class="col-md-6">
+                                        <div class="card border-success">
+                                            <div class="card-header bg-success text-white">
+                                                <h6 class="mb-0"><i class="fa fa-file-excel"></i> Shares Collection</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="text-muted small">Generate collection file for shares remittance data.</p>
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block">
+                                                    <i class="fa fa-download"></i> Export Shares
                                                 </a>
-                                            </form>
+                                            </div>
                                         </div>
                                     </div>
+                                </div>
 
+                                <!-- Preview Section -->
+                                <div class="row">
                                     <div class="col-12">
                                         @if (isset($preview) && $preview)
                                             <div class="row mb-4">
@@ -318,8 +276,9 @@
                                             </div>
                                         @else
                                             <div class="text-center py-5">
-                                                <i class="fa fa-upload fa-4x text-muted mb-3"></i>
-                                                <h4 class="text-muted">Upload a remittance file to see preview</h4>
+                                                <i class="fa fa-file-excel fa-4x text-muted mb-3"></i>
+                                                <h4 class="text-muted">No remittance data available for your branch</h4>
+                                                <p class="text-muted">Remittance data is uploaded by admin and will appear here when available for your branch members.</p>
                                             </div>
                                         @endif
                                     </div>
@@ -352,246 +311,19 @@
 
     @include('layouts.partials.footer')
 
-    <!-- Loans & Savings Format Modal -->
-    <div class="modal fade" id="loansSavingsFormatModal" tabindex="-1" role="dialog" aria-labelledby="loansSavingsFormatModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="loansSavingsFormatModalLabel">
-                        <i class="fa fa-file-excel text-success"></i> Loans & Savings Remittance Format
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <h6><i class="fa fa-info-circle"></i> File Format Requirements:</h6>
-                        <ul class="mb-0">
-                            <li><strong>File Type:</strong> Excel (.xlsx, .xls) or CSV</li>
-                            <li><strong>First Row:</strong> Must contain headers exactly as shown below</li>
-                            <li><strong>Data Rows:</strong> Start from row 2 onwards</li>
-                            <li><strong>Amounts:</strong> Use numbers only (no currency symbols)</li>
-                            <li><strong>Branch Filtering:</strong> Only members from your branch will be processed</li>
-                        </ul>
-                    </div>
-
-                    <h6 class="font-weight-bold mb-3">Required Headers (First Row):</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Header Name</th>
-                                    <th>Description</th>
-                                    <th>Required</th>
-                                    <th>Example</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><code>EmpId</code></td>
-                                    <td>Employee ID</td>
-                                    <td><span class="badge badge-success">Yes</span></td>
-                                    <td>EMP001</td>
-                                </tr>
-                                <tr>
-                                    <td><code>Name</code></td>
-                                    <td>Employee Full Name</td>
-                                    <td><span class="badge badge-success">Yes</span></td>
-                                    <td>John Doe</td>
-                                </tr>
-                                <tr>
-                                    <td><code>Loans</code></td>
-                                    <td>Total Loan Payment Amount</td>
-                                    <td><span class="badge badge-success">Yes</span></td>
-                                    <td>1500.00</td>
-                                </tr>
-                                <tr>
-                                    <td><code>Regular Savings</code></td>
-                                    <td>Regular Savings Amount</td>
-                                    <td><span class="badge badge-warning">Optional</span></td>
-                                    <td>500.00</td>
-                                </tr>
-                                <tr>
-                                    <td><code>Savings 2</code></td>
-                                    <td>Retirement Savings Amount</td>
-                                    <td><span class="badge badge-warning">Optional</span></td>
-                                    <td>300.00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h6 class="font-weight-bold mb-3 mt-4">Sample Data:</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>EmpId</th>
-                                    <th>Name</th>
-                                    <th>Loans</th>
-                                    <th>Regular Savings</th>
-                                    <th>Savings 2</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>EMP001</td>
-                                    <td>John Doe</td>
-                                    <td>1500.00</td>
-                                    <td>500.00</td>
-                                    <td>300.00</td>
-                                </tr>
-                                <tr>
-                                    <td>EMP002</td>
-                                    <td>Jane Smith</td>
-                                    <td>2000.00</td>
-                                    <td>750.00</td>
-                                    <td>400.00</td>
-                                </tr>
-                                <tr>
-                                    <td>EMP003</td>
-                                    <td>Bob Johnson</td>
-                                    <td>1200.00</td>
-                                    <td>0</td>
-                                    <td>250.00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Shares Format Modal -->
-    <div class="modal fade" id="sharesFormatModal" tabindex="-1" role="dialog" aria-labelledby="sharesFormatModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="sharesFormatModalLabel">
-                        <i class="fa fa-file-excel text-success"></i> Shares Remittance Format
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <h6><i class="fa fa-info-circle"></i> File Format Requirements:</h6>
-                        <ul class="mb-0">
-                            <li><strong>File Type:</strong> Excel (.xlsx, .xls) or CSV</li>
-                            <li><strong>First Row:</strong> Must contain headers exactly as shown below</li>
-                            <li><strong>Data Rows:</strong> Start from row 2 onwards</li>
-                            <li><strong>Name Format:</strong> LASTNAME, FIRSTNAME (comma separated)</li>
-                            <li><strong>Amounts:</strong> Use numbers only (no currency symbols)</li>
-                            <li><strong>Branch Filtering:</strong> Only members from your branch will be processed</li>
-                        </ul>
-                    </div>
-
-                    <h6 class="font-weight-bold mb-3">Required Headers (First Row):</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Header Name</th>
-                                    <th>Description</th>
-                                    <th>Required</th>
-                                    <th>Example</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><code>EmpId</code></td>
-                                    <td>Employee ID (can be empty)</td>
-                                    <td><span class="badge badge-warning">Optional</span></td>
-                                    <td>EMP001</td>
-                                </tr>
-                                <tr>
-                                    <td><code>Name</code></td>
-                                    <td>Name in format: LASTNAME, FIRSTNAME</td>
-                                    <td><span class="badge badge-success">Yes</span></td>
-                                    <td>DOE, JOHN</td>
-                                </tr>
-                                <tr>
-                                    <td><code>Share</code></td>
-                                    <td>Share Capital Amount</td>
-                                    <td><span class="badge badge-success">Yes</span></td>
-                                    <td>1000.00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <h6 class="font-weight-bold mb-3 mt-4">Sample Data:</h6>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm">
-                            <thead class="thead-dark">
-                                <tr>
-                                    <th>EmpId</th>
-                                    <th>Name</th>
-                                    <th>Share</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>EMP001</td>
-                                    <td>DOE, JOHN</td>
-                                    <td>1000.00</td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td>SMITH, JANE</td>
-                                    <td>1500.00</td>
-                                </tr>
-                                <tr>
-                                    <td>EMP003</td>
-                                    <td>JOHNSON, BOB</td>
-                                    <td>750.00</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="alert alert-warning mt-3">
-                        <h6><i class="fa fa-exclamation-triangle"></i> Important Notes:</h6>
-                        <ul class="mb-0">
-                            <li><strong>Name Format:</strong> Must be "LASTNAME, FIRSTNAME" (comma and space required)</li>
-                            <li><strong>EmpId:</strong> Can be empty for non-employee members</li>
-                            <li><strong>Share Amount:</strong> Must be a positive number</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
         $(document).ready(function() {
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert').alert('close');
-            }, 5000);
-
-            // Update file input label
+            // Custom file input
             $('.custom-file-input').on('change', function() {
                 var fileName = $(this).val().split('\\').pop();
                 $(this).next('.custom-file-label').html(fileName);
             });
-        });
 
-        function generateExport() {
-            let url = '{{ route('branch.remittance.generateExport') }}';
-            window.location.href = url;
-        }
+            // Auto-hide alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
     </script>
 </body>
 

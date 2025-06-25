@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Imports\RemittanceImport;
 use App\Exports\BranchRemittanceExport;
 use App\Models\Remittance;
 use App\Models\Savings;
@@ -15,7 +14,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\RemittancePreview;
-use App\Imports\ShareRemittanceImport;
 
 class BranchRemittanceController extends Controller
 {
@@ -24,12 +22,12 @@ class BranchRemittanceController extends Controller
         // Get the branch_id from the authenticated user
         $branch_id = Auth::user()->branch_id;
 
-        // Get preview data from database for current user
-        $previewCollection = RemittancePreview::where('user_id', Auth::id())
-            ->where('type', 'branch')
-            ->get();
+        // Get all preview data and filter by branch members (not just current user's uploads)
+        $previewCollection = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id);
+        })->get();
 
-        // Calculate stats
+        // Calculate stats for branch members only
         $stats = [
             'matched' => $previewCollection->where('status', 'success')->count(),
             'unmatched' => $previewCollection->where('status', '!=', 'success')->count(),
@@ -39,17 +37,19 @@ class BranchRemittanceController extends Controller
         ];
 
         // Get unique dates for the dropdown (only for this branch)
-        $dates = Remittance::where('branch_id', $branch_id)
-            ->select(DB::raw('DATE(created_at) as date'))
-            ->distinct()
-            ->orderBy('date', 'desc')
-            ->get()
-            ->map(function($item) {
-                return [
-                    'date' => $item->date,
-                    'formatted' => Carbon::parse($item->date)->format('M d, Y')
-                ];
-            });
+        $dates = Remittance::whereHas('member', function($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id);
+        })
+        ->select(DB::raw('DATE(created_at) as date'))
+        ->distinct()
+        ->orderBy('date', 'desc')
+        ->get()
+        ->map(function($item) {
+            return [
+                'date' => $item->date,
+                'formatted' => Carbon::parse($item->date)->format('M d, Y')
+            ];
+        });
 
         // Filter preview data if filter is set
         if ($previewCollection->isNotEmpty()) {
@@ -83,165 +83,40 @@ class BranchRemittanceController extends Controller
         return view('components.branch.remittance.remittance', compact('dates', 'preview', 'stats'));
     }
 
-    public function upload(Request $request)
+    public function generateExport(Request $request)
     {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240', // max 10MB
-        ]);
-
         try {
-            DB::beginTransaction();
-
             // Get branch_id from authenticated user
             $branch_id = Auth::user()->branch_id;
+            $type = $request->get('type', 'loans_savings'); // Default to loans_savings
 
-            // Create import instance with branch_id
-            $import = new RemittanceImport($branch_id);
-            Excel::import($import, $request->file('file'));
+            Log::info('Branch Export Request - Branch ID: ' . $branch_id . ', Type: ' . $type);
 
-            $results = $import->getResults();
+            // Get all remittance data for branch members (not just current user's uploads)
+            $remittanceData = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+                $query->where('branch_id', $branch_id);
+            })->get();
 
-            // Clear previous preview data for this user
-            RemittancePreview::where('user_id', Auth::id())
-                ->where('type', 'branch')
-                ->delete();
-
-            // Store new preview data
-            foreach ($results as $result) {
-                RemittancePreview::create([
-                    'user_id' => Auth::id(),
-                    'emp_id' => $result['emp_id'],
-                    'name' => $result['name'],
-                    'member_id' => $result['member_id'],
-                    'loans' => $result['loans'],
-                    'savings' => $result['savings'],
-                    'status' => $result['status'],
-                    'message' => $result['message'],
-                    'type' => 'branch'
-                ]);
+            if ($remittanceData->isEmpty()) {
+                return redirect()->back()->with('error', 'No remittance data found for your branch members.');
             }
 
-            DB::commit();
+            Log::info('Found ' . $remittanceData->count() . ' records for branch ' . $branch_id);
 
-            return redirect()->route('branch.remittance.index')
-                ->with('success', 'File processed successfully. Check the preview below.');
+            if ($type === 'shares') {
+                $export = new \App\Exports\SharesExport($remittanceData);
+                $filename = 'branch_shares_export_' . now()->format('Y-m-d') . '.xlsx';
+            } else {
+                $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
+                $filename = 'branch_loans_and_savings_export_' . now()->format('Y-m-d') . '.xlsx';
+            }
+
+            return Excel::download($export, $filename);
+
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Upload Error: ' . $e->getMessage());
+            Log::error('Branch Export Error: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
-            return redirect()->back()
-                ->with('error', 'Error processing file: ' . $e->getMessage());
-        }
-    }
-
-    public function generateExport()
-    {
-        try {
-            // Get branch_id from authenticated user
-            $branch_id = Auth::user()->branch_id;
-
-            // If we have uploaded data in session, use that
-            $remittanceData = session('branch_remittance_data');
-
-            // If no session data, get branch-specific records from database
-            if (empty($remittanceData)) {
-                $query = Remittance::with(['member', 'member.savings'])
-                    ->whereHas('member', function($query) use ($branch_id) {
-                        $query->where('branch_id', $branch_id);
-                    });
-
-                $remittances = $query->get();
-
-                if ($remittances->isEmpty()) {
-                    return redirect()->back()->with('error', 'No remittance records found for your branch.');
-                }
-
-                $remittanceData = $remittances->map(function($remittance) {
-                    // Get savings data for this member
-                    $savingsData = [];
-                    foreach ($remittance->member->savings as $saving) {
-                        $savingsData[$saving->product_name] = $saving->remittance_amount ?? 0;
-                    }
-
-                    return [
-                        'member_id' => $remittance->member_id,
-                        'loans' => $remittance->loan_payment,
-                        'savings' => $savingsData,
-                        'share_dep' => $remittance->share_dep
-                    ];
-                })->all();
-            }
-
-            // Debug information
-            \Log::info('Branch ID: ' . $branch_id);
-            \Log::info('Remittance Data Count: ' . count($remittanceData));
-            \Log::info('First Record: ' . json_encode(reset($remittanceData)));
-
-            $filename = 'branch_remittance_export_' . now()->format('Y-m-d') . '.xlsx';
-
-            Excel::store(
-                new BranchRemittanceExport($remittanceData, $branch_id),
-                $filename,
-                'public'
-            );
-
-            return response()->download(storage_path('app/public/' . $filename))->deleteFileAfterSend();
-        } catch (\Exception $e) {
-            \Log::error('Export Error: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
-        }
-    }
-
-    public function uploadShare(Request $request)
-    {
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240', // max 10MB
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            // Get branch_id from authenticated user
-            $branch_id = Auth::user()->branch_id;
-
-            // Create import instance with branch_id
-            $import = new ShareRemittanceImport($branch_id);
-            Excel::import($import, $request->file('file'));
-
-            $results = $import->getResults();
-
-            // Clear previous preview data for this user
-            RemittancePreview::where('user_id', Auth::id())
-                ->where('type', 'branch_share')
-                ->delete();
-
-            // Store new preview data
-            foreach ($results as $result) {
-                RemittancePreview::create([
-                    'user_id' => Auth::id(),
-                    'emp_id' => $result['emp_id'],
-                    'name' => $result['name'],
-                    'member_id' => $result['member_id'],
-                    'loans' => 0,
-                    'savings' => [],
-                    'share_dep' => $result['share'],
-                    'status' => $result['status'],
-                    'message' => $result['message'],
-                    'type' => 'branch_share'
-                ]);
-            }
-
-            DB::commit();
-
-            return redirect()->route('branch.remittance.index')
-                ->with('success', 'Share remittance file processed successfully. Check the preview below.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Share Upload Error: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            return redirect()->back()
-                ->with('error', 'Error processing share remittance file: ' . $e->getMessage());
         }
     }
 }
