@@ -13,6 +13,7 @@ class SpecialBilling extends Model
 
     protected $fillable = [
         'cid',
+        'loan_acct_no',
         'employee_id',
         'name',
         'amortization',
