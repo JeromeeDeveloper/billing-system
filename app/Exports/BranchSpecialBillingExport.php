@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use App\Models\SpecialBilling;
-use App\Models\Member;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
@@ -18,8 +17,7 @@ class BranchSpecialBillingExport implements FromCollection, WithHeadings
 
     public function collection()
     {
-        // Assuming SpecialBilling has a member_id or office/branch reference
-        // If office is a branch code, you may need to join with the branches table or filter by office
+        // Filter SpecialBilling records by branch through the member relationship
         return SpecialBilling::whereHas('member', function($q) {
             $q->where('branch_id', $this->branch_id);
         })->get([

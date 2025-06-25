@@ -30,12 +30,6 @@ class BranchSpecialBillingController extends Controller
         return view('components.branch.special_billing', compact('specialBillings'));
     }
 
-    public function import(Request $request)
-    {
-        // You can implement branch-specific import logic here if needed
-        return back()->with('error', 'Branch import not implemented yet.');
-    }
-
     public function export()
     {
         $branch_id = Auth::user()->branch_id;

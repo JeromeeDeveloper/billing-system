@@ -68,21 +68,57 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
             ->where('loan_balance', '>', 0)
             ->with(['loanForecasts' => function ($query) {
                 $query->where('billing_period', $this->billingPeriod);
-            }])
+            }, 'loanProductMembers.loanProduct'])
             ->get();
 
         return $members->map(function ($member) {
             $forecast = $member->loanForecasts->first();
+
+            // Calculate amortization as sum of total_due for all loans except those marked as 'special'
+            $amortization = 0;
+            $hasNonSpecialLoans = false;
+
+            // Get all loan forecasts for this member
+            foreach ($member->loanForecasts as $loanForecast) {
+                // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000025-9)
+                $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
+
+                if ($productCode) {
+                    // Check if this member has a loan product with this product code that is marked as 'special'
+                    $hasSpecialProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'special');
+                        })
+                        ->exists();
+
+                    // Include all loans except those marked as 'special'
+                    if (!$hasSpecialProduct) {
+                        $amortization += $loanForecast->total_due ?? 0;
+                        $hasNonSpecialLoans = true;
+                    }
+                } else {
+                    // If no product code found, include the loan (default behavior)
+                    $amortization += $loanForecast->total_due ?? 0;
+                    $hasNonSpecialLoans = true;
+                }
+            }
+
+            // If member only has special loans (or no loans), return null to exclude from export
+            if (!$hasNonSpecialLoans) {
+                return null;
+            }
+
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->loan_balance ?? 0,
+                'amortization'  => $amortization,
                 'name'          => "{$member->fname} {$member->lname}",
                 'start_date'    => $member->start_date ? $member->start_date->format('Y-m-d') : 'N/A',
                 'end_date'      => $member->end_date ? $member->end_date->format('Y-m-d') : 'N/A',
                 'gross'         => $member->principal ?? 0,
                 'office'        => $member->area_officer ?? 'N/A',
             ];
-        });
+        })->filter(); // Remove null entries
     }
 
     public function headings(): array

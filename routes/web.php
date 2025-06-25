@@ -195,7 +195,6 @@ Route::get('/branch/remittance/generate-export', [BranchRemittanceController::cl
 
 // Branch Special Billing
 Route::get('/branch/special-billing', [BranchSpecialBillingController::class, 'index'])->name('special-billing.index.branch');
-Route::post('/branch/special-billing/import', [BranchSpecialBillingController::class, 'import'])->name('special-billing.import.branch');
 Route::get('/branch/special-billing/export', [BranchSpecialBillingController::class, 'export'])->name('special-billing.export.branch');
 
 });

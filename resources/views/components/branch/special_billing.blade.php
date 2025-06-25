@@ -19,7 +19,7 @@
                     <div class="col-sm-6 p-md-0">
                         <div class="welcome-text">
                             <h4>Special Billing (Branch)</h4>
-                            <span class="ml-1">Upload and Process Special Billing Data for Your Branch</span>
+                            <span class="ml-1">View and Export Special Billing Data for Your Branch</span>
                         </div>
                     </div>
                     <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
@@ -33,7 +33,7 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">Upload Special Billing Excel File</h4>
+                                <h4 class="card-title mb-0">Special Billing Data (Branch)</h4>
                                 <a href="{{ route('special-billing.export.branch') }}" class="btn btn-success">
                                     <i class="fa fa-file-excel"></i> Export Special Billing (Branch)
                                 </a>
@@ -46,12 +46,11 @@
                                     <p class="mb-2"><strong>What this page does:</strong></p>
                                     <ul class="mb-2">
                                         <li><strong>Branch-Specific:</strong> Only displays and exports special billing data for your branch</li>
-                                        <li><strong>Loan Prioritization Filter:</strong> Only imports data for loans that have prioritization settings in the system</li>
-                                        <li><strong>Bonus Products Only:</strong> Filters to include only "Bonus" product types</li>
-                                        <li><strong>Data Processing:</strong> Groups data by employee ID and calculates total amortization</li>
-                                        <li><strong>Duplicate Handling:</strong> Updates existing records or creates new ones based on employee ID</li>
+                                        <li><strong>Export Only:</strong> Branch users can only export data, not import</li>
+                                        <li><strong>Filtered Data:</strong> Shows only special billing records for members in your branch</li>
+                                        <li><strong>Real-time Data:</strong> Displays the latest special billing information</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> This page is limited to your branch. All actions and exports are restricted to your branch's members only.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> This page is limited to your branch. All exports are restricted to your branch's members only.</small></p>
                                 </div>
 
                                 @if (session('success'))
@@ -68,24 +67,6 @@
                                         {{ session('error') }}
                                     </div>
                                 @endif
-                                <form action="{{ route('special-billing.import.branch') }}" method="POST" enctype="multipart/form-data" class="mb-4">
-                                    @csrf
-                                    <div class="form-group">
-                                        <label class="font-weight-bold">Forecast File</label>
-                                        <div class="custom-file mb-2">
-                                            <input type="file" class="custom-file-input" name="forecast_file" id="forecast_file" accept=".xlsx,.xls,.csv" required>
-                                            <label class="custom-file-label" for="forecast_file">Choose forecast file</label>
-                                        </div>
-                                        <label class="font-weight-bold">Detail File</label>
-                                        <div class="custom-file">
-                                            <input type="file" class="custom-file-input" name="detail_file" id="detail_file" accept=".xlsx,.xls,.csv" required>
-                                            <label class="custom-file-label" for="detail_file">Choose detail file</label>
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-info">
-                                        <i class="fa fa-upload"></i> Upload and Process Special Billing
-                                    </button>
-                                </form>
 
                                 <!-- Search Form -->
                                 <div class="row mb-3">
@@ -166,25 +147,6 @@
     <script src="{{ asset('js/quixnav-init.js') }}"></script>
     <script src="{{ asset('js/custom.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- File Input Display Script -->
-    <script>
-        // Update file input labels to show selected filenames
-        document.addEventListener('DOMContentLoaded', function() {
-            const forecastFile = document.getElementById('forecast_file');
-            const detailFile = document.getElementById('detail_file');
-
-            forecastFile.addEventListener('change', function() {
-                const fileName = this.files[0] ? this.files[0].name : 'Choose forecast file';
-                this.nextElementSibling.textContent = fileName;
-            });
-
-            detailFile.addEventListener('change', function() {
-                const fileName = this.files[0] ? this.files[0].name : 'Choose detail file';
-                this.nextElementSibling.textContent = fileName;
-            });
-        });
-    </script>
 
     @if (session('success'))
         <script>
