@@ -8,6 +8,7 @@ use App\Models\LoanProduct;
 use App\Models\LoanForecast;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Illuminate\Support\Facades\Log;
 
 class LoanImport implements ToCollection
 {
@@ -23,12 +24,14 @@ class LoanImport implements ToCollection
         if ($rows->count() < 2) return;
 
         $priorities = LoanProduct::pluck('prioritization', 'product_code')->toArray();
+        $billingTypes = LoanProduct::pluck('billing_type', 'product_code')->toArray();
 
-        $cidLoans = [];
+        // Group loans by member (CID)
+        $memberLoans = [];
 
         foreach ($rows as $row) {
             $cidRaw = trim($row[0] ?? '');
-            $loanNumber = trim($row[1] ?? ''); // Column C (index 2)
+            $loanNumber = trim($row[1] ?? ''); // Column B (Account No.)
             $principalRaw = trim($row[11] ?? '');
             $startDateRaw = trim($row[7] ?? '');
             $endDateRaw = trim($row[8] ?? '');
@@ -43,24 +46,36 @@ class LoanImport implements ToCollection
             $productCode = $segments[2] ?? null; // 3rd segment
 
             $priority = $priorities[$productCode] ?? null;
+            $billingType = $billingTypes[$productCode] ?? 'regular';
+
+            // Log the processing for debugging
+            \Log::info("Processing loan: CID={$cid}, Account={$loanNumber}, ProductCode={$productCode}, BillingType={$billingType}, Priority={$priority}, Principal={$principal}");
 
             $loanData = [
+                'loan_number' => $loanNumber,
                 'principal' => $principal,
-                'priority' => $priority ?? 999, // Non-priority loans get lowest rank
+                'priority' => $priority ?? 999,
+                'billing_type' => $billingType,
+                'product_code' => $productCode,
                 'start_date' => $this->parseDate($startDateRaw),
                 'end_date' => $this->parseDate($endDateRaw),
             ];
 
-            // If no record or better priority found or same priority but higher principal
-            if (
-                !isset($cidLoans[$cid]) ||
-                $loanData['priority'] < $cidLoans[$cid]['priority'] ||
-                (
-                    $loanData['priority'] === $cidLoans[$cid]['priority'] &&
-                    $loanData['principal'] > $cidLoans[$cid]['principal']
-                )
-            ) {
-                $cidLoans[$cid] = $loanData;
+            // Group by member
+            if (!isset($memberLoans[$cid])) {
+                $memberLoans[$cid] = [
+                    'regular_loans' => [],
+                    'special_loans' => []
+                ];
+            }
+
+            // Categorize loan by billing type
+            if ($billingType === 'special') {
+                $memberLoans[$cid]['special_loans'][] = $loanData;
+                \Log::info("Added to special loans for CID {$cid}");
+            } else {
+                $memberLoans[$cid]['regular_loans'][] = $loanData;
+                \Log::info("Added to regular loans for CID {$cid}");
             }
 
             // Update LoanForecast with principal amount
@@ -68,19 +83,100 @@ class LoanImport implements ToCollection
                 ->update(['principal' => $principal]);
         }
 
-        foreach ($cidLoans as $cid => $data) {
+        // Process each member's loans
+        foreach ($memberLoans as $cid => $loans) {
             $member = Member::where('cid', $cid)->first();
 
-            if ($member) {
-                $member->update([
-                    'principal' => $data['principal'],
-                    'start_date' => $data['start_date'],
-                    'end_date' => $data['end_date'],
-                ]);
+            if (!$member) {
+                \Log::warning("Member not found for CID: {$cid}");
+                continue;
+            }
+
+            \Log::info("Processing member: {$member->fname} {$member->lname} (CID: {$cid})");
+            \Log::info("Regular loans count: " . count($loans['regular_loans']));
+            \Log::info("Special loans count: " . count($loans['special_loans']));
+
+            $updateData = [];
+
+            // Process Regular Loans - Check prioritization first, then highest principal
+            if (!empty($loans['regular_loans'])) {
+                $bestRegularLoan = $this->findBestLoan($loans['regular_loans'], 'regular');
+                if ($bestRegularLoan) {
+                    $updateData['regular_principal'] = $bestRegularLoan['principal'];
+                    $updateData['start_date'] = $bestRegularLoan['start_date'];
+                    $updateData['end_date'] = $bestRegularLoan['end_date'];
+                    \Log::info("Selected regular loan: {$bestRegularLoan['loan_number']} (Principal: {$bestRegularLoan['principal']}, Priority: {$bestRegularLoan['priority']})");
+                }
+            }
+
+            // Process Special Loans - Check billing_type is special, then highest principal
+            if (!empty($loans['special_loans'])) {
+                $bestSpecialLoan = $this->findBestLoan($loans['special_loans'], 'special');
+                if ($bestSpecialLoan) {
+                    $updateData['special_principal'] = $bestSpecialLoan['principal'];
+                    \Log::info("Selected special loan: {$bestSpecialLoan['loan_number']} (Principal: {$bestSpecialLoan['principal']})");
+
+                    // If no regular loan was selected, use special loan dates
+                    if (empty($loans['regular_loans'])) {
+                        $updateData['start_date'] = $bestSpecialLoan['start_date'];
+                        $updateData['end_date'] = $bestSpecialLoan['end_date'];
+                    }
+                }
+            }
+
+            // Update main principal field with the highest principal overall
+            $allLoans = array_merge($loans['regular_loans'], $loans['special_loans']);
+            if (!empty($allLoans)) {
+                $highestPrincipal = max(array_column($allLoans, 'principal'));
+                $updateData['principal'] = $highestPrincipal;
+                \Log::info("Highest principal overall: {$highestPrincipal}");
+            }
+
+            // Update member
+            if (!empty($updateData)) {
+                $member->update($updateData);
+                \Log::info("Updated member {$cid} with: " . json_encode($updateData));
             }
         }
     }
 
+    private function findBestLoan($loans, $billingType)
+    {
+        if (empty($loans)) {
+            return null;
+        }
+
+        if ($billingType === 'regular') {
+            // For Regular Loans:
+            // 1. Check prioritization (lowest number first)
+            // 2. If same prioritization, find highest principal
+            // 3. Check 3rd segment to ensure it's NOT a special billing_type
+            usort($loans, function($a, $b) {
+                // First priority: lowest priority number
+                if ($a['priority'] != $b['priority']) {
+                    return $a['priority'] <=> $b['priority'];
+                }
+                // Second priority: highest principal
+                return $b['principal'] <=> $a['principal'];
+            });
+
+            // Return the best regular loan (already sorted by priority then principal)
+            return $loans[0];
+
+        } else {
+            // For Special Loans:
+            // 1. Check 3rd segment (product_code)
+            // 2. Check if billing_type is 'special' for that product_code
+            // 3. Find highest principal among special billing_type loans
+            usort($loans, function($a, $b) {
+                // Sort by highest principal first
+                return $b['principal'] <=> $a['principal'];
+            });
+
+            // Return the best special loan (highest principal)
+            return $loans[0];
+        }
+    }
 
     private function parseDate($date)
     {

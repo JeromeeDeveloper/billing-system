@@ -115,7 +115,7 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
                 'name'          => "{$member->fname} {$member->lname}",
                 'start_date'    => $member->start_date ? $member->start_date->format('Y-m-d') : 'N/A',
                 'end_date'      => $member->end_date ? $member->end_date->format('Y-m-d') : 'N/A',
-                'gross'         => $member->principal ?? 0,
+                'gross'         => $member->regular_principal ?? 0,
                 'office'        => $member->area_officer ?? 'N/A',
             ];
         })->filter(); // Remove null entries

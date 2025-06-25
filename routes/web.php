@@ -181,12 +181,6 @@ Route::get('/Branch/savings', [SavingsController::class, 'index_branch'])->name(
 //Shares
 Route::get('/Branch/shares', [SharesController::class, 'index_branch'])->name('shares.branch');
 
-// Branch Remittance Routes
-Route::get('/branch/remittance', [BranchRemittanceController::class, 'index'])->name('branch.remittance.index');
-Route::post('/branch/remittance/upload', [BranchRemittanceController::class, 'upload'])->name('branch.remittance.upload');
-Route::post('/branch/remittance/upload/share', [BranchRemittanceController::class, 'uploadShare'])->name('branch.remittance.upload.share');
-Route::get('/branch/remittance/generate-export', [BranchRemittanceController::class, 'generateExport'])->name('branch.remittance.generateExport');
-
 // Branch ATM Routes
     Route::get('/branch/atm', [BranchAtmController::class, 'index'])->name('branch.atm');
     Route::post('/branch/atm/update-balance', [BranchAtmController::class, 'updateBalance'])->name('branch.atm.update-balance');
@@ -196,6 +190,10 @@ Route::get('/branch/remittance/generate-export', [BranchRemittanceController::cl
 // Branch Special Billing
 Route::get('/branch/special-billing', [BranchSpecialBillingController::class, 'index'])->name('special-billing.index.branch');
 Route::get('/branch/special-billing/export', [BranchSpecialBillingController::class, 'export'])->name('special-billing.export.branch');
+
+// Branch Remittance Routes
+Route::get('/branch/remittance', [BranchRemittanceController::class, 'index'])->name('branch.remittance.index');
+Route::get('/branch/remittance/generate-export', [BranchRemittanceController::class, 'generateExport'])->name('branch.remittance.generateExport');
 
 });
 

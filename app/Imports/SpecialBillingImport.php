@@ -85,6 +85,7 @@ class SpecialBillingImport implements ToCollection, WithHeadingRow
         Log::info("Total loan forecasts found: " . $loanForecasts->count());
 
         $totalAmortization = 0;
+        $specialPrincipal = 0;
         $processedLoans = [];
 
         foreach ($loanForecasts as $loanForecast) {
@@ -96,11 +97,18 @@ class SpecialBillingImport implements ToCollection, WithHeadingRow
             if ($productCode && in_array($productCode, $specialLoanProducts)) {
                 // This loan has a product code that matches a special billing type
                 $totalAmortization += $loanForecast->total_due ?? 0;
+                $specialPrincipal += $loanForecast->principal ?? 0;
                 $processedLoans[] = $loanForecast->loan_acct_no;
                 Log::info("✓ Added to special billing: {$loanForecast->loan_acct_no} (Amount: {$loanForecast->total_due})");
             } else {
                 Log::info("✗ Skipped (not special): {$loanForecast->loan_acct_no}");
             }
+        }
+
+        // Update member's special_principal field
+        if ($specialPrincipal > 0) {
+            $member->update(['special_principal' => $specialPrincipal]);
+            Log::info("Updated member special_principal: {$specialPrincipal}");
         }
 
         Log::info("Final amortization for {$member->fname} {$member->lname}: {$totalAmortization}");

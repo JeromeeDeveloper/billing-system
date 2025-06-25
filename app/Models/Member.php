@@ -23,6 +23,8 @@ class Member extends Model
         'share_balance',
         'loan_balance',
         'principal',
+        'regular_principal',
+        'special_principal',
         'birth_date',
         'start_date',
         'end_date',
@@ -53,7 +55,9 @@ class Member extends Model
         'savings_balance' => 'decimal:2',
         'share_balance' => 'decimal:2',
         'loan_balance' => 'decimal:2',
-        'principal' => 'decimal:2'
+        'principal' => 'decimal:2',
+        'regular_principal' => 'decimal:2',
+        'special_principal' => 'decimal:2'
     ];
 
     public function branch()

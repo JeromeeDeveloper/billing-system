@@ -10,15 +10,17 @@ class SpecialBillingExport implements FromCollection, WithHeadings
 {
     public function collection()
     {
-        return SpecialBilling::all([
-            'employee_id',
-            'name',
-            'amortization',
-            'start_date',
-            'end_date',
-            'gross',
-            'office',
-        ]);
+        return SpecialBilling::with('member')->get()->map(function ($specialBilling) {
+            return [
+                'employee_id'   => $specialBilling->employee_id,
+                'name'          => $specialBilling->name,
+                'amortization'  => $specialBilling->amortization,
+                'start_date'    => $specialBilling->start_date,
+                'end_date'      => $specialBilling->end_date,
+                'gross'         => $specialBilling->gross ?? 0,
+                'office'        => $specialBilling->office,
+            ];
+        });
     }
 
     public function headings(): array
