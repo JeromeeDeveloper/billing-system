@@ -75,7 +75,7 @@
                     </ul>
                 </li>
 
-                <li>
+                {{-- <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
                         <i class="icon icon-wallet-90"></i><span class="nav-text">Accounts</span>
                     </a>
@@ -84,7 +84,7 @@
                         <li><a href="{{ route('shares') }}">Share Accounts</a></li>
                         <li><a href="{{ route('list') }}">Loan Accounts</a></li>
                     </ul>
-                </li>
+                </li> --}}
 
 
 

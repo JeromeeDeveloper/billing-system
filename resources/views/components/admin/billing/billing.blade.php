@@ -137,12 +137,12 @@
                                     <h5><i class="fa fa-info-circle"></i> Billing Management Information</h5>
                                     <p class="mb-2"><strong>What this page does:</strong></p>
                                     <ul class="mb-2">
-                                        <li><strong>Billing Overview:</strong> View all member billing records with loan balances, amortization, and payment schedules</li>
-                                        <li><strong>Data Management:</strong> Edit member billing information including loan balances, principal amounts, and dates</li>
+                                        <li><strong>Billing Overview:</strong> View all member billing records with amortization, and payment schedules</li>
+                                        <li><strong>Data Management:</strong> Edit member billing information including amounts and dates</li>
                                         <li><strong>Billing Generation:</strong> Generate monthly billing reports for all branches (requires branch approval)</li>
                                         <li><strong>Export History:</strong> Track and download previously generated billing reports</li>
                                         <li><strong>Search & Filter:</strong> Find specific members or billing records quickly</li>
-                                        <li><strong>Record Management:</strong> Add, edit, or delete billing records as needed</li>
+                                        <li><strong>Record Management:</strong>edit, or delete billing records as needed</li>
                                     </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> This page manages the billing cycle and ensures all branches have approved their data before generating final billing reports.</small></p>
                                 </div>

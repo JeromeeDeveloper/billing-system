@@ -146,9 +146,9 @@
                                                 <th>CID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-                                                <th>Savings</th>
-                                                <th>Share Balance</th>
-                                                <th>Loan Balance</th>
+                                                <th>Savings Accounts</th>
+                                                <th>Share Accounts</th>
+                                                <th>Loan Accounts</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>

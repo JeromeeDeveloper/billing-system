@@ -127,8 +127,8 @@
                                                 <th>Name</th>
                                                 <th>Branch</th>
                                                 <th>CID</th>
-                                                <th>Savings Balance</th>
-                                                <th>Share Balance</th>
+
+                                                <th>Address</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -139,8 +139,8 @@
                                                     <td>{{ $member->fname }} {{ $member->lname }}</td>
                                                     <td>{{ $member->branch?->name ?? 'N/A' }}</td>
                                                     <td>{{ $member->cid }}</td>
-                                                    <td>₱{{ number_format($member->savings_balance, 2) }}</td>
-                                                    <td>₱{{ number_format($member->share_balance, 2) }}</td>
+
+                                                    <td>{{ $member->address }}</td>
                                                     <td>
                                                         <!-- Edit Button -->
                                                         <button type="button" class="btn btn-rounded btn-primary"
@@ -185,8 +185,7 @@
                                                 <th>Name</th>
                                                 <th>Branch</th>
                                                 <th>CID</th>
-                                                <th>Savings Balance</th>
-                                                <th>Share Balance</th>
+                                                <th>Address</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
