@@ -73,15 +73,7 @@
                                     <h4 class="card-title mb-0">Upload Remittance Excel File</h4>
                                 </div>
                                 <div class="d-flex align-items-center ms-3">
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fa fa-file-excel"></i> Export
-                                        </button>
-                                        {{-- <div class="dropdown-menu">
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick="generateExport('loans_savings')">Loans & Savings</a>
-                                            <a class="dropdown-item" href="javascript:void(0);" onclick="generateExport('shares')">Shares</a>
-                                        </div> --}}
-                                    </div>
+                                    
                                 </div>
                             </div>
                             <div class="card-body">
@@ -143,6 +135,9 @@
                                                                 </ul>
                                                             </li>
                                                         </ul>
+                                                        <button type="button" class="btn btn-outline-info btn-sm" data-toggle="modal" data-target="#loansSavingsFormatModal">
+                                                            <i class="fa fa-eye"></i> View Expected Format
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 <button type="submit" class="btn btn-info btn-block">
@@ -179,6 +174,9 @@
                                                                 </ul>
                                                             </li>
                                                         </ul>
+                                                        <button type="button" class="btn btn-outline-info btn-sm" data-toggle="modal" data-target="#sharesFormatModal">
+                                                            <i class="fa fa-eye"></i> View Expected Format
+                                                        </button>
                                                     </div>
                                                 </div>
                                                 <button type="submit" class="btn btn-info btn-block">
@@ -352,6 +350,226 @@
     </div>
 
     @include('layouts.partials.footer')
+
+    <!-- Loans & Savings Format Modal -->
+    <div class="modal fade" id="loansSavingsFormatModal" tabindex="-1" role="dialog" aria-labelledby="loansSavingsFormatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loansSavingsFormatModalLabel">
+                        <i class="fa fa-file-excel text-success"></i> Loans & Savings Remittance Format
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fa fa-info-circle"></i> File Format Requirements:</h6>
+                        <ul class="mb-0">
+                            <li><strong>File Type:</strong> Excel (.xlsx, .xls) or CSV</li>
+                            <li><strong>First Row:</strong> Must contain headers exactly as shown below</li>
+                            <li><strong>Data Rows:</strong> Start from row 2 onwards</li>
+                            <li><strong>Amounts:</strong> Use numbers only (no currency symbols)</li>
+                        </ul>
+                    </div>
+
+                    <h6 class="font-weight-bold mb-3">Required Headers (First Row):</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Header Name</th>
+                                    <th>Description</th>
+                                    <th>Required</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>EmpId</code></td>
+                                    <td>Employee ID</td>
+                                    <td><span class="badge badge-success">Yes</span></td>
+                                    <td>EMP001</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Name</code></td>
+                                    <td>Employee Full Name</td>
+                                    <td><span class="badge badge-success">Yes</span></td>
+                                    <td>John Doe</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Loans</code></td>
+                                    <td>Total Loan Payment Amount</td>
+                                    <td><span class="badge badge-success">Yes</span></td>
+                                    <td>1500.00</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Regular Savings</code></td>
+                                    <td>Regular Savings Amount</td>
+                                    <td><span class="badge badge-warning">Optional</span></td>
+                                    <td>500.00</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Savings 2</code></td>
+                                    <td>Retirement Savings Amount</td>
+                                    <td><span class="badge badge-warning">Optional</span></td>
+                                    <td>300.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="font-weight-bold mb-3 mt-4">Sample Data:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>EmpId</th>
+                                    <th>Name</th>
+                                    <th>Loans</th>
+                                    <th>Regular Savings</th>
+                                    <th>Savings 2</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>EMP001</td>
+                                    <td>John Doe</td>
+                                    <td>1500.00</td>
+                                    <td>500.00</td>
+                                    <td>300.00</td>
+                                </tr>
+                                <tr>
+                                    <td>EMP002</td>
+                                    <td>Jane Smith</td>
+                                    <td>2000.00</td>
+                                    <td>750.00</td>
+                                    <td>400.00</td>
+                                </tr>
+                                <tr>
+                                    <td>EMP003</td>
+                                    <td>Bob Johnson</td>
+                                    <td>1200.00</td>
+                                    <td>0</td>
+                                    <td>250.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shares Format Modal -->
+    <div class="modal fade" id="sharesFormatModal" tabindex="-1" role="dialog" aria-labelledby="sharesFormatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sharesFormatModalLabel">
+                        <i class="fa fa-file-excel text-success"></i> Shares Remittance Format
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fa fa-info-circle"></i> File Format Requirements:</h6>
+                        <ul class="mb-0">
+                            <li><strong>File Type:</strong> Excel (.xlsx, .xls) or CSV</li>
+                            <li><strong>First Row:</strong> Must contain headers exactly as shown below</li>
+                            <li><strong>Data Rows:</strong> Start from row 2 onwards</li>
+                            <li><strong>Name Format:</strong> LASTNAME, FIRSTNAME (comma separated)</li>
+                            <li><strong>Amounts:</strong> Use numbers only (no currency symbols)</li>
+                        </ul>
+                    </div>
+
+                    <h6 class="font-weight-bold mb-3">Required Headers (First Row):</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Header Name</th>
+                                    <th>Description</th>
+                                    <th>Required</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>EmpId</code></td>
+                                    <td>Employee ID (can be empty)</td>
+                                    <td><span class="badge badge-warning">Optional</span></td>
+                                    <td>EMP001</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Name</code></td>
+                                    <td>Name in format: LASTNAME, FIRSTNAME</td>
+                                    <td><span class="badge badge-success">Yes</span></td>
+                                    <td>DOE, JOHN</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Share</code></td>
+                                    <td>Share Capital Amount</td>
+                                    <td><span class="badge badge-success">Yes</span></td>
+                                    <td>1000.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="font-weight-bold mb-3 mt-4">Sample Data:</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>EmpId</th>
+                                    <th>Name</th>
+                                    <th>Share</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>EMP001</td>
+                                    <td>DOE, JOHN</td>
+                                    <td>1000.00</td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>SMITH, JANE</td>
+                                    <td>1500.00</td>
+                                </tr>
+                                <tr>
+                                    <td>EMP003</td>
+                                    <td>JOHNSON, BOB</td>
+                                    <td>750.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <h6><i class="fa fa-exclamation-triangle"></i> Important Notes:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Name Format:</strong> Must be "LASTNAME, FIRSTNAME" (comma and space required)</li>
+                            <li><strong>EmpId:</strong> Can be empty for non-employee members</li>
+                            <li><strong>Share Amount:</strong> Must be a positive number</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Update custom file input label
