@@ -163,7 +163,7 @@ class RegularSavingsSheet implements FromCollection, WithHeadings, WithTitle
 
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->loan_balance ?? 0,
+                'amortization'  => $member->regular_principal ?? 0,
                 'name'          => "{$member->fname} {$member->lname}",
             ];
         });
@@ -198,13 +198,13 @@ class RetirementSavingsSheet implements FromCollection, WithHeadings, WithTitle
         $members = Member::whereHas('savings', function ($query) {
             $query->where('account_status', 'deduction')
                 ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'Savings 2');
+                    $q->where('product_name', 'Retirement');
                 });
         })
         ->with(['savings' => function ($query) {
             $query->where('account_status', 'deduction')
                 ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'Savings 2');
+                    $q->where('product_name', 'Retirement');
                 });
         }])
         ->get();
@@ -214,7 +214,7 @@ class RetirementSavingsSheet implements FromCollection, WithHeadings, WithTitle
 
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->loan_balance ?? 0,
+                'amortization'  => $member->regular_principal ?? 0,
                 'name'          => "{$member->fname} {$member->lname}",
             ];
         });
@@ -259,7 +259,7 @@ class SharesDeductionsSheet implements FromCollection, WithHeadings, WithTitle
 
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->loan_balance ?? 0,
+                'amortization'  => $member->regular_principal ?? 0,
                 'name'          => "{$member->fname} {$member->lname}",
             ];
         });
