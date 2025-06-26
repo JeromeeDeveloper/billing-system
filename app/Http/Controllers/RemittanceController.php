@@ -82,7 +82,7 @@ class RemittanceController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240', // max 10MB
+            'file' => 'required|file|max:10240', // max 10MB
         ]);
 
         try {
@@ -128,7 +128,7 @@ class RemittanceController extends Controller
     public function uploadShare(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv|max:10240', // max 10MB
+            'file' => 'required|file|max:10240', // max 10MB
         ]);
 
         try {

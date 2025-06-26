@@ -5,11 +5,14 @@ namespace App\Imports;
 use App\Models\Member;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
-class CifImport implements ToCollection, WithHeadingRow
+class CifImport implements ToCollection, WithChunkReading, WithBatchInserts, WithHeadingRow
 {
     protected string $billingPeriod;
 
@@ -21,6 +24,22 @@ class CifImport implements ToCollection, WithHeadingRow
     public function headingRow(): int
     {
         return 4; // A4 to M4 = headers, so data starts at row 5
+    }
+
+    /**
+     * Process the file in chunks to reduce memory usage
+     */
+    public function chunkSize(): int
+    {
+        return 1000; // Process 1000 rows at a time
+    }
+
+    /**
+     * Batch size for database operations
+     */
+    public function batchSize(): int
+    {
+        return 100; // Insert 100 records at a time
     }
 
     public function collection(Collection $rows)
@@ -62,7 +81,7 @@ class CifImport implements ToCollection, WithHeadingRow
             }
             return Carbon::parse($value);
         } catch (\Exception $e) {
-            \Log::error("CIF Date Parse Error: " . $value);
+            Log::error("CIF Date Parse Error: " . $value);
             return null;
         }
     }

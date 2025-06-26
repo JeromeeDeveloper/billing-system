@@ -38,7 +38,7 @@ class SpecialBillingController extends Controller
     {
         ini_set('max_execution_time', 600);
         $request->validate([
-            'detail_file' => 'required|mimes:xlsx,xls,csv|max:10240',
+            'detail_file' => 'required|file|max:10240',
         ]);
 
         // Get all loan products with billing_type = 'special'

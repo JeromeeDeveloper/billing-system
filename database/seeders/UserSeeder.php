@@ -26,7 +26,7 @@ class UserSeeder extends Seeder
             'email' => 'test@gmail.com',
             'password' => Hash::make('password'),
             'role' => 'branch',
-            'status' => 'approved',
+            'status' => 'pending',
             'branch_id' => null, // make sure this branch exists
         ]);
     }

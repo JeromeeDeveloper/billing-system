@@ -19,14 +19,15 @@ class DocumentUploadController extends Controller
 {
    public function store(Request $request)
 {
-    ini_set('max_execution_time', 600);
+    ini_set('max_execution_time', 1000);
+    ini_set('memory_limit', '1G'); // Increase memory limit to 1GB
 
     $request->validate([
-        'file'           => 'nullable|file|mimes:xls,xlsx,csv',
-        'savings_file'   => 'nullable|file|mimes:xls,xlsx,csv',
-        'shares_file'    => 'nullable|file|mimes:xls,xlsx,csv',
-        'cif_file'       => 'nullable|file|mimes:xls,xlsx,csv',
-        'loan_file'      => 'nullable|file|mimes:xls,xlsx,csv',
+        'file'           => 'nullable|file',
+        'savings_file'   => 'nullable|file',
+        'shares_file'    => 'nullable|file',
+        'cif_file'       => 'nullable|file',
+        'loan_file'      => 'nullable|file',
     ]);
 
     try {
@@ -89,13 +90,14 @@ class DocumentUploadController extends Controller
  public function store_branch(Request $request)
 {
     ini_set('max_execution_time', 600);
+    ini_set('memory_limit', '1G'); // Increase memory limit to 1GB
 
     $request->validate([
-        'file'           => 'nullable|file|mimes:xls,xlsx,csv',
-        'savings_file'   => 'nullable|file|mimes:xls,xlsx,csv',
-        'shares_file'    => 'nullable|file|mimes:xls,xlsx,csv',
-        'cif_file'       => 'nullable|file|mimes:xls,xlsx,csv',
-        'loan_file'      => 'nullable|file|mimes:xls,xlsx,csv',
+        'file'           => 'nullable|file',
+        'savings_file'   => 'nullable|file',
+        'shares_file'    => 'nullable|file',
+        'cif_file'       => 'nullable|file',
+        'loan_file'      => 'nullable|file',
     ]);
 
     try {
