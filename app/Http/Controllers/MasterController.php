@@ -67,7 +67,10 @@ class MasterController extends Controller
             ->orWhere('product_name', 'like', '%Mortuary%')
             ->get();
 
-        return view('components.admin.master.master', compact('masterlists', 'branches', 'mortuaryProducts'));
+        // Load loan products for JavaScript access
+        $loanProducts = \App\Models\LoanProduct::all(['product_code', 'product', 'billing_type']);
+
+        return view('components.admin.master.master', compact('masterlists', 'branches', 'mortuaryProducts', 'loanProducts'));
     }
 
    public function store(Request $request)
@@ -447,7 +450,10 @@ class MasterController extends Controller
             ->orWhere('product_name', 'like', '%Mortuary%')
             ->get();
 
-        return view('components.branch.master.master', compact('masterlists', 'branches', 'mortuaryProducts'));
+        // Load loan products for JavaScript access
+        $loanProducts = \App\Models\LoanProduct::all(['product_code', 'product', 'billing_type']);
+
+        return view('components.branch.master.master', compact('masterlists', 'branches', 'mortuaryProducts', 'loanProducts'));
     }
 
    public function store_branch(Request $request)

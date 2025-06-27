@@ -1334,6 +1334,9 @@
             console.log('Start hold value:', loan.start_hold);
             console.log('Expiry date value:', loan.expiry_date);
 
+            // Get loan product info from loan account number
+            let productInfo = getLoanProductInfo(loan.loan_acct_no);
+
             let html = `
     <div class="loan-item border p-3 mb-3 rounded position-relative">
         <input type="hidden" name="loan_forecasts[${index}][id]" value="${loan.id || ''}">
@@ -1342,6 +1345,14 @@
             <div class="form-group col-md-6">
                 <label>Loan Account No.</label>
                 <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Product Name</label>
+                <input type="text" class="form-control" value="${productInfo.product_name}" readonly>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Billing Type</label>
+                <input type="text" class="form-control" value="${productInfo.billing_type}" readonly>
             </div>
             <div class="form-group col-md-6" style="display: none;">
                 <label>Total Due</label>
@@ -1447,9 +1458,14 @@
                 var loan = loans[index];
                 if (!loan) return;
 
+                // Get loan product info from loan account number
+                var productInfo = getLoanProductInfo(loan.loan_acct_no);
+
                 var html = `
                     <div class="loan-details">
                         <p><strong>Loan Account No.:</strong> ${loan.loan_acct_no || 'N/A'}</p>
+                        <p><strong>Product Name:</strong> ${productInfo.product_name}</p>
+                        <p><strong>Billing Type:</strong> <span class="badge ${productInfo.billing_type === 'special' ? 'badge-warning' : 'badge-info'}">${productInfo.billing_type}</span></p>
                         <p><strong>Amount Due:</strong> ${loan.amount_due || '0.00'}</p>
                         <p><strong>Open Date:</strong> ${loan.open_date || 'N/A'}</p>
                         <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
@@ -2029,6 +2045,33 @@
             let productCode = segments[2];
             let mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
             return mortuaryProduct && mortuaryProduct.product_name.toLowerCase().includes('mortuary');
+        }
+    </script>
+
+    <!-- Loan Products Data for JavaScript -->
+    <script>
+        window.loanProducts = @json($loanProducts);
+        window.mortuaryProducts = @json($mortuaryProducts);
+
+        // Function to get loan product info from loan account number
+        function getLoanProductInfo(loanAcctNo) {
+            if (!loanAcctNo) return { billing_type: 'Unknown', product_name: 'Unknown Product' };
+
+            const segments = loanAcctNo.split('-');
+            const productCode = segments[2];
+
+            if (!productCode) return { billing_type: 'Unknown', product_name: 'Unknown Product' };
+
+            const loanProduct = window.loanProducts.find(p => p.product_code === productCode);
+
+            if (loanProduct) {
+                return {
+                    billing_type: loanProduct.billing_type,
+                    product_name: loanProduct.product
+                };
+            }
+
+            return { billing_type: 'Unknown', product_name: 'Unknown Product' };
         }
     </script>
 
