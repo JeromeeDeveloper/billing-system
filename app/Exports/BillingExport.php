@@ -77,6 +77,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
             ->whereHas('loanForecasts', function ($query) {
                 $query->where('billing_period', $this->billingPeriod);
             })
+            ->whereHas('loanProductMembers') // Include members who have at least one registered loan product
             ->where('loan_balance', '>', 0) // Only include members with loan balance greater than 0
             ->with(['loanForecasts' => function ($query) {
                 $query->where('billing_period', $this->billingPeriod);
@@ -104,19 +105,26 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
                         })
                         ->exists();
 
-                    // Include all loans except those marked as 'special'
-                    if (!$hasSpecialProduct) {
+                    // Check if this product code is registered in loan products
+                    $hasRegisteredProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode);
+                        })
+                        ->exists();
+
+                    // Only include loans that have registered products and are not marked as 'special'
+                    if ($hasRegisteredProduct && !$hasSpecialProduct) {
                         $amortization += $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
                     }
+                    // If loan is not registered, skip it (don't add to amortization but member is still included)
                 } else {
-                    // If no product code found, include the loan (default behavior)
-                    $amortization += $loanForecast->total_due ?? 0;
-                    $hasNonSpecialLoans = true;
+                    // If no product code found, skip this loan (don't add to amortization)
+                    continue;
                 }
             }
 
-            // If member only has special loans (or no loans), return null to exclude from export
+            // If member has no valid loans to include in amortization, return null to exclude from export
             if (!$hasNonSpecialLoans) {
                 return null;
             }

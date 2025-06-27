@@ -19,7 +19,7 @@ class DocumentUploadController extends Controller
 {
    public function store(Request $request)
 {
-    ini_set('max_execution_time', 1000);
+    ini_set('max_execution_time', 2000);
     ini_set('memory_limit', '1G'); // Increase memory limit to 1GB
 
     $request->validate([
