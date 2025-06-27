@@ -43,6 +43,21 @@
                     </div>
                 </div>
 
+                <div class="alert alert-info alert-dismissible fade show mb-4">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <h5><i class="fa fa-info-circle"></i> Saving Products Management Flow</h5>
+                    <ol class="mb-2">
+                        <li><strong>Add Product:</strong> Admin can add new saving products to the system.</li>
+                        <li><strong>Edit Product:</strong> Edit existing saving products as needed.</li>
+                        <li><strong>View Product:</strong> View product details and associated members.</li>
+                        <li><strong>Delete Product:</strong> Remove saving products that are no longer needed.</li>
+                    </ol>
+                    <ul class="mb-2">
+                        <li><strong>Impact:</strong> Saving products affect available options for member savings and remittance processing.</li>
+                    </ul>
+                    <p class="mb-0"><small><strong>Note:</strong> Manage saving products carefully to ensure accurate billing and remittance options for members.</small></p>
+                </div>
+
                 <div class="row">
                     <div class="col-12">
                         <div class="card">

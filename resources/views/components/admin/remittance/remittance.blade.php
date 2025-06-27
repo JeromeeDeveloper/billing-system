@@ -80,16 +80,18 @@
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Remittance Import Information</h5>
-                                    <p class="mb-2"><strong>What this import does:</strong></p>
+                                    <h5><i class="fa fa-info-circle"></i> Remittance Flow & User Guide (Admin)</h5>
+                                    <ol class="mb-2">
+                                        <li><strong>Upload:</strong> Admin uploads remittance files for loans/savings and shares.</li>
+                                        <li><strong>Processing:</strong> System matches and processes payments based on prioritization and member data.</li>
+                                        <li><strong>Preview & Export:</strong> Admin can preview, process, and export remittance data for all branches.</li>
+                                        <li><strong>Branch Filtering:</strong> Remittance data is automatically filtered for each branch user.</li>
+                                    </ol>
                                     <ul class="mb-2">
-                                        <li><strong>Loan Prioritization:</strong> Processes loans based on product prioritization settings (lower numbers = higher priority)</li>
-                                        <li><strong>Smart Allocation:</strong> Automatically allocates payments to highest priority loans first</li>
-                                        <li><strong>Data Matching:</strong> Matches employee IDs with existing loan records in the system</li>
-                                        <li><strong>Payment Processing:</strong> Handles both loan payments and savings contributions</li>
-                                        <li><strong>Share Management:</strong> Processes share capital contributions separately</li>
+                                        <li><strong>File Requirements:</strong> Ensure files meet the required format and headers before uploading.</li>
+                                        <li><strong>History:</strong> View and download previous remittance uploads and exports.</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> The system ensures payments are applied to the most important loans first based on your prioritization settings.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> Only admin can upload remittance data. Branch users can only export and view data filtered to their branch.</small></p>
                                 </div>
 
                                 @if (session('success'))

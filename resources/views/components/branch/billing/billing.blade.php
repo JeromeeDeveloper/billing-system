@@ -118,18 +118,18 @@
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Branch Billing Management Information</h5>
-                                    <p class="mb-2"><strong>What this page does:</strong></p>
+                                    <h5><i class="fa fa-info-circle"></i> Branch Billing Flow & User Guide</h5>
+                                    <ol class="mb-2">
+                                        <li><strong>Review & Edit:</strong> Branch users can view and edit billing records for their branch only.</li>
+                                        <li><strong>Amortization:</strong> Only regular loans are included in the amortization column. Members with zero amortization are hidden.</li>
+                                        <li><strong>Approval:</strong> Once all records are correct, approve your branch's billing. Admin cannot generate the consolidated export until all branches approve.</li>
+                                        <li><strong>Export:</strong> Export your branch's billing data (if allowed) and view export history.</li>
+                                    </ol>
                                     <ul class="mb-2">
-                                        <li><strong>Branch Billing Overview:</strong> View billing records for members in your branch only</li>
-                                        <li><strong>Data Management:</strong> Edit member billing information including loan balances, principal amounts, and dates</li>
-                                        <li><strong>Branch Approval:</strong> Approve billing data for your branch before admin can generate final reports</li>
-                                        <li><strong>Billing Generation:</strong> Generate billing reports for your branch (requires approval from all branches)</li>
-                                        <li><strong>Export History:</strong> Track and download previously generated billing reports for your branch</li>
-                                        <li><strong>Search & Filter:</strong> Find specific members or billing records within your branch</li>
-                                        <li><strong>Record Management:</strong> Add, edit, or delete billing records for your branch members</li>
+                                        <li><strong>Search & Filter:</strong> Use the search bar and filters to quickly find members or billing records within your branch.</li>
+                                        <li><strong>Record Management:</strong> Edit or delete billing records as needed using the Actions column.</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> This page manages your branch's billing data and ensures accuracy before approval for final billing generation.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> Only regular loans are included in amortization calculations. Approval is required before admin can generate the final report.</small></p>
                                 </div>
 
                                 <div class="table-responsive">

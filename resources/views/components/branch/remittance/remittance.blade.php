@@ -85,16 +85,17 @@
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Branch Remittance Collection Information</h5>
-                                    <p class="mb-2"><strong>What this page does:</strong></p>
+                                    <h5><i class="fa fa-info-circle"></i> Branch Remittance Flow & User Guide</h5>
+                                    <ol class="mb-2">
+                                        <li><strong>Export Only:</strong> Branch users can only export collection files for loans/savings and shares for their branch.</li>
+                                        <li><strong>Preview:</strong> Preview remittance data filtered to your branch before exporting.</li>
+                                        <li><strong>Format:</strong> Collection files use the same format and logic as admin exports.</li>
+                                    </ol>
                                     <ul class="mb-2">
-                                        <li><strong>Export Only:</strong> Branch users can only export collection files, not upload remittance data</li>
-                                        <li><strong>Branch-Specific:</strong> Only shows data for members in your branch</li>
-                                        <li><strong>Collection Files:</strong> Generate collection files for loans & savings or shares</li>
-                                        <li><strong>Preview Data:</strong> View preview of uploaded data filtered by your branch</li>
-                                        <li><strong>Same Format:</strong> Uses the same export format and logic as admin exports</li>
+                                        <li><strong>Branch-Specific:</strong> All data and exports are limited to your branch's members.</li>
+                                        <li><strong>History:</strong> View and download previous remittance exports for your branch.</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> Remittance data is uploaded by admin and automatically filtered to show only your branch's members. You can export this data even if you didn't upload it.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> Branch users cannot upload remittance data. All exports are restricted to your branch's members only.</small></p>
                                 </div>
 
                                 @if (session('success'))

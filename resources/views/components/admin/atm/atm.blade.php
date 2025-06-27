@@ -53,15 +53,16 @@
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> ATM Management Information</h5>
-                                    <p class="mb-2"><strong>What this page does:</strong></p>
+                                    <h5><i class="fa fa-info-circle"></i> ATM Management Flow & User Guide</h5>
+                                    <ol class="mb-2">
+                                        <li><strong>Account Overview:</strong> View all member account balances (savings, shares, loans) across all branches.</li>
+                                        <li><strong>Post Payments:</strong> Post loan payments with automatic prioritization (highest priority loans first).</li>
+                                        <li><strong>Edit Balances:</strong> Edit account balances for corrections and adjustments.</li>
+                                        <li><strong>Export Reports:</strong> Export list of profiles, remittance reports, and posted payment records.</li>
+                                    </ol>
                                     <ul class="mb-2">
-                                        <li><strong>Account Overview:</strong> View all member account balances including savings, shares, and loans</li>
-                                        <li><strong>Payment Processing:</strong> Post loan payments with automatic prioritization (highest priority loans first)</li>
-                                        <li><strong>Balance Management:</strong> Edit account balances for corrections and adjustments</li>
-                                        <li><strong>Search & Filter:</strong> Find members by name, employee ID, or CID</li>
-                                        <li><strong>Report Generation:</strong> Export various reports including list of profiles and remittance reports</li>
-                                        <li><strong>Payment History:</strong> Track and export posted payment records</li>
+                                        <li><strong>Search & Filter:</strong> Find members by name, employee ID, or CID across all branches.</li>
+                                        <li><strong>History:</strong> Track and export posted payment records for all branches.</li>
                                     </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> This is the central hub for managing member accounts and processing payments across all branches.</small></p>
                                 </div>

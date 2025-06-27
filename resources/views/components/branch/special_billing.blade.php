@@ -42,15 +42,16 @@
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Branch Special Billing Information</h5>
-                                    <p class="mb-2"><strong>What this page does:</strong></p>
+                                    <h5><i class="fa fa-info-circle"></i> Branch Special Billing Flow & User Guide</h5>
+                                    <ol class="mb-2">
+                                        <li><strong>View Only:</strong> Branch users can only view and export special billing data for their branch.</li>
+                                        <li><strong>Export:</strong> Export special billing data for your branch as needed.</li>
+                                        <li><strong>Filtered Data:</strong> All data and exports are limited to your branch's members.</li>
+                                    </ol>
                                     <ul class="mb-2">
-                                        <li><strong>Branch-Specific:</strong> Only displays and exports special billing data for your branch</li>
-                                        <li><strong>Export Only:</strong> Branch users can only export data, not import</li>
-                                        <li><strong>Filtered Data:</strong> Shows only special billing records for members in your branch</li>
-                                        <li><strong>Real-time Data:</strong> Displays the latest special billing information</li>
+                                        <li><strong>History:</strong> View and download previous special billing exports for your branch.</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> This page is limited to your branch. All exports are restricted to your branch's members only.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> Branch users cannot upload special billing data. All exports are restricted to your branch's members only.</small></p>
                                 </div>
 
                                 @if (session('success'))
