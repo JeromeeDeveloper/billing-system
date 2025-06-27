@@ -3,6 +3,8 @@
 namespace App\Exports;
 
 use App\Models\Member;
+use App\Models\SavingProduct;
+use App\Models\ShareProduct;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -20,12 +22,29 @@ class BillingExport implements WithMultipleSheets
 
     public function sheets(): array
     {
-        return [
+        $sheets = [
             'Billing Summary' => new LoanDeductionsSheet($this->billingPeriod),
-            'SAVINGS' => new RegularSavingsSheet($this->billingPeriod),
-            'RETIREMENT' => new RetirementSavingsSheet($this->billingPeriod),
-            'SHARES' => new SharesDeductionsSheet($this->billingPeriod),
         ];
+
+        // Add dynamic savings product sheets
+        $savingProducts = SavingProduct::whereHas('savings', function ($query) {
+            $query->where('account_status', 'deduction');
+        })->get();
+
+        foreach ($savingProducts as $product) {
+            $sheets[$product->product_name] = new DynamicSavingsSheet($this->billingPeriod, $product->product_name);
+        }
+
+        // Add dynamic share product sheets
+        $shareProducts = ShareProduct::whereHas('shares', function ($query) {
+            $query->where('account_status', 'deduction');
+        })->get();
+
+        foreach ($shareProducts as $product) {
+            $sheets[$product->product_name] = new DynamicSharesSheet($this->billingPeriod, $product->product_name);
+        }
+
+        return $sheets;
     }
 }
 
@@ -128,18 +147,20 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
     }
 }
 
-class RegularSavingsSheet implements FromCollection, WithHeadings, WithTitle
+class DynamicSavingsSheet implements FromCollection, WithHeadings, WithTitle
 {
     protected $billingPeriod;
+    protected $productName;
 
-    public function __construct($billingPeriod)
+    public function __construct($billingPeriod, $productName)
     {
         $this->billingPeriod = $billingPeriod;
+        $this->productName = $productName;
     }
 
     public function title(): string
     {
-        return 'SAVINGS';
+        return $this->productName;
     }
 
     public function collection()
@@ -147,20 +168,18 @@ class RegularSavingsSheet implements FromCollection, WithHeadings, WithTitle
         $members = Member::whereHas('savings', function ($query) {
             $query->where('account_status', 'deduction')
                 ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'Regular Savings');
+                    $q->where('product_name', $this->productName);
                 });
         })
         ->with(['savings' => function ($query) {
             $query->where('account_status', 'deduction')
                 ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'Regular Savings');
+                    $q->where('product_name', $this->productName);
                 });
         }])
         ->get();
 
         return $members->map(function ($member) {
-            $savings = $member->savings->first();
-
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
                 'amortization'  => $member->regular_principal ?? 0,
@@ -179,84 +198,35 @@ class RegularSavingsSheet implements FromCollection, WithHeadings, WithTitle
     }
 }
 
-class RetirementSavingsSheet implements FromCollection, WithHeadings, WithTitle
+class DynamicSharesSheet implements FromCollection, WithHeadings, WithTitle
 {
     protected $billingPeriod;
+    protected $productName;
 
-    public function __construct($billingPeriod)
+    public function __construct($billingPeriod, $productName)
     {
         $this->billingPeriod = $billingPeriod;
+        $this->productName = $productName;
     }
 
     public function title(): string
     {
-        return 'RETIREMENT';
-    }
-
-    public function collection()
-    {
-        $members = Member::whereHas('savings', function ($query) {
-            $query->where('account_status', 'deduction')
-                ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'Retirement');
-                });
-        })
-        ->with(['savings' => function ($query) {
-            $query->where('account_status', 'deduction')
-                ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', 'Retirement');
-                });
-        }])
-        ->get();
-
-        return $members->map(function ($member) {
-            $savings = $member->savings->first();
-
-            return [
-                'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->regular_principal ?? 0,
-                'name'          => "{$member->fname} {$member->lname}",
-            ];
-        });
-    }
-
-    public function headings(): array
-    {
-        return [
-            'Employee #',
-            'amortization',
-            'Name',
-        ];
-    }
-}
-
-class SharesDeductionsSheet implements FromCollection, WithHeadings, WithTitle
-{
-    protected $billingPeriod;
-
-    public function __construct($billingPeriod)
-    {
-        $this->billingPeriod = $billingPeriod;
-    }
-
-    public function title(): string
-    {
-        return 'SHARES';
+        return $this->productName;
     }
 
     public function collection()
     {
         $members = Member::whereHas('shares', function ($query) {
-            $query->where('account_status', 'deduction');
+            $query->where('account_status', 'deduction')
+                ->where('product_name', $this->productName);
         })
         ->with(['shares' => function ($query) {
-            $query->where('account_status', 'deduction');
+            $query->where('account_status', 'deduction')
+                ->where('product_name', $this->productName);
         }])
         ->get();
 
         return $members->map(function ($member) {
-            $shares = $member->shares->first();
-
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
                 'amortization'  => $member->regular_principal ?? 0,
