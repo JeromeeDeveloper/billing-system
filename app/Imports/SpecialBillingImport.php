@@ -12,6 +12,8 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
+ini_set('memory_limit', '2G'); // or higher if needed
+
 class SpecialBillingImport implements ToCollection, WithHeadingRow
 {
     public function collection(Collection $rows)
