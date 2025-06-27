@@ -3,6 +3,8 @@
 namespace App\Exports;
 
 use App\Models\Member;
+use App\Models\SavingProduct;
+use App\Models\ShareProduct;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Illuminate\Support\Facades\Log;
 
@@ -19,12 +21,30 @@ class BranchBillingExport implements WithMultipleSheets
 
     public function sheets(): array
     {
-        return [
+        $sheets = [
             'Billing Summary' => new BranchLoanDeductionsSheet($this->billingPeriod, $this->branchId),
-            'SAVINGS' => new BranchRegularSavingsSheet($this->billingPeriod, $this->branchId),
-            'RETIREMENT' => new BranchRetirementSavingsSheet($this->billingPeriod, $this->branchId),
-            'SHARES' => new BranchSharesDeductionsSheet($this->billingPeriod, $this->branchId),
         ];
+
+        // Add dynamic savings product sheets
+        $savingProducts = SavingProduct::whereHas('savings', function ($query) {
+            $query->where('account_status', 'deduction')
+                ->where('deduction_amount', '>', 0);
+        })->get();
+
+        foreach ($savingProducts as $product) {
+            $sheets[$product->product_name] = new BranchDynamicSavingsSheet($this->billingPeriod, $this->branchId, $product->product_name);
+        }
+
+        // Add dynamic share product sheets
+        $shareProducts = ShareProduct::whereHas('shares', function ($query) {
+            $query->where('account_status', 'deduction');
+        })->get();
+
+        foreach ($shareProducts as $product) {
+            $sheets[$product->product_name] = new BranchDynamicSharesSheet($this->billingPeriod, $this->branchId, $product->product_name);
+        }
+
+        return $sheets;
     }
 }
 
@@ -135,20 +155,22 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
     }
 }
 
-class BranchRegularSavingsSheet implements FromCollection, WithHeadings, WithTitle
+class BranchDynamicSavingsSheet implements FromCollection, WithHeadings, WithTitle
 {
     protected $billingPeriod;
     protected $branchId;
+    protected $productName;
 
-    public function __construct($billingPeriod, $branchId)
+    public function __construct($billingPeriod, $branchId, $productName)
     {
         $this->billingPeriod = $billingPeriod;
         $this->branchId = $branchId;
+        $this->productName = $productName;
     }
 
     public function title(): string
     {
-        return 'SAVINGS';
+        return $this->productName;
     }
 
     public function collection()
@@ -156,14 +178,16 @@ class BranchRegularSavingsSheet implements FromCollection, WithHeadings, WithTit
         $members = Member::where('branch_id', $this->branchId)
             ->whereHas('savings', function ($query) {
                 $query->where('account_status', 'deduction')
+                    ->where('deduction_amount', '>', 0)
                     ->whereHas('savingProduct', function($q) {
-                        $q->where('product_name', 'Regular Savings');
+                        $q->where('product_name', $this->productName);
                     });
             })
             ->with(['savings' => function ($query) {
                 $query->where('account_status', 'deduction')
+                    ->where('deduction_amount', '>', 0)
                     ->whereHas('savingProduct', function($q) {
-                        $q->where('product_name', 'Regular Savings');
+                        $q->where('product_name', $this->productName);
                     });
             }])
             ->get();
@@ -172,7 +196,7 @@ class BranchRegularSavingsSheet implements FromCollection, WithHeadings, WithTit
             $savings = $member->savings->first();
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->loan_balance ?? 0,
+                'amortization'  => $savings ? ($savings->deduction_amount ?? 0) : 0,
                 'name'          => "{$member->fname} {$member->lname}",
             ];
         });
@@ -188,91 +212,42 @@ class BranchRegularSavingsSheet implements FromCollection, WithHeadings, WithTit
     }
 }
 
-class BranchRetirementSavingsSheet implements FromCollection, WithHeadings, WithTitle
+class BranchDynamicSharesSheet implements FromCollection, WithHeadings, WithTitle
 {
     protected $billingPeriod;
     protected $branchId;
+    protected $productName;
 
-    public function __construct($billingPeriod, $branchId)
+    public function __construct($billingPeriod, $branchId, $productName)
     {
         $this->billingPeriod = $billingPeriod;
         $this->branchId = $branchId;
+        $this->productName = $productName;
     }
 
     public function title(): string
     {
-        return 'RETIREMENT';
-    }
-
-    public function collection()
-    {
-        $members = Member::where('branch_id', $this->branchId)
-            ->whereHas('savings', function ($query) {
-                $query->where('account_status', 'deduction')
-                    ->whereHas('savingProduct', function($q) {
-                        $q->where('product_name', 'Savings 2');
-                    });
-            })
-            ->with(['savings' => function ($query) {
-                $query->where('account_status', 'deduction')
-                    ->whereHas('savingProduct', function($q) {
-                        $q->where('product_name', 'Savings 2');
-                    });
-            }])
-            ->get();
-
-        return $members->map(function ($member) {
-            $savings = $member->savings->first();
-            return [
-                'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->loan_balance ?? 0,
-                'name'          => "{$member->fname} {$member->lname}",
-            ];
-        });
-    }
-
-    public function headings(): array
-    {
-        return [
-            'Employee #',
-            'amortization',
-            'Name',
-        ];
-    }
-}
-
-class BranchSharesDeductionsSheet implements FromCollection, WithHeadings, WithTitle
-{
-    protected $billingPeriod;
-    protected $branchId;
-
-    public function __construct($billingPeriod, $branchId)
-    {
-        $this->billingPeriod = $billingPeriod;
-        $this->branchId = $branchId;
-    }
-
-    public function title(): string
-    {
-        return 'SHARES';
+        return $this->productName;
     }
 
     public function collection()
     {
         $members = Member::where('branch_id', $this->branchId)
             ->whereHas('shares', function ($query) {
-                $query->where('account_status', 'deduction');
+                $query->where('account_status', 'deduction')
+                    ->where('product_name', $this->productName);
             })
             ->with(['shares' => function ($query) {
-                $query->where('account_status', 'deduction');
+                $query->where('account_status', 'deduction')
+                    ->where('product_name', $this->productName);
             }])
             ->get();
 
         return $members->map(function ($member) {
-            $share = $member->shares->first();
+            $shares = $member->shares->first();
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->loan_balance ?? 0,
+                'amortization'  => $member->regular_principal ?? 0,
                 'name'          => "{$member->fname} {$member->lname}",
             ];
         });

@@ -71,7 +71,7 @@ class SharesExport implements FromCollection, WithHeadings
                 return str_contains(strtolower($s->savingProduct->product_name), 'share');
             });
             $regularSaving = $member->savings->first(function ($s) {
-                return str_contains(strtolower($s->savingProduct->product_name), 'regular');
+                return str_contains(strtolower($s->savingProduct->product_name), 'Savings Deposit-Regular');
             });
             $shareAccount = $member->shares->first();
 

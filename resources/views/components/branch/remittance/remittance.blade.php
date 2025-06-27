@@ -220,11 +220,7 @@
                                                             <th>EmpId</th>
                                                             <th>Name</th>
                                                             <th class="text-right">Loans</th>
-                                                            @if(isset($preview[0]['savings']) && is_array($preview[0]['savings']))
-                                                                @foreach (array_keys($preview[0]['savings']) as $productName)
-                                                                    <th class="text-right">{{ $productName }}</th>
-                                                                @endforeach
-                                                            @endif
+                                                            <th class="text-right">Savings</th>
                                                             <th>Message</th>
                                                         </tr>
                                                     </thead>
@@ -247,13 +243,17 @@
                                                                 <td class="text-right">
                                                                     ₱{{ number_format($row['loans'] ?? 0, 2) }}
                                                                 </td>
-                                                                @if(isset($row['savings']) && is_array($row['savings']))
-                                                                    @foreach ($row['savings'] as $amount)
-                                                                        <td class="text-right">
-                                                                            ₱{{ number_format($amount ?? 0, 2) }}
-                                                                        </td>
-                                                                    @endforeach
-                                                                @endif
+                                                                <td class="text-right">
+                                                                    ₱{{ number_format($row['savings_total'] ?? 0, 2) }}
+                                                                    @if(isset($row['savings_distribution']) && count($row['savings_distribution']) > 0)
+                                                                        <br><small class="text-muted">
+                                                                            @foreach($row['savings_distribution'] as $dist)
+                                                                                {{ $dist['product'] }}: ₱{{ number_format($dist['amount'], 2) }}
+                                                                                @if(!$loop->last), @endif
+                                                                            @endforeach
+                                                                        </small>
+                                                                    @endif
+                                                                </td>
                                                                 <td>
                                                                     @if ($row['status'] !== 'success')
                                                                         <i class="fa fa-exclamation-circle text-danger"></i>
