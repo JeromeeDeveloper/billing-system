@@ -31,7 +31,13 @@ class RemittanceController extends Controller
             'matched' => $previewCollection->where('status', 'success')->count(),
             'unmatched' => $previewCollection->where('status', '!=', 'success')->count(),
             'total_amount' => $previewCollection->sum(function ($record) {
-                return $record->loans + collect($record->savings)->sum();
+                $savingsTotal = 0;
+                if (is_array($record->savings) && isset($record->savings['total'])) {
+                    $savingsTotal = $record->savings['total'];
+                } elseif (is_array($record->savings)) {
+                    $savingsTotal = collect($record->savings)->sum();
+                }
+                return $record->loans + $savingsTotal;
             })
         ];
 
@@ -106,7 +112,10 @@ class RemittanceController extends Controller
                     'name' => $result['name'],
                     'member_id' => $result['member_id'],
                     'loans' => $result['loans'],
-                    'savings' => $result['savings'],
+                    'savings' => [
+                        'total' => $result['savings_total'] ?? 0,
+                        'distribution' => $result['savings_distribution'] ?? []
+                    ],
                     'share_amount' => 0,
                     'status' => $result['status'],
                     'message' => $result['message'],

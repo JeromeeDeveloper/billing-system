@@ -59,6 +59,19 @@ class RemittanceImport implements ToCollection, WithHeadingRow
         $fullName = trim($row['name'] ?? '');
         $loans = floatval(str_replace(',', '', $row['loans'] ?? 0));
 
+        // Try different possible savings column names
+        $savingsTotal = 0;
+        if (isset($row['savings'])) {
+            $savingsTotal = floatval(str_replace(',', '', $row['savings'] ?? 0));
+        } elseif (isset($row['Savings'])) {
+            $savingsTotal = floatval(str_replace(',', '', $row['Savings'] ?? 0));
+        } elseif (isset($row['SAVINGS'])) {
+            $savingsTotal = floatval(str_replace(',', '', $row['SAVINGS'] ?? 0));
+        } else {
+            // Debug: Log what columns are available
+            Log::warning('Savings column not found. Available columns:', $row->keys()->toArray());
+        }
+
         // Try to find member by emp_id first
         $member = Member::where('emp_id', $empId)->first();
 
@@ -74,18 +87,11 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             'name' => $fullName,
             'member_id' => $member ? $member->id : null,
             'loans' => $loans,
+            'savings_total' => $savingsTotal,
             'status' => 'error',
             'message' => '',
-            'savings' => []
+            'savings_distribution' => []
         ];
-
-        // Add savings amounts to result for display
-        foreach ($this->savingProducts as $product) {
-            $columnName = strtolower(str_replace(' ', '_', $product->product_name));
-            // Handle decimal numbers properly by removing commas and converting to float
-            $amount = floatval(str_replace(',', '', $row[$columnName] ?? 0));
-            $result['savings'][$product->product_name] = $amount;
-        }
 
         // If member found, save remittance and savings
         if ($member) {
@@ -95,63 +101,67 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             try {
                 DB::beginTransaction();
 
-                $mismatchedSavings = [];
-                // First, validate that all provided savings products exist for the member
-                foreach ($this->savingProducts as $product) {
-                    $columnName = strtolower(str_replace(' ', '_', $product->product_name));
-                    $amount = floatval(str_replace(',', '', $row[$columnName] ?? 0));
+                // Process savings distribution if there's a total amount
+                if ($savingsTotal > 0) {
+                    $remainingSavings = $savingsTotal;
+                    $distributionDetails = [];
 
-                    if ($amount > 0) {
-                        $savingsAccountExists = $member->savings()
-                            ->where('product_code', $product->product_code)
-                            ->exists();
+                    // Get all savings accounts with deduction_amount > 0, sorted by prioritization
+                    $savingsAccounts = $member->savings()
+                        ->where('account_status', 'deduction')
+                        ->where('deduction_amount', '>', 0)
+                        ->with('savingProduct')
+                        ->get()
+                        ->sortBy(function($saving) {
+                            return $saving->savingProduct ? $saving->savingProduct->prioritization : 999;
+                        });
 
-                        if (!$savingsAccountExists) {
-                            $mismatchedSavings[] = $product->product_name;
+                    // Distribute amounts based on deduction_amount and prioritization
+                    foreach ($savingsAccounts as $savings) {
+                        if ($remainingSavings <= 0) break;
+
+                        $deductionAmount = $savings->deduction_amount ?? 0;
+                        $amountToApply = min($deductionAmount, $remainingSavings);
+
+                        if ($amountToApply > 0) {
+                            // Update the savings account with the distributed amount
+                            $savings->remittance_amount = $amountToApply;
+                            $savings->save();
+
+                            $distributionDetails[] = [
+                                'product' => $savings->product_name,
+                                'amount' => $amountToApply,
+                                'deduction_amount' => $deductionAmount
+                            ];
+
+                            $remainingSavings -= $amountToApply;
                         }
                     }
-                }
 
-                // If a mismatch is found, update the message and do not process this row's financials
-                if (!empty($mismatchedSavings)) {
-                    $result['message'] = 'Mismatched savings: ' . implode(', ', $mismatchedSavings);
-                    DB::rollBack();
-                    return $result; // Return with success status but error message
-                }
+                    // If there's remaining amount, apply it to Regular Savings
+                    if ($remainingSavings > 0) {
+                        $regularSavings = $member->savings()
+                            ->where('account_status', 'deduction')
+                            ->whereHas('savingProduct', function($q) {
+                                $q->where('product_name', 'Savings Deposit-Regular');
+                            })
+                            ->first();
 
-                // Process each saving product
-                $totalSavings = 0; // Track total savings for this member
-                foreach ($this->savingProducts as $product) {
-                    $columnName = strtolower(str_replace(' ', '_', $product->product_name));
-                    // Handle decimal numbers properly by removing commas and converting to float
-                    $amount = floatval(str_replace(',', '', $row[$columnName] ?? 0));
+                        if ($regularSavings) {
+                            // Add to existing remittance amount or set it
+                            $currentRemittance = $regularSavings->remittance_amount ?? 0;
+                            $regularSavings->remittance_amount = $currentRemittance + $remainingSavings;
+                            $regularSavings->save();
 
-                    if ($amount > 0) {
-                        $totalSavings += $amount; // Add to total savings
-
-                        // Find or create savings account for this product
-                        $savings = Savings::firstOrCreate(
-                            [
-                                'member_id' => $member->id,
-                                'product_code' => $product->product_code
-                            ],
-                            [
-                                'product_name' => $product->product_name,
-                                'remittance_amount' => 0 // Initialize with 0
-                            ]
-                        );
-
-                        // Log the amount before saving for debugging
-                        Log::info('Saving amount for member ' . $member->id . ': ' . $amount);
-
-                        // Update savings with the new amount (not adding to existing)
-                        $savings->remittance_amount = $amount;
-                        $savings->save();
-
-                        Log::info('Updated savings for member: ' . $member->id .
-                                ', product: ' . $product->product_name .
-                                ', new amount: ' . $amount);
+                            $distributionDetails[] = [
+                                'product' => 'Savings Deposit-Regular (Remaining)',
+                                'amount' => $remainingSavings,
+                                'deduction_amount' => 0
+                            ];
+                        }
                     }
+
+                    $result['savings_distribution'] = $distributionDetails;
                 }
 
                 // Process loan payments and deductions
@@ -246,7 +256,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 }
 
                 // Create remittance record with both loans and total savings
-                if ($loans > 0 || $totalSavings > 0) {
+                if ($loans > 0 || $savingsTotal > 0) {
                     // Find existing remittance record for this member today
                     $existingRemittance = Remittance::where('member_id', $member->id)
                         ->whereDate('created_at', now()->toDateString())
@@ -254,17 +264,17 @@ class RemittanceImport implements ToCollection, WithHeadingRow
 
                     if ($existingRemittance) {
                         // Update existing record if amounts are different
-                        if ($existingRemittance->loan_payment != $loans || $existingRemittance->savings_dep != $totalSavings) {
+                        if ($existingRemittance->loan_payment != $loans || $existingRemittance->savings_dep != $savingsTotal) {
                             $existingRemittance->update([
                                 'loan_payment' => $loans,
-                                'savings_dep' => $totalSavings,
+                                'savings_dep' => $savingsTotal,
                                 'share_dep' => 0
                             ]);
                             Log::info('Updated existing remittance for member: ' . $member->id .
                                     ' - Old loan: ' . $existingRemittance->loan_payment .
                                     ', New loan: ' . $loans .
                                     ' - Old savings: ' . $existingRemittance->savings_dep .
-                                    ', New savings: ' . $totalSavings);
+                                    ', New savings: ' . $savingsTotal);
                         }
                     } else {
                         // Create new remittance record if none exists
@@ -272,7 +282,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'member_id' => $member->id,
                             'branch_id' => $member->branch_id,
                             'loan_payment' => $loans,
-                            'savings_dep' => $totalSavings,
+                            'savings_dep' => $savingsTotal,
                             'share_dep' => 0
                         ]);
                     }

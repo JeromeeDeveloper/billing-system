@@ -73,7 +73,7 @@
                                     <h4 class="card-title mb-0">Upload Remittance Excel File</h4>
                                 </div>
                                 <div class="d-flex align-items-center ms-3">
-                                    
+
                                 </div>
                             </div>
                             <div class="card-body">
@@ -268,20 +268,7 @@
                                                                 <th>Share Amount</th>
                                                             @else
                                                                 <th>Loans</th>
-                                                                @php
-                                                                    $savingsHeaders = [];
-                                                                    if (isset($preview)) {
-                                                                        foreach ($preview as $record) {
-                                                                            if (!empty($record->savings)) {
-                                                                                $savingsHeaders = array_merge($savingsHeaders, array_keys($record->savings));
-                                                                            }
-                                                                        }
-                                                                        $savingsHeaders = array_unique($savingsHeaders);
-                                                                    }
-                                                                @endphp
-                                                                @foreach($savingsHeaders as $header)
-                                                                    <th>{{ $header }}</th>
-                                                                @endforeach
+                                                                <th>Savings</th>
                                                             @endif
                                                             <th>Message</th>
                                                         </tr>
@@ -302,9 +289,27 @@
                                                                     <td>₱{{ number_format($record->share_amount ?? 0, 2) }}</td>
                                                                 @else
                                                                     <td>₱{{ number_format($record->loans ?? 0, 2) }}</td>
-                                                                    @foreach($savingsHeaders as $header)
-                                                                        <td>₱{{ number_format($record->savings[$header] ?? 0, 2) }}</td>
-                                                                    @endforeach
+                                                                    <td>
+                                                                        @php
+                                                                            $savingsTotal = 0;
+                                                                            $savingsDistribution = [];
+                                                                            if (is_array($record->savings) && isset($record->savings['total'])) {
+                                                                                $savingsTotal = $record->savings['total'];
+                                                                                $savingsDistribution = $record->savings['distribution'] ?? [];
+                                                                            } elseif (is_array($record->savings)) {
+                                                                                $savingsTotal = collect($record->savings)->sum();
+                                                                            }
+                                                                        @endphp
+                                                                        ₱{{ number_format($savingsTotal, 2) }}
+                                                                        @if(count($savingsDistribution) > 0)
+                                                                            <br><small class="text-muted">
+                                                                                @foreach($savingsDistribution as $dist)
+                                                                                    {{ $dist['product'] }}: ₱{{ number_format($dist['amount'], 2) }}
+                                                                                    @if(!$loop->last), @endif
+                                                                                @endforeach
+                                                                            </small>
+                                                                        @endif
+                                                                    </td>
                                                                 @endif
                                                                 <td>
                                                                     {{ $record->message }}
@@ -405,16 +410,10 @@
                                     <td>1500.00</td>
                                 </tr>
                                 <tr>
-                                    <td><code>Regular Savings</code></td>
-                                    <td>Regular Savings Amount</td>
+                                    <td><code>Savings</code></td>
+                                    <td>Total Savings Amount (will be distributed automatically based on deduction_amount)</td>
                                     <td><span class="badge badge-warning">Optional</span></td>
-                                    <td>500.00</td>
-                                </tr>
-                                <tr>
-                                    <td><code>Savings 2</code></td>
-                                    <td>Retirement Savings Amount</td>
-                                    <td><span class="badge badge-warning">Optional</span></td>
-                                    <td>300.00</td>
+                                    <td>1000.00</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -428,8 +427,7 @@
                                     <th>EmpId</th>
                                     <th>Name</th>
                                     <th>Loans</th>
-                                    <th>Regular Savings</th>
-                                    <th>Savings 2</th>
+                                    <th>Savings</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -437,25 +435,31 @@
                                     <td>EMP001</td>
                                     <td>John Doe</td>
                                     <td>1500.00</td>
-                                    <td>500.00</td>
-                                    <td>300.00</td>
+                                    <td>1000.00</td>
                                 </tr>
                                 <tr>
                                     <td>EMP002</td>
                                     <td>Jane Smith</td>
                                     <td>2000.00</td>
                                     <td>750.00</td>
-                                    <td>400.00</td>
                                 </tr>
                                 <tr>
                                     <td>EMP003</td>
                                     <td>Bob Johnson</td>
                                     <td>1200.00</td>
                                     <td>0</td>
-                                    <td>250.00</td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="alert alert-warning mt-3">
+                        <h6><i class="fa fa-info-circle"></i> Important Notes:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Savings Distribution:</strong> The total savings amount will be automatically distributed based on each member's <code>deduction_amount</code> settings</li>
+                            <li><strong>Prioritization:</strong> Distribution follows the product prioritization order</li>
+                            <li><strong>Remaining Amount:</strong> Any remaining amount after distribution goes to Regular Savings</li>
+                        </ul>
                     </div>
                 </div>
                 <div class="modal-footer">
