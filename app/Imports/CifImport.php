@@ -49,7 +49,8 @@ class CifImport implements ToCollection, WithChunkReading, WithBatchInserts, Wit
                 continue;
             }
 
-            $cid = $row['customer_no'];
+            // Pad customer_no with leading zeros to ensure 9 digits
+            $cid = str_pad($row['customer_no'], 9, '0', STR_PAD_LEFT);
             [$lname, $fname] = array_map('trim', explode(',', $row['customer_name'] . ','));
 
             $member = Member::where('cid', $cid)->first();
