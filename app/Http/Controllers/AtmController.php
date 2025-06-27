@@ -134,12 +134,12 @@ class AtmController extends Controller
 
     public function exportListOfProfile()
     {
-        return Excel::download(new ListOfProfileExport, 'List_of_Profile_' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new ListOfProfileExport, 'List_of_Profile_' . now()->format('Y-m-d') . '.csv');
     }
 
     public function exportRemittanceReportConsolidated()
     {
-        return Excel::download(new RemittanceReportConsolidatedExport, 'Remittance_Report_Consolidated_' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new RemittanceReportConsolidatedExport, 'Remittance_Report_Consolidated_' . now()->format('Y-m-d') . '.csv');
     }
 
     public function postPayment(Request $request)
@@ -326,7 +326,7 @@ class AtmController extends Controller
                 Log::info("ATM Payment ID: {$atmPayment->id}, Member: {$atmPayment->member_id}, Withdrawal: {$atmPayment->withdrawal_amount}, Loan Payment: {$atmPayment->total_loan_payment}, Savings: {$atmPayment->savings_allocation}, Account: {$atmPayment->savings_account_number}");
             }
 
-            $filename = 'posted_payments_' . now()->format('Y-m-d') . '.xlsx';
+            $filename = 'posted_payments_' . now()->format('Y-m-d') . '.csv';
 
             Excel::store(
                 new PostedPaymentsExport($atmPayments),

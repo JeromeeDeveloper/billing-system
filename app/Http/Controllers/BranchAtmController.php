@@ -236,7 +236,7 @@ class BranchAtmController extends Controller
                 return redirect()->back()->with('error', 'No posted payments found for today.');
             }
 
-            $filename = 'branch_posted_payments_' . now()->format('Y-m-d') . '.xlsx';
+            $filename = 'branch_posted_payments_' . now()->format('Y-m-d') . '.csv';
 
             Excel::store(
                 new PostedPaymentsExport($payments),

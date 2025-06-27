@@ -196,10 +196,10 @@ class RemittanceController extends Controller
 
             if ($type === 'shares') {
                 $export = new \App\Exports\SharesExport($remittanceData);
-                $filename = 'shares_export_' . now()->format('Y-m-d') . '.xlsx';
+                $filename = 'shares_export_' . now()->format('Y-m-d') . '.csv';
             } else {
                 $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
-                $filename = 'loans_and_savings_export_' . now()->format('Y-m-d') . '.xlsx';
+                $filename = 'loans_and_savings_export_' . now()->format('Y-m-d') . '.csv';
             }
 
             return Excel::download($export, $filename);

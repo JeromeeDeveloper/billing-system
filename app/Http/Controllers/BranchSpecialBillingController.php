@@ -33,6 +33,6 @@ class BranchSpecialBillingController extends Controller
     public function export()
     {
         $branch_id = Auth::user()->branch_id;
-        return Excel::download(new BranchSpecialBillingExport($branch_id), 'special_billing_branch_export_' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new BranchSpecialBillingExport($branch_id), 'special_billing_branch_export_' . now()->format('Y-m-d') . '.csv');
     }
 }

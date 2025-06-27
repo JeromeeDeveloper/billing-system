@@ -256,6 +256,6 @@ class SpecialBillingController extends Controller
 
     public function export()
     {
-        return Excel::download(new SpecialBillingExport, 'special_billing_export_' . now()->format('Y-m-d') . '.xlsx');
+        return Excel::download(new SpecialBillingExport, 'special_billing_export_' . now()->format('Y-m-d') . '.csv');
     }
 }

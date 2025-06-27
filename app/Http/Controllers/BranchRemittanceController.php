@@ -105,10 +105,10 @@ class BranchRemittanceController extends Controller
 
             if ($type === 'shares') {
                 $export = new \App\Exports\SharesExport($remittanceData);
-                $filename = 'branch_shares_export_' . now()->format('Y-m-d') . '.xlsx';
+                $filename = 'branch_shares_export_' . now()->format('Y-m-d') . '.csv';
             } else {
                 $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
-                $filename = 'branch_loans_and_savings_export_' . now()->format('Y-m-d') . '.xlsx';
+                $filename = 'branch_loans_and_savings_export_' . now()->format('Y-m-d') . '.csv';
             }
 
             return Excel::download($export, $filename);
