@@ -71,6 +71,7 @@ class LoanProductSeeder extends Seeder
                 'product' => $product['product'],
                 'product_code' => $product['product_code'],
                 'prioritization' => $product['prioritization'],
+                'billing_type' => 'regular',
             ]);
         }
     }
