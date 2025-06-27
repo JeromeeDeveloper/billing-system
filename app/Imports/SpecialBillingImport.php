@@ -5,7 +5,6 @@ namespace App\Imports;
 use Carbon\Carbon;
 use App\Models\Member;
 use App\Models\LoanProduct;
-use App\Models\LoanForecast;
 use App\Models\SpecialBilling;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
@@ -34,6 +33,7 @@ class SpecialBillingImport implements ToCollection
             $cidRaw = trim($row[0] ?? '');
             $loanNumber = trim($row[1] ?? ''); // Column B (Account No.)
             $principalRaw = trim($row[11] ?? '');
+            $totalDueRaw = trim($row[8] ?? ''); // Column I (Total Due)
             $startDateRaw = trim($row[7] ?? '');
             $endDateRaw = trim($row[8] ?? '');
 
@@ -43,6 +43,7 @@ class SpecialBillingImport implements ToCollection
 
             $cid = ltrim($cidRaw, "'");
             $principal = floatval(str_replace(',', '', $principalRaw));
+            $totalDue = floatval(str_replace(',', '', $totalDueRaw));
             $segments = explode('-', $loanNumber);
             $productCode = $segments[2] ?? null; // 3rd segment
 
@@ -50,7 +51,7 @@ class SpecialBillingImport implements ToCollection
             $billingType = $billingTypes[$productCode] ?? 'regular';
 
             // Log the processing for debugging
-            Log::info("Processing special loan: CID={$cid}, Account={$loanNumber}, ProductCode={$productCode}, BillingType={$billingType}, Priority={$priority}, Principal={$principal}");
+            Log::info("Processing special loan: CID={$cid}, Account={$loanNumber}, ProductCode={$productCode}, BillingType={$billingType}, Priority={$priority}, Principal={$principal}, TotalDue={$totalDue}");
 
             // Only process loans that are marked as 'special' billing type
             if ($billingType !== 'special') {
@@ -61,6 +62,7 @@ class SpecialBillingImport implements ToCollection
             $loanData = [
                 'loan_number' => $loanNumber,
                 'principal' => $principal,
+                'total_due' => $totalDue,
                 'priority' => $priority ?? 999,
                 'billing_type' => $billingType,
                 'product_code' => $productCode,
@@ -77,11 +79,7 @@ class SpecialBillingImport implements ToCollection
 
             // Add to special loans
             $memberLoans[$cid]['special_loans'][] = $loanData;
-            Log::info("Added to special loans for CID {$cid}");
-
-            // Update LoanForecast with principal amount
-            LoanForecast::where('loan_acct_no', $loanNumber)
-                ->update(['principal' => $principal]);
+            Log::info("Added to special loans for CID {$cid} with total_due: {$totalDue}");
         }
 
         // Process each member's special loans
@@ -117,24 +115,27 @@ class SpecialBillingImport implements ToCollection
                 Log::info("Updated member {$cid} with special_principal: " . json_encode($updateData));
             }
 
-            // Also create/update SpecialBilling record
+            // Create/update SpecialBilling record using ONLY file data for amortization
             if (!empty($loans['special_loans'])) {
                 $bestSpecialLoan = $this->findBestSpecialLoan($loans['special_loans']);
                 if ($bestSpecialLoan) {
+                    // Calculate amortization from file data ONLY (not from LoanForecast)
+                    $fileAmortization = $this->calculateFileAmortization($loans['special_loans']);
+
                     SpecialBilling::updateOrCreate(
                         [
                             'employee_id' => $member->emp_id ?? $member->cid,
                         ],
                         [
                             'name'         => "{$member->fname} {$member->lname}",
-                            'amortization' => $this->calculateSpecialAmortization($member, $bestSpecialLoan['product_code']),
+                            'amortization' => $fileAmortization,
                             'start_date'   => $bestSpecialLoan['start_date'],
                             'end_date'     => $bestSpecialLoan['end_date'],
                             'gross'        => $bestSpecialLoan['principal'],
                             'office'       => $member->area_officer ?? null,
                         ]
                     );
-                    Log::info("Created/Updated SpecialBilling record for member {$cid}");
+                    Log::info("Created/Updated SpecialBilling record for member {$cid} with file-only amortization: {$fileAmortization}");
                 }
             }
         }
@@ -156,14 +157,17 @@ class SpecialBillingImport implements ToCollection
         return $loans[0];
     }
 
-    private function calculateSpecialAmortization($member, $productCode)
+    private function calculateFileAmortization($specialLoans)
     {
-        // Calculate amortization from loan forecast data for this member and product code
-        $totalAmortization = LoanForecast::where('member_id', $member->id)
-            ->where('loan_acct_no', 'like', "%-{$productCode}-%")
-            ->sum('total_due');
+        // Calculate amortization from the uploaded file data (Total Due values)
+        $totalAmortization = 0;
 
-        Log::info("Calculated special amortization for {$member->fname} {$member->lname}: {$totalAmortization}");
+        foreach ($specialLoans as $loan) {
+            $totalAmortization += $loan['total_due'] ?? 0;
+            Log::info("Added to file amortization: {$loan['loan_number']} (Total Due: {$loan['total_due']})");
+        }
+
+        Log::info("Total file amortization: {$totalAmortization}");
         return $totalAmortization;
     }
 

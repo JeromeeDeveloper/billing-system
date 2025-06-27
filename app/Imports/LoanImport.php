@@ -49,7 +49,13 @@ class LoanImport implements ToCollection
             $billingType = $billingTypes[$productCode] ?? 'regular';
 
             // Log the processing for debugging
-            \Log::info("Processing loan: CID={$cid}, Account={$loanNumber}, ProductCode={$productCode}, BillingType={$billingType}, Priority={$priority}, Principal={$principal}");
+            Log::info("Processing loan: CID={$cid}, Account={$loanNumber}, ProductCode={$productCode}, BillingType={$billingType}, Priority={$priority}, Principal={$principal}");
+
+            // Skip special loans - they are handled by SpecialBillingImport
+            if ($billingType === 'special') {
+                Log::info("Skipping special loan: {$loanNumber} (handled by SpecialBillingImport)");
+                continue;
+            }
 
             $loanData = [
                 'loan_number' => $loanNumber,
@@ -64,37 +70,30 @@ class LoanImport implements ToCollection
             // Group by member
             if (!isset($memberLoans[$cid])) {
                 $memberLoans[$cid] = [
-                    'regular_loans' => [],
-                    'special_loans' => []
+                    'regular_loans' => []
                 ];
             }
 
-            // Categorize loan by billing type
-            if ($billingType === 'special') {
-                $memberLoans[$cid]['special_loans'][] = $loanData;
-                \Log::info("Added to special loans for CID {$cid}");
-            } else {
-                $memberLoans[$cid]['regular_loans'][] = $loanData;
-                \Log::info("Added to regular loans for CID {$cid}");
-            }
+            // Add to regular loans only
+            $memberLoans[$cid]['regular_loans'][] = $loanData;
+            Log::info("Added to regular loans for CID {$cid}");
 
             // Update LoanForecast with principal amount
             LoanForecast::where('loan_acct_no', $loanNumber)
                 ->update(['principal' => $principal]);
         }
 
-        // Process each member's loans
+        // Process each member's regular loans
         foreach ($memberLoans as $cid => $loans) {
             $member = Member::where('cid', $cid)->first();
 
             if (!$member) {
-                \Log::warning("Member not found for CID: {$cid}");
+                Log::warning("Member not found for CID: {$cid}");
                 continue;
             }
 
-            \Log::info("Processing member: {$member->fname} {$member->lname} (CID: {$cid})");
-            \Log::info("Regular loans count: " . count($loans['regular_loans']));
-            \Log::info("Special loans count: " . count($loans['special_loans']));
+            Log::info("Processing member: {$member->fname} {$member->lname} (CID: {$cid})");
+            Log::info("Regular loans count: " . count($loans['regular_loans']));
 
             $updateData = [];
 
@@ -105,37 +104,21 @@ class LoanImport implements ToCollection
                     $updateData['regular_principal'] = $bestRegularLoan['principal'];
                     $updateData['start_date'] = $bestRegularLoan['start_date'];
                     $updateData['end_date'] = $bestRegularLoan['end_date'];
-                    \Log::info("Selected regular loan: {$bestRegularLoan['loan_number']} (Principal: {$bestRegularLoan['principal']}, Priority: {$bestRegularLoan['priority']})");
+                    Log::info("Selected regular loan: {$bestRegularLoan['loan_number']} (Principal: {$bestRegularLoan['principal']}, Priority: {$bestRegularLoan['priority']})");
                 }
             }
 
-            // Process Special Loans - Check billing_type is special, then highest principal
-            if (!empty($loans['special_loans'])) {
-                $bestSpecialLoan = $this->findBestLoan($loans['special_loans'], 'special');
-                if ($bestSpecialLoan) {
-                    $updateData['special_principal'] = $bestSpecialLoan['principal'];
-                    \Log::info("Selected special loan: {$bestSpecialLoan['loan_number']} (Principal: {$bestSpecialLoan['principal']})");
-
-                    // If no regular loan was selected, use special loan dates
-                    if (empty($loans['regular_loans'])) {
-                        $updateData['start_date'] = $bestSpecialLoan['start_date'];
-                        $updateData['end_date'] = $bestSpecialLoan['end_date'];
-                    }
-                }
-            }
-
-            // Update main principal field with the highest principal overall
-            $allLoans = array_merge($loans['regular_loans'], $loans['special_loans']);
-            if (!empty($allLoans)) {
-                $highestPrincipal = max(array_column($allLoans, 'principal'));
+            // Update main principal field with the highest principal from regular loans
+            if (!empty($loans['regular_loans'])) {
+                $highestPrincipal = max(array_column($loans['regular_loans'], 'principal'));
                 $updateData['principal'] = $highestPrincipal;
-                \Log::info("Highest principal overall: {$highestPrincipal}");
+                Log::info("Highest principal from regular loans: {$highestPrincipal}");
             }
 
             // Update member
             if (!empty($updateData)) {
                 $member->update($updateData);
-                \Log::info("Updated member {$cid} with: " . json_encode($updateData));
+                Log::info("Updated member {$cid} with: " . json_encode($updateData));
             }
         }
     }

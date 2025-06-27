@@ -38,6 +38,7 @@ class SpecialBillingController extends Controller
     {
         ini_set('max_execution_time', 600);
         $request->validate([
+            'forecast_file' => 'required|file|max:10240',
             'detail_file' => 'required|file|max:10240',
         ]);
 
@@ -53,7 +54,55 @@ class SpecialBillingController extends Controller
         // Clear existing special billing data
         SpecialBilling::truncate();
 
-        // 1. Process detail file (CSV: skip first 5 rows, row 6 is header, row 7+ is data)
+        // 1. Process forecast file (same structure as LoanForecastImport)
+        $forecastRows = Excel::toCollection(null, $request->file('forecast_file'))[0];
+        $memberSpecialLoans = [];
+
+        foreach ($forecastRows as $i => $row) {
+            if ($i < 1) continue; // Skip header row
+
+            $cidRaw = trim($row[2] ?? '');
+            $loanNumber = trim($row[4] ?? ''); // Column B (Account No.)
+            $totalDueRaw = trim($row[8] ?? ''); // Column I (Total Due)
+
+            if (empty($cidRaw) || empty($loanNumber) || empty($totalDueRaw)) {
+                continue;
+            }
+
+            $cid = ltrim($cidRaw, "'");
+            $totalDue = floatval(str_replace(',', '', $totalDueRaw));
+            $segments = explode('-', $loanNumber);
+            $productCode = $segments[2] ?? null; // 3rd segment
+
+            // Only process loans that are marked as 'special' billing type
+            if (!$productCode || !in_array($productCode, $specialLoanProducts)) {
+                continue;
+            }
+
+            $member = Member::where('cid', $cid)->first();
+            if (!$member) {
+                Log::warning("Member not found for CID: {$cid}");
+                continue;
+            }
+
+            Log::info("Processing special loan: CID={$cid}, Loan={$loanNumber}, ProductCode={$productCode}, TotalDue={$totalDue}");
+
+            // Group by member CID and sum total_due for special loans only
+            if (!isset($memberSpecialLoans[$cid])) {
+                $memberSpecialLoans[$cid] = [
+                    'name' => "{$member->fname} {$member->lname}",
+                    'total_amortization' => 0,
+                    'member' => $member
+                ];
+            }
+
+            // Add this special loan's total_due to the member's amortization
+            $memberSpecialLoans[$cid]['total_amortization'] += $totalDue;
+        }
+
+        Log::info("Members with special loans found: " . count($memberSpecialLoans));
+
+        // 2. Process detail file (CSV: skip first 5 rows, row 6 is header, row 7+ is data)
         $detailRowsRaw = Excel::toCollection(null, $request->file('detail_file'))[0];
         $detailRows = collect();
         $headerRow = [];
@@ -146,7 +195,7 @@ class SpecialBillingController extends Controller
             $detailByCid[$cid][] = $loanData;
         }
 
-        // 2. Process each CID to find the best loan based on prioritization and principal release
+        // 3. Process each CID to find the best loan based on prioritization and principal release
         foreach ($detailByCid as $cid => $loans) {
             // Sort loans by prioritization first, then by principal release (descending)
             usort($loans, function($a, $b) {
@@ -177,69 +226,20 @@ class SpecialBillingController extends Controller
             ];
         }
 
-        // 3. Get all loan forecasts and calculate amortization from database
-        $loanForecasts = \App\Models\LoanForecast::with('member')->get();
-
-        Log::info("Total loan forecasts found: " . $loanForecasts->count());
-
-        // Group loan forecasts by member and filter for special billing types
-        $memberSpecialLoans = [];
-
-        foreach ($loanForecasts as $loanForecast) {
-            // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000025-9)
-            $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
-
-            if (!$productCode) {
-                continue;
-            }
-
-            // Only process if this product code has billing_type = 'special'
-            if (!in_array($productCode, $specialLoanProducts)) {
-                continue;
-            }
-
-            $member = $loanForecast->member;
-            if (!$member) {
-                continue;
-            }
-
-            $cid = $member->cid;
-            if (empty($cid)) {
-                continue;
-            }
-
-            Log::info("Processing special loan for member {$member->fname} {$member->lname} (CID: {$cid})");
-            Log::info("  - Loan: {$loanForecast->loan_acct_no}, Product: {$productCode}, Total Due: {$loanForecast->total_due}");
-
-            // Group by member CID and sum total_due for special loans only
-            if (!isset($memberSpecialLoans[$cid])) {
-                $memberSpecialLoans[$cid] = [
-                    'name' => "{$member->fname} {$member->lname}",
-                    'total_amortization' => 0,
-                    'member' => $member
-                ];
-            }
-
-            // Add this special loan's total_due to the member's amortization
-            $memberSpecialLoans[$cid]['total_amortization'] += $loanForecast->total_due ?? 0;
-        }
-
-        Log::info("Members with special loans found: " . count($memberSpecialLoans));
-
-        // 4. Create special billing records combining database amortization with detail file data
+        // 4. Create special billing records combining forecast file amortization with detail file data
         foreach ($memberSpecialLoans as $cid => $data) {
             $detail = $detailByCid[$cid] ?? null;
 
             Log::info("Creating special billing record for CID {$cid}:");
             Log::info("  - Name: {$data['name']}");
-            Log::info("  - Amortization (sum of special total_due): {$data['total_amortization']}");
+            Log::info("  - Amortization (from forecast file): {$data['total_amortization']}");
             Log::info("  - Has detail data: " . ($detail ? 'YES' : 'NO'));
 
             SpecialBilling::create([
                 'cid' => $cid,
                 'employee_id' => $data['member']->emp_id ?? 'N/A',
                 'name' => $data['name'],
-                'amortization' => $data['total_amortization'], // From database loan forecasts
+                'amortization' => $data['total_amortization'], // From forecast file data
                 'loan_acct_no' => $detail['account_no'] ?? null, // From detail file
                 'start_date' => $detail['start_date'] ?? null, // From detail file
                 'end_date' => $detail['end_date'] ?? null, // From detail file
@@ -251,7 +251,7 @@ class SpecialBillingController extends Controller
         Log::info("=== Special Billing Import Completed ===");
         Log::info("Total special billing records created: " . count($memberSpecialLoans));
 
-        return redirect()->route('special-billing.index')->with('success', 'Special billing data imported successfully from loan forecasts and detail file.');
+        return redirect()->route('special-billing.index')->with('success', 'Special billing data imported successfully from forecast file and detail file.');
     }
 
     public function export()
