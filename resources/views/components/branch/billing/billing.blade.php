@@ -148,43 +148,55 @@
                                         </thead>
 
                                         <tbody>
+                                            @php
+                                                $productMap = json_decode(file_get_contents(public_path('loan_product_map.json')), true);
+                                            @endphp
                                             @foreach ($billing as $member)
-                                                <tr>
-                                                    <td>{{ $member->emp_id }}</td>
-                                                    <td>{{ number_format($member->loan_balance, 2) }}</td>
-                                                    <td>{{ $member->fname }} {{ $member->lname }}</td>
-                                                    <td>{{ optional($member->start_date)->format('Y-m-d') }}</td>
-                                                    <td>{{ optional($member->end_date)->format('Y-m-d') }}</td>
-                                                    <td>{{ number_format($member->principal, 2) }}</td>
-                                                    <td>{{ $member->area ?? '' }}</td>
-                                                    <td>
-                                                        <button class="btn btn-rounded btn-primary edit-btn"
-                                                            data-toggle="modal" data-target="#editModal"
-                                                            data-id="{{ $member->id }}"
-                                                            data-emp_id="{{ $member->emp_id }}"
-                                                            data-fname="{{ $member->fname }}"
-                                                            data-lname="{{ $member->lname }}"
-                                                            data-loan_balance="{{ $member->loan_balance }}"
-                                                            data-principal="{{ $member->principal }}"
-                                                            data-area="{{ $member->area }}"
-                                                            data-start_date="{{ optional($member->start_date)->format('Y-m-d') }}"
-                                                            data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}">Edit</button>
+                                                @php
+                                                    $amortization = $member->loanForecasts->filter(function($loan) use ($productMap) {
+                                                        $segments = explode('-', $loan->loan_acct_no);
+                                                        $productCode = $segments[2] ?? null;
+                                                        return isset($productMap[$productCode]) && $productMap[$productCode] === 'regular';
+                                                    })->sum('total_due');
+                                                @endphp
+                                                @if ($amortization > 0)
+                                                    <tr>
+                                                        <td>{{ $member->emp_id }}</td>
+                                                        <td>{{ number_format($amortization, 2) }}</td>
+                                                        <td>{{ $member->fname }} {{ $member->lname }}</td>
+                                                        <td>{{ optional($member->start_date)->format('Y-m-d') }}</td>
+                                                        <td>{{ optional($member->end_date)->format('Y-m-d') }}</td>
+                                                        <td>{{ number_format($member->principal, 2) }}</td>
+                                                        <td>{{ $member->area ?? '' }}</td>
+                                                        <td>
+                                                            <button class="btn btn-rounded btn-primary edit-btn"
+                                                                data-toggle="modal" data-target="#editModal"
+                                                                data-id="{{ $member->id }}"
+                                                                data-emp_id="{{ $member->emp_id }}"
+                                                                data-fname="{{ $member->fname }}"
+                                                                data-lname="{{ $member->lname }}"
+                                                                data-loan_balance="{{ $member->loan_balance }}"
+                                                                data-principal="{{ $member->principal }}"
+                                                                data-area="{{ $member->area }}"
+                                                                data-start_date="{{ optional($member->start_date)->format('Y-m-d') }}"
+                                                                data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}">Edit</button>
 
-                                                        <button class="btn btn-rounded btn-info view-btn"
-                                                            data-toggle="modal" data-target="#viewModal"
-                                                            data-emp_id="{{ $member->emp_id }}"
-                                                            data-name="{{ $member->fname }} {{ $member->lname }}"
-                                                            data-loan_balance="{{ $member->loan_balance }}"
-                                                            data-start_date="{{ optional($member->start_date)->format('Y-m-d') }}"
-                                                            data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}"
-                                                            data-principal="{{ $member->principal }}"
-                                                            data-office="{{ $member->area }}">View</button>
+                                                            <button class="btn btn-rounded btn-info view-btn"
+                                                                data-toggle="modal" data-target="#viewModal"
+                                                                data-emp_id="{{ $member->emp_id }}"
+                                                                data-name="{{ $member->fname }} {{ $member->lname }}"
+                                                                data-loan_balance="{{ $member->loan_balance }}"
+                                                                data-start_date="{{ optional($member->start_date)->format('Y-m-d') }}"
+                                                                data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}"
+                                                                data-principal="{{ $member->principal }}"
+                                                                data-office="{{ $member->area }}">View</button>
 
-                                                        <button class="btn btn-rounded btn-danger delete-btn"
-                                                            data-toggle="modal" data-target="#deleteModal"
-                                                            data-id="{{ $member->id }}">Delete</button>
-                                                    </td>
-                                                </tr>
+                                                            <button class="btn btn-rounded btn-danger delete-btn"
+                                                                data-toggle="modal" data-target="#deleteModal"
+                                                                data-id="{{ $member->id }}">Delete</button>
+                                                        </td>
+                                                    </tr>
+                                                @endif
                                             @endforeach
                                         </tbody>
 
