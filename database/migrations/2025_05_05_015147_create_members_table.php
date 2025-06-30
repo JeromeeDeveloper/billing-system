@@ -40,6 +40,7 @@ return new class extends Migration
             $table->string('area')->nullable();
             $table->string('account_name')->nullable();
             $table->enum('status', ['active', 'merged'])->default('active');
+            $table->enum('member_tagging', ['PGB', 'New'])->nullable();
 
             $table->string('approval_no')->nullable();
             $table->date('start_hold')->nullable();

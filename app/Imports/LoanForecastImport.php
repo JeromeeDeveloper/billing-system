@@ -12,12 +12,18 @@ use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class LoanForecastImport implements ToCollection, WithHeadingRow
 {
     protected $branchCache = [];
     protected $memberCache = [];
     protected $billingPeriod;
+    protected $stats = [
+        'processed' => 0,
+        'skipped' => 0,
+        'not_found' => 0
+    ];
 
     public function __construct(string $billingPeriod)
     {
@@ -52,24 +58,21 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
             // Parse name - Format as "Lastname, Firstname"
             [$lname, $fname] = array_map('trim', explode(',', $row['name'] . ','));
 
-            // Cache member - update or create
+            // Check if member exists with PGB tagging
             $cid = $row['cid'];
-            $member = $this->memberCache[$cid] ?? null;
+            $member = Member::where('cid', $cid)
+                           ->where('member_tagging', 'PGB')
+                           ->first();
+
             if (!$member) {
-                $member = Member::updateOrCreate(
-                    ['cid' => $cid],
-                    [
-                        'branch_id' => $branch->id,
-                        'fname' => $fname,
-                        'lname' => $lname,
-                        'address' => '',
-                        'savings_balance' => 0,
-                        'share_balance' => 0,
-                        'billing_period' => $this->billingPeriod,
-                    ]
-                );
-                $this->memberCache[$cid] = $member;
+                // Log skipped member and continue
+                Log::info("LoanForecast Import - Skipped CID {$cid}: Member not found or not tagged as PGB");
+                $this->stats['not_found']++;
+                continue;
             }
+
+            // Cache member for performance
+            $this->memberCache[$cid] = $member;
 
             // Match member_id from LoanProduct using the 3rd part of loan_acct_no
             $loanAcctParts = explode('-', $row['loan_account_no']);
@@ -95,7 +98,6 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     $loanProductMemberIds = array_merge($loanProductMemberIds, $loanProduct->members()->pluck('members.id')->toArray());
                 }
             }
-
 
             // Update or create loan forecast with billing period
             $loanForecast = LoanForecast::updateOrCreate(
@@ -128,9 +130,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'billing_period' => $this->billingPeriod,
                 ]
             );
+
+            $this->stats['processed']++;
         }
 
-        // Update loan balance for each member
+        // Update loan balance for each processed member
         foreach ($this->memberCache as $member) {
             $loanBalance = LoanForecast::where('member_id', $member->id)
                 ->where('billing_period', $this->billingPeriod)
@@ -138,6 +142,14 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
 
             $member->update(['loan_balance' => $loanBalance]);
         }
+
+        // Log import statistics
+        Log::info("LoanForecast Import completed - Processed: {$this->stats['processed']}, Not Found: {$this->stats['not_found']}");
+    }
+
+    public function getStats()
+    {
+        return $this->stats;
     }
 
     private function parseDate($value)
@@ -148,7 +160,7 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
             }
             return Carbon::parse($value);
         } catch (\Exception $e) {
-            \Log::error('Date parse error: ' . $value);
+            Log::error('Date parse error: ' . $value);
             return null;
         }
     }

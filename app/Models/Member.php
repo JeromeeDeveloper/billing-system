@@ -42,7 +42,8 @@ class Member extends Model
         'start_hold',
         'expiry_date',
         'account_status',
-        'billing_period'
+        'billing_period',
+        'member_tagging'
     ];
 
     protected $casts = [

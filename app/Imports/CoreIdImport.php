@@ -1,0 +1,130 @@
+<?php
+
+namespace App\Imports;
+
+use App\Models\Member;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+class CoreIdImport implements ToCollection, WithHeadingRow
+{
+    protected $results = [];
+    protected $stats = [
+        'matched' => 0,
+        'unmatched' => 0,
+        'inserted' => 0,
+        'updated' => 0,
+        'removed' => 0
+    ];
+
+    public function collection(Collection $rows)
+    {
+        DB::beginTransaction();
+
+        try {
+            // Validate that the file has the correct header
+            if ($rows->isEmpty()) {
+                throw new \Exception('Uploaded file is empty.');
+            }
+
+            $firstRow = $rows->first();
+            if (!isset($firstRow['coreid'])) {
+                throw new \Exception('File must have "CoreID" header in the first column.');
+            }
+
+            // Get all existing CIDs from the uploaded file
+            $uploadedCids = $rows->pluck('coreid')->map(function($cid) {
+                return str_pad($cid, 9, '0', STR_PAD_LEFT);
+            })->toArray();
+
+            // Get all existing members
+            $existingMembers = Member::all();
+            $existingCids = $existingMembers->pluck('cid')->toArray();
+
+            // Process each row in the uploaded file
+            foreach ($rows as $row) {
+                $cid = str_pad($row['coreid'], 9, '0', STR_PAD_LEFT);
+
+                // Find member with this CID
+                $member = Member::where('cid', $cid)->first();
+
+                if ($member) {
+                    // Update existing member's tagging to PGB
+                    $member->update(['member_tagging' => 'PGB']);
+                    $this->stats['matched']++;
+                    $this->stats['updated']++;
+
+                    $this->results[] = [
+                        'cid' => $cid,
+                        'status' => 'success',
+                        'message' => 'Member found and updated to PGB',
+                        'action' => 'updated'
+                    ];
+                } else {
+                    // Insert new member with PGB tagging
+                    Member::create([
+                        'cid' => $cid,
+                        'member_tagging' => 'PGB'
+                    ]);
+                    $this->stats['unmatched']++;
+                    $this->stats['inserted']++;
+
+                    $this->results[] = [
+                        'cid' => $cid,
+                        'status' => 'success',
+                        'message' => 'New member created with PGB tagging',
+                        'action' => 'inserted'
+                    ];
+                }
+            }
+
+            // Remove members that are not in the uploaded file (except those with 'New' tagging)
+            $membersToRemove = Member::whereNotIn('cid', $uploadedCids)
+                ->where(function($query) {
+                    $query->where('member_tagging', '!=', 'New')
+                          ->orWhereNull('member_tagging');
+                })
+                ->get();
+
+            Log::info('CoreID Import - Members to remove count: ' . $membersToRemove->count());
+            Log::info('CoreID Import - Uploaded CIDs: ' . implode(', ', $uploadedCids));
+
+            foreach ($membersToRemove as $member) {
+                Log::info('CoreID Import - Removing member: ' . $member->cid . ' with tagging: ' . $member->member_tagging);
+
+                // Force delete to bypass any soft deletes if they exist
+                $deleted = $member->forceDelete();
+                Log::info('CoreID Import - Delete result: ' . ($deleted ? 'success' : 'failed'));
+
+                $this->stats['removed']++;
+
+                $this->results[] = [
+                    'cid' => $member->cid,
+                    'status' => 'removed',
+                    'message' => 'Member removed (not in uploaded file)',
+                    'action' => 'removed'
+                ];
+            }
+
+            DB::commit();
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('CoreID Import Error: ' . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function getResults()
+    {
+        return $this->results;
+    }
+
+    public function getStats()
+    {
+        return $this->stats;
+    }
+}

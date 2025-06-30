@@ -245,6 +245,40 @@
                                 </div>
                             </div>
 
+                            <!-- CoreID Upload Section -->
+                            <div class="card-body border-bottom">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fa fa-upload me-2"></i>CoreID File Upload
+                                        </h6>
+                                        <p class="text-muted mb-3">
+                                            Upload CoreID file to set member tagging to PGB.
+                                            File should have "CoreID" header in A1 and CID values below.
+                                            CIDs will be padded to 9 digits (e.g., 2026 becomes 000002026).
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <form action="{{ route('master.upload.coreid') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" style="gap: 10px;">
+                                            @csrf
+                                            <input type="file" name="coreid_file" class="form-control-file" accept=".xlsx,.xls,.csv" required>
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="fa fa-upload me-1"></i>Upload CoreID
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                @if(session('success') && str_contains(session('success'), 'CoreID import'))
+                                    <div class="mt-3">
+                                        <div class="alert alert-success">
+                                            <i class="fa fa-check-circle me-2"></i>
+                                            {{ session('success') }}
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="masterlistTable" class="table table-striped table-bordered display">

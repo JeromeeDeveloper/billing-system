@@ -82,10 +82,12 @@ class SavingsImport implements ToCollection, WithHeadingRow, WithChunkReading, W
 
             $cid = str_pad(preg_replace('/\D/', '', $rawCid), 9, '0', STR_PAD_LEFT); // Ensure 9-digit CID
 
-            $member = Member::where('cid', $cid)->first();
+            $member = Member::where('cid', $cid)
+                           ->where('member_tagging', 'PGB')
+                           ->first();
 
             if (!$member) {
-                Log::warning("Member not found for CID: $cid");
+                Log::warning("Member not found or not tagged as PGB for CID: $cid");
                 $skipped++;
                 continue;
             }

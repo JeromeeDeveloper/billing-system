@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Member;
 use App\Models\MasterList;
+use App\Imports\CoreIdImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterController extends Controller
 {
@@ -786,8 +788,38 @@ class MasterController extends Controller
 
     public function destroy_branch($id)
     {
-        Member::destroy($id);
-        return redirect()->back()->with('success', 'Member deleted');
+        try {
+            $member = Member::findOrFail($id);
+            $member->delete();
+
+            return redirect()->back()->with('success', 'Member deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error deleting member: ' . $e->getMessage());
+        }
     }
 
+    public function uploadCoreId(Request $request)
+    {
+        $request->validate([
+            'coreid_file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
+        ]);
+
+        try {
+            $import = new CoreIdImport();
+            Excel::import($import, $request->file('coreid_file'));
+
+            $stats = $import->getStats();
+
+            // Only store summary in session, not detailed results
+            $message = "CoreID import completed successfully. ";
+            $message .= "Matched: {$stats['matched']}, ";
+            $message .= "Inserted: {$stats['inserted']}, ";
+            $message .= "Removed: {$stats['removed']}";
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            Log::error('CoreID Upload Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error uploading CoreID file: ' . $e->getMessage());
+        }
+    }
 }
