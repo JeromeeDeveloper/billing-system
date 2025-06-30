@@ -102,6 +102,7 @@ class MasterController extends Controller
         'start_hold' => 'nullable|date',
         'account_status' => 'nullable|in:deduction,non-deduction',
         'branch_id' => 'nullable|exists:branches,id',
+        'member_tagging' => 'nullable|in:New,PGB',
     ]);
 
     // Get current billing period from authenticated user
@@ -111,10 +112,13 @@ class MasterController extends Controller
         return redirect()->back()->with('error', 'Please set a billing period in the dashboard first.');
     }
 
-    // Merge the billing period into the request data
+    // Merge the billing period and set default member_tagging into the request data
     $memberData = array_merge(
         $request->except(['savings_balance', 'share_balance']),
-        ['billing_period' => $billingPeriod]
+        [
+            'billing_period' => $billingPeriod,
+            'member_tagging' => $request->member_tagging ?? 'New'
+        ]
     );
 
     // Create the member with billing period
@@ -485,6 +489,7 @@ class MasterController extends Controller
         'start_hold' => 'nullable|date',
         'account_status' => 'nullable|in:deduction,non-deduction',
         'branch_id' => 'nullable|exists:branches,id',
+        'member_tagging' => 'nullable|in:New,PGB',
     ]);
 
     // Get current billing period from authenticated user
@@ -494,10 +499,13 @@ class MasterController extends Controller
         return redirect()->back()->with('error', 'Please set a billing period in the dashboard first.');
     }
 
-    // Merge the billing period into the request data
+    // Merge the billing period and set default member_tagging into the request data
     $memberData = array_merge(
         $request->except(['savings_balance', 'share_balance']),
-        ['billing_period' => $billingPeriod]
+        [
+            'billing_period' => $billingPeriod,
+            'member_tagging' => $request->member_tagging ?? 'New'
+        ]
     );
 
     // Create the member with billing period

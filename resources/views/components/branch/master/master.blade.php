@@ -191,6 +191,16 @@
                                                 </div>
                                             </div>
 
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Member Tagging</label>
+                                                    <select class="form-control" name="member_tagging">
+                                                        <option value="New" selected>New</option>
+                                                        <option value="PGB">PGB</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
