@@ -193,9 +193,45 @@ class DynamicSavingsSheet implements FromCollection, WithHeadings, WithTitle
         ->get();
 
         return $members->map(function ($member) {
+            // Calculate amortization as sum of total_due for all loans except those marked as 'special'
+            $amortization = 0;
+            $hasNonSpecialLoans = false;
+
+            // Get all loan forecasts for this member
+            foreach ($member->loanForecasts as $loanForecast) {
+                // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
+                $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
+
+                if ($productCode) {
+                    // Check if this member has a loan product with this product code that is marked as 'special'
+                    $hasSpecialProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'special');
+                        })
+                        ->exists();
+
+                    // Check if this product code is registered in loan products
+                    $hasRegisteredProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode);
+                        })
+                        ->exists();
+
+                    // Only include loans that have registered products and are not marked as 'special'
+                    if ($hasRegisteredProduct && !$hasSpecialProduct) {
+                        $amortization += $loanForecast->total_due ?? 0;
+                        $hasNonSpecialLoans = true;
+                    }
+                } else {
+                    // If no product code found, skip this loan
+                    continue;
+                }
+            }
+
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->regular_principal ?? 0,
+                'amortization'  => $amortization,
                 'name'          => "{$member->fname} {$member->lname}",
             ];
         });
@@ -205,7 +241,7 @@ class DynamicSavingsSheet implements FromCollection, WithHeadings, WithTitle
     {
         return [
             'Employee #',
-            'amortization',
+            'Amortization',
             'Name',
         ];
     }
@@ -240,9 +276,45 @@ class DynamicSharesSheet implements FromCollection, WithHeadings, WithTitle
         ->get();
 
         return $members->map(function ($member) {
+            // Calculate amortization as sum of total_due for all loans except those marked as 'special'
+            $amortization = 0;
+            $hasNonSpecialLoans = false;
+
+            // Get all loan forecasts for this member
+            foreach ($member->loanForecasts as $loanForecast) {
+                // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
+                $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
+
+                if ($productCode) {
+                    // Check if this member has a loan product with this product code that is marked as 'special'
+                    $hasSpecialProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'special');
+                        })
+                        ->exists();
+
+                    // Check if this product code is registered in loan products
+                    $hasRegisteredProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode);
+                        })
+                        ->exists();
+
+                    // Only include loans that have registered products and are not marked as 'special'
+                    if ($hasRegisteredProduct && !$hasSpecialProduct) {
+                        $amortization += $loanForecast->total_due ?? 0;
+                        $hasNonSpecialLoans = true;
+                    }
+                } else {
+                    // If no product code found, skip this loan
+                    continue;
+                }
+            }
+
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->regular_principal ?? 0,
+                'amortization'  => $amortization,
                 'name'          => "{$member->fname} {$member->lname}",
             ];
         });
@@ -252,7 +324,7 @@ class DynamicSharesSheet implements FromCollection, WithHeadings, WithTitle
     {
         return [
             'Employee #',
-            'amortization',
+            'Amortization',
             'Name',
         ];
     }

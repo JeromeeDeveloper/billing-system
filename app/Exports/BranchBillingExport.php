@@ -152,10 +152,6 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
             'Employee #',
             'Amortization',
             'Name',
-            'Start Date',
-            'End Date',
-            'Gross',
-            'Office',
         ];
     }
 }
@@ -198,10 +194,39 @@ class BranchDynamicSavingsSheet implements FromCollection, WithHeadings, WithTit
             ->get();
 
         return $members->map(function ($member) {
-            $savings = $member->savings->first();
+            // Calculate amortization as sum of total_due for all loans except those marked as 'special'
+            $amortization = 0;
+            $hasNonSpecialLoans = false;
+
+            // Get all loan forecasts for this member
+            foreach ($member->loanForecasts as $loanForecast) {
+                // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000025-9)
+                $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
+
+                if ($productCode) {
+                    // Check if this member has a loan product with this product code that is marked as 'special'
+                    $hasSpecialProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'special');
+                        })
+                        ->exists();
+
+                    // Include all loans except those marked as 'special'
+                    if (!$hasSpecialProduct) {
+                        $amortization += $loanForecast->total_due ?? 0;
+                        $hasNonSpecialLoans = true;
+                    }
+                } else {
+                    // If no product code found, include the loan (default behavior)
+                    $amortization += $loanForecast->total_due ?? 0;
+                    $hasNonSpecialLoans = true;
+                }
+            }
+
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $savings ? ($savings->deduction_amount ?? 0) : 0,
+                'amortization'  => $amortization,
                 'name'          => "{$member->fname} {$member->lname}",
             ];
         });
@@ -211,7 +236,7 @@ class BranchDynamicSavingsSheet implements FromCollection, WithHeadings, WithTit
     {
         return [
             'Employee #',
-            'amortization',
+            'Amortization',
             'Name',
         ];
     }
@@ -249,10 +274,39 @@ class BranchDynamicSharesSheet implements FromCollection, WithHeadings, WithTitl
             ->get();
 
         return $members->map(function ($member) {
-            $shares = $member->shares->first();
+            // Calculate amortization as sum of total_due for all loans except those marked as 'special'
+            $amortization = 0;
+            $hasNonSpecialLoans = false;
+
+            // Get all loan forecasts for this member
+            foreach ($member->loanForecasts as $loanForecast) {
+                // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000025-9)
+                $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
+
+                if ($productCode) {
+                    // Check if this member has a loan product with this product code that is marked as 'special'
+                    $hasSpecialProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'special');
+                        })
+                        ->exists();
+
+                    // Include all loans except those marked as 'special'
+                    if (!$hasSpecialProduct) {
+                        $amortization += $loanForecast->total_due ?? 0;
+                        $hasNonSpecialLoans = true;
+                    }
+                } else {
+                    // If no product code found, include the loan (default behavior)
+                    $amortization += $loanForecast->total_due ?? 0;
+                    $hasNonSpecialLoans = true;
+                }
+            }
+
             return [
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $member->regular_principal ?? 0,
+                'amortization'  => $amortization,
                 'name'          => "{$member->fname} {$member->lname}",
             ];
         });
@@ -262,7 +316,7 @@ class BranchDynamicSharesSheet implements FromCollection, WithHeadings, WithTitl
     {
         return [
             'Employee #',
-            'amortization',
+            'Amortization',
             'Name',
         ];
     }
