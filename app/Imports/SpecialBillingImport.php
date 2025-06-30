@@ -28,6 +28,7 @@ class SpecialBillingImport implements ToCollection
 
         // Group loans by member (CID)
         $memberLoans = [];
+        $uploadedCids = []; // Track all CIDs from the uploaded file
 
         foreach ($rows as $row) {
             $cidRaw = trim($row[0] ?? '');
@@ -42,6 +43,18 @@ class SpecialBillingImport implements ToCollection
             }
 
             $cid = ltrim($cidRaw, "'");
+
+            // Check if member exists with member_tagging "PGB" before processing
+            $member = Member::where('cid', $cid)
+                           ->where('member_tagging', 'PGB')
+                           ->first();
+
+            if (!$member) {
+                Log::warning("Skipping CID {$cid} - member not found or not authorized (PGB)");
+                continue;
+            }
+
+            $uploadedCids[] = $cid; // Only track CIDs that match existing members
             $principal = floatval(str_replace(',', '', $principalRaw));
             $totalDue = floatval(str_replace(',', '', $totalDueRaw));
             $segments = explode('-', $loanNumber);
@@ -73,6 +86,7 @@ class SpecialBillingImport implements ToCollection
             // Group by member
             if (!isset($memberLoans[$cid])) {
                 $memberLoans[$cid] = [
+                    'member' => $member,
                     'special_loans' => []
                 ];
             }
@@ -82,23 +96,24 @@ class SpecialBillingImport implements ToCollection
             Log::info("Added to special loans for CID {$cid} with total_due: {$totalDue}");
         }
 
-        // Process each member's special loans
-        foreach ($memberLoans as $cid => $loans) {
-            $member = Member::where('cid', $cid)->first();
+        // Remove existing SpecialBilling records that don't match uploaded CIDs
+        $uniqueUploadedCids = array_unique($uploadedCids);
+        $deletedCount = SpecialBilling::whereNotIn('cid', $uniqueUploadedCids)->delete();
+        Log::info("Removed {$deletedCount} SpecialBilling records that don't match uploaded CIDs");
 
-            if (!$member) {
-                Log::warning("Member not found for CID: {$cid}");
-                continue;
-            }
+        // Process each member's special loans
+        foreach ($memberLoans as $cid => $data) {
+            $member = $data['member'];
+            $loans = $data['special_loans'];
 
             Log::info("Processing member: {$member->fname} {$member->lname} (CID: {$cid})");
-            Log::info("Special loans count: " . count($loans['special_loans']));
+            Log::info("Special loans count: " . count($loans));
 
             $updateData = [];
 
             // Process Special Loans - Find highest principal among special loans
-            if (!empty($loans['special_loans'])) {
-                $bestSpecialLoan = $this->findBestSpecialLoan($loans['special_loans']);
+            if (!empty($loans)) {
+                $bestSpecialLoan = $this->findBestSpecialLoan($loans);
                 if ($bestSpecialLoan) {
                     $updateData['special_principal'] = $bestSpecialLoan['principal'];
                     Log::info("Selected special loan: {$bestSpecialLoan['loan_number']} (Principal: {$bestSpecialLoan['principal']})");
@@ -116,17 +131,19 @@ class SpecialBillingImport implements ToCollection
             }
 
             // Create/update SpecialBilling record using ONLY file data for amortization
-            if (!empty($loans['special_loans'])) {
-                $bestSpecialLoan = $this->findBestSpecialLoan($loans['special_loans']);
+            if (!empty($loans)) {
+                $bestSpecialLoan = $this->findBestSpecialLoan($loans);
                 if ($bestSpecialLoan) {
                     // Calculate amortization from file data ONLY (not from LoanForecast)
-                    $fileAmortization = $this->calculateFileAmortization($loans['special_loans']);
+                    $fileAmortization = $this->calculateFileAmortization($loans);
 
                     SpecialBilling::updateOrCreate(
                         [
-                            'employee_id' => $member->emp_id ?? $member->cid,
+                            'cid' => $cid, // Use CID for matching
                         ],
                         [
+                            'loan_acct_no' => $bestSpecialLoan['loan_number'],
+                            'employee_id'  => $member->emp_id ?? $member->cid,
                             'name'         => "{$member->fname} {$member->lname}",
                             'amortization' => $fileAmortization,
                             'start_date'   => $bestSpecialLoan['start_date'],
