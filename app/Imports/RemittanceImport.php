@@ -113,7 +113,15 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         ->with('savingProduct')
                         ->get()
                         ->sortBy(function($saving) {
-                            return $saving->savingProduct ? $saving->savingProduct->prioritization : 999;
+                            $priority = $saving->savingProduct ? $saving->savingProduct->prioritization : 999;
+                            $deductionAmount = $saving->deduction_amount ?? 0;
+                            $id = $saving->id;
+
+                            // If deduction_amount is NULL, use 0 for sorting
+                            $deductionForSorting = $deductionAmount === null ? 0 : $deductionAmount;
+
+                            // Return a composite key: priority, then negative deduction amount (for descending), then ID
+                            return [$priority, -$deductionForSorting, $id];
                         });
 
                     // Distribute amounts based on deduction_amount and prioritization

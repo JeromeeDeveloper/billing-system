@@ -32,6 +32,11 @@ class BranchBillingExport implements WithMultipleSheets
         })->get();
 
         foreach ($savingProducts as $product) {
+            // Skip mortuary products
+            if (stripos($product->product_name, 'mortuary') !== false) {
+                continue;
+            }
+
             $sheets[$product->product_name] = new BranchDynamicSavingsSheet($this->billingPeriod, $this->branchId, $product->product_name);
         }
 

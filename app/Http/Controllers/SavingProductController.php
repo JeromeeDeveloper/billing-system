@@ -46,6 +46,7 @@ class SavingProductController extends Controller
         // Update deduction_amount in all related Savings records
         if ($request->has('amount_to_deduct') && $request->amount_to_deduct != $oldAmountToDeduct) {
             $updatedCount = Savings::where('product_code', $savingProduct->product_code)
+                ->whereRaw('LOWER(product_name) LIKE ?', ['%mortuary%'])
                 ->update(['deduction_amount' => $request->amount_to_deduct]);
 
             $message = 'Saving product updated successfully';

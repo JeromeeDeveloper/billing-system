@@ -519,10 +519,9 @@
                                                                                         <label class="form-check-label fw-bold" for="loan{{ $member->id }}_{{ $index }}">
                                                                                             <i class="fa fa-credit-card me-2 text-primary"></i>
                                                                                             <strong>{{ $loan->loan_acct_no }}</strong>
-                                                                                            <span class="badge {{ $loan->prioritization == 1 ? 'bg-danger' : ($loan->prioritization == 2 ? 'bg-warning' : 'bg-info') }} ms-2">
-                                                                                                Priority {{ $loan->prioritization }}
+                                                                                            <span class="badge bg-info ms-2">
+                                                                                                Balance: ₱ {{ number_format($loan->total_due, 2) }}
                                                                                             </span>
-                                                                                            <span class="float-right fw-bold text-primary">₱{{ number_format($loan->total_due, 2) }}</span>
                                                                                         </label>
                                                                                     </div>
                                                                                     <div class="ml-4 mt-2">
@@ -551,30 +550,8 @@
 
                                                                     <!-- Payment Summary -->
                                                                     <div class="row mt-4">
-                                                                        <div class="col-md-6">
-                                                                            <div class="card bg-light border-success">
-                                                                                <div class="card-header bg-success text-white">
-                                                                                    <h6 class="card-title mb-0">
-                                                                                        <i class="fa fa-calculator me-2"></i>Payment Summary
-                                                                                    </h6>
-                                                                                </div>
-                                                                                <div class="card-body">
-                                                                                    <div class="row">
-                                                                                        <div class="col-6">
-                                                                                            <p class="mb-2"><strong>Total Withdrawal:</strong></p>
-                                                                                            <p class="mb-2"><strong>Total Loan Payment:</strong></p>
-                                                                                            <p class="mb-0"><strong>Remaining to Savings:</strong></p>
-                                                                                        </div>
-                                                                                        <div class="col-6 text-end">
-                                                                                            <p class="mb-2" id="total-withdrawal{{ $member->id }}">₱0.00</p>
-                                                                                            <p class="mb-2" id="total-loan-payment{{ $member->id }}">₱0.00</p>
-                                                                                            <p class="mb-0" id="remaining-to-savings{{ $member->id }}">₱0.00</p>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div class="col-md-6">
+
+                                                                        <div class="col-md-12">
                                                                             <div class="card bg-light border-primary">
                                                                                 <div class="card-header bg-primary text-white">
                                                                                     <h6 class="card-title mb-0">
