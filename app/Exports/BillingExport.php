@@ -26,7 +26,7 @@ class BillingExport implements WithMultipleSheets
             'Billing Summary' => new LoanDeductionsSheet($this->billingPeriod),
         ];
 
-        // Add dynamic savings product sheets
+        // Add dynamic savings product sheets only if there are members with member_tagging = 'New'
         $savingProducts = SavingProduct::whereHas('savings', function ($query) {
             $query->where('account_status', 'deduction');
         })->get();
@@ -36,17 +36,35 @@ class BillingExport implements WithMultipleSheets
             if (stripos($product->product_name, 'mortuary') !== false) {
                 continue;
             }
-
-            $sheets[$product->product_name] = new DynamicSavingsSheet($this->billingPeriod, $product->product_name);
+            // Check if there are any members for this product
+            $memberCount = Member::where('member_tagging', 'New')
+                ->whereHas('savings', function ($query) use ($product) {
+                    $query->where('account_status', 'deduction')
+                        ->whereHas('savingProduct', function($q) use ($product) {
+                            $q->where('product_name', $product->product_name);
+                        });
+                })
+                ->count();
+            if ($memberCount > 0) {
+                $sheets[$product->product_name] = new DynamicSavingsSheet($this->billingPeriod, $product->product_name);
+            }
         }
 
-        // Add dynamic share product sheets
+        // Add dynamic share product sheets only if there are members with member_tagging = 'New'
         $shareProducts = ShareProduct::whereHas('shares', function ($query) {
             $query->where('account_status', 'deduction');
         })->get();
 
         foreach ($shareProducts as $product) {
-            $sheets[$product->product_name] = new DynamicSharesSheet($this->billingPeriod, $product->product_name);
+            $memberCount = Member::where('member_tagging', 'New')
+                ->whereHas('shares', function ($query) use ($product) {
+                    $query->where('account_status', 'deduction')
+                        ->where('product_name', $product->product_name);
+                })
+                ->count();
+            if ($memberCount > 0) {
+                $sheets[$product->product_name] = new DynamicSharesSheet($this->billingPeriod, $product->product_name);
+            }
         }
 
         return $sheets;
@@ -178,19 +196,20 @@ class DynamicSavingsSheet implements FromCollection, WithHeadings, WithTitle
 
     public function collection()
     {
-        $members = Member::whereHas('savings', function ($query) {
-            $query->where('account_status', 'deduction')
-                ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', $this->productName);
-                });
-        })
-        ->with(['savings' => function ($query) {
-            $query->where('account_status', 'deduction')
-                ->whereHas('savingProduct', function($q) {
-                    $q->where('product_name', $this->productName);
-                });
-        }])
-        ->get();
+        $members = Member::where('member_tagging', 'New')
+            ->whereHas('savings', function ($query) {
+                $query->where('account_status', 'deduction')
+                    ->whereHas('savingProduct', function($q) {
+                        $q->where('product_name', $this->productName);
+                    });
+            })
+            ->with(['savings' => function ($query) {
+                $query->where('account_status', 'deduction')
+                    ->whereHas('savingProduct', function($q) {
+                        $q->where('product_name', $this->productName);
+                    });
+            }])
+            ->get();
 
         return $members->map(function ($member) {
             // Calculate amortization as sum of total_due for all loans except those marked as 'special'
@@ -265,15 +284,16 @@ class DynamicSharesSheet implements FromCollection, WithHeadings, WithTitle
 
     public function collection()
     {
-        $members = Member::whereHas('shares', function ($query) {
-            $query->where('account_status', 'deduction')
-                ->where('product_name', $this->productName);
-        })
-        ->with(['shares' => function ($query) {
-            $query->where('account_status', 'deduction')
-                ->where('product_name', $this->productName);
-        }])
-        ->get();
+        $members = Member::where('member_tagging', 'New')
+            ->whereHas('shares', function ($query) {
+                $query->where('account_status', 'deduction')
+                    ->where('product_name', $this->productName);
+            })
+            ->with(['shares' => function ($query) {
+                $query->where('account_status', 'deduction')
+                    ->where('product_name', $this->productName);
+            }])
+            ->get();
 
         return $members->map(function ($member) {
             // Calculate amortization as sum of total_due for all loans except those marked as 'special'
