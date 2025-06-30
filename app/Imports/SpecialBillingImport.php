@@ -44,13 +44,13 @@ class SpecialBillingImport implements ToCollection
 
             $cid = ltrim($cidRaw, "'");
 
-            // Check if member exists with member_tagging "PGB" before processing
+            // Check if member exists with member_tagging 'PGB' or 'New' before processing
             $member = Member::where('cid', $cid)
-                           ->where('member_tagging', 'PGB')
+                           ->whereIn('member_tagging', ['PGB', 'New'])
                            ->first();
 
             if (!$member) {
-                Log::warning("Skipping CID {$cid} - member not found or not authorized (PGB)");
+                Log::warning("Skipping CID {$cid} - member not found or not authorized (PGB or New)");
                 continue;
             }
 

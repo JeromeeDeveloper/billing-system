@@ -58,15 +58,15 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
             // Parse name - Format as "Lastname, Firstname"
             [$lname, $fname] = array_map('trim', explode(',', $row['name'] . ','));
 
-            // Check if member exists with PGB tagging
+            // Check if member exists with PGB or New tagging
             $cid = $row['cid'];
             $member = Member::where('cid', $cid)
-                           ->where('member_tagging', 'PGB')
+                           ->whereIn('member_tagging', ['PGB', 'New'])
                            ->first();
 
             if (!$member) {
                 // Log skipped member and continue
-                Log::info("LoanForecast Import - Skipped CID {$cid}: Member not found or not tagged as PGB");
+                Log::info("LoanForecast Import - Skipped CID {$cid}: Member not found or not tagged as PGB or New");
                 $this->stats['not_found']++;
                 continue;
             }
