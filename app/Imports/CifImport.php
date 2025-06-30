@@ -53,7 +53,9 @@ class CifImport implements ToCollection, WithChunkReading, WithBatchInserts, Wit
             $cid = str_pad($row['customer_no'], 9, '0', STR_PAD_LEFT);
             [$lname, $fname] = array_map('trim', explode(',', $row['customer_name'] . ','));
 
-            $member = Member::where('cid', $cid)->first();
+            $member = Member::where('cid', $cid)
+                ->whereIn('member_tagging', ['PGB', 'New'])
+                ->first();
 
             if ($member) {
                 $member->update([
@@ -70,7 +72,7 @@ class CifImport implements ToCollection, WithChunkReading, WithBatchInserts, Wit
                     'billing_period'          => $this->billingPeriod, // Added billing period here
                 ]);
             }
-            // Do nothing if member doesn't exist
+            // Do nothing if member doesn't exist or tagging is not PGB/New
         }
     }
 
