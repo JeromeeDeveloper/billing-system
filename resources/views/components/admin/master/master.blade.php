@@ -279,6 +279,40 @@
                                 @endif
                             </div>
 
+                            <!-- Savings & Shares Product Upload Section -->
+                            <div class="card-body border-bottom">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fa fa-upload me-2"></i>Savings & Shares Product File Upload
+                                        </h6>
+                                        <p class="text-muted mb-3">
+                                            Upload file with savings and shares product codes to set deduction amounts.
+                                            File should have "CoreID" header in A1, product codes in row 1 (columns B onwards),
+                                            and deduction amounts below. CIDs will be padded to 9 digits.
+                                        </p>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <form action="{{ route('master.upload.savings-shares-product') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" style="gap: 10px;">
+                                            @csrf
+                                            <input type="file" name="savings_shares_file" class="form-control-file" accept=".xlsx,.xls,.csv" required>
+                                            <button type="submit" class="btn btn-info">
+                                                <i class="fa fa-upload me-1"></i>Upload Products
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                @if(session('success') && str_contains(session('success'), 'Savings & Shares Product import'))
+                                    <div class="mt-3">
+                                        <div class="alert alert-success">
+                                            <i class="fa fa-check-circle me-2"></i>
+                                            {{ session('success') }}
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="masterlistTable" class="table table-striped table-bordered display">

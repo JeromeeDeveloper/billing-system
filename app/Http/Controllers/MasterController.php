@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Member;
 use App\Models\MasterList;
 use App\Imports\CoreIdImport;
+use App\Imports\SavingsSharesProductImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -820,6 +821,31 @@ class MasterController extends Controller
         } catch (\Exception $e) {
             Log::error('CoreID Upload Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error uploading CoreID file: ' . $e->getMessage());
+        }
+    }
+
+    public function uploadSavingsSharesProduct(Request $request)
+    {
+        $request->validate([
+            'savings_shares_file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
+        ]);
+
+        try {
+            $import = new SavingsSharesProductImport();
+            Excel::import($import, $request->file('savings_shares_file'));
+
+            $stats = $import->getStats();
+
+            $message = "Savings & Shares Product import completed successfully. ";
+            $message .= "Processed: {$stats['processed']}, ";
+            $message .= "Savings Updated: {$stats['savings_updated']}, ";
+            $message .= "Shares Updated: {$stats['shares_updated']}, ";
+            $message .= "Skipped: {$stats['skipped']}";
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            Log::error('Savings & Shares Product Upload Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error uploading Savings & Shares Product file: ' . $e->getMessage());
         }
     }
 }

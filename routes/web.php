@@ -107,6 +107,7 @@ Route::put('/master/members/{id}', [MasterController::class, 'update'])->name('m
 Route::delete('/master/members/{id}', [MasterController::class, 'destroy'])->name('master.member.delete');
 Route::post('Admin/master/add', [MasterController::class, 'store'])->name('members.store');
 Route::post('/master/upload-coreid', [MasterController::class, 'uploadCoreId'])->name('master.upload.coreid');
+Route::post('/master/upload-savings-shares-product', [MasterController::class, 'uploadSavingsSharesProduct'])->name('master.upload.savings-shares-product');
 
 //Savings
 Route::get('/savings', [SavingsController::class, 'index'])->name('savings');
