@@ -51,28 +51,59 @@ class CifImport implements ToCollection, WithChunkReading, WithBatchInserts, Wit
 
             // Pad customer_no with leading zeros to ensure 9 digits
             $cid = str_pad($row['customer_no'], 9, '0', STR_PAD_LEFT);
-            [$lname, $fname] = array_map('trim', explode(',', $row['customer_name'] . ','));
 
-            $member = Member::where('cid', $cid)
+            // Only update existing members with member_tagging PGB
+            $member = \App\Models\Member::where('cid', $cid)
                 ->whereIn('member_tagging', ['PGB', 'New'])
                 ->first();
 
-            if ($member) {
-                $member->update([
-                    'birth_date'               => $this->parseDate($row['birth_date']),
-                    'date_registered'         => $this->parseDate($row['date_registered']),
-                    'gender'                  => $this->normalizeGender($row['gender']),
-                    'customer_type'           => $row['customer_type'],
-                    'customer_classification' => $row['customer_classification'],
-                    'industry'                => $row['industry'],
-                    'area_officer'            => $row['area_officer'],
-                    'area'                    => $row['area'],
-                    'status'                  => strtolower($row['status']) === 'merged' ? 'merged' : 'active',
-                    'address'                 => $row['address'],
-                    'billing_period'          => $this->billingPeriod, // Added billing period here
-                ]);
+            if (!$member) {
+                // Skip if member doesn't exist or doesn't have PGB tagging
+                continue;
             }
-            // Do nothing if member doesn't exist or tagging is not PGB/New
+
+            // Remove prefixes and split name
+            $name = trim($row['customer_name']);
+            $name = preg_replace('/^(Mr\.|Mrs\.|Ms\.|Miss\.|Dr\.|MR\.|MRS\.|MS\.|MISS\.|DR\.)\s*/i', '', $name);
+            [$lname, $fname] = array_map('trim', explode(',', $name . ','));
+
+            $data = [
+                'fname' => $fname,
+                'lname' => $lname,
+                'birth_date'               => $this->parseDate($row['birth_date'] ?? null),
+                'date_registered'         => $this->parseDate($row['date_registered'] ?? null),
+                'gender'                  => $this->normalizeGender($row['gender'] ?? null),
+                'customer_type'           => $row['customer_type'] ?? null,
+                'customer_classification' => $row['customer_classification'] ?? null,
+                'industry'                => $row['industry'] ?? null,
+                'area_officer'            => $row['area_officer'] ?? null,
+                'area'                    => $row['area'] ?? null,
+                'status'                  => strtolower($row['status'] ?? '') === 'merged' ? 'merged' : 'active',
+                'address'                 => $row['address'] ?? null,
+                'billing_period'          => $this->billingPeriod,
+            ];
+
+            // Update the existing member
+            $member->update($data);
+
+            // Create or update MasterList entry
+            try {
+                $masterListEntry = \App\Models\MasterList::updateOrCreate(
+                    [
+                        'member_id' => $member->id,
+                        'billing_period' => $this->billingPeriod,
+                    ],
+                    [
+                        'branches_id' => $member->branch_id, // This can be null for members with no branch
+                        'status' => 'deduction',
+                    ]
+                );
+
+                // Log for debugging
+                Log::info("CIF Import - Updated member: {$member->cid}, Branch ID: " . ($member->branch_id ?? 'NULL') . ", MasterList ID: {$masterListEntry->id}");
+            } catch (\Exception $e) {
+                Log::error("CIF Import - Failed to create MasterList for member {$member->cid}: " . $e->getMessage());
+            }
         }
     }
 

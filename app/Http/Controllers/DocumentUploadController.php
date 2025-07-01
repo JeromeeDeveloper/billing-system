@@ -14,12 +14,13 @@ use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\NotificationController;
+use Illuminate\Database\Eloquent\Collection;
 
 class DocumentUploadController extends Controller
 {
    public function store(Request $request)
 {
-    ini_set('max_execution_time', 2000);
+    ini_set('max_execution_time', 8000);
     ini_set('memory_limit', '1G'); // Increase memory limit to 1GB
 
     $request->validate([
@@ -104,10 +105,10 @@ class DocumentUploadController extends Controller
         $billingPeriod = Auth::user()->billing_period ?? null;
 
         $uploadMappings = [
+            'cif_file'     => ['type' => 'CIF', 'import' => CifImport::class],
             'file'         => ['type' => 'Installment File', 'import' => LoanForecastImport::class],
             'savings_file' => ['type' => 'Savings', 'import' => SavingsImport::class],
             'shares_file'  => ['type' => 'Shares', 'import' => SharesImport::class],
-            'cif_file'     => ['type' => 'CIF', 'import' => CifImport::class],
             'loan_file'    => ['type' => 'Loan', 'import' => LoanImport::class],
         ];
 
