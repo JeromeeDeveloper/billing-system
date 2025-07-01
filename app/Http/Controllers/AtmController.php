@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\AtmPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -23,8 +24,13 @@ class AtmController extends Controller
 {
     public function index(Request $request)
     {
+        $billingPeriod = Auth::user()->billing_period;
+
         $query = Member::query()
             ->with(['branch', 'savings', 'shares', 'loanForecasts', 'loanPayments'])
+            ->when($billingPeriod, function ($query, $billingPeriod) {
+                $query->where('billing_period', 'like', $billingPeriod . '%');
+            })
             ->when($request->filled('name'), function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {
                     $q->where('fname', 'like', '%' . $request->name . '%')
@@ -101,11 +107,17 @@ class AtmController extends Controller
 
     public function generateSummaryReport()
     {
+        $billingPeriod = Auth::user()->billing_period;
+
         $summary = Member::select(
             DB::raw('SUM(savings_balance) as total_savings'),
             DB::raw('SUM(share_balance) as total_shares'),
             DB::raw('SUM(loan_balance) as total_loans')
-        )->first();
+        )
+        ->when($billingPeriod, function ($query, $billingPeriod) {
+            $query->where('billing_period', 'like', $billingPeriod . '%');
+        })
+        ->first();
 
         $branchSummary = Member::select(
             'branches.name as branch_name',
@@ -114,6 +126,9 @@ class AtmController extends Controller
             DB::raw('SUM(members.loan_balance) as total_loans')
         )
         ->join('branches', 'members.branch_id', '=', 'branches.id')
+        ->when($billingPeriod, function ($query, $billingPeriod) {
+            $query->where('members.billing_period', 'like', $billingPeriod . '%');
+        })
         ->groupBy('branches.id', 'branches.name')
         ->get();
 
@@ -122,9 +137,14 @@ class AtmController extends Controller
 
     public function generateBranchReport()
     {
+        $billingPeriod = Auth::user()->billing_period;
+
         $branches = Member::with(['branch', 'savings', 'shares', 'loanForecasts'])
             ->select('members.*')
             ->join('branches', 'members.branch_id', '=', 'branches.id')
+            ->when($billingPeriod, function ($query, $billingPeriod) {
+                $query->where('members.billing_period', 'like', $billingPeriod . '%');
+            })
             ->orderBy('branches.name')
             ->get()
             ->groupBy('branch.name');

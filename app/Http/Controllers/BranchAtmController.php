@@ -6,7 +6,7 @@ use App\Models\Member;
 use App\Models\LoanPayment;
 use App\Models\LoanForecast;
 use App\Models\Saving;
-use App\Models\Share;
+use App\Models\Shares;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +18,13 @@ class BranchAtmController extends Controller
 {
     public function index(Request $request)
     {
+        $billingPeriod = Auth::user()->billing_period;
+
         $query = Member::with(['branch', 'savings', 'shares', 'loanForecasts'])
-            ->where('branch_id', Auth::user()->branch_id);
+            ->where('branch_id', Auth::user()->branch_id)
+            ->when($billingPeriod, function ($query, $billingPeriod) {
+                $query->where('billing_period', 'like', $billingPeriod . '%');
+            });
 
         if ($request->filled('name')) {
             $query->where(function ($q) use ($request) {
@@ -84,7 +89,7 @@ class BranchAtmController extends Controller
             // Update share balances
             if ($request->has('shares')) {
                 foreach ($request->shares as $shareData) {
-                    $share = Share::where('account_number', $shareData['account_number'])
+                    $share = Shares::where('account_number', $shareData['account_number'])
                         ->where('member_id', $member->id)
                         ->first();
 
