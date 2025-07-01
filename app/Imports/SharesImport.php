@@ -79,14 +79,14 @@ class SharesImport implements ToCollection, WithHeadingRow, WithChunkReading, Wi
                 continue;
             }
 
-            $cid = str_pad(preg_replace('/\D/', '', $rawCid), 9, '0', STR_PAD_LEFT); // Ensure 9-digit CID
+            $cid = str_pad($rawCid, 9, '0', STR_PAD_LEFT); // Ensure 9-digit CID
 
             $member = Member::where('cid', $cid)
-                           ->where('member_tagging', 'PGB')
+                           ->whereIn('member_tagging', ['PGB', 'New'])
                            ->first();
 
             if (!$member) {
-                Log::warning("Member not found or not tagged as PGB for CID: $cid");
+                Log::warning("Member not found or not tagged as PGB/New for CID: $cid (Raw CID: $rawCid)");
                 $skipped++;
                 continue;
             }
@@ -185,7 +185,27 @@ class SharesImport implements ToCollection, WithHeadingRow, WithChunkReading, Wi
             }
         }
 
+        // Update member share balances
+        $this->updateMemberShareBalances();
+
         Log::info("Shares Import Summary: Processed $processed new records, Updated $updated records, Skipped $skipped records");
+    }
+
+    /**
+     * Update member share balances after import
+     */
+    private function updateMemberShareBalances()
+    {
+        $members = Member::whereIn('member_tagging', ['PGB', 'New'])->get();
+
+        foreach ($members as $member) {
+            $totalShareBalance = Shares::where('member_id', $member->id)
+                ->sum('current_balance');
+
+            $member->update(['share_balance' => $totalShareBalance]);
+        }
+
+        Log::info("Updated share balances for " . $members->count() . " members");
     }
 
     /**
