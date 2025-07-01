@@ -117,6 +117,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 ]
             );
 
+            // Update member's branch_id if it's different
+            if ($member->branch_id != $branch->id) {
+                $member->update(['branch_id' => $branch->id]);
+            }
+
             // Create or update master_list entry with billing period
             MasterList::updateOrCreate(
                 [
