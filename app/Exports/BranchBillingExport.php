@@ -25,7 +25,7 @@ class BranchBillingExport implements WithMultipleSheets
             'Billing Summary' => new BranchLoanDeductionsSheet($this->billingPeriod, $this->branchId),
         ];
 
-        // Add dynamic savings product sheets
+        // Add dynamic savings product sheets only if there are members with member_tagging = 'New'
         $savingProducts = SavingProduct::whereHas('savings', function ($query) {
             $query->where('account_status', 'deduction')
                 ->where('deduction_amount', '>', 0);
@@ -36,17 +36,38 @@ class BranchBillingExport implements WithMultipleSheets
             if (stripos($product->product_name, 'mortuary') !== false) {
                 continue;
             }
-
-            $sheets[$product->product_name] = new BranchDynamicSavingsSheet($this->billingPeriod, $this->branchId, $product->product_name);
+            // Check if there are any members for this product
+            $memberCount = Member::where('branch_id', $this->branchId)
+                ->where('member_tagging', 'New')
+                ->whereHas('savings', function ($query) use ($product) {
+                    $query->where('account_status', 'deduction')
+                        ->where('deduction_amount', '>', 0)
+                        ->whereHas('savingProduct', function($q) use ($product) {
+                            $q->where('product_name', $product->product_name);
+                        });
+                })
+                ->count();
+            if ($memberCount > 0) {
+                $sheets[$product->product_name] = new BranchDynamicSavingsSheet($this->billingPeriod, $this->branchId, $product->product_name);
+            }
         }
 
-        // Add dynamic share product sheets
+        // Add dynamic share product sheets only if there are members with member_tagging = 'New'
         $shareProducts = ShareProduct::whereHas('shares', function ($query) {
             $query->where('account_status', 'deduction');
         })->get();
 
         foreach ($shareProducts as $product) {
-            $sheets[$product->product_name] = new BranchDynamicSharesSheet($this->billingPeriod, $this->branchId, $product->product_name);
+            $memberCount = Member::where('branch_id', $this->branchId)
+                ->where('member_tagging', 'New')
+                ->whereHas('shares', function ($query) use ($product) {
+                    $query->where('account_status', 'deduction')
+                        ->where('product_name', $product->product_name);
+                })
+                ->count();
+            if ($memberCount > 0) {
+                $sheets[$product->product_name] = new BranchDynamicSharesSheet($this->billingPeriod, $this->branchId, $product->product_name);
+            }
         }
 
         return $sheets;
@@ -177,6 +198,7 @@ class BranchDynamicSavingsSheet implements FromCollection, WithHeadings, WithTit
     public function collection()
     {
         $members = Member::where('branch_id', $this->branchId)
+            ->where('member_tagging', 'New')
             ->whereHas('savings', function ($query) {
                 $query->where('account_status', 'deduction')
                     ->where('deduction_amount', '>', 0)
@@ -263,6 +285,7 @@ class BranchDynamicSharesSheet implements FromCollection, WithHeadings, WithTitl
     public function collection()
     {
         $members = Member::where('branch_id', $this->branchId)
+            ->where('member_tagging', 'New')
             ->whereHas('shares', function ($query) {
                 $query->where('account_status', 'deduction')
                     ->where('product_name', $this->productName);
