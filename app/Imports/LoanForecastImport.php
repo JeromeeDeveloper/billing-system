@@ -122,6 +122,16 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 $member->update(['branch_id' => $branch->id]);
             }
 
+            // Update member's name if provided in import
+            if (!empty($fname) || !empty($lname)) {
+                $updateData = [];
+                if (!empty($fname)) $updateData['fname'] = $fname;
+                if (!empty($lname)) $updateData['lname'] = $lname;
+                if (!empty($updateData)) {
+                    $member->update($updateData);
+                }
+            }
+
             // Create or update master_list entry with billing period
             MasterList::updateOrCreate(
                 [
