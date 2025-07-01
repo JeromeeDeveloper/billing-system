@@ -10,13 +10,22 @@ use App\Imports\SpecialBillingImport;
 use App\Exports\SpecialBillingExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class SpecialBillingController extends Controller
 {
     public function index(Request $request)
     {
-        $query = SpecialBilling::query();
+        $billingPeriod = Auth::user()->billing_period;
+
+        $query = SpecialBilling::query()
+            ->with('member')
+            ->when($billingPeriod, function ($query, $billingPeriod) {
+                $query->whereHas('member', function ($q) use ($billingPeriod) {
+                    $q->where('billing_period', 'like', $billingPeriod . '%');
+                });
+            });
 
         // Search functionality
         if ($request->filled('search')) {
@@ -79,9 +88,11 @@ class SpecialBillingController extends Controller
                 continue;
             }
 
-            $member = Member::where('cid', $cid)->first();
+            $member = Member::where('cid', $cid)
+                ->whereIn('member_tagging', ['PGB', 'New'])
+                ->first();
             if (!$member) {
-                Log::warning("Member not found for CID: {$cid}");
+                Log::warning("Member not found or not tagged as PGB/New for CID: {$cid}");
                 continue;
             }
 

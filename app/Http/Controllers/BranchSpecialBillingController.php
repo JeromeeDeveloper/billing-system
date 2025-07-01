@@ -13,11 +13,21 @@ class BranchSpecialBillingController extends Controller
     public function index(Request $request)
     {
         $branch_id = Auth::user()->branch_id;
-        $query = SpecialBilling::query();
-        // If SpecialBilling has a member relationship, filter by member's branch_id
+        $billingPeriod = Auth::user()->billing_period;
+
+        $query = SpecialBilling::query()
+            ->with('member');
+
+        // Filter by member's branch_id
         $query->whereHas('member', function($q) use ($branch_id) {
             $q->where('branch_id', $branch_id);
         });
+
+        // Filter by billing_period
+        $query->whereHas('member', function($q) use ($billingPeriod) {
+            $q->where('billing_period', 'like', $billingPeriod . '%');
+        });
+
         // Add search if needed
         if ($request->filled('search')) {
             $search = $request->search;
