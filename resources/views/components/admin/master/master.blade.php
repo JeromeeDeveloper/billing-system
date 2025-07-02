@@ -260,7 +260,7 @@
                                 <div class="row">
                                     <div class="col-md-8">
                                         <h6 class="text-primary mb-3">
-                                            <i class="fa fa-upload me-2"></i>CoreID File Upload
+                                            <i class="fa fa-upload me-2"></i>PGB Members File Upload
                                         </h6>
                                         <p class="text-muted mb-3">
                                             Upload CoreID file to set member tagging to PGB.
@@ -273,7 +273,7 @@
                                             @csrf
                                             <input type="file" name="coreid_file" class="form-control-file" accept=".xlsx,.xls,.csv" required>
                                             <button type="submit" class="btn btn-warning">
-                                                <i class="fa fa-upload me-1"></i>Upload CoreID
+                                                <i class="fa fa-upload me-1"></i>Upload PGB Members
                                             </button>
                                         </form>
                                     </div>
@@ -294,7 +294,7 @@
                                 <div class="row">
                                     <div class="col-md-8">
                                         <h6 class="text-primary mb-3">
-                                            <i class="fa fa-upload me-2"></i>Savings & Shares Product File Upload
+                                            <i class="fa fa-upload me-2"></i>Savings & Shares Deduction File Upload
                                         </h6>
                                         <p class="text-muted mb-3">
                                             Upload file with savings and shares product codes to set deduction amounts.
