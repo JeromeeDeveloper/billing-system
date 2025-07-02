@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\LoanProduct;
 use App\Models\SavingProduct;
 use App\Models\ShareProduct;
+use App\Models\RemittancePreview;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
@@ -30,53 +31,58 @@ class RemittanceReportPerBranchMemberExport implements FromArray, WithStyles, Wi
     public function array(): array
     {
         $rows = [];
-        $branches = Branch::with(['members' => function($query) {
-            $query->with(['loanForecasts', 'shares', 'savings']);
-        }])->get();
+        $branches = Branch::all();
         foreach ($branches as $branch) {
-            // Static headers
-            $rows[] = ['Remittance Report for ' . $branch->name]; // A1
-            $rows[] = ['Remittance Date', now()->format('F d, Y')]; // A2
-            $rows[] = ['For Billing Period', $this->billingPeriod]; // A3
+            $rows[] = ['Remittance Report for ' . $branch->name];
+            $rows[] = ['Remittance Date', now()->format('F d, Y')];
+            $rows[] = ['For Billing Period', $this->billingPeriod];
             $rows[] = [''];
 
-            // Dynamic headers
             $header = ['Member Name'];
-            foreach ($this->loanProducts as $i => $product) {
-                $header[] = 'Loan ' . ($i + 1);
+            foreach ($this->loanProducts as $product) {
+                $header[] = $product->product;
             }
-            foreach ($this->shareProducts as $i => $product) {
-                $header[] = 'Share ' . ($i + 1);
+            foreach ($this->shareProducts as $product) {
+                $header[] = $product->product_name;
             }
-            foreach ($this->savingProducts as $i => $product) {
-                $header[] = 'Savings ' . ($i + 1);
+            foreach ($this->savingProducts as $product) {
+                $header[] = $product->product_name;
             }
             $rows[] = $header;
 
-            // Member rows
-            foreach ($branch->members as $member) {
+            $members = $branch->members;
+            foreach ($members as $member) {
+                $remitted = RemittancePreview::where('member_id', $member->id)
+                    ->where('billing_period', $this->billingPeriod)
+                    ->where('status', 'success')
+                    ->first();
                 $row = [$member->fname . ' ' . $member->lname];
-                // Loans
+                // Loans: Only display remitted loan amount in the first loan product column
+                $loanDisplayed = false;
                 foreach ($this->loanProducts as $product) {
-                    $amount = $member->loanForecasts->filter(function($loan) use ($product) {
-                        $segments = explode('-', $loan->loan_acct_no);
-                        $productCode = $segments[2] ?? null;
-                        return $productCode && $productCode == $product->product_code;
-                    })->sum('total_due');
-                    $row[] = $amount;
+                    if (!$loanDisplayed && $remitted && $remitted->loans > 0) {
+                        $row[] = $remitted->loans;
+                        $loanDisplayed = true;
+                    } else {
+                        $row[] = '';
+                    }
                 }
                 // Shares
                 foreach ($this->shareProducts as $product) {
-                    $amount = $member->shares->filter(function($share) use ($product) {
-                        return $share->product_code == $product->product_code;
-                    })->sum('current_balance');
+                    $amount = $remitted ? $remitted->share_amount : 0;
                     $row[] = $amount;
                 }
                 // Savings
                 foreach ($this->savingProducts as $product) {
-                    $amount = $member->savings->filter(function($saving) use ($product) {
-                        return $saving->product_code == $product->product_code;
-                    })->sum('current_balance');
+                    $amount = 0;
+                    if ($remitted && is_array($remitted->savings) && isset($remitted->savings['distribution'])) {
+                        foreach ($remitted->savings['distribution'] as $dist) {
+                            if (($dist['product_code'] ?? null) == $product->product_code) {
+                                $amount = $dist['amount'] ?? 0;
+                                break;
+                            }
+                        }
+                    }
                     $row[] = $amount;
                 }
                 $rows[] = $row;
@@ -85,33 +91,36 @@ class RemittanceReportPerBranchMemberExport implements FromArray, WithStyles, Wi
             // Totals row
             $totals = ['TOTAL'];
             // Loans
+            $remitted = RemittancePreview::where('billing_period', $this->billingPeriod)
+                ->where('status', 'success')
+                ->whereHas('member', function($q) use ($branch) {
+                    $q->where('branch_id', $branch->id);
+                })
+                ->get();
             foreach ($this->loanProducts as $product) {
-                $total = $branch->members->flatMap->loanForecasts
-                    ->filter(function($loan) use ($product) {
-                        $segments = explode('-', $loan->loan_acct_no);
-                        $productCode = $segments[2] ?? null;
-                        return $productCode && $productCode == $product->product_code;
-                    })->sum('total_due');
+                $total = $remitted->sum('loans');
                 $totals[] = $total;
             }
             // Shares
             foreach ($this->shareProducts as $product) {
-                $total = $branch->members->flatMap->shares
-                    ->filter(function($share) use ($product) {
-                        return $share->product_code == $product->product_code;
-                    })->sum('current_balance');
+                $total = $remitted->sum('share_amount');
                 $totals[] = $total;
             }
             // Savings
             foreach ($this->savingProducts as $product) {
-                $total = $branch->members->flatMap->savings
-                    ->filter(function($saving) use ($product) {
-                        return $saving->product_code == $product->product_code;
-                    })->sum('current_balance');
+                $total = $remitted->sum(function($item) use ($product) {
+                    if (is_array($item->savings) && isset($item->savings['distribution'])) {
+                        foreach ($item->savings['distribution'] as $dist) {
+                            if (($dist['product_code'] ?? null) == $product->product_code) {
+                                return $dist['amount'] ?? 0;
+                            }
+                        }
+                    }
+                    return 0;
+                });
                 $totals[] = $total;
             }
             $rows[] = $totals;
-            // Blank row before next branch
             $rows[] = [''];
         }
         return $rows;
