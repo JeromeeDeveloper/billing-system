@@ -156,6 +156,7 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
             }
 
             return [
+                'cid'        => $member->cid ?? 'N/A',
                 'emp_id'        => $member->emp_id ?? 'N/A',
                 'amortization'  => $amortization,
                 'name'          => "{$member->fname} {$member->lname}",
@@ -170,6 +171,7 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
     public function headings(): array
     {
         return [
+            'CID',
             'Employee #',
             'Amortization',
             'Name',
@@ -251,6 +253,7 @@ class BranchDynamicSavingsSheet implements FromCollection, WithHeadings, WithTit
             }
 
             return [
+                'cid'        => $member->cid ?? 'N/A',
                 'emp_id'        => $member->emp_id ?? 'N/A',
                 'amortization'  => $amortization,
                 'name'          => "{$member->fname} {$member->lname}",
