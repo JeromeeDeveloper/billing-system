@@ -126,6 +126,21 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
 
             // Get all loan forecasts for this member
             foreach ($member->loanForecasts as $loanForecast) {
+                // Exclude loans set to non-deduction only if today is between start_hold and expiry_date (inclusive)
+                if ($loanForecast->account_status === 'non-deduction') {
+                    $today = now()->toDateString();
+                    $startHold = $loanForecast->start_hold ? $loanForecast->start_hold->format('Y-m-d') : null;
+                    $expiryDate = $loanForecast->expiry_date ? $loanForecast->expiry_date->format('Y-m-d') : null;
+                    if (
+                        ($startHold && $expiryDate && $today >= $startHold && $today <= $expiryDate) ||
+                        ($startHold && !$expiryDate && $today >= $startHold) ||
+                        (!$startHold && $expiryDate && $today <= $expiryDate)
+                    ) {
+                        continue;
+                    }
+                } else if ($loanForecast->account_status !== 'deduction') {
+                    continue;
+                }
                 // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000025-9)
                 $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
 
@@ -228,6 +243,10 @@ class BranchDynamicSavingsSheet implements FromCollection, WithHeadings, WithTit
 
             // Get all loan forecasts for this member
             foreach ($member->loanForecasts as $loanForecast) {
+                // Exclude loans set to non-deduction
+                if ($loanForecast->account_status !== 'deduction') {
+                    continue;
+                }
                 // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000025-9)
                 $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
 
@@ -310,6 +329,10 @@ class BranchDynamicSharesSheet implements FromCollection, WithHeadings, WithTitl
 
             // Get all loan forecasts for this member
             foreach ($member->loanForecasts as $loanForecast) {
+                // Exclude loans set to non-deduction
+                if ($loanForecast->account_status !== 'deduction') {
+                    continue;
+                }
                 // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000025-9)
                 $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
 
