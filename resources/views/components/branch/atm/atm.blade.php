@@ -168,82 +168,352 @@
 
                                                 <!-- Post Payment Modal -->
                                                 <div class="modal fade" id="postPaymentModal{{ $member->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                                    <div class="modal-dialog modal-lg">
+                                                    <div class="modal-dialog modal-xl">
                                                         <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title">Post Loan Payment - {{ $member->lname }}, {{ $member->fname }}</h5>
-                                                                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                                                            <div class="modal-header bg-primary text-white">
+                                                                <h5 class="modal-title">
+                                                                    <i class="fa fa-money-bill me-2"></i>
+                                                                    Post ATM Withdrawal - {{ $member->lname }}, {{ $member->fname }}
+                                                                </h5>
+                                                                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
                                                             </div>
-                                                            <form action="{{ route('branch.atm.post-payment') }}" method="POST">
+                                                            <form id="postPaymentForm{{ $member->id }}" action="{{ route('branch.atm.post-payment') }}" method="POST">
                                                                 @csrf
                                                                 <input type="hidden" name="member_id" value="{{ $member->id }}">
                                                                 <div class="modal-body">
-                                                                    <div class="row">
-                                                                        <div class="col-md-6">
-                                                                            <div class="form-group">
-                                                                                <label>Payment Amount</label>
-                                                                                <input type="number" step="0.01" class="form-control" name="payment_amount" required>
+                                                                    <!-- Loan Summary Cards -->
+                                                                    <div class="row mb-4">
+                                                                        <div class="col-md-4">
+                                                                            <div class="card bg-light border-primary">
+                                                                                <div class="card-body text-center">
+                                                                                    <h6 class="card-title text-primary">
+                                                                                        <i class="fa fa-credit-card me-2"></i>Total Loan Balance
+                                                                                    </h6>
+                                                                                    <h4 class="text-primary">₱{{ number_format($member->loan_balance ?? 0, 2) }}</h4>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
-                                                                        <div class="col-md-6">
-                                                                            <div class="form-group">
-                                                                                <label>Payment Date</label>
-                                                                                <input type="date" class="form-control" name="payment_date" value="{{ date('Y-m-d') }}" required>
+                                                                        <div class="col-md-4">
+                                                                            <div class="card bg-light border-success">
+                                                                                <div class="card-body text-center">
+                                                                                    <h6 class="card-title text-success">
+                                                                                        <i class="fa fa-exchange-alt me-2"></i>Total Remittance
+                                                                                    </h6>
+                                                                                    <h4 class="text-success">₱{{ number_format($member->loanForecasts->sum('total_due_after_remittance'), 2) }}</h4>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="col-md-4">
+                                                                            <div class="card bg-light border-info">
+                                                                                <div class="card-body text-center">
+                                                                                    <h6 class="card-title text-info">
+                                                                                        <i class="fa fa-money-check-alt me-2"></i>Total Payments
+                                                                                    </h6>
+                                                                                    <h4 class="text-info">₱{{ number_format($member->loanPayments ? $member->loanPayments->sum('amount') : 0, 2) }}</h4>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="row">
-                                                                        <div class="col-md-6">
-                                                                            <div class="form-group">
-                                                                                <label>Payment Reference</label>
-                                                                                <input type="text" class="form-control" name="payment_reference" required>
-                                                                            </div>
+
+                                                                    <!-- Withdrawal Amount Field -->
+                                                                    <div class="form-group">
+                                                                        <label class="form-label fw-bold">
+                                                                            <i class="fa fa-cash-register me-2 text-primary"></i>Withdrawal Amount
+                                                                        </label>
+                                                                        <input type="number" step="0.01" class="form-control form-control-lg"
+                                                                               name="withdrawal_amount" id="withdrawal_amount{{ $member->id }}"
+                                                                               placeholder="Enter the total amount withdrawn from ATM" required>
+                                                                        <small class="form-text text-muted">
+                                                                            <i class="fa fa-info-circle me-1"></i>
+                                                                            Enter the total amount withdrawn from ATM
+                                                                        </small>
+                                                                    </div>
+
+                                                                    <!-- Loan Selection Section -->
+                                                                    <div class="form-group mt-4">
+                                                                        <label class="form-label fw-bold">
+                                                                            <i class="fa fa-list-check me-2 text-success"></i>Select Loans to Pay
+                                                                        </label>
+                                                                        <div class="alert alert-info">
+                                                                            <i class="fa fa-lightbulb me-2"></i>
+                                                                            <strong>Tip:</strong> You can directly enter amounts for loans you want to pay, or check the boxes to auto-fill with total due amounts.
+                                                                            Remaining amount will be added to Regular Savings if available.
                                                                         </div>
-                                                                        <div class="col-md-6">
-                                                                            <div class="form-group">
-                                                                                <label>Notes</label>
-                                                                                <textarea class="form-control" name="notes" rows="1"></textarea>
-                                                                            </div>
+                                                                        <div class="loan-selection-container" id="loan-selection{{ $member->id }}">
+                                                                            @foreach ($member->loanForecasts as $index => $loan)
+                                                                                <div class="loan-option mb-3 p-3 border rounded">
+                                                                                    <div class="form-check">
+                                                                                        <input class="form-check-input loan-checkbox" type="checkbox"
+                                                                                               name="selected_loans[]"
+                                                                                               value="{{ $loan->loan_acct_no }}"
+                                                                                               id="loan{{ $member->id }}_{{ $index }}"
+                                                                                               data-total-due="{{ $loan->total_due }}"
+                                                                                               data-member-id="{{ $member->id }}">
+                                                                                        <label class="form-check-label fw-bold" for="loan{{ $member->id }}_{{ $index }}">
+                                                                                            <i class="fa fa-credit-card me-2 text-primary"></i>
+                                                                                            <strong>{{ $loan->loan_acct_no }}</strong>
+                                                                                            <span class="badge bg-info ms-2">
+                                                                                                Balance: ₱ {{ number_format($loan->total_due, 2) }}
+                                                                                            </span>
+                                                                                        </label>
+                                                                                    </div>
+                                                                                    <div class="ml-4 mt-2">
+                                                                                        <div class="row">
+                                                                                            <div class="col-md-6">
+                                                                                                <label class="form-label small">Amount to Pay:</label>
+                                                                                                <input type="number" step="0.01" class="form-control loan-amount-input"
+                                                                                                       name="loan_amounts[{{ $loan->loan_acct_no }}]"
+                                                                                                       placeholder="Enter amount"
+                                                                                                       data-total-due="{{ $loan->total_due }}"
+                                                                                                       data-member-id="{{ $member->id }}">
+                                                                                            </div>
+                                                                                            <div class="col-md-6">
+                                                                                                <div class="loan-details small text-muted">
+                                                                                                    <div><strong>Principal:</strong> ₱{{ number_format($loan->principal_due, 2) }}</div>
+                                                                                                    <div><strong>Interest:</strong> ₱{{ number_format($loan->interest_due, 2) }}</div>
+                                                                                                    <div><strong>Penalty:</strong> ₱{{ number_format($loan->penalty_due, 2) }}</div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @endforeach
                                                                         </div>
                                                                     </div>
-                                                                    <div class="row mt-3">
-                                                                        <div class="col-12">
-                                                                            <div class="card">
-                                                                                <div class="card-header">
-                                                                                    <h6 class="mb-0">Current Loan Balances</h6>
+
+                                                                    <!-- Payment Summary -->
+                                                                    <div class="row mt-4">
+                                                                        <div class="col-md-12">
+                                                                            <div class="card bg-light border-primary">
+                                                                                <div class="card-header bg-primary text-white">
+                                                                                    <h6 class="card-title mb-0">
+                                                                                        <i class="fa fa-file-invoice me-2"></i>Payment Details
+                                                                                    </h6>
                                                                                 </div>
                                                                                 <div class="card-body">
-                                                                                    @foreach ($member->loanForecasts as $loan)
-                                                                                    <div class="loan-info mb-2">
-                                                                                        <div class="d-flex justify-content-between align-items-center">
-                                                                                            <div>
-                                                                                                <strong>{{ $loan->loan_acct_no }}</strong>
-                                                                                                <span class="badge {{ $loan->prioritization == 1 ? 'bg-danger' : ($loan->prioritization == 2 ? 'bg-warning' : 'bg-info') }} ms-2">
-                                                                                                    Priority {{ $loan->prioritization }}
-                                                                                                </span>
-                                                                                            </div>
-                                                                                            <span class="float-right">₱{{ number_format($loan->total_due, 2) }}</span>
-                                                                                        </div>
-                                                                                        <small class="text-muted">
-                                                                                            Principal: ₱{{ number_format($loan->principal_due, 2) }} |
-                                                                                            Interest: ₱{{ number_format($loan->interest_due, 2) }} |
-                                                                                            Penalty: ₱{{ number_format($loan->penalty_due, 2) }}
-                                                                                        </small>
+                                                                                    <div class="form-group">
+                                                                                        <label class="form-label">Payment Date</label>
+                                                                                        <input type="date" class="form-control" name="payment_date" value="{{ date('Y-m-d') }}" required>
                                                                                     </div>
-                                                                                    @endforeach
+                                                                                    <div class="form-group">
+                                                                                        <label class="form-label">Payment Reference</label>
+                                                                                        <input type="text" class="form-control" name="payment_reference" placeholder="Enter reference number" required>
+                                                                                    </div>
+                                                                                    <div class="form-group">
+                                                                                        <label class="form-label">Notes</label>
+                                                                                        <textarea class="form-control" name="notes" rows="2" placeholder="Optional notes"></textarea>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                                    <button type="submit" class="btn btn-primary">Post Payment</button>
+                                                                <div class="modal-footer bg-light">
+                                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                                        <i class="fa fa-times me-2"></i>Cancel
+                                                                    </button>
+                                                                    <button type="submit" class="btn btn-primary">
+                                                                        <i class="fa fa-check me-2"></i>Process Payment
+                                                                    </button>
                                                                 </div>
                                                             </form>
                                                         </div>
                                                     </div>
                                                 </div>
+
+                                                <script>
+                                                    $(document).ready(function() {
+                                                        const memberId = {{ $member->id }};
+                                                        const withdrawalInput = $('#withdrawal_amount' + memberId);
+                                                        const loanCheckboxes = $('.loan-checkbox[data-member-id="' + memberId + '"]');
+                                                        const loanAmountInputs = $('.loan-amount-input[data-member-id="' + memberId + '"]');
+
+                                                        // Function to update payment summary
+                                                        function updatePaymentSummary() {
+                                                            const withdrawalAmount = parseFloat(withdrawalInput.val()) || 0;
+                                                            let totalLoanPayment = 0;
+
+                                                            loanAmountInputs.each(function() {
+                                                                const amount = parseFloat($(this).val()) || 0;
+                                                                if (amount > 0) {
+                                                                    totalLoanPayment += amount;
+                                                                }
+                                                            });
+
+                                                            const remainingToSavings = withdrawalAmount - totalLoanPayment;
+
+                                                            $('#total-withdrawal' + memberId).text('₱' + withdrawalAmount.toFixed(2));
+                                                            $('#total-loan-payment' + memberId).text('₱' + totalLoanPayment.toFixed(2));
+                                                            $('#remaining-to-savings' + memberId).text('₱' + remainingToSavings.toFixed(2));
+
+                                                            // Highlight if remaining amount is negative
+                                                            if (remainingToSavings < 0) {
+                                                                $('#remaining-to-savings' + memberId).removeClass('text-success').addClass('text-danger fw-bold');
+                                                            } else if (remainingToSavings > 0) {
+                                                                $('#remaining-to-savings' + memberId).removeClass('text-danger').addClass('text-success fw-bold');
+                                                            } else {
+                                                                $('#remaining-to-savings' + memberId).removeClass('text-danger text-success fw-bold');
+                                                            }
+                                                        }
+
+                                                        // Handle withdrawal amount change
+                                                        withdrawalInput.on('input', updatePaymentSummary);
+
+                                                        // Handle loan checkbox changes
+                                                        loanCheckboxes.on('change', function() {
+                                                            const checkbox = $(this);
+                                                            const loanOption = checkbox.closest('.loan-option');
+                                                            const amountInput = loanOption.find('.loan-amount-input');
+
+                                                            if (checkbox.is(':checked')) {
+                                                                loanOption.addClass('border-success').removeClass('border-secondary');
+                                                                // Auto-fill with total due amount if input is empty
+                                                                if (!amountInput.val()) {
+                                                                    const totalDue = parseFloat(amountInput.data('total-due')) || 0;
+                                                                    amountInput.val(totalDue.toFixed(2));
+                                                                }
+                                                            } else {
+                                                                loanOption.removeClass('border-success').addClass('border-secondary');
+                                                                // Don't clear the amount, just uncheck the box
+                                                            }
+
+                                                            updatePaymentSummary();
+                                                        });
+
+                                                        // Handle loan amount input changes
+                                                        loanAmountInputs.on('input', function() {
+                                                            const input = $(this);
+                                                            const totalDue = parseFloat(input.data('total-due')) || 0;
+                                                            const enteredAmount = parseFloat(input.val()) || 0;
+                                                            const checkbox = input.closest('.loan-option').find('.loan-checkbox');
+
+                                                            // Auto-check the checkbox when user enters an amount
+                                                            if (enteredAmount > 0 && !checkbox.is(':checked')) {
+                                                                checkbox.prop('checked', true).trigger('change');
+                                                            }
+
+                                                            // Validate amount doesn't exceed total due
+                                                            if (enteredAmount > totalDue) {
+                                                                input.val(totalDue.toFixed(2));
+                                                                Swal.fire({
+                                                                    icon: 'warning',
+                                                                    title: 'Amount Limit',
+                                                                    text: 'Amount cannot exceed total due for this loan'
+                                                                });
+                                                            }
+
+                                                            updatePaymentSummary();
+                                                        });
+
+                                                        // Form submission
+                                                        $('#postPaymentForm' + memberId).on('submit', function(e) {
+                                                            e.preventDefault();
+
+                                                            const withdrawalAmount = parseFloat(withdrawalInput.val()) || 0;
+                                                            let totalLoanPayment = 0;
+                                                            let hasSelectedLoans = false;
+
+                                                            // Check which loans have amounts entered
+                                                            loanAmountInputs.each(function() {
+                                                                const amount = parseFloat($(this).val()) || 0;
+                                                                if (amount > 0) {
+                                                                    totalLoanPayment += amount;
+                                                                    hasSelectedLoans = true;
+                                                                    // Ensure the checkbox is checked for this loan
+                                                                    $(this).closest('.loan-option').find('.loan-checkbox').prop('checked', true);
+                                                                } else {
+                                                                    // Uncheck checkbox and disable input for loans with no amount
+                                                                    $(this).closest('.loan-option').find('.loan-checkbox').prop('checked', false);
+                                                                    $(this).prop('disabled', true);
+                                                                }
+                                                            });
+
+                                                            const remainingToSavings = withdrawalAmount - totalLoanPayment;
+
+                                                            // Validation
+                                                            if (withdrawalAmount <= 0) {
+                                                                Swal.fire({
+                                                                    icon: 'error',
+                                                                    title: 'Invalid Amount',
+                                                                    text: 'Please enter a valid withdrawal amount'
+                                                                });
+                                                                return;
+                                                            }
+
+                                                            if (!hasSelectedLoans) {
+                                                                Swal.fire({
+                                                                    icon: 'error',
+                                                                    title: 'No Loans Selected',
+                                                                    text: 'Please enter amounts for at least one loan'
+                                                                });
+                                                                return;
+                                                            }
+
+                                                            if (remainingToSavings < 0) {
+                                                                Swal.fire({
+                                                                    icon: 'error',
+                                                                    title: 'Invalid Amount',
+                                                                    text: 'Total loan payment amount cannot exceed withdrawal amount'
+                                                                });
+                                                                return;
+                                                            }
+
+                                                            // Show confirmation dialog
+                                                            Swal.fire({
+                                                                icon: 'question',
+                                                                title: 'Confirm Payment',
+                                                                html: `
+                                                                    <div class="text-left">
+                                                                        <p><strong>Withdrawal Amount:</strong> ₱${withdrawalAmount.toFixed(2)}</p>
+                                                                        <p><strong>Total Loan Payment:</strong> ₱${totalLoanPayment.toFixed(2)}</p>
+                                                                        <p><strong>Remaining to Savings:</strong> ₱${remainingToSavings.toFixed(2)}</p>
+                                                                    </div>
+                                                                `,
+                                                                showCancelButton: true,
+                                                                confirmButtonText: 'Process Payment',
+                                                                cancelButtonText: 'Cancel'
+                                                            }).then((result) => {
+                                                                if (result.isConfirmed) {
+                                                                    // Submit form
+                                                                    $.ajax({
+                                                                        url: $(this).attr('action'),
+                                                                        method: 'POST',
+                                                                        data: $(this).serialize(),
+                                                                        success: function(response) {
+                                                                            try {
+                                                                                const result = JSON.parse(response);
+                                                                                if (result.success) {
+                                                                                    Swal.fire({
+                                                                                        icon: 'success',
+                                                                                        title: 'Success!',
+                                                                                        text: result.message,
+                                                                                        showConfirmButton: false,
+                                                                                        timer: 2000
+                                                                                    }).then(function() {
+                                                                                        location.reload();
+                                                                                    });
+                                                                                } else {
+                                                                                    Swal.fire({
+                                                                                        icon: 'error',
+                                                                                        title: 'Error!',
+                                                                                        text: result.message
+                                                                                    });
+                                                                                }
+                                                                            } catch (e) {
+                                                                                // If response is not JSON, just submit the form normally
+                                                                                $('#postPaymentForm' + memberId)[0].submit();
+                                                                            }
+                                                                        },
+                                                                        error: function() {
+                                                                            // If AJAX fails, submit the form normally
+                                                                            $('#postPaymentForm' + memberId)[0].submit();
+                                                                        }
+                                                                    });
+                                                                }
+                                                            });
+                                                        });
+                                                    });
+                                                </script>
 
                                                 <!-- Edit Balance Modal -->
                                                 <div class="modal fade" id="editBalanceModal{{ $member->id }}" tabindex="-1" role="dialog" aria-hidden="true">
@@ -447,5 +717,46 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        .flex.justify-between.flex-1.sm\:hidden {
+            display: none;
+        }
+
+        /* Custom styles for ATM modal */
+        .loan-option {
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .loan-option:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .loan-option.border-success {
+            background: #d1edff;
+            border-color: #28a745 !important;
+        }
+
+        .loan-option.border-secondary {
+            background: #f8f9fa;
+            border-color: #6c757d !important;
+        }
+
+        .form-control-lg {
+            font-size: 1.1rem;
+            padding: 0.75rem 1rem;
+        }
+
+        .card-header {
+            border-bottom: none;
+        }
+
+        .modal-xl {
+            max-width: 1200px;
+        }
+    </style>
 </body>
 </html>
