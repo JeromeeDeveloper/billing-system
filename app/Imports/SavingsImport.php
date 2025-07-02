@@ -49,6 +49,7 @@ class SavingsImport implements ToCollection, WithHeadingRow, WithChunkReading, W
         $processed = 0;
         $skipped = 0;
         $updated = 0;
+        $mortuaryUpdated = 0;
 
         // Group by member and product code to ensure only one record per product
         $memberProducts = [];
@@ -174,6 +175,28 @@ class SavingsImport implements ToCollection, WithHeadingRow, WithChunkReading, W
                 ]
             );
 
+            // Check if this is a mortuary product and update deduction_amount
+            // This logic automatically sets deduction_amount for mortuary accounts based on the amount_to_deduct
+            // from the SavingProduct. It checks both the product name and product code for mortuary detection.
+            $mortuaryDeductionAmount = $this->getMortuaryDeductionAmount($data['product_code'], $product->product_name);
+
+            // Update deduction_amount if this is a mortuary product
+            if ($mortuaryDeductionAmount > 0) {
+                Log::info("Detected mortuary product for member {$data['member_id']}, product {$data['product_code']} ({$product->product_name}) with deduction amount: {$mortuaryDeductionAmount}");
+
+                // Update the deduction_amount for this savings account
+                Saving::where([
+                    'member_id' => $data['member_id'],
+                    'product_code' => $data['product_code']
+                ])->update([
+                    'deduction_amount' => $mortuaryDeductionAmount,
+                    'account_status' => 'deduction'
+                ]);
+
+                Log::info("Updated mortuary deduction amount for member {$data['member_id']}, product {$data['product_code']}: {$mortuaryDeductionAmount}");
+                $mortuaryUpdated++;
+            }
+
             // Create relationship in pivot table if it doesn't exist
             if (!$member->savingProducts()->where('saving_product_id', $product->id)->exists()) {
                 $member->savingProducts()->attach($product->id);
@@ -189,7 +212,7 @@ class SavingsImport implements ToCollection, WithHeadingRow, WithChunkReading, W
         // Update member savings balances
         $this->updateMemberSavingsBalances();
 
-        Log::info("Savings Import Summary: Processed $processed new records, Updated $updated records, Skipped $skipped records");
+        Log::info("Savings Import Summary: Processed $processed new records, Updated $updated records, Skipped $skipped records, Mortuary Updated $mortuaryUpdated records");
     }
 
     /**
@@ -326,5 +349,39 @@ class SavingsImport implements ToCollection, WithHeadingRow, WithChunkReading, W
         $clean = preg_replace('/[^0-9.-]/', '', str_replace(',', '', $value));
 
         return is_numeric($clean) ? floatval($clean) : null;
+    }
+
+    /**
+     * Check if a product is a mortuary product and get its deduction amount
+     *
+     * This method detects mortuary products in two ways:
+     * 1. If the product name contains "mortuary" (case-insensitive)
+     * 2. If the product code matches an existing SavingProduct with "mortuary" in the name
+     *
+     * @param string $productCode The product code from the account number
+     * @param string $productName The product name from the import file
+     * @return float The deduction amount if it's a mortuary product, 0 otherwise
+     */
+    private function getMortuaryDeductionAmount($productCode, $productName)
+    {
+        // First check if the current product is a mortuary product
+        if (stripos($productName, 'mortuary') !== false) {
+            $mortuaryProduct = SavingProduct::where('product_code', $productCode)
+                ->whereRaw('LOWER(product_name) LIKE ?', ['%mortuary%'])
+                ->where('amount_to_deduct', '>', 0)
+                ->first();
+
+            if ($mortuaryProduct) {
+                return $mortuaryProduct->amount_to_deduct;
+            }
+        }
+
+        // Also check if the product code matches any existing mortuary product codes
+        $mortuaryProduct = SavingProduct::where('product_code', $productCode)
+            ->whereRaw('LOWER(product_name) LIKE ?', ['%mortuary%'])
+            ->where('amount_to_deduct', '>', 0)
+            ->first();
+
+        return $mortuaryProduct ? $mortuaryProduct->amount_to_deduct : 0;
     }
 }
