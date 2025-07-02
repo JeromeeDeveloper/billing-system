@@ -99,14 +99,14 @@
                     </ul>
                 </li>
 
-                <li>
+                {{-- <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
                         <i class="icon icon-users-mm"></i><span class="nav-text">Members</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('member') }}">Members Datatable</a></li>
                     </ul>
-                </li>
+                </li> --}}
 
                 <li>
                     <a href="{{ route('users') }}" aria-expanded="false">
