@@ -43,50 +43,27 @@
                     </div>
                 </div>
 
-                <div class="row mt-4">
-                    <div class="col-md-12">
+                <!-- Information Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
                         <div class="card">
-                            <div class="card-header">
-                                <h5 class="card-title">Generate Reports</h5>
-                            </div>
                             <div class="card-body">
                                 <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                <div class="alert alert-info alert-dismissible fade show mb-0">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> ATM Management Flow & User Guide</h5>
                                     <ol class="mb-2">
                                         <li><strong>Account Overview:</strong> View all member account balances (savings, shares, loans) across all branches.</li>
                                         <li><strong>Post Payments:</strong> Post loan payments with automatic prioritization (highest priority loans first).</li>
                                         <li><strong>Edit Balances:</strong> Edit account balances for corrections and adjustments.</li>
-                                        <li><strong>Export Reports:</strong> Export list of profiles, remittance reports, and posted payment records.</li>
+                                        <li><strong>Export Posted Payments:</strong> Export records of posted payments from this page.</li>
                                     </ol>
                                     <ul class="mb-2">
                                         <li><strong>Search & Filter:</strong> Find members by name, employee ID, or CID across all branches.</li>
-                                        <li><strong>History:</strong> Track and export posted payment records for all branches.</li>
+                                        <li><strong>Report Generation:</strong> Access comprehensive reports from the Dashboard page.</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> This is the central hub for managing member accounts and processing payments across all branches.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> This is the central hub for managing member accounts and processing payments across all branches. For other reports, visit the Dashboard.</small></p>
                                 </div>
-
-                                <div class="row mb-3">
-                                    <div class="col-12">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <a href="{{ route('atm.export.list-of-profile') }}" class="btn btn-success">
-                                                <i class="fas fa-file-excel me-1"></i> Export List of Profile
-                                            </a>
-                                            <a href="{{ route('atm.export.remittance-report-consolidated') }}" class="btn btn-primary">
-                                                <i class="fas fa-file-excel me-1"></i> Export Remittance Report Consolidated
-                                            </a>
-                                            <a href="" class="btn btn-primary">
-                                                <i class="fas fa-file-excel me-1"></i> Remittance Report Per Branch
-                                            </a>
-                                            <a href="" class="btn btn-primary">
-                                                <i class="fas fa-file-excel me-1"></i> Remittance Report Per Branch
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-
                             </div>
                         </div>
                     </div>

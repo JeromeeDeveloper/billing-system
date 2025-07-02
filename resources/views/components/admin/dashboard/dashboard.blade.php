@@ -115,6 +115,55 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Report Generation Section -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title">Generate Reports</h4>
+                            </div>
+                            <div class="card-body">
+                                <!-- Information Note -->
+                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h5><i class="fa fa-info-circle"></i> Report Generation Center</h5>
+                                    <p class="mb-2"><strong>Available Reports:</strong></p>
+                                    <ul class="mb-2">
+                                        <li><strong>List of Profile:</strong> Export comprehensive member profile data</li>
+                                        <li><strong>Remittance Report Consolidated:</strong> Consolidated remittance data across all branches</li>
+                                        <li><strong>Remittance Report Per Branch:</strong> Branch-specific remittance reports</li>
+                                        <li><strong>Posted Payments:</strong> Export records of all posted payments</li>
+                                    </ul>
+                                    <p class="mb-0"><small><strong>Note:</strong> All reports are generated for the current billing period and include the latest data.</small></p>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <a href="{{ route('atm.export.list-of-profile') }}" class="btn btn-success btn-block">
+                                            <i class="fas fa-file-excel me-2"></i> Export List of Profile
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <a href="{{ route('atm.export.remittance-report-consolidated') }}" class="btn btn-primary btn-block">
+                                            <i class="fas fa-file-excel me-2"></i> Export Remittance Report Consolidated
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <a href="{{ route('atm.branch-report') }}" class="btn btn-info btn-block">
+                                            <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <a href="{{ route('atm.export-posted-payments') }}" class="btn btn-warning btn-block">
+                                            <i class="fas fa-file-excel me-2"></i> Export Posted Payments
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
