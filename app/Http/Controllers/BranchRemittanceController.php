@@ -32,7 +32,13 @@ class BranchRemittanceController extends Controller
             'matched' => $previewCollection->where('status', 'success')->count(),
             'unmatched' => $previewCollection->where('status', '!=', 'success')->count(),
             'total_amount' => $previewCollection->sum(function ($record) {
-                return $record->loans + collect($record->savings)->sum();
+                $savingsTotal = 0;
+                if (is_array($record->savings) && isset($record->savings['total'])) {
+                    $savingsTotal = $record->savings['total'];
+                } elseif (is_array($record->savings)) {
+                    $savingsTotal = collect($record->savings)->sum();
+                }
+                return $record->loans + $savingsTotal;
             })
         ];
 

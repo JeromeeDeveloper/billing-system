@@ -65,7 +65,7 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header">
+                            {{-- <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center title-container">
                                     <h4 class="card-title mb-0">Remittance Collection Files (Branch)</h4>
                                 </div>
@@ -80,7 +80,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="card-body">
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
