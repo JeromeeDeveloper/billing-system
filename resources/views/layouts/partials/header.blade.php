@@ -38,6 +38,17 @@
                     </div>
 
                     <ul class="navbar-nav header-right">
+                        <li class="nav-item d-flex align-items-center mr-3">
+                            <span class="badge badge-info mr-2">
+                                Billing Period: {{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->format('F Y') : 'N/A' }}
+                            </span>
+                            <span class="badge badge-secondary mr-2">
+                                Role: {{ ucfirst(Auth::user()->role) }}
+                                @if(Auth::user()->role === 'branch' && Auth::user()->branch)
+                                    ({{ Auth::user()->branch->name }})
+                                @endif
+                            </span>
+                        </li>
                         <li class="nav-item dropdown notification_dropdown">
                             <a class="nav-link" href="#" role="button" data-toggle="dropdown">
                                 <i class="mdi mdi-bell"></i>

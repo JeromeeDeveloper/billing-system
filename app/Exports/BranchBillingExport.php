@@ -173,6 +173,10 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
             'Employee #',
             'Amortization',
             'Name',
+            'start_date',
+            'end_date',
+            'gross',
+            'office',
         ];
     }
 }
