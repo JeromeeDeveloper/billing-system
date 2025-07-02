@@ -326,16 +326,90 @@ class BillingController extends Controller
         $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
         $branchId = Auth::user()->branch_id;
 
-        // Generate the Excel file for the branch only
+        // Generate the Excel file
         $export = new \App\Exports\BranchBillingExport($billingPeriod, $branchId);
-        $filename = 'billing_export_branch_' . $billingPeriod . '.xlsx';
+        $filename = 'branch_billing_export_' . $billingPeriod . '.xlsx';
 
         // Store the file
-        \Maatwebsite\Excel\Facades\Excel::store($export, 'exports/' . $filename, 'public');
+        Excel::store($export, 'exports/' . $filename, 'public');
 
-        // Optionally, you can save an export record or notification here if needed
+        // Save export record
+        $billingExport = BillingExport::create([
+            'billing_period' => $billingPeriod,
+            'filename' => $filename,
+            'filepath' => 'exports/' . $filename,
+            'generated_by' => Auth::id()
+        ]);
+
+        // Add notification
+        NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
 
         // Download the file
-        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
+        return Excel::download($export, $filename);
+    }
+
+    public function exportLoanReport(Request $request)
+    {
+        try {
+            $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+
+            // Generate the Excel file
+            $export = new \App\Exports\LoanReportExport($billingPeriod);
+            $filename = 'loan_report_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
+
+            // Store the file
+            Excel::store($export, 'exports/' . $filename, 'public');
+
+            // Save export record
+            $billingExport = BillingExport::create([
+                'billing_period' => $billingPeriod,
+                'filename' => $filename,
+                'filepath' => 'exports/' . $filename,
+                'generated_by' => Auth::id()
+            ]);
+
+            // Add notification
+            NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
+
+            // Download the file
+            return Excel::download($export, $filename);
+
+        } catch (\Exception $e) {
+            Log::error('Error generating loan report: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error generating loan report: ' . $e->getMessage());
+        }
+    }
+
+    public function exportBranchLoanReport(Request $request)
+    {
+        try {
+            $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+            $branchId = Auth::user()->branch_id;
+
+            // Generate the Excel file
+            $export = new \App\Exports\BranchLoanReportExport($billingPeriod, $branchId);
+            $filename = 'branch_loan_report_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
+
+            // Store the file
+            Excel::store($export, 'exports/' . $filename, 'public');
+
+            // Save export record
+            $billingExport = BillingExport::create([
+                'billing_period' => $billingPeriod,
+                'filename' => $filename,
+                'filepath' => 'exports/' . $filename,
+                'generated_by' => Auth::id()
+            ]);
+
+            // Add notification
+            NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
+
+            // Download the file
+            return Excel::download($export, $filename);
+
+        } catch (\Exception $e) {
+            Log::error('Error generating branch loan report: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error generating branch loan report: ' . $e->getMessage());
+        }
     }
 }

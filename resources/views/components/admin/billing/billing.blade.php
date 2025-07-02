@@ -79,6 +79,13 @@
                                             Generate Billing
                                         </a>
 
+                                        <a href="{{ route('billing.loan-report') }}" class="btn btn-rounded btn-success text-white me-4">
+                                            <span class="btn-icon-left text-success">
+                                                <i class="fa fa-chart-line"></i>
+                                            </span>
+                                            Loan Report
+                                        </a>
+
                                         <a href="{{ route('billing.exports') }}" class="btn btn-rounded btn-info text-white ms-2">
                                             <span class="btn-icon-left text-info">
                                                 <i class="fa fa-history"></i>
@@ -140,6 +147,7 @@
                                         <li><strong>Billing Overview:</strong> View all member billing records with amortization, and payment schedules</li>
                                         <li><strong>Data Management:</strong> Edit member billing information including amounts and dates</li>
                                         <li><strong>Billing Generation:</strong> Generate monthly billing reports for all branches (requires branch approval)</li>
+                                        <li><strong>Loan Reports:</strong> Generate detailed loan reports showing total billed vs remitted amounts per member</li>
                                         <li><strong>Export History:</strong> Track and download previously generated billing reports</li>
                                         <li><strong>Search & Filter:</strong> Find specific members or billing records quickly</li>
                                         <li><strong>Record Management:</strong>edit, or delete billing records as needed</li>

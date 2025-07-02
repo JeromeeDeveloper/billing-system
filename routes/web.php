@@ -56,6 +56,7 @@ Route::post('/dashboard/store', [DashboardController::class, 'store'])->name('da
 //Billing
 Route::get('/Billing', [BillingController::class, 'index'])->name('billing');
 Route::get('/billing/export', [BillingController::class, 'export'])->name('billing.export');
+Route::get('/billing/loan-report', [BillingController::class, 'exportLoanReport'])->name('billing.loan-report');
 
 //Billing Export History
 Route::get('/billing/exports', [BillingController::class, 'viewExports'])->name('billing.exports');
@@ -167,6 +168,7 @@ Route::post('Branch/master/add', [MasterController::class, 'store_branch'])->nam
 //Billing
 Route::get('/Branch/Billing', [BillingController::class, 'index_branch'])->name('billing.branch');
 Route::get('/Branch/billing/export', [BillingController::class, 'export_branch'])->name('billing.export.branch');
+Route::get('/Branch/billing/loan-report', [BillingController::class, 'exportBranchLoanReport'])->name('billing.loan-report.branch');
 Route::get('/Branch/billing/exports', [BillingController::class, 'viewExports_branch'])->name('billing.exports.branch');
 Route::get('/Branch/billing/exports/{id}/download', [BillingController::class, 'downloadExport_branch'])->name('billing.download-export.branch');
 Route::put('/Branch/billing/{member}', [BillingController::class, 'update_branch'])->name('billing.update.branch');

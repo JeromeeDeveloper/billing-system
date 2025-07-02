@@ -69,6 +69,13 @@
                                             </button>
                                         </form>
 
+                                        <a href="{{ route('billing.loan-report.branch') }}" class="btn btn-rounded btn-success text-white me-2">
+                                            <span class="btn-icon-left text-success">
+                                                <i class="fa fa-chart-line"></i>
+                                            </span>
+                                            Loan Report
+                                        </a>
+
                                         <a href="{{ route('billing.exports.branch') }}" class="btn btn-rounded btn-info text-white ms-2">
                                             <span class="btn-icon-left text-info">
                                                 <i class="fa fa-history"></i>
@@ -124,6 +131,7 @@
                                         <li><strong>Amortization:</strong> Only regular loans are included in the amortization column. Members with zero amortization are hidden.</li>
                                         <li><strong>Approval:</strong> Once all records are correct, approve your branch's billing. Admin cannot generate the consolidated export until all branches approve.</li>
                                         <li><strong>Export:</strong> Export your branch's billing data (if allowed) and view export history.</li>
+                                        <li><strong>Loan Reports:</strong> Generate detailed loan reports showing total billed vs remitted amounts for your branch members.</li>
                                     </ol>
                                     <ul class="mb-2">
                                         <li><strong>Search & Filter:</strong> Use the search bar and filters to quickly find members or billing records within your branch.</li>

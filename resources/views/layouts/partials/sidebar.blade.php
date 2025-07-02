@@ -122,14 +122,14 @@
 
                 <li class="nav-label">Transactions</li>
 
-                {{-- <li>
+                <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
                         <i class="fa fa-upload"></i><span class="nav-text">File Uploads</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('documents.branch') }}">File Datatable</a></li>
                     </ul>
-                </li> --}}
+                </li>
 
                   <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
