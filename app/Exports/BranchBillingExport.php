@@ -32,23 +32,12 @@ class BranchBillingExport implements WithMultipleSheets
         })->get();
 
         foreach ($savingProducts as $product) {
-            // Skip mortuary products
             if (stripos($product->product_name, 'mortuary') !== false) {
                 continue;
             }
-            // Check if there are any members for this product
-            $memberCount = Member::where('branch_id', $this->branchId)
-                ->where('member_tagging', 'New')
-                ->whereHas('savings', function ($query) use ($product) {
-                    $query->where('account_status', 'deduction')
-                        ->where('deduction_amount', '>', 0)
-                        ->whereHas('savingProduct', function($q) use ($product) {
-                            $q->where('product_name', $product->product_name);
-                        });
-                })
-                ->count();
-            if ($memberCount > 0) {
-                $sheets[$product->product_name] = new BranchDynamicSavingsSheet($this->billingPeriod, $this->branchId, $product->product_name);
+            $sheet = new BranchDynamicSavingsSheet($this->billingPeriod, $this->branchId, $product->product_name);
+            if ($sheet->collection()->count() > 0) {
+                $sheets[$product->product_name] = $sheet;
             }
         }
 
@@ -58,15 +47,9 @@ class BranchBillingExport implements WithMultipleSheets
         })->get();
 
         foreach ($shareProducts as $product) {
-            $memberCount = Member::where('branch_id', $this->branchId)
-                ->where('member_tagging', 'New')
-                ->whereHas('shares', function ($query) use ($product) {
-                    $query->where('account_status', 'deduction')
-                        ->where('product_name', $product->product_name);
-                })
-                ->count();
-            if ($memberCount > 0) {
-                $sheets[$product->product_name] = new BranchDynamicSharesSheet($this->billingPeriod, $this->branchId, $product->product_name);
+            $sheet = new BranchDynamicSharesSheet($this->billingPeriod, $this->branchId, $product->product_name);
+            if ($sheet->collection()->count() > 0) {
+                $sheets[$product->product_name] = $sheet;
             }
         }
 
@@ -243,11 +226,13 @@ class BranchDynamicSavingsSheet implements FromCollection, WithHeadings, WithTit
                 $today = now()->toDateString();
                 $startHold = $saving->start_hold ? (string)$saving->start_hold : null;
                 $expiryDate = $saving->expiry_date ? (string)$saving->expiry_date : null;
-                if (
-                    ($startHold && $expiryDate && $today >= $startHold && $today <= $expiryDate) ||
-                    ($startHold && !$expiryDate && $today >= $startHold) ||
-                    (!$startHold && $expiryDate && $today <= $expiryDate)
-                ) {
+                if ($startHold && $expiryDate && $today >= $startHold && $today <= $expiryDate) {
+                    continue;
+                }
+                if ($startHold && !$expiryDate && $today >= $startHold) {
+                    continue;
+                }
+                if (!$startHold && $expiryDate && $today <= $expiryDate) {
                     continue;
                 }
                 $hasValid = true;
@@ -337,11 +322,13 @@ class BranchDynamicSharesSheet implements FromCollection, WithHeadings, WithTitl
                 $today = now()->toDateString();
                 $startHold = $share->start_hold ? (string)$share->start_hold : null;
                 $expiryDate = $share->expiry_date ? (string)$share->expiry_date : null;
-                if (
-                    ($startHold && $expiryDate && $today >= $startHold && $today <= $expiryDate) ||
-                    ($startHold && !$expiryDate && $today >= $startHold) ||
-                    (!$startHold && $expiryDate && $today <= $expiryDate)
-                ) {
+                if ($startHold && $expiryDate && $today >= $startHold && $today <= $expiryDate) {
+                    continue;
+                }
+                if ($startHold && !$expiryDate && $today >= $startHold) {
+                    continue;
+                }
+                if (!$startHold && $expiryDate && $today <= $expiryDate) {
                     continue;
                 }
                 $hasValid = true;
