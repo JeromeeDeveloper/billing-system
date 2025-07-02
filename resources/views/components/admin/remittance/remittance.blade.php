@@ -110,6 +110,25 @@
                                     </div>
                                 @endif
 
+                                <!-- Current Billing Period Display -->
+                                <div class="alert alert-warning alert-dismissible fade show mb-4">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h6><i class="fa fa-calendar"></i> Current Billing Period</h6>
+                                    <p class="mb-0">
+                                        <strong>Period:</strong>
+                                        @php
+                                            $billingPeriod = auth()->user()->billing_period
+                                                ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format('F Y')
+                                                : 'Not Set';
+                                        @endphp
+                                        {{ $billingPeriod }}
+                                    </p>
+                                    <p class="mb-0 small text-muted">
+                                        <i class="fa fa-info-circle"></i>
+                                        Remittance data will be filtered and exported only for this billing period.
+                                    </p>
+                                </div>
+
                                 <div class="row">
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">

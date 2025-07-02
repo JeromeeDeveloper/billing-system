@@ -21,9 +21,13 @@ class RemittanceController extends Controller
 {
     public function index(Request $request)
     {
-        // Get preview data from database for current user
+        // Get current billing period
+        $currentBillingPeriod = Auth::user()->billing_period;
+
+        // Get preview data from database for current user and current billing period
         $previewCollection = RemittancePreview::where('user_id', Auth::id())
             ->where('type', 'admin')
+            ->where('billing_period', $currentBillingPeriod)
             ->get();
 
         // Calculate stats
@@ -99,9 +103,13 @@ class RemittanceController extends Controller
 
             $results = $import->getResults();
 
-            // Clear previous preview data for this user
+            // Get current billing period
+            $currentBillingPeriod = Auth::user()->billing_period;
+
+            // Clear previous preview data for this user and billing period
             RemittancePreview::where('user_id', Auth::id())
                 ->where('type', 'admin')
+                ->where('billing_period', $currentBillingPeriod)
                 ->delete();
 
             // Store new preview data
@@ -119,7 +127,8 @@ class RemittanceController extends Controller
                     'share_amount' => 0,
                     'status' => $result['status'],
                     'message' => $result['message'],
-                    'type' => 'admin'
+                    'type' => 'admin',
+                    'billing_period' => $currentBillingPeriod
                 ]);
             }
 
@@ -149,9 +158,13 @@ class RemittanceController extends Controller
             $results = $import->getResults();
             $stats = $import->getStats();
 
-            // Clear previous preview data for this user
+            // Get current billing period
+            $currentBillingPeriod = Auth::user()->billing_period;
+
+            // Clear previous preview data for this user and billing period
             RemittancePreview::where('user_id', Auth::id())
                 ->where('type', 'admin')
+                ->where('billing_period', $currentBillingPeriod)
                 ->delete();
 
             // Store new preview data
@@ -166,7 +179,8 @@ class RemittanceController extends Controller
                     'share_amount' => $result['share'],
                     'status' => $result['status'],
                     'message' => $result['message'],
-                    'type' => 'admin'
+                    'type' => 'admin',
+                    'billing_period' => $currentBillingPeriod
                 ]);
             }
 
@@ -184,22 +198,26 @@ class RemittanceController extends Controller
     public function generateExport(Request $request)
     {
         try {
+            // Get current billing period
+            $currentBillingPeriod = Auth::user()->billing_period;
+
             $remittanceData = RemittancePreview::where('user_id', Auth::id())
                 ->where('type', 'admin')
+                ->where('billing_period', $currentBillingPeriod)
                 ->get();
 
             if ($remittanceData->isEmpty()) {
-                return redirect()->back()->with('error', 'No remittance data to export. Please upload a file first.');
+                return redirect()->back()->with('error', 'No remittance data to export for the current billing period. Please upload a file first.');
             }
 
             $type = $request->input('type', 'loans_savings');
 
             if ($type === 'shares') {
                 $export = new \App\Exports\SharesExport($remittanceData);
-                $filename = 'shares_export_' . now()->format('Y-m-d') . '.csv';
+                $filename = 'shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             } else {
                 $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
-                $filename = 'loans_and_savings_export_' . now()->format('Y-m-d') . '.csv';
+                $filename = 'loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             }
 
             return Excel::download($export, $filename);

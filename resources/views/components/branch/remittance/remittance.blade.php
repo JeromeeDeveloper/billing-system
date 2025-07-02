@@ -83,7 +83,7 @@
                             </div> --}}
                             <div class="card-body">
                                 <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                <div class="alert alert-info alert-dismissible show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> Branch Remittance Flow & User Guide</h5>
                                     <ol class="mb-2">
@@ -107,12 +107,31 @@
                                 @endif
 
                                 @if (session('error'))
-                                    <div class="alert alert-danger alert-dismissible fade show">
+                                    <div class="alert alert-danger alert-dismissible show">
                                         <button type="button" class="close" data-dismiss="alert">&times;</button>
                                         <strong><i class="fa fa-exclamation-circle"></i> Error!</strong>
                                         {{ session('error') }}
                                     </div>
                                 @endif
+
+                                <!-- Current Billing Period Display -->
+                                <div class="alert alert-warning alert-dismissible show mb-4">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h6><i class="fa fa-calendar"></i> Current Billing Period</h6>
+                                    <p class="mb-0">
+                                        <strong>Period:</strong>
+                                        @php
+                                            $billingPeriod = auth()->user()->billing_period
+                                                ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format('F Y')
+                                                : 'Not Set';
+                                        @endphp
+                                        {{ $billingPeriod }}
+                                    </p>
+                                    <p class="mb-0 small text-muted">
+                                        <i class="fa fa-info-circle"></i>
+                                        Remittance data will be filtered and exported only for this billing period.
+                                    </p>
+                                </div>
 
                                 <!-- Export Section -->
                                 <div class="row mb-4">

@@ -21,11 +21,14 @@ class BranchRemittanceController extends Controller
     {
         // Get the branch_id from the authenticated user
         $branch_id = Auth::user()->branch_id;
+        $currentBillingPeriod = Auth::user()->billing_period;
 
-        // Get all preview data and filter by branch members (not just current user's uploads)
+        // Get all preview data and filter by branch members and current billing period
         $previewCollection = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
-        })->get();
+        })
+        ->where('billing_period', $currentBillingPeriod)
+        ->get();
 
         // Calculate stats for branch members only
         $stats = [
@@ -94,27 +97,30 @@ class BranchRemittanceController extends Controller
         try {
             // Get branch_id from authenticated user
             $branch_id = Auth::user()->branch_id;
+            $currentBillingPeriod = Auth::user()->billing_period;
             $type = $request->get('type', 'loans_savings'); // Default to loans_savings
 
-            Log::info('Branch Export Request - Branch ID: ' . $branch_id . ', Type: ' . $type);
+            Log::info('Branch Export Request - Branch ID: ' . $branch_id . ', Type: ' . $type . ', Billing Period: ' . $currentBillingPeriod);
 
-            // Get all remittance data for branch members (not just current user's uploads)
+            // Get all remittance data for branch members and current billing period
             $remittanceData = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id);
-            })->get();
+            })
+            ->where('billing_period', $currentBillingPeriod)
+            ->get();
 
             if ($remittanceData->isEmpty()) {
-                return redirect()->back()->with('error', 'No remittance data found for your branch members.');
+                return redirect()->back()->with('error', 'No remittance data found for your branch members in the current billing period.');
             }
 
-            Log::info('Found ' . $remittanceData->count() . ' records for branch ' . $branch_id);
+            Log::info('Found ' . $remittanceData->count() . ' records for branch ' . $branch_id . ' in billing period ' . $currentBillingPeriod);
 
             if ($type === 'shares') {
                 $export = new \App\Exports\BranchSharesExport($remittanceData, $branch_id);
-                $filename = 'branch_shares_export_' . now()->format('Y-m-d') . '.csv';
+                $filename = 'branch_shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             } else {
                 $export = new \App\Exports\BranchLoansAndSavingsExport($remittanceData, $branch_id);
-                $filename = 'branch_loans_and_savings_export_' . now()->format('Y-m-d') . '.csv';
+                $filename = 'branch_loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             }
 
             return Excel::download($export, $filename);

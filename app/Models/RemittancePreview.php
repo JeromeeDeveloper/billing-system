@@ -19,7 +19,8 @@ class RemittancePreview extends Model
         'share_amount',
         'status',
         'message',
-        'type'
+        'type',
+        'billing_period'
     ];
 
     protected $casts = [
