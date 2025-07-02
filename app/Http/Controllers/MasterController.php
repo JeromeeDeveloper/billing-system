@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\MemberDetailsExport;
 
 class MasterController extends Controller
 {
@@ -855,5 +856,16 @@ class MasterController extends Controller
             Log::error('Savings & Shares Product Upload Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error uploading Savings & Shares Product file: ' . $e->getMessage());
         }
+    }
+
+    public function exportMemberDetails()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new MemberDetailsExport(), 'member_details.csv', \Maatwebsite\Excel\Excel::CSV);
+    }
+
+    public function exportMemberDetailsBranch()
+    {
+        $branchId = \Auth::user()->branch_id;
+        return \Maatwebsite\Excel\Facades\Excel::download(new MemberDetailsExport($branchId), 'member_details_branch.csv', \Maatwebsite\Excel\Excel::CSV);
     }
 }

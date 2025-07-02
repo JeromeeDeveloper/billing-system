@@ -111,6 +111,8 @@ Route::delete('/master/members/{id}', [MasterController::class, 'destroy'])->nam
 Route::post('Admin/master/add', [MasterController::class, 'store'])->name('members.store');
 Route::post('/master/upload-coreid', [MasterController::class, 'uploadCoreId'])->name('master.upload.coreid');
 Route::post('/master/upload-savings-shares-product', [MasterController::class, 'uploadSavingsSharesProduct'])->name('master.upload.savings-shares-product');
+Route::get('/master/export-member-details', [MasterController::class, 'exportMemberDetails'])->name('master.exportMemberDetails');
+Route::get('/master/export-member-details-branch', [MasterController::class, 'exportMemberDetailsBranch'])->name('master.exportMemberDetailsBranch');
 
 //Savings
 Route::get('/savings', [SavingsController::class, 'index'])->name('savings');

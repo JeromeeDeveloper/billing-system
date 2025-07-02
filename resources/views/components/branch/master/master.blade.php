@@ -47,6 +47,8 @@
                         </ol>
                     </div>
                 </div>
+                <!-- Export Button -->
+
                 <!-- Add Member Modal -->
                 <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel"
                     aria-hidden="true">
@@ -244,6 +246,11 @@
                                         <i class="fa fa-plus-circle me-2"></i>
                                         Add New Member
                                     </a>
+
+                                    <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-success">
+                                        <i class="fa fa-download"></i> Export Member Details (CSV)
+                                    </a>
+                                    
                                 </div>
                             </div>
 
