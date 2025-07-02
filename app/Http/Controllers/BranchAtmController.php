@@ -340,4 +340,43 @@ class BranchAtmController extends Controller
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
     }
+
+    public function exportBranchRemittanceReportPerBranch()
+    {
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+        $branchId = Auth::user()->branch_id;
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\BranchRemittanceReportPerBranchExport($billingPeriod, $branchId),
+            'Remittance_Report_Per_Branch_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportBranchRemittanceReportPerBranchMember()
+    {
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+        $branchId = Auth::user()->branch_id;
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\BranchRemittanceReportPerBranchMemberExport($billingPeriod, $branchId),
+            'Remittance_Report_Per_Branch_Member_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportBranchRemittanceReportConsolidated()
+    {
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+        $branchId = Auth::user()->branch_id;
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\BranchRemittanceReportConsolidatedExport($billingPeriod, $branchId),
+            'Remittance_Report_Consolidated_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportBranchListOfProfile()
+    {
+        $branchId = \Illuminate\Support\Facades\Auth::user()->branch_id;
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\BranchListOfProfileExport($branchId),
+            'Branch_List_of_Profile_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
 }

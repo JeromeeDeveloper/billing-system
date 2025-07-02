@@ -90,6 +90,7 @@ Route::get('/atm', [AtmController::class, 'index'])->name('atm');
     Route::get('/atm/export-list-of-profile', [AtmController::class, 'exportListOfProfile'])->name('atm.export.list-of-profile');
     Route::get('/atm/export-remittance-report-consolidated', [AtmController::class, 'exportRemittanceReportConsolidated'])->name('atm.export.remittance-report-consolidated');
     Route::get('/atm/export-remittance-report-per-branch', [AtmController::class, 'exportRemittanceReportPerBranch'])->name('atm.export.remittance-report-per-branch');
+    Route::get('/atm/export-remittance-report-per-branch-member', [AtmController::class, 'exportRemittanceReportPerBranchMember'])->name('atm.export.remittance-report-per-branch-member');
     Route::post('/atm/post-payment', [AtmController::class, 'postPayment'])->name('atm.post-payment');
     Route::get('/atm/export-posted-payments', [AtmController::class, 'exportPostedPayments'])->name('atm.export-posted-payments');
 
@@ -191,6 +192,10 @@ Route::get('/Branch/shares', [SharesController::class, 'index_branch'])->name('s
     Route::post('/branch/atm/update-balance', [BranchAtmController::class, 'updateBalance'])->name('branch.atm.update-balance');
     Route::post('/branch/atm/post-payment', [BranchAtmController::class, 'postPayment'])->name('branch.atm.post-payment');
     Route::get('/branch/atm/export-posted-payments', [BranchAtmController::class, 'exportPostedPayments'])->name('branch.atm.export-posted-payments');
+    Route::get('/branch/atm/export-remittance-report-per-branch', [BranchAtmController::class, 'exportBranchRemittanceReportPerBranch'])->name('branch.atm.export.remittance-report-per-branch');
+    Route::get('/branch/atm/export-remittance-report-per-branch-member', [BranchAtmController::class, 'exportBranchRemittanceReportPerBranchMember'])->name('branch.atm.export.remittance-report-per-branch-member');
+    Route::get('/branch/atm/export-remittance-report-consolidated', [BranchAtmController::class, 'exportBranchRemittanceReportConsolidated'])->name('branch.atm.export.remittance-report-consolidated');
+    Route::get('/branch/atm/export-list-of-profile', [BranchAtmController::class, 'exportBranchListOfProfile'])->name('branch.atm.export.list-of-profile');
 
 // Branch Special Billing
 Route::get('/branch/special-billing', [BranchSpecialBillingController::class, 'index'])->name('special-billing.index.branch');

@@ -369,4 +369,13 @@ class AtmController extends Controller
             'Remittance_Report_Per_Branch_' . now()->format('Y-m-d') . '.xlsx'
         );
     }
+
+    public function exportRemittanceReportPerBranchMember()
+    {
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\RemittanceReportPerBranchMemberExport($billingPeriod),
+            'Remittance_Report_Per_Branch_Member_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
 }

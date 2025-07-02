@@ -121,19 +121,18 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title">Generate Reports</h4>
+                                <h4 class="card-title">Report Center</h4>
                             </div>
                             <div class="card-body">
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Report Generation Center</h5>
-                                    <p class="mb-2"><strong>Available Reports:</strong></p>
+                                    <h5><i class="fa fa-info-circle"></i> Available Reports</h5>
                                     <ul class="mb-2">
                                         <li><strong>List of Profile:</strong> Export comprehensive member profile data</li>
                                         <li><strong>Remittance Report Consolidated:</strong> Consolidated remittance data across all branches</li>
                                         <li><strong>Remittance Report Per Branch:</strong> Branch-specific remittance reports</li>
-                                        <li><strong>Posted Payments:</strong> Export records of all posted payments</li>
+                                        <li><strong>Remittance Report Per Branch Member:</strong> Export records of all members per branch</li>
                                     </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> All reports are generated for the current billing period and include the latest data.</small></p>
                                 </div>
@@ -155,8 +154,8 @@
                                         </a>
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <a href="{{ route('atm.export-posted-payments') }}" class="btn btn-warning btn-block">
-                                            <i class="fas fa-file-excel me-2"></i> Export Posted Payments
+                                        <a href="{{ route('atm.export.remittance-report-per-branch-member') }}" class="btn btn-warning btn-block">
+                                            <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch Member
                                         </a>
                                     </div>
                                 </div>
