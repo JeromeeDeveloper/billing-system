@@ -229,7 +229,7 @@
                                                         @forelse ($preview as $row)
                                                             <tr>
                                                                 <td>
-                                                                    @if ($row['status'] === 'success')
+                                                                    @if ($row->status === 'success')
                                                                         <span class="badge badge-success">
                                                                             <i class="fa fa-check"></i> Matched
                                                                         </span>
@@ -239,16 +239,34 @@
                                                                         </span>
                                                                     @endif
                                                                 </td>
-                                                                <td>{{ $row['emp_id'] }}</td>
-                                                                <td>{{ $row['name'] }}</td>
+                                                                <td>{{ $row->emp_id }}</td>
+                                                                <td>{{ $row->name }}</td>
                                                                 <td class="text-right">
-                                                                    ₱{{ number_format($row['loans'] ?? 0, 2) }}
+                                                                    ₱{{ number_format($row->loans ?? 0, 2) }}
                                                                 </td>
                                                                 <td class="text-right">
-                                                                    ₱{{ number_format($row['savings_total'] ?? 0, 2) }}
-                                                                    @if(isset($row['savings_distribution']) && count($row['savings_distribution']) > 0)
+                                                                    @php
+                                                                        $savingsTotal = 0;
+                                                                        $savingsDistribution = [];
+                                                                        if (is_array($row->savings) && isset($row->savings['total'])) {
+                                                                            $savingsTotal = $row->savings['total'];
+                                                                            $savingsDistribution = $row->savings['distribution'] ?? [];
+                                                                        } elseif (is_array($row->savings)) {
+                                                                            $savingsTotal = collect($row->savings)->sum();
+                                                                            foreach ($row->savings as $productName => $amount) {
+                                                                                if ($amount > 0) {
+                                                                                    $savingsDistribution[] = [
+                                                                                        'product' => $productName,
+                                                                                        'amount' => $amount
+                                                                                    ];
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    @endphp
+                                                                    ₱{{ number_format($savingsTotal, 2) }}
+                                                                    @if(count($savingsDistribution) > 0)
                                                                         <br><small class="text-muted">
-                                                                            @foreach($row['savings_distribution'] as $dist)
+                                                                            @foreach($savingsDistribution as $dist)
                                                                                 {{ $dist['product'] }}: ₱{{ number_format($dist['amount'], 2) }}
                                                                                 @if(!$loop->last), @endif
                                                                             @endforeach
@@ -256,10 +274,10 @@
                                                                     @endif
                                                                 </td>
                                                                 <td>
-                                                                    @if ($row['status'] !== 'success')
+                                                                    @if ($row->status !== 'success')
                                                                         <i class="fa fa-exclamation-circle text-danger"></i>
                                                                     @endif
-                                                                    {{ $row['message'] }}
+                                                                    {{ $row->message }}
                                                                 </td>
                                                             </tr>
                                                         @empty

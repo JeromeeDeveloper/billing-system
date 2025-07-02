@@ -9,13 +9,15 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Facades\Log;
 use App\Models\Savings;
 
-class LoansAndSavingsExport implements FromCollection, WithHeadings
+class BranchLoansAndSavingsExport implements FromCollection, WithHeadings
 {
     protected $remittanceData;
+    protected $branch_id;
 
-    public function __construct($remittanceData)
+    public function __construct($remittanceData, $branch_id)
     {
         $this->remittanceData = $remittanceData;
+        $this->branch_id = $branch_id;
     }
 
     public function headings(): array
@@ -40,10 +42,18 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                 continue;
             }
 
-            $member = Member::with(['branch', 'loanForecasts', 'savings.savingProduct'])->find($record->member_id);
+            $member = Member::with(['branch', 'loanForecasts', 'savings.savingProduct'])
+                ->where('branch_id', $this->branch_id) // Only get members from this branch
+                ->find($record->member_id);
 
             if (!$member) {
-                Log::warning('Member not found for record: ' . json_encode($record));
+                Log::warning('Member not found or not in branch for record: ' . json_encode($record));
+                continue;
+            }
+
+            // Verify member belongs to the correct branch
+            if ($member->branch_id !== $this->branch_id) {
+                Log::warning('Member ' . $member->id . ' does not belong to branch ' . $this->branch_id);
                 continue;
             }
 

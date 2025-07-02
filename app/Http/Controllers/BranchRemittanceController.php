@@ -110,10 +110,10 @@ class BranchRemittanceController extends Controller
             Log::info('Found ' . $remittanceData->count() . ' records for branch ' . $branch_id);
 
             if ($type === 'shares') {
-                $export = new \App\Exports\SharesExport($remittanceData);
+                $export = new \App\Exports\BranchSharesExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_export_' . now()->format('Y-m-d') . '.csv';
             } else {
-                $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
+                $export = new \App\Exports\BranchLoansAndSavingsExport($remittanceData, $branch_id);
                 $filename = 'branch_loans_and_savings_export_' . now()->format('Y-m-d') . '.csv';
             }
 
