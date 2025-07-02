@@ -153,6 +153,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
             }
 
             return [
+                'cid'        => $member->cid ?? 'N/A',
                 'emp_id'        => $member->emp_id ?? 'N/A',
                 'amortization'  => $amortization,
                 'name'          => "{$member->fname} {$member->lname}",
@@ -167,6 +168,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
     public function headings(): array
     {
         return [
+            'CID',
             'Employee #',
             'Amortization',
             'Name',
@@ -249,6 +251,7 @@ class DynamicSavingsSheet implements FromCollection, WithHeadings, WithTitle
             }
 
             return [
+                'cid'        => $member->cid ?? 'N/A',
                 'emp_id'        => $member->emp_id ?? 'N/A',
                 'amortization'  => $amortization,
                 'name'          => "{$member->fname} {$member->lname}",
@@ -343,6 +346,7 @@ class DynamicSharesSheet implements FromCollection, WithHeadings, WithTitle
     public function headings(): array
     {
         return [
+            'CID',
             'Employee #',
             'Amortization',
             'Name',

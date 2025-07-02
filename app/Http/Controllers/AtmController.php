@@ -360,4 +360,13 @@ class AtmController extends Controller
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
     }
+
+    public function exportRemittanceReportPerBranch()
+    {
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\RemittanceReportPerBranchExport($billingPeriod),
+            'Remittance_Report_Per_Branch_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
 }

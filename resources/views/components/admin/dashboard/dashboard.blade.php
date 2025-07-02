@@ -150,7 +150,7 @@
                                         </a>
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <a href="{{ route('atm.branch-report') }}" class="btn btn-info btn-block">
+                                        <a href="{{ route('atm.export.remittance-report-per-branch') }}" class="btn btn-info btn-block">
                                             <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch
                                         </a>
                                     </div>
