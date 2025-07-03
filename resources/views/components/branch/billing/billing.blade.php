@@ -49,6 +49,19 @@
                                 <h4 class="card-title mb-0">Billing Datatable</h4>
 
                                 <div class="d-flex flex-column align-items-end">
+                                    <!-- Status Indicator -->
+                                    <div class="mb-2">
+                                        @if(Auth::user()->status === 'pending')
+                                            <span class="badge badge-warning">
+                                                <i class="fa fa-clock"></i> Status: Pending Approval
+                                            </span>
+                                        @else
+                                            <span class="badge badge-success">
+                                                <i class="fa fa-check-circle"></i> Status: Approved
+                                            </span>
+                                        @endif
+                                    </div>
+
                                     <div class="d-flex mb-1 buttons-header">
                                         <a href="{{ $allBranchApproved ? route('billing.export.branch', ['billing_period' => now()->format('Y-m')]) : '#' }}"
                                             class="btn btn-rounded btn-primary text-white me-2 {{ !$allBranchApproved ? 'disabled' : '' }}"
@@ -59,15 +72,27 @@
                                             Generate Billing
                                         </a>
 
-                                        <form action="{{ route('billing.approve') }}" method="POST" class="m-0">
-                                            @csrf
-                                            <button type="submit" class="btn btn-rounded btn-primary text-white">
-                                                <span class="btn-icon-left text-primary">
-                                                    <i class="fa fa-check"></i>
-                                                </span>
-                                                Approve Billing
-                                            </button>
-                                        </form>
+                                        @if(Auth::user()->status === 'pending')
+                                            <form action="{{ route('billing.approve') }}" method="POST" class="m-0">
+                                                @csrf
+                                                <button type="submit" class="btn btn-rounded btn-success text-white">
+                                                    <span class="btn-icon-left text-success">
+                                                        <i class="fa fa-check"></i>
+                                                    </span>
+                                                    Approve Billing
+                                                </button>
+                                            </form>
+                                        @else
+                                            <form action="{{ route('billing.cancel-approval') }}" method="POST" class="m-0">
+                                                @csrf
+                                                <button type="submit" class="btn btn-rounded btn-warning text-white">
+                                                    <span class="btn-icon-left text-warning">
+                                                        <i class="fa fa-times"></i>
+                                                    </span>
+                                                    Cancel Approval
+                                                </button>
+                                            </form>
+                                        @endif
 
                                         <a href="{{ route('billing.loan-report.branch') }}" class="btn btn-rounded btn-success text-white me-2">
                                             <span class="btn-icon-left text-success">

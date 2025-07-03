@@ -79,6 +79,14 @@
                                                             <span class="badge badge-warning">
                                                                 <i class="ti-calendar"></i> Billing Period Update
                                                             </span>
+                                                        @elseif($notification->type === 'billing_approval')
+                                                            <span class="badge badge-success">
+                                                                <i class="ti-check"></i> Billing Approval
+                                                            </span>
+                                                        @elseif($notification->type === 'billing_approval_cancelled')
+                                                            <span class="badge badge-danger">
+                                                                <i class="ti-close"></i> Approval Cancelled
+                                                            </span>
                                                         @else
                                                             <span class="badge badge-secondary">
                                                                 <i class="ti-info"></i> {{ ucfirst($notification->type) }}

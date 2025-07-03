@@ -75,7 +75,7 @@
                                         </button>
                                                                                                                                                 @else
                                         <button type="button" class="btn btn-rounded btn-secondary" disabled
-                                            title="Upload is disabled. No branch users are in pending status.">
+                                            title="Upload is disabled. One or more branch users have been approved.">
                                             <span class="btn-icon-left text-secondary">
                                                 <i class="fa fa-upload"></i>
                                             </span>
@@ -209,8 +209,8 @@
                                                                                                                 @if(!$isApproved)
                                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                                     <i class="fa fa-exclamation-triangle me-2"></i>
-                                    <strong>Upload Disabled:</strong> File upload is currently disabled because no branch users are in pending status.
-                                    Upload is only enabled when there are branch users who need to process files.
+                                    <strong>Upload Disabled:</strong> File upload is currently disabled because one or more branch users have been approved.
+                                    Upload is only enabled when all branch users are still in pending status.
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                 </div>
                             @endif

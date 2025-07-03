@@ -75,6 +75,14 @@ class NotificationController extends Controller
                 $billingPeriodFormatted = $billingPeriod ? \Carbon\Carbon::parse($billingPeriod)->format('F Y') : 'N/A';
                 $message = 'Your billing period has been automatically updated to: ' . $billingPeriodFormatted;
                 break;
+            case 'billing_approval':
+                $billingPeriodFormatted = $billingPeriod ? \Carbon\Carbon::parse($billingPeriod)->format('F Y') : 'N/A';
+                $message = 'You have approved your branch billing for billing period: ' . $billingPeriodFormatted;
+                break;
+            case 'billing_approval_cancelled':
+                $billingPeriodFormatted = $billingPeriod ? \Carbon\Carbon::parse($billingPeriod)->format('F Y') : 'N/A';
+                $message = 'You have cancelled your billing approval for billing period: ' . $billingPeriodFormatted;
+                break;
         }
 
         Notification::create([

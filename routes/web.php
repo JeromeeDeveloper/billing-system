@@ -188,6 +188,7 @@ Route::get('/Branch/billing/exports/{id}/download', [BillingController::class, '
 Route::put('/Branch/billing/{member}', [BillingController::class, 'update_branch'])->name('billing.update.branch');
 Route::delete('/Branch/billing/{member}', [BillingController::class, 'destroy_branch'])->name('billing.destroy.branch');
 Route::post('/Branch/billing/approve', [BillingController::class, 'approve'])->name('billing.approve');
+Route::post('/Branch/billing/cancel-approval', [BillingController::class, 'cancelApproval'])->name('billing.cancel-approval');
 
 
 Route::post('/Branch/upload', [DocumentUploadController::class, 'store_branch'])->name('document.upload.branch');

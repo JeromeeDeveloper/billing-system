@@ -62,13 +62,13 @@ class DocumentUploadController extends Controller
     // Check if user is approved
     $user = Auth::user();
 
-    // For admin users, check if there are any branch users in pending status
+    // For admin users, check if there are any branch users in approved status
     if ($user->role === 'admin') {
-        $hasPendingBranches = User::where('role', 'branch')
-            ->where('status', 'pending')
+        $hasApprovedBranches = User::where('role', 'branch')
+            ->where('status', 'approved')
             ->count() > 0;
-        if (!$hasPendingBranches) {
-            return redirect()->back()->with('error', 'File upload is disabled because there are no branch users in pending status.');
+        if ($hasApprovedBranches) {
+            return redirect()->back()->with('error', 'File upload is disabled because one or more branch users have been approved.');
         }
     } else {
         // For branch users, check their own status
@@ -206,12 +206,12 @@ class DocumentUploadController extends Controller
         $user = Auth::user();
         $billingPeriod = $user->billing_period; // e.g. '2025-05'
 
-        // For admin users, check if there are any branch users in pending status
+        // For admin users, check if there are any branch users in approved status
         if ($user->role === 'admin') {
-            $hasPendingBranches = User::where('role', 'branch')
-                ->where('status', 'pending')
+            $hasApprovedBranches = User::where('role', 'branch')
+                ->where('status', 'approved')
                 ->count() > 0;
-            $isApproved = $hasPendingBranches;
+            $isApproved = !$hasApprovedBranches; // Upload is enabled only if NO branch users are approved
         } else {
             // For branch users, check their own status
             $isApproved = $user->status === 'pending';

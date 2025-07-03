@@ -106,6 +106,12 @@ function updateNotifications() {
             } else if (notification.type === 'billing_period_update') {
                 icon = 'ti-calendar';
                 statusClass = 'warning';
+            } else if (notification.type === 'billing_approval') {
+                icon = 'ti-check';
+                statusClass = 'success';
+            } else if (notification.type === 'billing_approval_cancelled') {
+                icon = 'ti-close';
+                statusClass = 'danger';
             } else {
                 icon = 'ti-info';
                 statusClass = 'secondary';

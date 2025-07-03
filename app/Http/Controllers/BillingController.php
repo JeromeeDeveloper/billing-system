@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Member;
 use App\Models\User;
 use App\Models\BillingExport;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Exports\BillingExport as BillingExcelExport;
 use Illuminate\Routing\Controller;
@@ -224,10 +225,40 @@ class BillingController extends Controller
             return back()->with('info', 'You are already approved.');
         }
 
-        $user->status = 'approved';
-        $user->save();
+        User::where('id', $user->id)->update(['status' => 'approved']);
+
+        // Create notification about approval
+        \App\Models\Notification::create([
+            'type' => 'billing_approval',
+            'user_id' => $user->id,
+            'related_id' => $user->id,
+            'message' => 'You have approved your branch billing for ' . \Carbon\Carbon::parse($user->billing_period)->format('F Y'),
+            'billing_period' => $user->billing_period
+        ]);
 
         return back()->with('success', 'Billing approved successfully.');
+    }
+
+    public function cancelApproval()
+    {
+        $user = Auth::user();
+
+        if ($user->status === 'pending') {
+            return back()->with('info', 'You are already in pending status.');
+        }
+
+        User::where('id', $user->id)->update(['status' => 'pending']);
+
+        // Create notification about approval cancellation
+        \App\Models\Notification::create([
+            'type' => 'billing_approval_cancelled',
+            'user_id' => $user->id,
+            'related_id' => $user->id,
+            'message' => 'You have cancelled your billing approval for ' . \Carbon\Carbon::parse($user->billing_period)->format('F Y'),
+            'billing_period' => $user->billing_period
+        ]);
+
+        return back()->with('success', 'Approval cancelled successfully. Your status has been set back to pending.');
     }
 
     public function getExportsData(Request $request)
