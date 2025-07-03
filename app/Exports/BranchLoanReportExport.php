@@ -132,7 +132,7 @@ class BranchLoanReportExport implements FromCollection, WithHeadings, WithMappin
                     'remaining_balance' => $remainingBalance,
                     'payment_status' => $paymentStatus,
                     'account_status' => $forecast->account_status,
-                    'open_date' => $forecast->open_date ? $forecast->open_date->format('Y-m-d') : 'N/A',
+                    'open_date' => $forecast->open_date ?: 'N/A',
                     'maturity_date' => $forecast->maturity_date ? $forecast->maturity_date->format('Y-m-d') : 'N/A',
                     'approval_no' => $forecast->approval_no ?? 'N/A',
                     'billing_period' => $this->billingPeriod

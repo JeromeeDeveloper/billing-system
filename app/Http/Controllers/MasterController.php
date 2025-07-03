@@ -107,13 +107,13 @@ class MasterController extends Controller
 
             // Format savings dates
             $member->savings->transform(function ($saving) {
-                $saving->open_date = $saving->open_date ? $saving->open_date->format('Y-m-d') : null;
+                $saving->open_date = $saving->open_date ?: null;
                 return $saving;
             });
 
             // Format shares dates
             $member->shares->transform(function ($share) {
-                $share->open_date = $share->open_date ? $share->open_date->format('Y-m-d') : null;
+                $share->open_date = $share->open_date ?: null;
                 return $share;
             });
 
@@ -145,7 +145,7 @@ class MasterController extends Controller
         'share_balance' => 'nullable|numeric',
         'loan_balance' => 'nullable|numeric',
         'birth_date' => 'nullable|date',
-        'expiry_date' => 'nullable|date',
+        'expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
         'date_registered' => 'nullable|date',
         'gender' => 'nullable|in:male,female,other',
         'customer_type' => 'nullable|string',
@@ -156,7 +156,7 @@ class MasterController extends Controller
         'area' => 'nullable|string',
         'status' => 'nullable|in:active,merged',
         'approval_no' => 'nullable|string',
-        'start_hold' => 'nullable|date',
+        'start_hold' => 'nullable|regex:/^\d{4}-\d{2}$/',
         'account_status' => 'nullable|in:deduction,non-deduction',
         'branch_id' => 'nullable|exists:branches,id',
         'member_tagging' => 'nullable|in:New,PGB',
@@ -221,7 +221,7 @@ class MasterController extends Controller
                 'lname' => 'nullable|string|max:255',
                 'address' => 'nullable|string',
                 'birth_date' => 'nullable|date',
-                'expiry_date' => 'nullable|date',
+                'expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
                 'date_registered' => 'nullable|date',
                 'gender' => 'nullable|string|in:male,female,other',
                 'customer_type' => 'nullable|string|max:255',
@@ -240,8 +240,8 @@ class MasterController extends Controller
                 'savings.*.account_number' => 'required|string',
                 'savings.*.current_balance' => 'required|numeric',
                 'savings.*.approval_no' => 'nullable|string',
-                'savings.*.start_hold' => 'nullable|date',
-                'savings.*.expiry_date' => 'nullable|date',
+                'savings.*.start_hold' => 'nullable|regex:/^\d{4}-\d{2}$/',
+                'savings.*.expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
                 'savings.*.account_status' => 'nullable|in:deduction,non-deduction',
                 'savings.*.deduction_amount' => 'nullable|numeric',
                 'savings.*.remarks' => 'nullable|string',
@@ -251,8 +251,8 @@ class MasterController extends Controller
                 'shares.*.account_number' => 'required|string',
                 'shares.*.current_balance' => 'required|numeric',
                 'shares.*.approval_no' => 'nullable|string',
-                'shares.*.start_hold' => 'nullable|date',
-                'shares.*.expiry_date' => 'nullable|date',
+                'shares.*.start_hold' => 'nullable|regex:/^\d{4}-\d{2}$/',
+                'shares.*.expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
                 'shares.*.account_status' => 'required|in:deduction,non-deduction',
                 'shares.*.deduction_amount' => 'nullable|numeric',
                 'shares.*.remarks' => 'nullable|string',
@@ -262,8 +262,8 @@ class MasterController extends Controller
                 'loan_forecasts.*.loan_acct_no' => 'required|string',
                 'loan_forecasts.*.total_due' => 'required|numeric',
                 'loan_forecasts.*.billing_period' => 'nullable|string',
-                'loan_forecasts.*.start_hold' => 'nullable|date',
-                'loan_forecasts.*.expiry_date' => 'nullable|date',
+                'loan_forecasts.*.start_hold' => 'nullable|regex:/^\d{4}-\d{2}$/',
+                'loan_forecasts.*.expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
                 'loan_forecasts.*.account_status' => 'required|in:deduction,non-deduction',
                 'loan_forecasts.*.approval_no' => 'nullable|string',
                 'loan_forecasts.*.remarks' => 'nullable|string',
@@ -293,8 +293,8 @@ class MasterController extends Controller
                                 $updateData = [
                                     'current_balance' => $savingsData['current_balance'],
                                     'approval_no' => $savingsData['approval_no'],
-                                    'start_hold' => $savingsData['start_hold'],
-                                    'expiry_date' => $savingsData['expiry_date'],
+                                    'start_hold' => isset($savingsData['start_hold']) ? substr($savingsData['start_hold'], 0, 7) : null,
+                                    'expiry_date' => isset($savingsData['expiry_date']) ? substr($savingsData['expiry_date'], 0, 7) : null,
                                     'account_status' => $savingsData['account_status'],
                                     'deduction_amount' => $savingsData['deduction_amount'],
                                     'remarks' => $savingsData['remarks'] ?? null,
@@ -329,8 +329,8 @@ class MasterController extends Controller
                                 $updateData = [
                                     'current_balance' => $sharesData['current_balance'],
                                     'approval_no' => $sharesData['approval_no'],
-                                    'start_hold' => $sharesData['start_hold'],
-                                    'expiry_date' => $sharesData['expiry_date'],
+                                    'start_hold' => isset($sharesData['start_hold']) ? substr($sharesData['start_hold'], 0, 7) : null,
+                                    'expiry_date' => isset($sharesData['expiry_date']) ? substr($sharesData['expiry_date'], 0, 7) : null,
                                     'account_status' => $sharesData['account_status'],
                                     'deduction_amount' => $sharesData['deduction_amount'],
                                     'remarks' => $sharesData['remarks'] ?? null,
@@ -365,8 +365,8 @@ class MasterController extends Controller
                                 $updateData = [
                                     'total_due' => $loanData['total_due'],
                                     'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
-                                    'start_hold' => $loanData['start_hold'],
-                                    'expiry_date' => $loanData['expiry_date'],
+                                    'start_hold' => isset($loanData['start_hold']) ? substr($loanData['start_hold'], 0, 7) : null,
+                                    'expiry_date' => isset($loanData['expiry_date']) ? substr($loanData['expiry_date'], 0, 7) : null,
                                     'account_status' => $loanData['account_status'],
                                     'approval_no' => $loanData['approval_no'],
                                     'remarks' => $loanData['remarks'] ?? null,
@@ -493,13 +493,13 @@ class MasterController extends Controller
 
             // Format savings dates
             $member->savings->transform(function ($saving) {
-                $saving->open_date = $saving->open_date ? $saving->open_date->format('Y-m-d') : null;
+                $saving->open_date = $saving->open_date ?: null;
                 return $saving;
             });
 
             // Format shares dates
             $member->shares->transform(function ($share) {
-                $share->open_date = $share->open_date ? $share->open_date->format('Y-m-d') : null;
+                $share->open_date = $share->open_date ?: null;
                 return $share;
             });
 
@@ -532,7 +532,7 @@ class MasterController extends Controller
         'share_balance' => 'nullable|numeric',
         'loan_balance' => 'nullable|numeric',
         'birth_date' => 'nullable|date',
-        'expiry_date' => 'nullable|date',
+        'expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
         'date_registered' => 'nullable|date',
         'gender' => 'nullable|in:male,female,other',
         'customer_type' => 'nullable|string',
@@ -543,7 +543,7 @@ class MasterController extends Controller
         'area' => 'nullable|string',
         'status' => 'nullable|in:active,merged',
         'approval_no' => 'nullable|string',
-        'start_hold' => 'nullable|date',
+        'start_hold' => 'nullable|regex:/^\d{4}-\d{2}$/',
         'account_status' => 'nullable|in:deduction,non-deduction',
         'branch_id' => 'nullable|exists:branches,id',
         'member_tagging' => 'nullable|in:New,PGB',
@@ -612,7 +612,7 @@ class MasterController extends Controller
                 'lname' => 'nullable|string|max:255',
                 'address' => 'nullable|string',
                 'birth_date' => 'nullable|date',
-                'expiry_date' => 'nullable|date',
+                'expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
                 'date_registered' => 'nullable|date',
                 'gender' => 'nullable|string|in:male,female,other',
                 'customer_type' => 'nullable|string|max:255',
@@ -631,8 +631,8 @@ class MasterController extends Controller
                 'savings.*.account_number' => 'required|string',
                 'savings.*.current_balance' => 'required|numeric',
                 'savings.*.approval_no' => 'nullable|string',
-                'savings.*.start_hold' => 'nullable|date',
-                'savings.*.expiry_date' => 'nullable|date',
+                'savings.*.start_hold' => 'nullable|regex:/^\d{4}-\d{2}$/',
+                'savings.*.expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
                 'savings.*.account_status' => 'nullable|in:deduction,non-deduction',
                 'savings.*.deduction_amount' => 'nullable|numeric',
                 'savings.*.remarks' => 'nullable|string',
@@ -642,8 +642,8 @@ class MasterController extends Controller
                 'shares.*.account_number' => 'required|string',
                 'shares.*.current_balance' => 'required|numeric',
                 'shares.*.approval_no' => 'nullable|string',
-                'shares.*.start_hold' => 'nullable|date',
-                'shares.*.expiry_date' => 'nullable|date',
+                'shares.*.start_hold' => 'nullable|regex:/^\d{4}-\d{2}$/',
+                'shares.*.expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
                 'shares.*.account_status' => 'required|in:deduction,non-deduction',
                 'shares.*.deduction_amount' => 'nullable|numeric',
                 'shares.*.remarks' => 'nullable|string',
@@ -660,8 +660,8 @@ class MasterController extends Controller
                 'loan_forecasts.*.interest_due' => 'nullable|numeric',
                 'loan_forecasts.*.penalty_due' => 'nullable|numeric',
                 'loan_forecasts.*.billing_period' => 'nullable|string',
-                'loan_forecasts.*.start_hold' => 'nullable|date',
-                'loan_forecasts.*.expiry_date' => 'nullable|date',
+                'loan_forecasts.*.start_hold' => 'nullable|regex:/^\d{4}-\d{2}$/',
+                'loan_forecasts.*.expiry_date' => 'nullable|regex:/^\d{4}-\d{2}$/',
                 'loan_forecasts.*.account_status' => 'required|in:deduction,non-deduction',
                 'loan_forecasts.*.approval_no' => 'nullable|string',
             ]);
@@ -690,8 +690,8 @@ class MasterController extends Controller
                                 $updateData = [
                                     'current_balance' => $savingsData['current_balance'],
                                     'approval_no' => $savingsData['approval_no'],
-                                    'start_hold' => $savingsData['start_hold'],
-                                    'expiry_date' => $savingsData['expiry_date'],
+                                    'start_hold' => isset($savingsData['start_hold']) ? substr($savingsData['start_hold'], 0, 7) : null,
+                                    'expiry_date' => isset($savingsData['expiry_date']) ? substr($savingsData['expiry_date'], 0, 7) : null,
                                     'account_status' => $savingsData['account_status'],
                                     'deduction_amount' => $savingsData['deduction_amount'],
                                     'remarks' => $savingsData['remarks'] ?? null,
@@ -726,8 +726,8 @@ class MasterController extends Controller
                                 $updateData = [
                                     'current_balance' => $sharesData['current_balance'],
                                     'approval_no' => $sharesData['approval_no'],
-                                    'start_hold' => $sharesData['start_hold'],
-                                    'expiry_date' => $sharesData['expiry_date'],
+                                    'start_hold' => isset($sharesData['start_hold']) ? substr($sharesData['start_hold'], 0, 7) : null,
+                                    'expiry_date' => isset($sharesData['expiry_date']) ? substr($sharesData['expiry_date'], 0, 7) : null,
                                     'account_status' => $sharesData['account_status'],
                                     'deduction_amount' => $sharesData['deduction_amount'],
                                     'remarks' => $sharesData['remarks'] ?? null,
@@ -769,8 +769,8 @@ class MasterController extends Controller
                                     'interest_due' => $loanData['interest_due'],
                                     'penalty_due' => $loanData['penalty_due'],
                                     'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
-                                    'start_hold' => $loanData['start_hold'],
-                                    'expiry_date' => $loanData['expiry_date'],
+                                    'start_hold' => isset($loanData['start_hold']) ? substr($loanData['start_hold'], 0, 7) : null,
+                                    'expiry_date' => isset($loanData['expiry_date']) ? substr($loanData['expiry_date'], 0, 7) : null,
                                     'account_status' => $loanData['account_status'],
                                     'approval_no' => $loanData['approval_no'],
                                     'remarks' => $loanData['remarks'] ?? null,

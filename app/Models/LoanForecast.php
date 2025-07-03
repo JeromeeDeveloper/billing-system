@@ -37,8 +37,6 @@ class LoanForecast extends Model
         'open_date' => 'date:Y-m-d',
         'maturity_date' => 'date:Y-m-d',
         'amortization_due_date' => 'date:Y-m-d',
-        'start_hold' => 'date:Y-m-d',
-        'expiry_date' => 'date:Y-m-d',
         'amount_due' => 'decimal:2',
         'total_due' => 'decimal:2',
         'principal_due' => 'decimal:2',
@@ -46,31 +44,6 @@ class LoanForecast extends Model
         'penalty_due' => 'decimal:2',
         'loan_payment' => 'decimal:2'
     ];
-
-    public function setStartHoldAttribute($value)
-    {
-        $this->attributes['start_hold'] = $value ? Carbon::parse($value)->format('Y-m-d') : null;
-    }
-
-    public function setExpiryDateAttribute($value)
-    {
-        $this->attributes['expiry_date'] = $value ? Carbon::parse($value)->format('Y-m-d') : null;
-    }
-
-    public function setOpenDateAttribute($value)
-    {
-        $this->attributes['open_date'] = $value ? Carbon::parse($value)->format('Y-m-d') : null;
-    }
-
-    public function setMaturityDateAttribute($value)
-    {
-        $this->attributes['maturity_date'] = $value ? Carbon::parse($value)->format('Y-m-d') : null;
-    }
-
-    public function setAmortizationDueDateAttribute($value)
-    {
-        $this->attributes['amortization_due_date'] = $value ? Carbon::parse($value)->format('Y-m-d') : null;
-    }
 
     public function member()
     {

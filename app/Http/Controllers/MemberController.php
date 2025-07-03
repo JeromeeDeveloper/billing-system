@@ -67,7 +67,7 @@ class MemberController extends Controller
             $member->lname = $request->input('lname');
             $member->cid = $request->input('cid');
             $member->branch_id = $request->input('branch_id');
-            $member->expiry_date = $request->input('expiry_date');
+            $member->expiry_date = $request->input('expiry_date') ? substr($request->input('expiry_date'), 0, 7) : null;
             $member->save();
 
             return redirect()->route('member')->with('success', 'Member updated successfully!');

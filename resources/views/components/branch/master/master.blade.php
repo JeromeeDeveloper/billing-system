@@ -250,7 +250,7 @@
                                     <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-success">
                                         <i class="fa fa-download"></i> Export Member Details (CSV)
                                     </a>
-                                    
+
                                 </div>
                             </div>
 
@@ -299,8 +299,8 @@
                                                             data-customer_classification="{{ $item->member->customer_classification }}"
                                                             data-occupation="{{ $item->member->occupation }}"
                                                             data-approval_no="{{ $item->member->approval_no }}"
-                                                            data-expiry_date="{{ optional($item->member->expiry_date)->format('Y-m-d') }}"
-                                                            data-start_hold="{{ optional($item->member->start_hold)->format('Y-m-d') }}"
+                                                            data-expiry_date="{{ $item->member->expiry_date }}"
+                                                            data-start_hold="{{ $item->member->start_hold }}"
                                                             data-account_status="{{ $item->member->account_status }}"
                                                             data-industry="{{ $item->member->industry }}"
                                                             data-area_officer="{{ $item->member->area_officer }}"
@@ -1090,7 +1090,7 @@
             // Format dates for all accounts
             loans = loans.map(loan => ({
                 ...loan,
-                open_date: formatDate(loan.open_date),
+
                 maturity_date: formatDate(loan.maturity_date),
                 amortization_due_date: formatDate(loan.amortization_due_date),
                 start_hold: formatDate(loan.start_hold),
@@ -1099,14 +1099,14 @@
 
             savings = savings.map(saving => ({
                 ...saving,
-                open_date: formatDate(saving.open_date),
+
                 start_hold: formatDate(saving.start_hold),
                 expiry_date: formatDate(saving.expiry_date)
             }));
 
             shares = shares.map(share => ({
                 ...share,
-                open_date: formatDate(share.open_date),
+
                 start_hold: formatDate(share.start_hold),
                 expiry_date: formatDate(share.expiry_date)
             }));
@@ -1233,21 +1233,18 @@
                         <label>Current Balance</label>
                         <input type="number" step="0.01" name="savings[${index}][current_balance]" class="form-control" value="${saving.current_balance || '0.00'}">
                     </div>
-                    <div class="form-group col-md-6" style="display: none;">
-                        <label>Open Date</label>
-                        <input type="date" name="savings[${index}][open_date]" class="form-control" value="${formatDate(saving.open_date)}" readonly>
-                    </div>
+
                     <div class="form-group col-md-6">
                         <label>Approval Number</label>
                         <input type="text" name="savings[${index}][approval_no]" class="form-control" value="${saving.approval_no || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
-                        <input type="date" name="savings[${index}][start_hold]" class="form-control" value="${formatDate(saving.start_hold)}">
+                        <input type="month" name="savings[${index}][start_hold]" class="form-control" value="${formatDate(saving.start_hold)}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Expiry Date</label>
-                        <input type="date" name="savings[${index}][expiry_date]" class="form-control" value="${formatDate(saving.expiry_date)}">
+                        <input type="month" name="savings[${index}][expiry_date]" class="form-control" value="${formatDate(saving.expiry_date)}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Request for Hold</label>
@@ -1309,21 +1306,18 @@
                         <label>Current Balance</label>
                         <input type="number" step="0.01" name="shares[${index}][current_balance]" class="form-control" value="${share.current_balance || ''}">
                     </div>
-                    <div class="form-group col-md-6" style="display: none;">
-                        <label>Open Date</label>
-                        <input type="date" name="shares[${index}][open_date]" class="form-control" value="${formatDate(share.open_date)}" readonly>
-                    </div>
+
                     <div class="form-group col-md-6">
                         <label>Approval Number</label>
                         <input type="text" name="shares[${index}][approval_no]" class="form-control" value="${share.approval_no || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
-                        <input type="date" name="shares[${index}][start_hold]" class="form-control" value="${formatDate(share.start_hold)}">
+                        <input type="month" name="shares[${index}][start_hold]" class="form-control" value="${formatDate(share.start_hold)}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Expiry Date</label>
-                        <input type="date" name="shares[${index}][expiry_date]" class="form-control" value="${formatDate(share.expiry_date)}">
+                        <input type="month" name="shares[${index}][expiry_date]" class="form-control" value="${formatDate(share.expiry_date)}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Request for Hold</label>
@@ -1379,10 +1373,7 @@
                 <label>Amount Due</label>
                 <input type="number" step="0.01" name="loan_forecasts[${index}][amount_due]" class="form-control" value="${loan.amount_due || ''}" required>
             </div>
-            <div class="form-group col-md-6" style="display: none;">
-                <label>Open Date</label>
-                <input type="date" name="loan_forecasts[${index}][open_date]" class="form-control" value="${formatDate(loan.open_date)}" required>
-            </div>
+
             <div class="form-group col-md-6" style="display: none;">
                 <label>Maturity Date</label>
                 <input type="date" name="loan_forecasts[${index}][maturity_date]" class="form-control" value="${formatDate(loan.maturity_date)}" required>
@@ -1409,11 +1400,11 @@
             </div>
             <div class="form-group col-md-6">
                 <label>Start Hold Date</label>
-                <input type="date" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${formatDate(loan.start_hold)}">
+                <input type="month" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${formatDate(loan.start_hold)}">
             </div>
             <div class="form-group col-md-6">
                 <label>Expiry Date</label>
-                <input type="date" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${formatDate(loan.expiry_date)}">
+                <input type="month" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${formatDate(loan.expiry_date)}">
             </div>
             <div class="form-group col-md-6">
                 <label>Request for Hold</label>
@@ -1484,7 +1475,7 @@
                         <p><strong>Product Name:</strong> ${productInfo.product_name}</p>
                         <p><strong>Billing Type:</strong> <span class="badge ${productInfo.billing_type === 'special' ? 'badge-warning' : 'badge-info'}">${productInfo.billing_type}</span></p>
                         <p><strong>Amount Due:</strong> ${loan.amount_due || '0.00'}</p>
-                        <p><strong>Open Date:</strong> ${loan.open_date || 'N/A'}</p>
+
                         <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
                         <p><strong>Total Due:</strong> ${loan.total_due || '0.00'}</p>
@@ -1528,7 +1519,7 @@
                         <p><strong>Current Balance:</strong> ${saving.current_balance || '0.00'}</p>
                         <p><strong>Available Balance:</strong> ${saving.available_balance || '0.00'}</p>
                         <p><strong>Interest:</strong> ${saving.interest || '0.00'}</p>
-                        <p><strong>Open Date:</strong> ${saving.open_date || 'N/A'}</p>
+
                         <p><strong>Approval Number:</strong> ${saving.approval_no || 'N/A'}</p>
                         <p><strong>Start Hold:</strong> ${saving.start_hold || 'N/A'}</p>
                         <p><strong>Expiry Date:</strong> ${saving.expiry_date || 'N/A'}</p>
@@ -1566,7 +1557,7 @@
                         <p><strong>Current Balance:</strong> ${share.current_balance || '0.00'}</p>
                         <p><strong>Available Balance:</strong> ${share.available_balance || '0.00'}</p>
                         <p><strong>Interest:</strong> ${share.interest || '0.00'}</p>
-                        <p><strong>Open Date:</strong> ${share.open_date || 'N/A'}</p>
+
                         <p><strong>Approval Number:</strong> ${share.approval_no || 'N/A'}</p>
                         <p><strong>Start Hold:</strong> ${share.start_hold || 'N/A'}</p>
                         <p><strong>Expiry Date:</strong> ${share.expiry_date || 'N/A'}</p>

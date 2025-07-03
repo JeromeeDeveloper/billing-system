@@ -43,8 +43,8 @@ return new class extends Migration
             $table->enum('member_tagging', ['PGB', 'New'])->nullable();
 
             $table->string('approval_no')->nullable();
-            $table->date('start_hold')->nullable();
-            $table->date('expiry_date')->nullable();
+            $table->string('start_hold', 7)->nullable();
+            $table->string('expiry_date', 7)->nullable();
             $table->enum('account_status', ['deduction', 'non-deduction'])->default('deduction');
 
             $table->string('billing_period')->nullable();

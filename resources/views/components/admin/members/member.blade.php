@@ -421,13 +421,13 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Start Hold</label>
-                                        <input type="date" name="start_hold" class="form-control">
+                                        <input type="month" name="start_hold" class="form-control">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Expiry Date</label>
-                                        <input type="date" name="expiry_date" class="form-control">
+                                        <input type="month" name="expiry_date" class="form-control">
                                     </div>
                                 </div>
                             </div>
@@ -638,13 +638,13 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Start Hold</label>
-                                        <input type="date" name="start_hold" id="edit-start_hold" class="form-control">
+                                        <input type="month" name="start_hold" id="edit-start_hold" class="form-control">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label>Expiry Date</label>
-                                        <input type="date" name="expiry_date" id="edit-expiry_date" class="form-control">
+                                        <input type="month" name="expiry_date" id="edit-expiry_date" class="form-control">
                                     </div>
                                 </div>
                             </div>

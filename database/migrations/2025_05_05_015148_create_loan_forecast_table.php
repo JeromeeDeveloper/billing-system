@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('loan_acct_no')->unique();
             $table->decimal('amount_due', 12, 2)->default(0);
-            $table->date('open_date');
-            $table->date('maturity_date');
-            $table->date('amortization_due_date');
+            $table->date('open_date')->nullable();
+            $table->date('maturity_date')->nullable();
+            $table->date('amortization_due_date')->nullable();
             $table->decimal('total_due', 12, 2)->default(0);
             $table->decimal('principal_due', 12, 2)->default(0);
             $table->decimal('interest_due', 12, 2)->default(0);
@@ -28,8 +28,8 @@ return new class extends Migration
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
             $table->string('billing_period')->nullable();
             $table->string('approval_no')->nullable();
-            $table->date('start_hold')->nullable();
-            $table->date('expiry_date')->nullable();
+            $table->string('start_hold', 7)->nullable();
+            $table->string('expiry_date', 7)->nullable();
             $table->decimal('total_due_after_remittance', 12, 2)->default(0);
             $table->enum('account_status', ['deduction', 'non-deduction'])->default('deduction');
             $table->text('remarks')->nullable();

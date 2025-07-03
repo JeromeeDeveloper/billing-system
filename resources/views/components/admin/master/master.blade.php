@@ -1088,17 +1088,20 @@
         function formatDate(dateString) {
             if (!dateString || dateString === 'null' || dateString === 'undefined') return '';
 
+            // If it's already in YYYY-MM format, return as is
+            if (/^\d{4}-\d{2}$/.test(dateString)) return dateString;
+
+            // If it's already in YYYY-MM-DD format, return as is
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+
+            // Handle datetime format with timezone
+            if (dateString.includes('T')) {
+                // Extract just the date part without timezone conversion
+                return dateString.split('T')[0];
+            }
+
+            // For other formats, parse without timezone conversion
             try {
-                // If it's already in YYYY-MM-DD format, return it
-                if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
-
-                // Handle datetime format with timezone
-                if (dateString.includes('T')) {
-                    // Extract just the date part without timezone conversion
-                    return dateString.split('T')[0];
-                }
-
-                // For other formats, parse without timezone conversion
                 const parts = new Date(dateString).toISOString().split('T')[0];
                 return parts;
             } catch (error) {
@@ -1323,7 +1326,7 @@
                     </div>
                     <div class="form-group col-md-6" style="display: none;">
                         <label>Open Date</label>
-                        <input type="date" name="savings[${index}][open_date]" class="form-control" value="${formatDate(saving.open_date)}" readonly>
+                        <input type="date" name="savings[${index}][open_date]" class="form-control" value="${saving.open_date || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Approval Number</label>
@@ -1331,11 +1334,11 @@
                     </div>
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
-                        <input type="date" name="savings[${index}][start_hold]" class="form-control" value="${formatDate(saving.start_hold)}">
+                        <input type="month" name="savings[${index}][start_hold]" class="form-control" value="${saving.start_hold || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Expiry Date</label>
-                        <input type="date" name="savings[${index}][expiry_date]" class="form-control" value="${formatDate(saving.expiry_date)}">
+                        <input type="month" name="savings[${index}][expiry_date]" class="form-control" value="${saving.expiry_date || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Request for Hold</label>
@@ -1403,7 +1406,7 @@
                     </div>
                     <div class="form-group col-md-6" style="display: none;">
                         <label>Open Date</label>
-                        <input type="date" name="shares[${index}][open_date]" class="form-control" value="${formatDate(share.open_date)}" readonly>
+                        <input type="date" name="shares[${index}][open_date]" class="form-control" value="${share.open_date || ''}" readonly>
                     </div>
                     <div class="form-group col-md-6">
                         <label>Approval Number</label>
@@ -1411,11 +1414,11 @@
                     </div>
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
-                        <input type="date" name="shares[${index}][start_hold]" class="form-control" value="${formatDate(share.start_hold)}">
+                        <input type="month" name="shares[${index}][start_hold]" class="form-control" value="${share.start_hold || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Expiry Date</label>
-                        <input type="date" name="shares[${index}][expiry_date]" class="form-control" value="${formatDate(share.expiry_date)}">
+                        <input type="month" name="shares[${index}][expiry_date]" class="form-control" value="${share.expiry_date || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Request for Hold</label>
@@ -1484,12 +1487,12 @@
 
             <div class="form-group col-md-6">
                 <label>Start Hold</label>
-                <input type="date" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
+                <input type="month" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
             </div>
 
             <div class="form-group col-md-6">
                 <label>Expiry Date</label>
-                <input type="date" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${loan.expiry_date || ''}">
+                <input type="month" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${loan.expiry_date || ''}">
             </div>
 
             <div class="form-group col-md-6">

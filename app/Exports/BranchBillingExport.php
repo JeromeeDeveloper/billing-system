@@ -86,8 +86,8 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
                     ->orWhere(function ($query) {
                         $query->where('account_status', 'non-deduction')
                             ->where(function ($q) {
-                                $q->whereDate('start_hold', '>', now()->toDateString())
-                                    ->orWhereDate('expiry_date', '<=', now()->toDateString());
+                                $q->whereRaw("STR_TO_DATE(start_hold, '%Y-%m') > ?", [now()->format('Y-m-01')])
+                                    ->orWhereRaw("STR_TO_DATE(expiry_date, '%Y-%m') <= ?", [now()->format('Y-m-01')]);
                             });
                     });
             })
@@ -112,8 +112,8 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
                 // Exclude loans set to non-deduction only if today is between start_hold and expiry_date (inclusive)
                 if ($loanForecast->account_status === 'non-deduction') {
                     $today = now()->toDateString();
-                    $startHold = $loanForecast->start_hold ? $loanForecast->start_hold->format('Y-m-d') : null;
-                    $expiryDate = $loanForecast->expiry_date ? $loanForecast->expiry_date->format('Y-m-d') : null;
+                    $startHold = $loanForecast->start_hold ? $loanForecast->start_hold : null;
+                    $expiryDate = $loanForecast->expiry_date ? $loanForecast->expiry_date : null;
                     if (
                         ($startHold && $expiryDate && $today >= $startHold && $today <= $expiryDate) ||
                         ($startHold && !$expiryDate && $today >= $startHold) ||
@@ -222,21 +222,19 @@ class BranchDynamicSavingsSheet implements FromCollection, WithHeadings, WithTit
         return $members->map(function ($member) {
             $hasValid = false;
             foreach ($member->savings as $saving) {
-                if ($saving->account_status !== 'deduction') continue;
-                $today = now()->toDateString();
-                $startHold = $saving->start_hold ? (string)$saving->start_hold : null;
-                $expiryDate = $saving->expiry_date ? (string)$saving->expiry_date : null;
-                if ($startHold && $expiryDate && $today >= $startHold && $today <= $expiryDate) {
-                    continue;
+                if (
+                    $saving->account_status === 'deduction' &&
+                    $saving->deduction_amount > 0 &&
+                    $saving->start_hold && $saving->expiry_date
+                ) {
+                    $today = now()->toDateString();
+                    $startHold = \Carbon\Carbon::parse($saving->start_hold . '-01')->toDateString();
+                    $expiryDate = \Carbon\Carbon::parse($saving->expiry_date . '-01')->toDateString();
+                    if ($today >= $startHold && $today <= $expiryDate) {
+                        $hasValid = true;
+                        break;
+                    }
                 }
-                if ($startHold && !$expiryDate && $today >= $startHold) {
-                    continue;
-                }
-                if (!$startHold && $expiryDate && $today <= $expiryDate) {
-                    continue;
-                }
-                $hasValid = true;
-                break;
             }
             if (!$hasValid) return null;
             $amortization = 0;
@@ -318,21 +316,19 @@ class BranchDynamicSharesSheet implements FromCollection, WithHeadings, WithTitl
         return $members->map(function ($member) {
             $hasValid = false;
             foreach ($member->shares as $share) {
-                if ($share->account_status !== 'deduction') continue;
-                $today = now()->toDateString();
-                $startHold = $share->start_hold ? (string)$share->start_hold : null;
-                $expiryDate = $share->expiry_date ? (string)$share->expiry_date : null;
-                if ($startHold && $expiryDate && $today >= $startHold && $today <= $expiryDate) {
-                    continue;
+                if (
+                    $share->account_status === 'deduction' &&
+                    $share->deduction_amount > 0 &&
+                    $share->start_hold && $share->expiry_date
+                ) {
+                    $today = now()->toDateString();
+                    $startHold = \Carbon\Carbon::parse($share->start_hold . '-01')->toDateString();
+                    $expiryDate = \Carbon\Carbon::parse($share->expiry_date . '-01')->toDateString();
+                    if ($today >= $startHold && $today <= $expiryDate) {
+                        $hasValid = true;
+                        break;
+                    }
                 }
-                if ($startHold && !$expiryDate && $today >= $startHold) {
-                    continue;
-                }
-                if (!$startHold && $expiryDate && $today <= $expiryDate) {
-                    continue;
-                }
-                $hasValid = true;
-                break;
             }
             if (!$hasValid) return null;
             $amortization = 0;
