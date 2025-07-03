@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DocumentUpload extends Model
 {
@@ -26,5 +27,13 @@ class DocumentUpload extends Model
     protected $casts = [
         'upload_date' => 'datetime',
     ];
+
+    /**
+     * Get the user that uploaded the document.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
 }
 

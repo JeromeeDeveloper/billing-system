@@ -5,17 +5,52 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Member;
 use App\Models\MasterList;
+use App\Models\DocumentUpload;
 use App\Imports\CoreIdImport;
 use App\Imports\SavingsSharesProductImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\MemberDetailsExport;
 
 class MasterController extends Controller
 {
+    // Maximum number of files to keep per document type
+    private const MAX_FILES_PER_TYPE = 12;
+
+    /**
+     * Clean up old files for a specific document type
+     */
+    private function cleanupOldFiles($documentType, $billingPeriod = null)
+    {
+        $query = DocumentUpload::where('document_type', $documentType);
+
+        if ($billingPeriod) {
+            $query->where('billing_period', $billingPeriod);
+        }
+
+        $files = $query->orderBy('upload_date', 'desc')->get();
+
+        // If we have more than the maximum allowed files, delete the oldest ones
+        if ($files->count() > self::MAX_FILES_PER_TYPE) {
+            $filesToDelete = $files->slice(self::MAX_FILES_PER_TYPE);
+
+            foreach ($filesToDelete as $file) {
+                // Delete physical file from storage
+                if (Storage::disk('public')->exists($file->filepath)) {
+                    Storage::disk('public')->delete($file->filepath);
+                }
+
+                // Delete database record
+                $file->delete();
+            }
+
+            Log::info("Cleaned up " . $filesToDelete->count() . " old files for document type: {$documentType}");
+        }
+    }
 
     public function index(Request $request)
     {
@@ -815,8 +850,28 @@ class MasterController extends Controller
         ]);
 
         try {
+            $billingPeriod = Auth::user()->billing_period ?? null;
+
+            // Clean up old files for this document type before uploading new one
+            $this->cleanupOldFiles('CoreID', $billingPeriod);
+
+            $file = $request->file('coreid_file');
+            $newFileName = time() . '-' . $file->getClientOriginalName();
+            $path = $file->storeAs('uploads/documents', $newFileName, 'public');
+
+            // Store file record in database
+            $documentUpload = DocumentUpload::create([
+                'document_type'  => 'CoreID',
+                'filename'       => $newFileName,
+                'filepath'       => $path,
+                'mime_type'      => $file->getClientMimeType(),
+                'uploaded_by'    => Auth::id(),
+                'upload_date'    => now(),
+                'billing_period' => $billingPeriod,
+            ]);
+
             $import = new CoreIdImport();
-            Excel::import($import, $request->file('coreid_file'));
+            Excel::import($import, $file);
 
             $stats = $import->getStats();
 
@@ -840,8 +895,28 @@ class MasterController extends Controller
         ]);
 
         try {
+            $billingPeriod = Auth::user()->billing_period ?? null;
+
+            // Clean up old files for this document type before uploading new one
+            $this->cleanupOldFiles('Savings & Shares Product', $billingPeriod);
+
+            $file = $request->file('savings_shares_file');
+            $newFileName = time() . '-' . $file->getClientOriginalName();
+            $path = $file->storeAs('uploads/documents', $newFileName, 'public');
+
+            // Store file record in database
+            $documentUpload = DocumentUpload::create([
+                'document_type'  => 'Savings & Shares Product',
+                'filename'       => $newFileName,
+                'filepath'       => $path,
+                'mime_type'      => $file->getClientMimeType(),
+                'uploaded_by'    => Auth::id(),
+                'upload_date'    => now(),
+                'billing_period' => $billingPeriod,
+            ]);
+
             $import = new SavingsSharesProductImport();
-            Excel::import($import, $request->file('savings_shares_file'));
+            Excel::import($import, $file);
 
             $stats = $import->getStats();
 
@@ -865,7 +940,7 @@ class MasterController extends Controller
 
     public function exportMemberDetailsBranch()
     {
-        $branchId = \Auth::user()->branch_id;
+        $branchId = Auth::user()->branch_id;
         return \Maatwebsite\Excel\Facades\Excel::download(new MemberDetailsExport($branchId), 'member_details_branch.csv', \Maatwebsite\Excel\Excel::CSV);
     }
 }

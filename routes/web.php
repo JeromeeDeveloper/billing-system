@@ -23,6 +23,7 @@ use App\Http\Controllers\BranchRemittanceController;
 use App\Http\Controllers\BranchAtmController;
 use App\Http\Controllers\SpecialBillingController;
 use App\Http\Controllers\BranchSpecialBillingController;
+use App\Http\Controllers\FileRetentionController;
 
 //Login
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
@@ -81,6 +82,15 @@ Route::delete('/loans/{loan}', [LoansController::class, 'destroy'])->name('loans
 //Document
 Route::post('/upload', [DocumentUploadController::class, 'store'])->name('document.upload');
 Route::get('/Documents', [DocumentUploadController::class, 'index'])->name('documents');
+
+//File Retention Management
+Route::get('/admin/file-retention', [FileRetentionController::class, 'index'])->name('file.retention.dashboard');
+Route::get('/admin/file-retention/files', [FileRetentionController::class, 'getFiles'])->name('file.retention.files');
+Route::get('/admin/file-retention/download/{type}/{id}', [FileRetentionController::class, 'download'])->name('file.retention.download');
+Route::post('/admin/file-retention/cleanup-type', [FileRetentionController::class, 'cleanupType'])->name('file.retention.cleanup.type');
+Route::post('/admin/file-retention/cleanup-all', [FileRetentionController::class, 'cleanupAll'])->name('file.retention.cleanup.all');
+Route::get('/admin/file-retention/stats', [FileRetentionController::class, 'getStats'])->name('file.retention.stats');
+Route::post('/admin/file-retention/preview', [FileRetentionController::class, 'previewCleanup'])->name('file.retention.preview');
 
 //atm
 Route::get('/atm', [AtmController::class, 'index'])->name('atm');

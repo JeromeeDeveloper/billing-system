@@ -45,14 +45,35 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">File Datatable</h4>
-                                <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
-                                    data-target="#exampleModalpopover">
-                                    <span class="btn-icon-left text-primary">
-                                        <i class="fa fa-upload"></i>
-                                    </span>
-                                    Upload
-                                </button>
+                                <div>
+                                    <h4 class="card-title mb-0">File Datatable</h4>
+                                    <small class="text-muted">Showing latest 5 files total for current billing period</small>
+                                </div>
+                                <div class="d-flex align-items-center" style="gap: 10px;">
+                                    <a href="{{ route('file.retention.dashboard') }}" class="btn btn-rounded btn-info">
+                                        <span class="btn-icon-left text-info">
+                                            <i class="fa fa-cogs"></i>
+                                        </span>
+                                        File Retention
+                                    </a>
+                                    @if($isApproved)
+                                        <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
+                                            data-target="#exampleModalpopover">
+                                            <span class="btn-icon-left text-primary">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            Upload
+                                        </button>
+                                                                        @else
+                                        <button type="button" class="btn btn-rounded btn-secondary" disabled
+                                            title="Your account is approved. Upload is disabled for approved accounts.">
+                                            <span class="btn-icon-left text-secondary">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            Upload (Approved - Disabled)
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
 
                             <div class="modal fade" id="exampleModalpopover" tabindex="-1" role="dialog"
@@ -176,8 +197,22 @@
                                 </div>
                             @endif
 
+                                                        @if(!$isApproved)
+                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    <i class="fa fa-exclamation-triangle me-2"></i>
+                                    <strong>Upload Disabled:</strong> Your account is approved. File upload is disabled for approved accounts.
+                                    You can view files but cannot upload new ones.
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                </div>
+                            @endif
+
 
                             <div class="card-body">
+                                <div class="alert alert-info mb-3">
+                                    <i class="fa fa-info-circle me-2"></i>
+                                    <strong>Note:</strong> This table shows only the latest 5 files total for the current billing period.
+                                    To view all files and manage file retention, use the <strong>File Retention</strong> button above.
+                                </div>
                                 <div class="table-responsive">
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
