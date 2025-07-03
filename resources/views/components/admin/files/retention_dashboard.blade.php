@@ -108,7 +108,7 @@
                             <div class="card-body p-4">
                                 <div class="media ai-icon">
                                     <span class="mr-3 bgl-info text-info">
-                                        <i class="fa fa-limit"></i>
+                                        <i class="fa fa-company"></i>
                                     </span>
                                     <div class="media-body">
                                         <h3 class="mb-0 text-black"><span class="counter ml-0">{{ $maxFilesPerType }}</span></h3>
@@ -130,9 +130,10 @@
                                     <button type="button" class="btn btn-primary mr-2" onclick="refreshStats()">
                                         <i class="fa fa-refresh"></i> Refresh
                                     </button>
-                                    <button type="button" class="btn btn-warning mr-2" onclick="previewCleanup()">
-                                        <i class="fa fa-eye"></i> Preview Cleanup
+                                    <button type="button" class="btn btn-success mr-2" onclick="createBackup()">
+                                        <i class="fa fa-download"></i> Create Backup
                                     </button>
+
                                     <button type="button" class="btn btn-danger" onclick="performCleanupAll()">
                                         <i class="fa fa-trash"></i> Cleanup All
                                     </button>
@@ -196,9 +197,7 @@
                                                         </button>
                                                     @endif
                                                     @if($data['files_over_limit'] > 0)
-                                                        <button type="button" class="btn btn-sm btn-warning" onclick="previewCleanup('{{ $type }}')">
-                                                            <i class="fa fa-eye"></i> Preview
-                                                        </button>
+
                                                         <button type="button" class="btn btn-sm btn-danger" onclick="performCleanup('{{ $type }}')">
                                                             <i class="fa fa-trash"></i> Cleanup
                                                         </button>
@@ -343,9 +342,6 @@
                             <a href="${file.download_url}" class="btn btn-sm btn-primary" target="_blank">
                                 <i class="fa fa-download"></i> Download
                             </a>
-                            <button type="button" class="btn btn-sm btn-info" onclick="previewFile('${file.filename}', '${file.download_url}')">
-                                <i class="fa fa-eye"></i> Preview
-                            </button>
                         </td>
                     </tr>
                 `;
@@ -537,6 +533,60 @@
                         Swal.fire('Error', 'Failed to perform cleanup', 'error');
                     });
                 }
+            });
+        }
+
+        function createBackup() {
+            Swal.fire({
+                title: 'Creating Backup',
+                html: 'Please wait while we create a backup of all files...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch('/admin/file-retention/backup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Backup Created Successfully!',
+                        html: `
+                            <div class="text-left">
+                                <p><strong>Filename:</strong> ${data.filename}</p>
+                                <p><strong>Total Files:</strong> ${data.total_files}</p>
+                                <p><strong>Total Size:</strong> ${data.total_size_mb} MB</p>
+                            </div>
+                        `,
+                        icon: 'success',
+                        showCancelButton: true,
+                        confirmButtonText: 'Download Backup',
+                        cancelButtonText: 'Close'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Create a temporary link to download the file
+                            const link = document.createElement('a');
+                            link.href = data.download_url;
+                            link.download = data.filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }
+                    });
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Failed to create backup', 'error');
             });
         }
     </script>

@@ -198,17 +198,184 @@ class FileRetentionController extends Controller
             ]);
         }
 
+        $filesToDelete = [];
+        if ($typeStats['files_over_limit'] > 0) {
+            if ($documentType === 'Billing Exports') {
+                $files = BillingExport::orderBy('created_at', 'asc')->get();
+                $filesToDelete = $files->slice($maxFiles)->map(function ($file) {
+                    return [
+                        'filename' => $file->filename,
+                        'size' => Storage::disk('public')->exists($file->filepath) ? Storage::disk('public')->size($file->filepath) : 0,
+                        'created_at' => $file->created_at->format('Y-m-d H:i:s')
+                    ];
+                });
+            } else {
+                $files = DocumentUpload::where('document_type', $documentType)
+                    ->orderBy('upload_date', 'asc')
+                    ->get();
+                $filesToDelete = $files->slice($maxFiles)->map(function ($file) {
+                    return [
+                        'filename' => $file->filename,
+                        'size' => Storage::disk('public')->exists($file->filepath) ? Storage::disk('public')->size($file->filepath) : 0,
+                        'upload_date' => $file->upload_date->format('Y-m-d H:i:s')
+                    ];
+                });
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'data' => [
-                'document_type' => $documentType,
-                'total_files' => $typeStats['count'],
-                'files_over_limit' => $typeStats['files_over_limit'],
-                'max_files_allowed' => $maxFiles,
-                'total_size_mb' => $typeStats['total_size_mb'],
-                'oldest_file' => $typeStats['oldest_file'],
-                'newest_file' => $typeStats['newest_file']
-            ]
+            'document_type' => $documentType,
+            'current_count' => $typeStats['count'],
+            'max_files' => $maxFiles,
+            'files_over_limit' => $typeStats['files_over_limit'],
+            'files_to_delete' => $filesToDelete,
+            'total_size_to_free' => $filesToDelete->sum('size')
         ]);
+    }
+
+    /**
+     * Create a backup zip file containing all files
+     */
+    public function createBackup()
+    {
+        try {
+            $timestamp = now()->format('Y-m-d_H-i-s');
+            $backupFilename = "file_retention_backup_{$timestamp}.zip";
+            $backupPath = "backups/{$backupFilename}";
+
+            // Create backups directory if it doesn't exist
+            if (!Storage::disk('public')->exists('backups')) {
+                Storage::disk('public')->makeDirectory('backups');
+            }
+
+            // Create a new ZipArchive
+            $zip = new \ZipArchive();
+            $zipPath = storage_path('app/public/' . $backupPath);
+
+            if ($zip->open($zipPath, \ZipArchive::CREATE) !== TRUE) {
+                throw new \Exception('Could not create ZIP file');
+            }
+
+            $totalFiles = 0;
+            $totalSize = 0;
+
+            // Add document upload files
+            $documentUploads = DocumentUpload::with('user')->get();
+            foreach ($documentUploads as $upload) {
+                if (Storage::disk('public')->exists($upload->filepath)) {
+                    $filePath = storage_path('app/public/' . $upload->filepath);
+                    $zipPath = "document_uploads/{$upload->document_type}/{$upload->filename}";
+
+                    if ($zip->addFile($filePath, $zipPath)) {
+                        $totalFiles++;
+                        $totalSize += Storage::disk('public')->size($upload->filepath);
+                    }
+                }
+            }
+
+            // Add billing export files
+            $billingExports = BillingExport::with('user')->get();
+            foreach ($billingExports as $export) {
+                if (Storage::disk('public')->exists($export->filepath)) {
+                    $filePath = storage_path('app/public/' . $export->filepath);
+                    $zipPath = "billing_exports/{$export->filename}";
+
+                    if ($zip->addFile($filePath, $zipPath)) {
+                        $totalFiles++;
+                        $totalSize += Storage::disk('public')->size($export->filepath);
+                    }
+                }
+            }
+
+            // Add a manifest file with file information
+            $manifest = [
+                'backup_created_at' => now()->toISOString(),
+                'total_files' => $totalFiles,
+                'total_size_bytes' => $totalSize,
+                'total_size_mb' => round($totalSize / 1024 / 1024, 2),
+                'document_uploads' => $documentUploads->count(),
+                'billing_exports' => $billingExports->count(),
+                'files' => []
+            ];
+
+            // Add file details to manifest
+            foreach ($documentUploads as $upload) {
+                $manifest['files'][] = [
+                    'type' => 'document_upload',
+                    'document_type' => $upload->document_type,
+                    'filename' => $upload->filename,
+                    'filepath' => $upload->filepath,
+                    'upload_date' => $upload->upload_date,
+                    'uploaded_by' => $upload->user ? $upload->user->name : 'Unknown',
+                    'billing_period' => $upload->billing_period,
+                    'size_bytes' => Storage::disk('public')->exists($upload->filepath) ? Storage::disk('public')->size($upload->filepath) : 0
+                ];
+            }
+
+            foreach ($billingExports as $export) {
+                $manifest['files'][] = [
+                    'type' => 'billing_export',
+                    'filename' => $export->filename,
+                    'filepath' => $export->filepath,
+                    'created_at' => $export->created_at,
+                    'generated_by' => $export->user ? $export->user->name : 'Unknown',
+                    'billing_period' => $export->billing_period,
+                    'size_bytes' => Storage::disk('public')->exists($export->filepath) ? Storage::disk('public')->size($export->filepath) : 0
+                ];
+            }
+
+            // Add manifest to zip
+            $zip->addFromString('manifest.json', json_encode($manifest, JSON_PRETTY_PRINT));
+
+            $zip->close();
+
+            // Create notification about backup creation
+            \App\Models\Notification::create([
+                'type' => 'file_backup',
+                'user_id' => Auth::id(),
+                'related_id' => Auth::id(),
+                'message' => "File retention backup created: {$backupFilename} ({$totalFiles} files, " . round($totalSize / 1024 / 1024, 2) . " MB)",
+                'billing_period' => Auth::user()->billing_period
+            ]);
+
+            Log::info("File retention backup created: {$backupFilename} with {$totalFiles} files, " . round($totalSize / 1024 / 1024, 2) . " MB");
+
+            return response()->json([
+                'success' => true,
+                'message' => "Backup created successfully: {$backupFilename}",
+                'filename' => $backupFilename,
+                'filepath' => $backupPath,
+                'total_files' => $totalFiles,
+                'total_size_mb' => round($totalSize / 1024 / 1024, 2),
+                'download_url' => route('file.retention.download.backup', ['filename' => $backupFilename])
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('File retention backup error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create backup: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Download a backup file
+     */
+    public function downloadBackup($filename)
+    {
+        try {
+            $backupPath = "backups/{$filename}";
+
+            if (!Storage::disk('public')->exists($backupPath)) {
+                abort(404, 'Backup file not found');
+            }
+
+            return response()->download(storage_path('app/public/' . $backupPath), $filename);
+        } catch (\Exception $e) {
+            Log::error('Backup download error: ' . $e->getMessage());
+            abort(404, 'Backup file not found');
+        }
     }
 }

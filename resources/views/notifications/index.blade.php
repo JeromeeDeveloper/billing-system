@@ -87,6 +87,10 @@
                                                             <span class="badge badge-danger">
                                                                 <i class="ti-close"></i> Approval Cancelled
                                                             </span>
+                                                        @elseif($notification->type === 'file_backup')
+                                                            <span class="badge badge-info">
+                                                                <i class="ti-download"></i> File Backup
+                                                            </span>
                                                         @else
                                                             <span class="badge badge-secondary">
                                                                 <i class="ti-info"></i> {{ ucfirst($notification->type) }}

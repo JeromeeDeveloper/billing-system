@@ -31,12 +31,34 @@ class CoreIdImport implements ToCollection, WithHeadingRow
             }
 
             $firstRow = $rows->first();
-            if (!isset($firstRow['coreid'])) {
-                throw new \Exception('File must have "CoreID" header in the first column.');
+
+            // Check for different possible header names
+            $cidColumn = null;
+            if (isset($firstRow['coreid'])) {
+                $cidColumn = 'coreid';
+            } elseif (isset($firstRow['customer_no'])) {
+                $cidColumn = 'customer_no';
+            } elseif (isset($firstRow['customer_no_'])) {
+                $cidColumn = 'customer_no_';
+            } elseif (isset($firstRow['customer_no'])) {
+                $cidColumn = 'customer_no';
+            } else {
+                // Try to find any column that might contain the CID data
+                $possibleColumns = ['coreid', 'customer_no', 'customer_no_', 'cid', 'customer_number', 'customer_id'];
+                foreach ($possibleColumns as $column) {
+                    if (isset($firstRow[$column])) {
+                        $cidColumn = $column;
+                        break;
+                    }
+                }
+
+                if (!$cidColumn) {
+                    throw new \Exception('File must have "CoreID" or "Customer No" header in the first column. Available columns: ' . implode(', ', array_keys($firstRow->toArray())));
+                }
             }
 
             // Get all existing CIDs from the uploaded file
-            $uploadedCids = $rows->pluck('coreid')->map(function($cid) {
+            $uploadedCids = $rows->pluck($cidColumn)->map(function($cid) {
                 return str_pad($cid, 9, '0', STR_PAD_LEFT);
             })->toArray();
 
@@ -46,7 +68,7 @@ class CoreIdImport implements ToCollection, WithHeadingRow
 
             // Process each row in the uploaded file
             foreach ($rows as $row) {
-                $cid = str_pad($row['coreid'], 9, '0', STR_PAD_LEFT);
+                $cid = str_pad($row[$cidColumn], 9, '0', STR_PAD_LEFT);
 
                 // Find member with this CID
                 $member = Member::where('cid', $cid)->first();

@@ -83,6 +83,10 @@ class NotificationController extends Controller
                 $billingPeriodFormatted = $billingPeriod ? \Carbon\Carbon::parse($billingPeriod)->format('F Y') : 'N/A';
                 $message = 'You have cancelled your billing approval for billing period: ' . $billingPeriodFormatted;
                 break;
+            case 'file_backup':
+                $billingPeriodFormatted = $billingPeriod ? \Carbon\Carbon::parse($billingPeriod)->format('F Y') : 'N/A';
+                $message = $user->name . ' has created a file retention backup for billing period: ' . $billingPeriodFormatted;
+                break;
         }
 
         Notification::create([

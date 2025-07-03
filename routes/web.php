@@ -91,6 +91,8 @@ Route::post('/admin/file-retention/cleanup-type', [FileRetentionController::clas
 Route::post('/admin/file-retention/cleanup-all', [FileRetentionController::class, 'cleanupAll'])->name('file.retention.cleanup.all');
 Route::get('/admin/file-retention/stats', [FileRetentionController::class, 'getStats'])->name('file.retention.stats');
 Route::post('/admin/file-retention/preview', [FileRetentionController::class, 'previewCleanup'])->name('file.retention.preview');
+Route::post('/admin/file-retention/backup', [FileRetentionController::class, 'createBackup'])->name('file.retention.backup');
+Route::get('/admin/file-retention/backup/{filename}/download', [FileRetentionController::class, 'downloadBackup'])->name('file.retention.download.backup');
 
 //atm
 Route::get('/atm', [AtmController::class, 'index'])->name('atm');

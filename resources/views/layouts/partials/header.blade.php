@@ -112,6 +112,9 @@ function updateNotifications() {
             } else if (notification.type === 'billing_approval_cancelled') {
                 icon = 'ti-close';
                 statusClass = 'danger';
+            } else if (notification.type === 'file_backup') {
+                icon = 'ti-download';
+                statusClass = 'info';
             } else {
                 icon = 'ti-info';
                 statusClass = 'secondary';
