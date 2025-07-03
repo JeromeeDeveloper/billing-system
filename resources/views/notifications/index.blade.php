@@ -58,6 +58,7 @@
                                                 <th>Type</th>
                                                 <th>Message</th>
                                                 <th>User</th>
+                                                <th>Billing Period</th>
                                                 <th>Time</th>
                                                 <th>Status</th>
                                             </tr>
@@ -70,14 +71,31 @@
                                                             <span class="badge badge-success">
                                                                 <i class="ti-file"></i> Document Upload
                                                             </span>
-                                                        @else
+                                                        @elseif($notification->type === 'billing_report')
                                                             <span class="badge badge-primary">
                                                                 <i class="ti-receipt"></i> Billing Report
+                                                            </span>
+                                                        @elseif($notification->type === 'billing_period_update')
+                                                            <span class="badge badge-warning">
+                                                                <i class="ti-calendar"></i> Billing Period Update
+                                                            </span>
+                                                        @else
+                                                            <span class="badge badge-secondary">
+                                                                <i class="ti-info"></i> {{ ucfirst($notification->type) }}
                                                             </span>
                                                         @endif
                                                     </td>
                                                     <td>{{ $notification->message }}</td>
                                                     <td>{{ $notification->user->name }}</td>
+                                                    <td>
+                                                        @if($notification->billing_period)
+                                                            <span class="badge badge-info">
+                                                                {{ \Carbon\Carbon::parse($notification->billing_period)->format('F Y') }}
+                                                            </span>
+                                                        @else
+                                                            <span class="badge badge-secondary">N/A</span>
+                                                        @endif
+                                                    </td>
                                                     <td>{{ $notification->created_at->diffForHumans() }}</td>
                                                     <td>
                                                         @if($notification->is_read)

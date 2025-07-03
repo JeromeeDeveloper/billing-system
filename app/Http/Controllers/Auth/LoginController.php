@@ -41,6 +41,15 @@ class LoginController extends Controller
         if (!$user->billing_period ||
             (Carbon::parse($user->billing_period)->format('Y-m') !== Carbon::now()->format('Y-m'))) {
             User::where('id', $user->id)->update(['billing_period' => $currentBillingPeriod]);
+
+            // Create a notification about the billing period update
+            \App\Models\Notification::create([
+                'type' => 'billing_period_update',
+                'user_id' => $user->id,
+                'related_id' => $user->id,
+                'message' => 'Your billing period has been automatically updated to ' . Carbon::parse($currentBillingPeriod)->format('F Y'),
+                'billing_period' => $currentBillingPeriod
+            ]);
         }
 
         if ($user->role === 'admin') {

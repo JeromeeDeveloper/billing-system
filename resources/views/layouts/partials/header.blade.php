@@ -95,8 +95,21 @@ function updateNotifications() {
         notificationList.empty();
 
         data.forEach(function(notification) {
-            var icon = notification.type === 'document_upload' ? 'ti-file' : 'ti-receipt';
-            var statusClass = notification.type === 'document_upload' ? 'success' : 'primary';
+            var icon, statusClass;
+
+            if (notification.type === 'document_upload') {
+                icon = 'ti-file';
+                statusClass = 'success';
+            } else if (notification.type === 'billing_report') {
+                icon = 'ti-receipt';
+                statusClass = 'primary';
+            } else if (notification.type === 'billing_period_update') {
+                icon = 'ti-calendar';
+                statusClass = 'warning';
+            } else {
+                icon = 'ti-info';
+                statusClass = 'secondary';
+            }
 
             var html = `
                 <li class="media dropdown-item ${notification.is_read ? '' : 'unread'}" data-id="${notification.id}">
@@ -104,6 +117,9 @@ function updateNotifications() {
                     <div class="media-body">
                         <a href="#">
                             <p><strong>${notification.user_name}</strong> ${notification.message}</p>
+                            <small class="text-muted">
+                                <i class="ti-calendar"></i> Billing Period: ${notification.billing_period}
+                            </small>
                         </a>
                     </div>
                     <span class="notify-time">${notification.time}</span>

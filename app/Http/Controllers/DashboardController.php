@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Member;
 use App\Models\LoanForecast;
 use App\Models\MasterList;
+use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -213,6 +214,17 @@ class DashboardController extends Controller
 
         User::where('id', $user->id)->update(['billing_period' => $newBillingPeriod]);
 
+        // Create notification about billing period change
+        if ($oldBillingPeriod !== $newBillingPeriod) {
+            \App\Models\Notification::create([
+                'type' => 'billing_period_update',
+                'user_id' => $user->id,
+                'related_id' => $user->id,
+                'message' => 'Your billing period has been manually updated to ' . \Carbon\Carbon::parse($newBillingPeriod)->format('F Y'),
+                'billing_period' => $newBillingPeriod
+            ]);
+        }
+
         $message = 'Billing period saved.';
         if ($statusChanged) {
             $message .= ' Your status has been reset to pending due to billing period change.';
@@ -242,6 +254,17 @@ class DashboardController extends Controller
         }
 
         User::where('id', $user->id)->update(['billing_period' => $newBillingPeriod]);
+
+        // Create notification about billing period change
+        if ($oldBillingPeriod !== $newBillingPeriod) {
+            \App\Models\Notification::create([
+                'type' => 'billing_period_update',
+                'user_id' => $user->id,
+                'related_id' => $user->id,
+                'message' => 'Your billing period has been manually updated to ' . \Carbon\Carbon::parse($newBillingPeriod)->format('F Y'),
+                'billing_period' => $newBillingPeriod
+            ]);
+        }
 
         $message = 'Billing period saved.';
         if ($statusChanged) {

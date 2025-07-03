@@ -33,6 +33,7 @@ class NotificationController extends Controller
                     'id' => $notification->id,
                     'message' => $notification->message,
                     'user_name' => $notification->user->name,
+                    'billing_period' => $notification->billing_period ? \Carbon\Carbon::parse($notification->billing_period)->format('F Y') : 'N/A',
                     'time' => $notification->created_at->diffForHumans(),
                     'type' => $notification->type,
                     'is_read' => $notification->is_read
@@ -58,14 +59,21 @@ class NotificationController extends Controller
     public static function createNotification($type, $userId, $relatedId)
     {
         $user = Auth::user();
+        $billingPeriod = $user->billing_period;
         $message = '';
 
         switch ($type) {
             case 'document_upload':
-                $message = $user->name . ' has uploaded a new document';
+                $billingPeriodFormatted = $billingPeriod ? \Carbon\Carbon::parse($billingPeriod)->format('F Y') : 'N/A';
+                $message = $user->name . ' has uploaded a new document for billing period: ' . $billingPeriodFormatted;
                 break;
             case 'billing_report':
-                $message = $user->name . ' has generated a new billing report';
+                $billingPeriodFormatted = $billingPeriod ? \Carbon\Carbon::parse($billingPeriod)->format('F Y') : 'N/A';
+                $message = $user->name . ' has generated a new billing report for billing period: ' . $billingPeriodFormatted;
+                break;
+            case 'billing_period_update':
+                $billingPeriodFormatted = $billingPeriod ? \Carbon\Carbon::parse($billingPeriod)->format('F Y') : 'N/A';
+                $message = 'Your billing period has been automatically updated to: ' . $billingPeriodFormatted;
                 break;
         }
 
@@ -73,7 +81,8 @@ class NotificationController extends Controller
             'type' => $type,
             'user_id' => $userId,
             'related_id' => $relatedId,
-            'message' => $message
+            'message' => $message,
+            'billing_period' => $billingPeriod
         ]);
     }
 }

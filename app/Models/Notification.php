@@ -12,6 +12,7 @@ class Notification extends Model
         'user_id',
         'related_id',
         'message',
+        'billing_period',
         'is_read'
     ];
 
