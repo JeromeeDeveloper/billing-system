@@ -225,10 +225,10 @@ class FileRetentionController extends Controller
 
         return response()->json([
             'success' => true,
-            'document_type' => $documentType,
+                'document_type' => $documentType,
             'current_count' => $typeStats['count'],
             'max_files' => $maxFiles,
-            'files_over_limit' => $typeStats['files_over_limit'],
+                'files_over_limit' => $typeStats['files_over_limit'],
             'files_to_delete' => $filesToDelete,
             'total_size_to_free' => $filesToDelete->sum('size')
         ]);

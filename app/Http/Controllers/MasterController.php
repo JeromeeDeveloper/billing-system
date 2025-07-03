@@ -52,6 +52,27 @@ class MasterController extends Controller
         }
     }
 
+    /**
+     * Preprocess Excel file to ensure compatibility
+     */
+    private function preprocessExcelFile($file)
+    {
+        try {
+            // Create a temporary copy of the file
+            $tempPath = $file->getRealPath();
+            $tempDir = sys_get_temp_dir();
+            $tempFile = $tempDir . '/' . uniqid('excel_') . '.xlsx';
+
+            // Copy the file to temp directory
+            copy($tempPath, $tempFile);
+
+            return $tempFile;
+        } catch (\Exception $e) {
+            Log::error('File preprocessing error: ' . $e->getMessage());
+            throw new \Exception('Error preparing file for processing. Please try again.');
+        }
+    }
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -851,11 +872,63 @@ class MasterController extends Controller
 
         try {
             $billingPeriod = Auth::user()->billing_period ?? null;
+            $file = $request->file('coreid_file');
 
-            // Clean up old files for this document type before uploading new one
+            // Validate file before processing
+            if (!$file->isValid()) {
+                throw new \Exception('Invalid file upload. Please try again.');
+            }
+
+            // Check file size
+            if ($file->getSize() > 2 * 1024 * 1024) { // 2MB limit
+                throw new \Exception('File size exceeds 2MB limit.');
+            }
+
+            // Validate file extension
+            $extension = strtolower($file->getClientOriginalExtension());
+            $allowedExtensions = ['xlsx', 'xls', 'csv'];
+            if (!in_array($extension, $allowedExtensions)) {
+                throw new \Exception('Invalid file format. Please upload .xlsx, .xls, or .csv files only.');
+            }
+
+            // Try to process the file first before storing
+            try {
+                $import = new CoreIdImport();
+
+                // Use different import methods based on file type with better error handling
+                if ($extension === 'csv') {
+                    Excel::import($import, $file, null, \Maatwebsite\Excel\Excel::CSV);
+                } else {
+                    // For Excel files, try multiple approaches
+                    try {
+                        Excel::import($import, $file, null, \Maatwebsite\Excel\Excel::XLSX);
+                    } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
+                        // If XLSX fails, try XLS
+                        if ($extension === 'xls') {
+                            Excel::import($import, $file, null, \Maatwebsite\Excel\Excel::XLS);
+                        } else {
+                            throw $e;
+                        }
+                    }
+                }
+
+                $stats = $import->getStats();
+            } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+                throw new \Exception('File validation failed: ' . $e->getMessage());
+            } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
+                throw new \Exception('Invalid spreadsheet file. Please ensure the file is not corrupted and try saving it again as .xlsx format. Error: ' . $e->getMessage());
+            } catch (\Exception $e) {
+                $errorMessage = $e->getMessage();
+                if (strpos($errorMessage, 'Invalid Spreadsheet file') !== false) {
+                    throw new \Exception('The file appears to be corrupted or in an unsupported format. Please try the following: 1) Open the file in Excel, 2) Save it as a new .xlsx file, 3) Upload the new file.');
+                } else {
+                    throw new \Exception('Error processing file: ' . $errorMessage . '. Please try saving the file again in Excel and upload.');
+                }
+            }
+
+            // If processing was successful, clean up old files and store the new one
             $this->cleanupOldFiles('CoreID', $billingPeriod);
 
-            $file = $request->file('coreid_file');
             $newFileName = time() . '-' . $file->getClientOriginalName();
             $path = $file->storeAs('uploads/documents', $newFileName, 'public');
 
@@ -869,11 +942,6 @@ class MasterController extends Controller
                 'upload_date'    => now(),
                 'billing_period' => $billingPeriod,
             ]);
-
-            $import = new CoreIdImport();
-            Excel::import($import, $file);
-
-            $stats = $import->getStats();
 
             // Only store summary in session, not detailed results
             $message = "CoreID import completed successfully. ";

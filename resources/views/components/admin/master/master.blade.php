@@ -269,9 +269,10 @@
                                         </h6>
                                         <p class="text-muted mb-3">
                                             Upload CoreID file to set member tagging to PGB.
-                                            File should have "CoreID" header in A1 and CID values below.
-                                            CIDs will be padded to 9 digits (e.g., 2026 becomes 000002026).
+                                            File should have "Customer No" header in A1 and CID values below.
+                                            CIDs will be padded to 9 digits (e.g., 123 becomes 000000123).
                                         </p>
+
                                     </div>
                                     <div class="col-md-4">
                                         <form action="{{ route('master.upload.coreid') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" style="gap: 10px;">
@@ -2168,6 +2169,75 @@
             let mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
             return mortuaryProduct && mortuaryProduct.product_name.toLowerCase().includes('mortuary');
         }
+
+        // File upload enhancement
+        $(document).ready(function() {
+            // Add file validation for CoreID upload
+            $('input[name="coreid_file"]').on('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const fileSize = file.size / 1024 / 1024; // Convert to MB
+                    const fileName = file.name.toLowerCase();
+
+                    // Check file size
+                    if (fileSize > 2) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'File size exceeds 2MB limit. Please choose a smaller file.'
+                        });
+                        this.value = '';
+                        return;
+                    }
+
+                    // Check file extension
+                    const allowedExtensions = ['.xlsx', '.xls', '.csv'];
+                    const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+                    if (!hasValidExtension) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid File Format',
+                            text: 'Please upload .xlsx, .xls, or .csv files only.'
+                        });
+                        this.value = '';
+                        return;
+                    }
+
+                    // Show file info
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'File Selected',
+                        html: `
+                            <p><strong>File:</strong> ${file.name}</p>
+                            <p><strong>Size:</strong> ${fileSize.toFixed(2)} MB</p>
+                            <p><strong>Type:</strong> ${file.type || 'Unknown'}</p>
+                        `,
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                }
+            });
+
+            // Add loading state for form submission
+            $('form[action*="upload-coreid"]').on('submit', function() {
+                const submitBtn = $(this).find('button[type="submit"]');
+                const originalText = submitBtn.html();
+
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<i class="fa fa-spinner fa-spin me-1"></i>Uploading...');
+
+                // Show loading message
+                Swal.fire({
+                    title: 'Uploading File...',
+                    html: 'Please wait while we process your file. This may take a few moments.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            });
+        });
     </script>
 
 </body>

@@ -29,8 +29,7 @@ class MemberDetailsExport implements FromCollection, WithHeadings, WithMapping
         return [
             'Branch', 'CID', 'Emp ID', 'First Name', 'Last Name', 'Address', 'Birth Date', 'Date Registered', 'Gender',
             'Customer Type', 'Customer Classification', 'Occupation', 'Industry', 'Area Officer', 'Area', 'Member Tagging',
-            'Status', 'Account Status', 'Approval No', 'Start Hold', 'Expiry Date', 'Billing Period',
-            'Loan Accounts', 'Savings Accounts', 'Share Accounts'
+            'Status'
         ];
     }
 
@@ -63,14 +62,6 @@ class MemberDetailsExport implements FromCollection, WithHeadings, WithMapping
             $member->area,
             $member->member_tagging,
             $member->status,
-            $member->account_status,
-            $member->approval_no,
-            $member->start_hold,
-            $member->expiry_date,
-            $member->billing_period,
-            $loanAccounts,
-            $savings,
-            $shares
         ];
     }
 }

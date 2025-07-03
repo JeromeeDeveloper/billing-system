@@ -222,6 +222,12 @@
                                     <strong>Note:</strong> This table shows only the latest 5 files total for the current billing period.
                                     To view all files and manage file retention, use the <strong>File Retention</strong> button above.
                                 </div>
+
+                                <div class="alert alert-warning mb-3">
+                                    <i class="fa fa-exclamation-triangle me-2"></i>
+                                    <strong>Important:</strong> If you're uploading files downloaded from websites and encounter "Invalid Spreadsheet file" errors,
+                                    please open the file in Excel and save it as a new .csv file before uploading. This ensures compatibility with our system.
+                                </div>
                                 <div class="table-responsive">
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
@@ -315,14 +321,72 @@
         });
     </script>
 
-    <script>
+    {{-- <script>
         document.querySelectorAll('.custom-file-input').forEach(input => {
             input.addEventListener('change', function(e) {
-                let fileName = e.target.files[0]?.name || 'Choose file...';
+                const file = e.target.files[0];
+                let fileName = file?.name || 'Choose file...';
                 e.target.nextElementSibling.innerText = fileName;
+
+                // Validate file if one is selected
+                if (file) {
+                    const fileSize = file.size / 1024 / 1024; // Convert to MB
+                    const fileName = file.name.toLowerCase();
+
+                    // Check file size
+                    if (fileSize > 2) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'File size exceeds 2MB limit. Please choose a smaller file.'
+                        });
+                        e.target.value = '';
+                        e.target.nextElementSibling.innerText = 'Choose file...';
+                        return;
+                    }
+
+                    // Check file extension
+                    const allowedExtensions = ['.xlsx', '.xls', '.csv'];
+                    const hasValidExtension = allowedExtensions.some(ext => fileName.endsWith(ext));
+
+                    if (!hasValidExtension) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid File Format',
+                            text: 'Please upload .xlsx, .xls, or .csv files only.'
+                        });
+                        e.target.value = '';
+                        e.target.nextElementSibling.innerText = 'Choose file...';
+                        return;
+                    }
+
+                    // Show file info for downloaded files
+                    if (fileName.includes('download') || fileName.includes('export')) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Downloaded File Detected',
+                            html: `
+                                <p>This appears to be a downloaded file. If you encounter upload issues:</p>
+                                <ol class="text-left">
+                                    <li>Open the file in Excel</li>
+                                    <li>Save it as a new .xlsx file</li>
+                                    <li>Upload the new file</li>
+                                </ol>
+                            `,
+                            confirmButtonText: 'Continue Upload',
+                            showCancelButton: true,
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (!result.isConfirmed) {
+                                e.target.value = '';
+                                e.target.nextElementSibling.innerText = 'Choose file...';
+                            }
+                        });
+                    }
+                }
             });
         });
-    </script>
+    </script> --}}
 
 
 </body>
