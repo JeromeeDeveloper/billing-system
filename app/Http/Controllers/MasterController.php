@@ -297,7 +297,7 @@ class MasterController extends Controller
                                     'expiry_date' => $savingsData['expiry_date'],
                                     'account_status' => $savingsData['account_status'],
                                     'deduction_amount' => $savingsData['deduction_amount'],
-                                    'remarks' => $savingsData['remarks'],
+                                    'remarks' => $savingsData['remarks'] ?? null,
                                 ];
 
                                 Log::info('Updating savings account with data: ' . json_encode($updateData));
@@ -333,7 +333,7 @@ class MasterController extends Controller
                                     'expiry_date' => $sharesData['expiry_date'],
                                     'account_status' => $sharesData['account_status'],
                                     'deduction_amount' => $sharesData['deduction_amount'],
-                                    'remarks' => $sharesData['remarks'],
+                                    'remarks' => $sharesData['remarks'] ?? null,
                                 ];
 
                                 Log::info('Updating shares account with data: ' . json_encode($updateData));
@@ -369,7 +369,7 @@ class MasterController extends Controller
                                     'expiry_date' => $loanData['expiry_date'],
                                     'account_status' => $loanData['account_status'],
                                     'approval_no' => $loanData['approval_no'],
-                                    'remarks' => $loanData['remarks'],
+                                    'remarks' => $loanData['remarks'] ?? null,
                                 ];
 
                                 Log::info('Updating loan forecast with data: ' . json_encode($updateData));
@@ -693,7 +693,8 @@ class MasterController extends Controller
                                     'start_hold' => $savingsData['start_hold'],
                                     'expiry_date' => $savingsData['expiry_date'],
                                     'account_status' => $savingsData['account_status'],
-                                    'deduction_amount' => $savingsData['deduction_amount']
+                                    'deduction_amount' => $savingsData['deduction_amount'],
+                                    'remarks' => $savingsData['remarks'] ?? null,
                                 ];
 
                                 Log::info('Updating savings account with data: ' . json_encode($updateData));
@@ -728,7 +729,8 @@ class MasterController extends Controller
                                     'start_hold' => $sharesData['start_hold'],
                                     'expiry_date' => $sharesData['expiry_date'],
                                     'account_status' => $sharesData['account_status'],
-                                    'deduction_amount' => $sharesData['deduction_amount']
+                                    'deduction_amount' => $sharesData['deduction_amount'],
+                                    'remarks' => $sharesData['remarks'] ?? null,
                                 ];
 
                                 Log::info('Updating shares account with data: ' . json_encode($updateData));
@@ -770,7 +772,8 @@ class MasterController extends Controller
                                     'start_hold' => $loanData['start_hold'],
                                     'expiry_date' => $loanData['expiry_date'],
                                     'account_status' => $loanData['account_status'],
-                                    'approval_no' => $loanData['approval_no']
+                                    'approval_no' => $loanData['approval_no'],
+                                    'remarks' => $loanData['remarks'] ?? null,
                                 ];
 
                                 Log::info('Updating loan forecast with data: ' . json_encode($updateData));
