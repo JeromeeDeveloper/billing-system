@@ -24,6 +24,13 @@
             Content body start
         ***********************************-->
         <div class="content-body">
+            @if(session('status_change_notice'))
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <i class="fa fa-exclamation-triangle me-2"></i>
+                    <strong>Status Change Notice:</strong> {{ session('status_change_notice') }}
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                </div>
+            @endif
             <!-- row -->
             <div class="container-fluid">
                 <div class="row">

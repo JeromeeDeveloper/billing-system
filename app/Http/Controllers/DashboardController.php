@@ -195,10 +195,28 @@ class DashboardController extends Controller
         ]);
 
         $user = Auth::user();
-        $user->billing_period = $request->billing_period . '-01'; // Save as full date
+        $oldBillingPeriod = $user->billing_period;
+        $newBillingPeriod = $request->billing_period . '-01'; // Save as full date
+
+        $statusChanged = false;
+
+        // If billing period changed and user is a branch user, set status to pending
+        if ($user->role === 'branch' && $oldBillingPeriod !== $newBillingPeriod) {
+            $user->status = 'pending';
+            $statusChanged = true;
+        }
+
+        $user->billing_period = $newBillingPeriod;
         $user->save();
 
-        return response()->json(['message' => 'Billing period saved.']);
+        $message = 'Billing period saved.';
+        if ($statusChanged) {
+            $message .= ' Your status has been reset to pending due to billing period change.';
+            // Add session message for the next page load
+            session()->flash('status_change_notice', 'Your account status has been reset to pending due to billing period change.');
+        }
+
+        return response()->json(['message' => $message, 'status_changed' => $statusChanged]);
     }
 
     public function store_branch(Request $request)
@@ -208,9 +226,27 @@ class DashboardController extends Controller
         ]);
 
         $user = Auth::user();
-        $user->billing_period = $request->billing_period . '-01'; // Save as full date
+        $oldBillingPeriod = $user->billing_period;
+        $newBillingPeriod = $request->billing_period . '-01'; // Save as full date
+
+        $statusChanged = false;
+
+        // If billing period changed and user is a branch user, set status to pending
+        if ($user->role === 'branch' && $oldBillingPeriod !== $newBillingPeriod) {
+            $user->status = 'pending';
+            $statusChanged = true;
+        }
+
+        $user->billing_period = $newBillingPeriod;
         $user->save();
 
-        return response()->json(['message' => 'Billing period saved.']);
+        $message = 'Billing period saved.';
+        if ($statusChanged) {
+            $message .= ' Your status has been reset to pending due to billing period change.';
+            // Add session message for the next page load
+            session()->flash('status_change_notice', 'Your account status has been reset to pending due to billing period change.');
+        }
+
+        return response()->json(['message' => $message, 'status_changed' => $statusChanged]);
     }
 }
