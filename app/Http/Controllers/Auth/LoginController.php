@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Branch;
+use Carbon\Carbon;
 
 class LoginController extends Controller
 {
@@ -32,6 +33,16 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+
+        // Automatically set billing period to current month and year if not already set
+        // or if the current billing period is from a previous month
+        $currentBillingPeriod = Carbon::now()->format('Y-m') . '-01'; // Format as YYYY-MM-01
+
+        if (!$user->billing_period ||
+            (Carbon::parse($user->billing_period)->format('Y-m') !== Carbon::now()->format('Y-m'))) {
+            User::where('id', $user->id)->update(['billing_period' => $currentBillingPeriod]);
+        }
+
         if ($user->role === 'admin') {
             return redirect()->route('dashboard')->with('success', 'Welcome, Admin!');
         } elseif ($user->role === 'branch') {

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\User;
 
 class DashboardController extends Controller
 {
@@ -17,8 +18,9 @@ class DashboardController extends Controller
         // Get current billing period
         $billingPeriod = Auth::user()->billing_period;
 
-        // Check if billing_period prompt was shown this session
-        if (!$request->session()->has('billing_prompt_shown')) {
+        // Only show billing period prompt if user doesn't have a billing period set
+        // and the prompt hasn't been shown this session
+        if (!$billingPeriod && !$request->session()->has('billing_prompt_shown')) {
             $request->session()->put('billing_prompt_shown', true);
             $showPrompt = true;
         } else {
@@ -97,15 +99,18 @@ class DashboardController extends Controller
 
     public function index_branch(Request $request)
     {
-        // Similar logic for branch dashboard
-        if (!$request->session()->has('billing_prompt_shown')) {
+        // Get current billing period
+        $billingPeriod = Auth::user()->billing_period;
+
+        // Only show billing period prompt if user doesn't have a billing period set
+        // and the prompt hasn't been shown this session
+        if (!$billingPeriod && !$request->session()->has('billing_prompt_shown')) {
             $request->session()->put('billing_prompt_shown', true);
             $showPrompt = true;
         } else {
             $showPrompt = false;
         }
 
-        $billingPeriod = Auth::user()->billing_period;
         $branchId = Auth::user()->branch_id;
 
         // Get branch-specific statistics
@@ -202,12 +207,11 @@ class DashboardController extends Controller
 
         // If billing period changed and user is a branch user, set status to pending
         if ($user->role === 'branch' && $oldBillingPeriod !== $newBillingPeriod) {
-            $user->status = 'pending';
+            User::where('id', $user->id)->update(['status' => 'pending']);
             $statusChanged = true;
         }
 
-        $user->billing_period = $newBillingPeriod;
-        $user->save();
+        User::where('id', $user->id)->update(['billing_period' => $newBillingPeriod]);
 
         $message = 'Billing period saved.';
         if ($statusChanged) {
@@ -233,12 +237,11 @@ class DashboardController extends Controller
 
         // If billing period changed and user is a branch user, set status to pending
         if ($user->role === 'branch' && $oldBillingPeriod !== $newBillingPeriod) {
-            $user->status = 'pending';
+            User::where('id', $user->id)->update(['status' => 'pending']);
             $statusChanged = true;
         }
 
-        $user->billing_period = $newBillingPeriod;
-        $user->save();
+        User::where('id', $user->id)->update(['billing_period' => $newBillingPeriod]);
 
         $message = 'Billing period saved.';
         if ($statusChanged) {
