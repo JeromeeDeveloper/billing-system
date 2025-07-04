@@ -70,9 +70,16 @@
 
                                 <div class="d-flex flex-column align-items-end pe-3">
                                     <div class="d-flex mb-3 gap-btn">
-                                        <a href="{{ $allBranchApproved ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
-                                            class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved ? 'disabled' : '' }}"
-                                            @if (!$allBranchApproved) onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;" @endif>
+                                        @php
+                                            $hasMembersNoBranch = isset($billing) && collect($billing)->contains(function($member) { return empty($member->branch_id); });
+                                        @endphp
+                                        <a href="{{ $allBranchApproved && !$hasMembersNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
+                                            class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved || $hasMembersNoBranch ? 'disabled' : '' }}"
+                                            @if (!$allBranchApproved)
+                                                onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;"
+                                            @elseif ($hasMembersNoBranch)
+                                                onclick="Swal.fire('Action Blocked', 'Some members have no branch assigned. Please assign branches before generating billing.', 'warning'); return false;"
+                                            @endif>
                                             <span class="btn-icon-left text-primary">
                                                 <i class="fa fa-file"></i>
                                             </span>
@@ -104,6 +111,11 @@
                                     @if (!$allBranchApproved)
                                         <div class="text-danger small">
                                             * Not all branch users has approved yet.
+                                        </div>
+                                    @endif
+                                    @if ($hasMembersNoBranch)
+                                        <div class="text-danger small">
+                                            * Some members have no branch assigned. Please assign branches before generating billing.
                                         </div>
                                     @endif
                                 </div>

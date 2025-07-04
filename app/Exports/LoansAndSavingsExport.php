@@ -82,8 +82,8 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                         $amount = floatval($distribution['amount']);
                         $deductionAmount = floatval($distribution['deduction_amount'] ?? 0);
                         // Exclude mortuary products
-                        $savingAccount = $member->savings->first(function ($s) use ($productName) {
-                            return $s->savingProduct && strtolower($s->savingProduct->product_name) === strtolower($productName);
+                        $savingAccount = $member->savings->first(function ($s) use ($distribution) {
+                            return $s->savingProduct && $s->savingProduct->product_type === ($distribution['product_type'] ?? null);
                         });
                         if ($savingAccount && $savingAccount->savingProduct && $savingAccount->savingProduct->product_type === 'mortuary') {
                             continue;
@@ -118,7 +118,7 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                     }
                     foreach ($savingsDistribution as $distribution) {
                         $savingAccount = $member->savings->first(function ($s) use ($distribution) {
-                            return $s->savingProduct && strtolower($s->savingProduct->product_name) === strtolower($distribution['product']);
+                            return $s->savingProduct && $s->savingProduct->product_type === ($distribution['product_type'] ?? null);
                         });
                         if (
                             $savingAccount && $savingAccount->savingProduct && $savingAccount->savingProduct->product_type === 'regular' &&
@@ -146,6 +146,9 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                         'gl/sl acct no' => $formattedAccountNumber,
                         'amount' => number_format($totalRegularRemaining, 2, '.', '')
                     ]);
+                    // Before outputting the regular savings row:
+                    Log::info('Regular savings found for member ' . $member->id . ': ' . json_encode($regularSavings));
+                    Log::info('Total regular remaining for member ' . $member->id . ': ' . $totalRegularRemaining);
                 }
             }
         }

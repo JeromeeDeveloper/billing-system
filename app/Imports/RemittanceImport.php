@@ -87,6 +87,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             'savings_distribution' => []
         ];
 
+        $distributionDetails = [];
+
         // If member found, save remittance and savings
         if ($member) {
             $result['status'] = 'success';
@@ -98,7 +100,6 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 // Process savings distribution if there's a total amount
                 if ($savingsTotal > 0) {
                     $remainingSavings = $savingsTotal;
-                    $distributionDetails = [];
 
                     // Get all savings accounts with deduction_amount > 0, sorted by prioritization, excluding mortuary
                     $savingsAccounts = $member->savings()
@@ -128,6 +129,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             $savings->save();
                             $distributionDetails[] = [
                                 'product' => $savings->product_name,
+                                'product_type' => $savings->savingProduct->product_type ?? null,
                                 'amount' => $amountToApply,
                                 'deduction_amount' => $deductionAmount
                             ];
@@ -148,14 +150,14 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             $regularSavings->save();
                             $distributionDetails[] = [
                                 'product' => $regularSavings->product_name ?? 'Regular Savings',
+                                'product_type' => $regularSavings->savingProduct->product_type ?? null,
                                 'amount' => $remainingSavings,
                                 'deduction_amount' => 0,
                                 'is_remaining' => true
                             ];
+                            Log::info("[RemittanceImport] Remaining savings remittance of {$remainingSavings} deposited to regular savings for member {$member->id}");
                         }
                     }
-
-                    $result['savings_distribution'] = $distributionDetails;
                 }
 
                 // Process loan payments and deductions
@@ -243,9 +245,28 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                     $member->update(['loan_balance' => $totalLoanBalance]);
                     Log::info("Updated member {$member->id} total loan balance to: {$totalLoanBalance}");
 
-                    // If there's still remaining payment, log it as unused
+                    // If there's still remaining payment, deposit it to regular savings
                     if ($remainingPayment > 0) {
-                        Log::warning("Member {$member->id} has unused loan payment: {$remainingPayment}");
+                        $regularSavings = $member->savings()
+                            ->whereHas('savingProduct', function($q) {
+                                $q->where('product_type', 'regular');
+                            })
+                            ->first();
+                        if ($regularSavings) {
+                            $currentRemittance = $regularSavings->remittance_amount ?? 0;
+                            $regularSavings->remittance_amount = $currentRemittance + $remainingPayment;
+                            $regularSavings->save();
+                            $distributionDetails[] = [
+                                'product' => $regularSavings->product_name ?? 'Regular Savings',
+                                'product_type' => $regularSavings->savingProduct->product_type ?? null,
+                                'amount' => $remainingPayment,
+                                'deduction_amount' => 0,
+                                'is_remaining' => true
+                            ];
+                            Log::info("[RemittanceImport] Remaining loan payment of {$remainingPayment} deposited to regular savings for member {$member->id}");
+                        } else {
+                            Log::warning("[RemittanceImport] No regular savings account found for remaining loan payment for member {$member->id}");
+                        }
                     }
                 }
 
@@ -281,6 +302,9 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         ]);
                     }
                 }
+
+                // Always include distributionDetails in the result for export
+                $result['savings_distribution'] = $distributionDetails;
 
                 DB::commit();
             } catch (\Exception $e) {
