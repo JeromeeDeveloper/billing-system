@@ -132,6 +132,24 @@
                                 <div class="row">
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">
+                                            <form action="{{ route('document.upload') }}" method="POST" enctype="multipart/form-data">
+                                                @csrf
+                                                <div class="form-group">
+                                                    <label for="remit_installment_file" class="font-weight-bold mb-2">📁 Installment Forecast File</label>
+                                                    <div class="custom-file">
+                                                        <input type="file" class="custom-file-input" id="remit_installment_file" name="file">
+                                                        <label class="custom-file-label" for="remit_installment_file">Choose file...</label>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <button type="submit" class="btn btn-primary">Upload Installment File</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 mb-4">
+                                        <div class="upload-section">
                                             <form action="{{ route('remittance.upload') }}" method="POST"
                                                 enctype="multipart/form-data">
                                                 @csrf
@@ -604,6 +622,7 @@
 
 
     <script>
+        
         // // Update custom file input label
         // $('.custom-file-input').on('change', function() {
         //     let fileName = $(this).val().split('\\').pop();
