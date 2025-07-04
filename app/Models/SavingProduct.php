@@ -15,6 +15,7 @@ class SavingProduct extends Model
     protected $fillable = [
         'product_name',
         'product_code',
+        'product_type',
         'amount_to_deduct',
         'prioritization'
     ];
@@ -22,7 +23,8 @@ class SavingProduct extends Model
     protected $casts = [
         'interest' => 'decimal:2',
         'amount_to_deduct' => 'decimal:2',
-        'prioritization' => 'integer'
+        'prioritization' => 'integer',
+        'product_type' => 'string'
     ];
 
     /**
@@ -46,5 +48,13 @@ class SavingProduct extends Model
             'product_code', // Local key on saving_products table
             'member_id' // Local key on savings table
         );
+    }
+
+    /**
+     * Get available product types
+     */
+    public static function getProductTypes()
+    {
+        return ['mortuary', 'regular'];
     }
 }

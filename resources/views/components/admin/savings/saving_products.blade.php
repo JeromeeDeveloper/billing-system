@@ -79,6 +79,7 @@
                                             <tr>
                                                 <th>Product Name</th>
                                                 <th>Product Code</th>
+                                                <th>Product Type</th>
                                                 <th>Amount to Deduct</th>
                                                 <th>Prioritization</th>
                                                 <th>Actions</th>
@@ -89,6 +90,11 @@
                                             <tr>
                                                 <td>{{ $product->product_name }}</td>
                                                 <td>{{ $product->product_code }}</td>
+                                                <td>
+                                                    <span class="badge badge-{{ $product->product_type === 'mortuary' ? 'danger' : 'success' }}">
+                                                        {{ ucfirst($product->product_type) }}
+                                                    </span>
+                                                </td>
                                                 <td>{{ $product->amount_to_deduct }}</td>
                                                 <td>{{ $product->prioritization }}</td>
                                                 <td>
@@ -146,6 +152,14 @@
                             <input type="text" class="form-control" name="product_code" required>
                         </div>
                         <div class="form-group">
+                            <label>Product Type</label>
+                            <select class="form-control" name="product_type" required>
+                                <option value="">Select Product Type</option>
+                                <option value="regular">Regular</option>
+                                <option value="mortuary">Mortuary</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Amount to Deduct</label>
                             <input type="number" class="form-control" name="amount_to_deduct">
                         </div>
@@ -185,6 +199,14 @@
                             <input type="text" class="form-control" name="product_code" value="{{ $product->product_code }}" required>
                         </div>
                         <div class="form-group">
+                            <label>Product Type</label>
+                            <select class="form-control" name="product_type">
+                                <option value="">Select Product Type</option>
+                                <option value="regular" {{ $product->product_type === 'regular' ? 'selected' : '' }}>Regular</option>
+                                <option value="mortuary" {{ $product->product_type === 'mortuary' ? 'selected' : '' }}>Mortuary</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Amount to Deduct</label>
                             <input type="number" step="0.01" class="form-control" name="amount_to_deduct" value="{{ $product->amount_to_deduct > 0 ? $product->amount_to_deduct : '' }}" placeholder="Enter amount (optional)">
                         </div>
@@ -218,6 +240,10 @@
                     <div class="form-group">
                         <label>Product Code</label>
                         <input type="text" class="form-control" value="{{ $product->product_code }}" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Product Type</label>
+                        <input type="text" class="form-control" value="{{ ucfirst($product->product_type) }}" readonly>
                     </div>
                     <div class="form-group">
                         <label>Amount to Deduct</label>

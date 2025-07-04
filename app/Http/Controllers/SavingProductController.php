@@ -21,6 +21,7 @@ class SavingProductController extends Controller
         $request->validate([
             'product_name' => 'required|string',
             'product_code' => 'required|string|unique:saving_products',
+            'product_type' => 'nullable|in:mortuary,regular',
             'amount_to_deduct' => 'nullable|numeric|min:0',
             'prioritization' => 'nullable|integer|min:1'
         ]);
@@ -34,6 +35,7 @@ class SavingProductController extends Controller
         $request->validate([
             'product_name' => 'required|string',
             'product_code' => 'required|string|unique:saving_products,product_code,' . $id,
+            'product_type' => 'nullable|in:mortuary,regular',
             'amount_to_deduct' => 'nullable|numeric|min:0',
             'prioritization' => 'nullable|integer|min:1'
         ]);
