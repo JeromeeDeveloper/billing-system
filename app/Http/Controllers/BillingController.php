@@ -9,6 +9,7 @@ use App\Models\BillingExport;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use App\Exports\BillingExport as BillingExcelExport;
+use App\Exports\MembersNoBranchExport;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
@@ -441,6 +442,36 @@ class BillingController extends Controller
         } catch (\Exception $e) {
             Log::error('Error generating branch loan report: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error generating branch loan report: ' . $e->getMessage());
+        }
+    }
+
+    public function exportMembersNoBranch(Request $request)
+    {
+        try {
+            // Generate the Excel file
+            $export = new MembersNoBranchExport();
+            $filename = 'members_no_branch_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+            // Store the file
+            Excel::store($export, 'exports/' . $filename, 'public');
+
+            // Save export record
+            $billingExport = BillingExport::create([
+                'billing_period' => now()->format('Y-m'),
+                'filename' => $filename,
+                'filepath' => 'exports/' . $filename,
+                'generated_by' => Auth::id()
+            ]);
+
+            // Add notification
+            NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
+
+            // Download the file
+            return Excel::download($export, $filename);
+
+        } catch (\Exception $e) {
+            Log::error('Error generating members no branch report: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error generating members no branch report: ' . $e->getMessage());
         }
     }
 }

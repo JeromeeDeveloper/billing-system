@@ -58,6 +58,7 @@ Route::post('/dashboard/store', [DashboardController::class, 'store'])->name('da
 Route::get('/Billing', [BillingController::class, 'index'])->name('billing');
 Route::get('/billing/export', [BillingController::class, 'export'])->name('billing.export');
 Route::get('/billing/loan-report', [BillingController::class, 'exportLoanReport'])->name('billing.loan-report');
+Route::get('/billing/members-no-branch', [BillingController::class, 'exportMembersNoBranch'])->name('billing.members-no-branch');
 
 //Billing Export History
 Route::get('/billing/exports', [BillingController::class, 'viewExports'])->name('billing.exports');
