@@ -81,15 +81,15 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                         $productName = $distribution['product'];
                         $amount = floatval($distribution['amount']);
                         $deductionAmount = floatval($distribution['deduction_amount'] ?? 0);
-                        // Exclude mortuary
-                        if (stripos($productName, 'Mortuary') !== false || strtolower($productName) === 'special fund - mortuary') {
+                        // Exclude mortuary products
+                        $savingAccount = $member->savings->first(function ($s) use ($productName) {
+                            return $s->savingProduct && strtolower($s->savingProduct->product_name) === strtolower($productName);
+                        });
+                        if ($savingAccount && $savingAccount->savingProduct && $savingAccount->savingProduct->product_type === 'mortuary') {
                             continue;
                         }
                         // Output deduction row for each product (except regular)
-                        if (strtolower($productName) !== 'savings deposit-regular') {
-                            $savingAccount = $member->savings->first(function ($s) use ($productName) {
-                                return $s->savingProduct && strtolower($s->savingProduct->product_name) === strtolower($productName) && $s->savingProduct->product_code !== '20313';
-                            });
+                        if ($savingAccount && $savingAccount->savingProduct && $savingAccount->savingProduct->product_type !== 'regular') {
                             if ($savingAccount && $deductionAmount > 0) {
                                 $originalAccountNumber = $savingAccount->account_number;
                                 $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
@@ -117,8 +117,11 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                         $savingsDistribution = $record->savings['distribution'];
                     }
                     foreach ($savingsDistribution as $distribution) {
+                        $savingAccount = $member->savings->first(function ($s) use ($distribution) {
+                            return $s->savingProduct && strtolower($s->savingProduct->product_name) === strtolower($distribution['product']);
+                        });
                         if (
-                            strtolower($distribution['product']) === 'savings deposit-regular' &&
+                            $savingAccount && $savingAccount->savingProduct && $savingAccount->savingProduct->product_type === 'regular' &&
                             (isset($distribution['is_remaining']) && $distribution['is_remaining'])
                         ) {
                             $totalRegularRemaining += floatval($distribution['amount']);
@@ -127,9 +130,9 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                 }
             }
             if ($totalRegularRemaining > 0) {
-                // Find the member's regular savings account (product code 20101)
+                // Find the member's regular savings account
                 $regularSavings = $member->savings->first(function ($s) {
-                    return $s->savingProduct && $s->savingProduct->product_code === '20101';
+                    return $s->savingProduct && $s->savingProduct->product_type === 'regular';
                 });
                 if ($regularSavings) {
                     $originalAccountNumber = $regularSavings->account_number;

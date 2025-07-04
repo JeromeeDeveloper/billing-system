@@ -123,9 +123,7 @@ class MasterController extends Controller
         $branches = Branch::all();
 
         // Load mortuary products for JavaScript access
-        $mortuaryProducts = \App\Models\SavingProduct::where('product_name', 'like', '%mortuary%')
-            ->orWhere('product_name', 'like', '%Mortuary%')
-            ->get();
+        $mortuaryProducts = \App\Models\SavingProduct::where('product_type', 'mortuary')->get();
 
         // Load loan products for JavaScript access
         $loanProducts = \App\Models\LoanProduct::all(['product_code', 'product', 'billing_type']);
@@ -510,9 +508,7 @@ class MasterController extends Controller
         $branches = Branch::where('id', $userBranchId)->get();
 
         // Load mortuary products for JavaScript access
-        $mortuaryProducts = \App\Models\SavingProduct::where('product_name', 'like', '%mortuary%')
-            ->orWhere('product_name', 'like', '%Mortuary%')
-            ->get();
+        $mortuaryProducts = \App\Models\SavingProduct::where('product_type', 'mortuary')->get();
 
         // Load loan products for JavaScript access
         $loanProducts = \App\Models\LoanProduct::all(['product_code', 'product', 'billing_type']);

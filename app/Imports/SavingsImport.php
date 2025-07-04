@@ -177,8 +177,11 @@ class SavingsImport implements ToCollection, WithHeadingRow, WithChunkReading, W
 
             // Check if this is a mortuary product and update deduction_amount
             // This logic automatically sets deduction_amount for mortuary accounts based on the amount_to_deduct
-            // from the SavingProduct. It checks both the product name and product code for mortuary detection.
-            $mortuaryDeductionAmount = $this->getMortuaryDeductionAmount($data['product_code'], $product->product_name);
+            // from the SavingProduct. It now checks the product_type field.
+            $mortuaryDeductionAmount = 0;
+            if ($product && $product->product_type === 'mortuary' && $product->amount_to_deduct > 0) {
+                $mortuaryDeductionAmount = $product->amount_to_deduct;
+            }
 
             // Update deduction_amount if this is a mortuary product
             if ($mortuaryDeductionAmount > 0) {
@@ -349,39 +352,5 @@ class SavingsImport implements ToCollection, WithHeadingRow, WithChunkReading, W
         $clean = preg_replace('/[^0-9.-]/', '', str_replace(',', '', $value));
 
         return is_numeric($clean) ? floatval($clean) : null;
-    }
-
-    /**
-     * Check if a product is a mortuary product and get its deduction amount
-     *
-     * This method detects mortuary products in two ways:
-     * 1. If the product name contains "mortuary" (case-insensitive)
-     * 2. If the product code matches an existing SavingProduct with "mortuary" in the name
-     *
-     * @param string $productCode The product code from the account number
-     * @param string $productName The product name from the import file
-     * @return float The deduction amount if it's a mortuary product, 0 otherwise
-     */
-    private function getMortuaryDeductionAmount($productCode, $productName)
-    {
-        // First check if the current product is a mortuary product
-        if (stripos($productName, 'mortuary') !== false) {
-            $mortuaryProduct = SavingProduct::where('product_code', $productCode)
-                ->whereRaw('LOWER(product_name) LIKE ?', ['%mortuary%'])
-                ->where('amount_to_deduct', '>', 0)
-                ->first();
-
-            if ($mortuaryProduct) {
-                return $mortuaryProduct->amount_to_deduct;
-            }
-        }
-
-        // Also check if the product code matches any existing mortuary product codes
-        $mortuaryProduct = SavingProduct::where('product_code', $productCode)
-            ->whereRaw('LOWER(product_name) LIKE ?', ['%mortuary%'])
-            ->where('amount_to_deduct', '>', 0)
-            ->first();
-
-        return $mortuaryProduct ? $mortuaryProduct->amount_to_deduct : 0;
     }
 }

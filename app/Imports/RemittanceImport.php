@@ -107,12 +107,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         ->with('savingProduct')
                         ->get()
                         ->filter(function($saving) {
-                            // Exclude mortuary by product name or code
-                            return !($saving->savingProduct && (
-                                strtolower($saving->savingProduct->product_name) === 'special fund - mortuary' ||
-                                $saving->savingProduct->product_code === '20313' ||
-                                stripos($saving->savingProduct->product_name, 'Mortuary') !== false
-                            ));
+                            // Exclude mortuary by product_type
+                            return !($saving->savingProduct && $saving->savingProduct->product_type === 'mortuary');
                         })
                         ->sortBy(function($saving) {
                             $priority = $saving->savingProduct ? $saving->savingProduct->prioritization : 999;
@@ -143,8 +139,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                     if ($remainingSavings > 0) {
                         $regularSavings = $member->savings()
                             ->whereHas('savingProduct', function($q) {
-                                $q->where('product_name', 'Savings Deposit-Regular')
-                                  ->where('product_code', '!=', '20313'); // Exclude mortuary
+                                $q->where('product_type', 'regular');
                             })
                             ->first();
                         if ($regularSavings) {
@@ -152,7 +147,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             $regularSavings->remittance_amount = $currentRemittance + $remainingSavings;
                             $regularSavings->save();
                             $distributionDetails[] = [
-                                'product' => 'Savings Deposit-Regular',
+                                'product' => $regularSavings->product_name ?? 'Regular Savings',
                                 'amount' => $remainingSavings,
                                 'deduction_amount' => 0,
                                 'is_remaining' => true

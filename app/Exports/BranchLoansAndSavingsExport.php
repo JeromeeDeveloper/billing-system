@@ -117,8 +117,11 @@ class BranchLoansAndSavingsExport implements FromCollection, WithHeadings
                             continue;
                         }
 
-                        // Exclude savings products named 'Mortuary'
-                        if (stripos($productName, 'Mortuary') !== false) {
+                        // Exclude mortuary products
+                        $savingAccount = $member->savings->first(function ($s) use ($productName) {
+                            return $s->savingProduct && strtolower($s->savingProduct->product_name) === strtolower($productName);
+                        });
+                        if ($savingAccount && $savingAccount->savingProduct && $savingAccount->savingProduct->product_type === 'mortuary') {
                             continue;
                         }
 
@@ -154,9 +157,9 @@ class BranchLoansAndSavingsExport implements FromCollection, WithHeadings
                             // Add a row for the remaining amount from the import to Regular Savings
                             $remainingAmount = $amountFromImport - $deductionAmount;
                             if ($remainingAmount > 0) {
-                                // Find Savings Deposit-Regular account for this member
+                                // Find regular savings account for this member
                                 $regularSavings = $member->savings->first(function ($s) {
-                                    return $s->savingProduct && strtolower($s->savingProduct->product_name) === 'savings deposit-regular';
+                                    return $s->savingProduct && $s->savingProduct->product_type === 'regular';
                                 });
                                 if ($regularSavings) {
                                     Log::info("Found Savings Deposit-Regular account: {$regularSavings->account_number}");

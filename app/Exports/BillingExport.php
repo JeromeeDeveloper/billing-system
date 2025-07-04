@@ -33,7 +33,7 @@ class BillingExport implements WithMultipleSheets
 
         foreach ($savingProducts as $product) {
             // Skip mortuary products
-            if (stripos($product->product_name, 'mortuary') !== false) {
+            if ($product->product_type === 'mortuary') {
                 continue;
             }
             $sheet = new DynamicSavingsSheet($this->billingPeriod, $product->product_name);

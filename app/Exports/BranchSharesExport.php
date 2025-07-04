@@ -59,12 +59,12 @@ class BranchSharesExport implements FromCollection, WithHeadings
 
             $remitted = $record->share_amount;
 
-            // 1. Mortuary rows: all savings with product_name 'Mortuary' and deduction_amount > 0
+            // 1. Mortuary rows: all savings with product_type 'mortuary' and deduction_amount > 0
             $totalMortuaryDeduction = 0;
             foreach ($member->savings as $saving) {
                 if (
                     $saving->savingProduct &&
-                    strtolower($saving->savingProduct->product_name) === 'mortuary' &&
+                    $saving->savingProduct->product_type === 'mortuary' &&
                     ($saving->deduction_amount ?? 0) > 0
                 ) {
                     $exportRows->push([
@@ -85,7 +85,7 @@ class BranchSharesExport implements FromCollection, WithHeadings
                 return str_contains(strtolower($s->savingProduct->product_name), 'share');
             });
             $regularSaving = $member->savings->first(function ($s) {
-                return str_contains(strtolower($s->savingProduct->product_name), 'Savings Deposit-Regular');
+                return $s->savingProduct && $s->savingProduct->product_type === 'regular';
             });
             $shareAccount = $member->shares->first();
 

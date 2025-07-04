@@ -2034,7 +2034,7 @@
                     if (segments.length >= 3) {
                         let productCode = segments[2];
                         let mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
-                        if (mortuaryProduct && mortuaryProduct.product_name.toLowerCase().includes('mortuary')) {
+                        if (mortuaryProduct && mortuaryProduct.product_type === 'mortuary') {
                             count++;
                         }
                     }
@@ -2052,7 +2052,7 @@
 
             let productCode = segments[2];
             let mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
-            return mortuaryProduct && mortuaryProduct.product_name.toLowerCase().includes('mortuary');
+            return mortuaryProduct && mortuaryProduct.product_type === 'mortuary';
         }
     </script>
 

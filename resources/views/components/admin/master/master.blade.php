@@ -1281,7 +1281,7 @@
                     ${isCurrentMortuary ? `
                     <div class="form-group col-md-6">
                         <label>Deduction Amount</label>
-                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount !== undefined && saving.deduction_amount !== null ? saving.deduction_amount : ''}" placeholder="${mortuaryProduct && mortuaryProduct.amount_to_deduct ? mortuaryProduct.amount_to_deduct : ''}">
+                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount !== undefined && saving.deduction_amount !== null ? saving.deduction_amount : ''}" placeholder="${mortuaryProduct && mortuaryProduct.amount_to_deduct ? mortuaryProduct.amount_to_deduct : ''}" disabled>
                     </div>
                     <div class="form-group col-md-12">
                         <div class="alert alert-warning">
@@ -2083,7 +2083,7 @@
                     if (segments.length >= 3) {
                         let productCode = segments[2];
                         let mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
-                        if (mortuaryProduct && mortuaryProduct.product_name.toLowerCase().includes('mortuary')) {
+                        if (mortuaryProduct && mortuaryProduct.product_type === 'mortuary') {
                             count++;
                         }
                     }
@@ -2101,7 +2101,7 @@
 
             let productCode = segments[2];
             let mortuaryProduct = window.mortuaryProducts.find(p => p.product_code === productCode);
-            return mortuaryProduct && mortuaryProduct.product_name.toLowerCase().includes('mortuary');
+            return mortuaryProduct && mortuaryProduct.product_type === 'mortuary';
         }
 
         // File upload enhancement
