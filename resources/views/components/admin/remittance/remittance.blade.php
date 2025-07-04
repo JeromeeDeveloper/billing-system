@@ -263,19 +263,26 @@
 
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <div>
-                                                    <a href="{{ route('remittance.index') }}"
-                                                        class="btn {{ !request()->has('filter') ? 'btn-primary' : 'btn-outline-primary' }}">
+                                                    <a href="{{ route('remittance.index') }}" class="btn {{ !request()->has('filter') ? 'btn-primary' : 'btn-outline-primary' }}">
                                                         All Records
                                                     </a>
-                                                    <a href="{{ route('remittance.index', ['filter' => 'matched']) }}"
-                                                        class="btn {{ request()->get('filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }}">
+                                                    <a href="{{ route('remittance.index', ['filter' => 'matched']) }}" class="btn {{ request()->get('filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }}">
                                                         Matched Only
                                                     </a>
-                                                    <a href="{{ route('remittance.index', ['filter' => 'unmatched']) }}"
-                                                        class="btn {{ request()->get('filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }}">
+                                                    <a href="{{ route('remittance.index', ['filter' => 'unmatched']) }}" class="btn {{ request()->get('filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }}">
                                                         Unmatched Only
                                                     </a>
+                                                    <a href="{{ route('remittance.index', array_merge(request()->except('page'), ['filter' => 'no_branch'])) }}" class="btn {{ request()->get('filter') === 'no_branch' ? 'btn-warning text-white' : 'btn-outline-warning' }}">
+                                                        No Branch
+                                                    </a>
                                                 </div>
+                                                <form method="GET" action="{{ route('remittance.index') }}" class="d-flex" style="max-width: 350px;">
+                                                    @foreach(request()->except('search', 'page') as $key => $value)
+                                                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                                    @endforeach
+                                                    <input type="text" name="search" value="{{ request('search') }}" class="form-control me-2" placeholder="Search by CID or Name..." />
+                                                    <button type="submit" class="btn btn-outline-primary">Search</button>
+                                                </form>
                                             </div>
 
                                             <div class="table-responsive">
@@ -528,15 +535,15 @@
                             <tbody>
                                 <tr>
                                     <td><code>CID</code></td>
-                                    <td>Employee ID (can be empty)</td>
-                                    <td><span class="badge badge-warning">Optional</span></td>
-                                    <td>EMP001</td>
+                                    <td>Member CID</td>
+                                    <td><span class="badge badge-success">Yes</span></td>
+                                    <td>000000123</td>
                                 </tr>
                                 <tr>
                                     <td><code>Name</code></td>
-                                    <td>Name in format: LASTNAME, FIRSTNAME</td>
-                                    <td><span class="badge badge-success">Yes</span></td>
-                                    <td>DOE, JOHN</td>
+                                    <td>Name (optional)</td>
+                                    <td><span class="badge badge-warning">No</span></td>
+                                    <td>John</td>
                                 </tr>
                                 <tr>
                                     <td><code>Share</code></td>
@@ -561,17 +568,17 @@
                             <tbody>
                                 <tr>
                                     <td>000000123</td>
-                                    <td>DOE, JOHN</td>
+                                    <td>JOHN</td>
                                     <td>1000.00</td>
                                 </tr>
                                 <tr>
                                     <td>000000001</td>
-                                    <td>SMITH, JANE</td>
+                                    <td>JANE</td>
                                     <td>1500.00</td>
                                 </tr>
                                 <tr>
                                     <td>000000002</td>
-                                    <td>JOHNSON, BOB</td>
+                                    <td>JOHNSON</td>
                                     <td>750.00</td>
                                 </tr>
                             </tbody>
@@ -581,8 +588,8 @@
                     <div class="alert alert-warning mt-3">
                         <h6><i class="fa fa-exclamation-triangle"></i> Important Notes:</h6>
                         <ul class="mb-0">
-                            <li><strong>Name Format:</strong> Must be "LASTNAME, FIRSTNAME" (comma and space required)</li>
-                            <li><strong>CID:</strong> Can be empty for non-employee members</li>
+                            <li><strong>Name Format:</strong> Must be "LASTNAME FIRSTNAME" (optional)</li>
+                            <li><strong>CID:</strong> CID is required</li>
                             <li><strong>Share Amount:</strong> Must be a positive number</li>
                         </ul>
                     </div>
@@ -595,36 +602,64 @@
         </div>
     </div>
 
+
     <script>
-        // Update custom file input label
-        $('.custom-file-input').on('change', function() {
-            let fileName = $(this).val().split('\\').pop();
-            $(this).next('.custom-file-label').addClass("selected").html(fileName);
-        });
+        // // Update custom file input label
+        // $('.custom-file-input').on('change', function() {
+        //     let fileName = $(this).val().split('\\').pop();
+        //     $(this).next('.custom-file-label').addClass("selected").html(fileName);
+        // });
 
-        // Initialize DataTable if preview exists
-        $(document).ready(function() {
-            if ($('.table').length) {
-                $('.table').DataTable({
-                    pageLength: 25,
-                    ordering: true,
-                    dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                        '<"row"<"col-sm-12"tr>>' +
-                        '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-                    buttons: ['copy', 'excel', 'pdf', 'print']
-                });
-            }
+        // // Initialize DataTable if preview exists
+        // $(document).ready(function() {
+        //     if ($('.table').length) {
+        //         $('.table').DataTable({
+        //             pageLength: 25,
+        //             ordering: true,
+        //             dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+        //                 '<"row"<"col-sm-12"tr>>' +
+        //                 '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        //             buttons: ['copy', 'excel', 'pdf', 'print']
+        //         });
+        //     }
 
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert').alert('close');
-            }, 5000);
-        });
+        //     // Auto-hide alerts after 5 seconds
+        //     setTimeout(function() {
+        //         $('.alert').alert('close');
+        //     }, 5000);
+        // });
 
         function generateExport(type) {
             let url = '{{ route('remittance.generateExport') }}';
             window.location.href = url + '?type=' + type;
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Explicitly select both upload forms by their action attribute
+            var loansSavingsForm = document.querySelector('form[action*="remittance.upload"]');
+            var sharesForm = document.querySelector('form[action*="remittance.upload.share"]');
+            [loansSavingsForm, sharesForm].forEach(function(form) {
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        // Prevent double submit
+                        if (form.classList.contains('loading')) {
+                            e.preventDefault();
+                            return false;
+                        }
+                        form.classList.add('loading');
+                        Swal.fire({
+                            title: 'Uploading...',
+                            text: 'Please wait while your file is being processed.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                    });
+                }
+            });
+        });
     </script>
 </body>
 

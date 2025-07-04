@@ -38,52 +38,29 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
     protected function processRow($row)
     {
         // Extract and clean data
-        $empId = trim($row['empid'] ?? '');
+        $cidRaw = trim($row['cid'] ?? '');
+        $cid = str_pad($cidRaw, 9, '0', STR_PAD_LEFT);
         $fullName = trim($row['name'] ?? '');
         $share = floatval(str_replace(',', '', $row['share'] ?? 0));
 
         Log::info('Processing share remittance row:', [
-            'emp_id' => $empId,
+            'cid' => $cid,
             'name' => $fullName,
             'share' => $share
         ]);
 
-        // Try to find member by emp_id first if provided
+        // Match member by CID only
         $member = null;
-        if ($empId) {
-            $member = Member::where('emp_id', $empId)->first();
+        if ($cid) {
+            $member = Member::where('cid', $cid)->first();
             if ($member) {
-                Log::info('Found member by emp_id: ' . $empId);
-            }
-        }
-
-        // If not found by emp_id or emp_id not provided, try to match by name
-        if (!$member && $fullName) {
-            // Split name into lastname and firstname
-            $nameParts = explode(',', $fullName);
-            if (count($nameParts) === 2) {
-                $lastName = trim($nameParts[0]);
-                $firstName = trim($nameParts[1]);
-
-                Log::info('Attempting name match:', [
-                    'lastName' => $lastName,
-                    'firstName' => $firstName
-                ]);
-
-                $member = Member::where(function($query) use ($lastName, $firstName) {
-                    $query->whereRaw('LOWER(lname) LIKE ?', ['%' . strtolower($lastName) . '%'])
-                          ->whereRaw('LOWER(fname) LIKE ?', ['%' . strtolower($firstName) . '%']);
-                })->first();
-
-                if ($member) {
-                    Log::info('Found member by name match: ' . $member->fname . ' ' . $member->lname);
-                }
+                Log::info('Found member by cid: ' . $cid);
             }
         }
 
         // Prepare result array with basic info
         $result = [
-            'emp_id' => $empId,
+            'cid' => $cid,
             'name' => $fullName,
             'member_id' => $member ? $member->id : null,
             'share' => $share,
@@ -146,10 +123,10 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
             }
         } else {
             Log::warning('Member not found for share remittance:', [
-                'emp_id' => $empId,
+                'cid' => $cid,
                 'name' => $fullName
             ]);
-            $result['message'] = "Member not found. Tried matching: $fullName";
+            $result['message'] = "Member not found. Tried matching CID: $cid";
         }
 
         return $result;

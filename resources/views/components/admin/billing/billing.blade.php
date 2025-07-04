@@ -73,7 +73,10 @@
                                         @php
                                             $hasMembersNoBranch = isset($billing) && collect($billing)->contains(function($member) { return empty($member->branch_id); });
                                         @endphp
-                                        <a href="{{ $allBranchApproved && !$hasMembersNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
+
+                                        {{-- main function --}}
+                                        
+                                        {{-- <a href="{{ $allBranchApproved && !$hasMembersNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
                                             class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved || $hasMembersNoBranch ? 'disabled' : '' }}"
                                             @if (!$allBranchApproved)
                                                 onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;"
@@ -84,7 +87,19 @@
                                                 <i class="fa fa-file"></i>
                                             </span>
                                             Generate Billing
+                                        </a> --}}
+
+                                        {{-- for testing --}}
+                                        <a href="{{ route('billing.export', ['billing_period' => now()->format('Y-m')]) }}"
+                                            class="btn btn-rounded btn-primary text-white me-4">
+                                            <span class="btn-icon-left text-primary">
+                                                <i class="fa fa-file"></i>
+                                            </span>
+                                            Generate Billing
                                         </a>
+
+
+
 
                                         <a href="{{ route('billing.loan-report') }}" class="btn btn-rounded btn-success text-white me-4">
                                             <span class="btn-icon-left text-success">

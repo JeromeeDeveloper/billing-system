@@ -68,6 +68,23 @@ class RemittanceController extends Controller
                 $previewCollection = $previewCollection->filter(function($record) {
                     return $record->status !== 'success';
                 });
+            } elseif ($filter === 'no_branch') {
+                $previewCollection = $previewCollection->filter(function($record) {
+                    if (!$record->member_id) return false;
+                    $member = \App\Models\Member::find($record->member_id);
+                    return $member && is_null($member->branch_id);
+                });
+            }
+
+            // Search filter (by CID or name)
+            $search = $request->get('search');
+            if ($search) {
+                $search = strtolower($search);
+                $previewCollection = $previewCollection->filter(function($record) use ($search) {
+                    $cid = strtolower($record->emp_id ?? '');
+                    $name = strtolower($record->name ?? '');
+                    return strpos($cid, $search) !== false || strpos($name, $search) !== false;
+                });
             }
 
             // Paginate the filtered collection

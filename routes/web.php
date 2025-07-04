@@ -80,6 +80,7 @@ Route::get('/Loans/Members', [LoansController::class, 'list'])->name('list');
 Route::post('/loans', [LoansController::class, 'store'])->name('loans.store');
 Route::put('/loans/{loan}', [LoansController::class, 'update'])->name('loans.update');
 Route::delete('/loans/{loan}', [LoansController::class, 'destroy'])->name('loans.destroy');
+Route::get('/Loans/export', [LoansController::class, 'export'])->name('loans.export');
 //Document
 Route::post('/upload', [DocumentUploadController::class, 'store'])->name('document.upload');
 Route::get('/Documents', [DocumentUploadController::class, 'index'])->name('documents');

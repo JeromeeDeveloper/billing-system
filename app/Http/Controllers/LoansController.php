@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\LoanProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\LoanProductsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LoansController extends Controller
 {
@@ -56,6 +58,11 @@ class LoansController extends Controller
         LoanProduct::create($request->only(['product', 'prioritization', 'product_code', 'billing_type']));
 
         return redirect()->route('loans')->with('success', 'Loan added successfully.');
+    }
+
+    public function export()
+    {
+        return Excel::download(new LoanProductsExport, 'loans_datatable.xlsx');
     }
 
 }
