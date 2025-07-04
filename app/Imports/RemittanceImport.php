@@ -177,16 +177,14 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
                         $productCode = explode('-', $forecast->loan_acct_no)[2] ?? null;
 
-                        // Find the loan product member with matching product code
-                        $loanProductMember = $member->loanProductMembers()
-                            ->whereHas('loanProduct', function($query) use ($productCode) {
-                                $query->where('product_code', $productCode);
-                            })
+                        // Find the loan product for this member with matching product code
+                        $loanProduct = $member->loanProducts()
+                            ->where('product_code', $productCode)
                             ->first();
 
                         return [
                             'forecast' => $forecast,
-                            'prioritization' => $loanProductMember ? $loanProductMember->prioritization : 999,
+                            'prioritization' => $loanProduct ? $loanProduct->prioritization : 999,
                             'product_code' => $productCode,
                             'total_due' => $forecast->total_due,
                             'principal' => $forecast->principal ?? 0
