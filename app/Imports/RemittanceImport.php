@@ -55,8 +55,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
     protected function processRow($row)
     {
         // Extract and clean data
-        $empId = trim($row['empid'] ?? '');
-        $fullName = trim($row['name'] ?? '');
+        $cidRaw = trim($row['cid'] ?? '');
+        $cid = str_pad($cidRaw, 9, '0', STR_PAD_LEFT);
         $loans = floatval(str_replace(',', '', $row['loans'] ?? 0));
 
         // Try different possible savings column names
@@ -72,19 +72,13 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             Log::warning('Savings column not found. Available columns:', $row->keys()->toArray());
         }
 
-        // Try to find member by emp_id first
-        $member = Member::where('emp_id', $empId)->first();
-
-        // If not found by emp_id, try to match by name
-        if (!$member && $fullName) {
-            $nameParts = explode(' ', $fullName);
-            $member = $this->findMemberByName($nameParts);
-        }
+        // Find member by 9-digit padded CID only
+        $member = Member::where('cid', $cid)->first();
 
         // Prepare result array with basic info
         $result = [
-            'emp_id' => $empId,
-            'name' => $fullName,
+            'cid' => $cid,
+            'name' => $member ? trim(($member->fname ?? '') . ' ' . ($member->lname ?? '')) : '',
             'member_id' => $member ? $member->id : null,
             'loans' => $loans,
             'savings_total' => $savingsTotal,
@@ -106,65 +100,62 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                     $remainingSavings = $savingsTotal;
                     $distributionDetails = [];
 
-                    // Get all savings accounts with deduction_amount > 0, sorted by prioritization
+                    // Get all savings accounts with deduction_amount > 0, sorted by prioritization, excluding mortuary
                     $savingsAccounts = $member->savings()
                         ->where('account_status', 'deduction')
                         ->where('deduction_amount', '>', 0)
                         ->with('savingProduct')
                         ->get()
+                        ->filter(function($saving) {
+                            // Exclude mortuary by product name or code
+                            return !($saving->savingProduct && (
+                                strtolower($saving->savingProduct->product_name) === 'special fund - mortuary' ||
+                                $saving->savingProduct->product_code === '20313' ||
+                                stripos($saving->savingProduct->product_name, 'Mortuary') !== false
+                            ));
+                        })
                         ->sortBy(function($saving) {
                             $priority = $saving->savingProduct ? $saving->savingProduct->prioritization : 999;
                             $deductionAmount = $saving->deduction_amount ?? 0;
                             $id = $saving->id;
-
-                            // If deduction_amount is NULL, use 0 for sorting
                             $deductionForSorting = $deductionAmount === null ? 0 : $deductionAmount;
-
-                            // Return a composite key: priority, then negative deduction amount (for descending), then ID
                             return [$priority, -$deductionForSorting, $id];
                         });
 
                     // Distribute amounts based on deduction_amount and prioritization
                     foreach ($savingsAccounts as $savings) {
                         if ($remainingSavings <= 0) break;
-
                         $deductionAmount = $savings->deduction_amount ?? 0;
                         $amountToApply = min($deductionAmount, $remainingSavings);
-
                         if ($amountToApply > 0) {
-                            // Update the savings account with the distributed amount
                             $savings->remittance_amount = $amountToApply;
                             $savings->save();
-
                             $distributionDetails[] = [
                                 'product' => $savings->product_name,
                                 'amount' => $amountToApply,
                                 'deduction_amount' => $deductionAmount
                             ];
-
                             $remainingSavings -= $amountToApply;
                         }
                     }
 
-                    // If there's remaining amount, apply it to Regular Savings
+                    // If there's remaining amount, apply it to Regular Savings and add to distribution
                     if ($remainingSavings > 0) {
                         $regularSavings = $member->savings()
-                            ->where('account_status', 'deduction')
                             ->whereHas('savingProduct', function($q) {
-                                $q->where('product_name', 'Savings Deposit-Regular');
+                                $q->where('product_name', 'Savings Deposit-Regular')
+                                  ->where('product_code', '!=', '20313'); // Exclude mortuary
                             })
                             ->first();
-
                         if ($regularSavings) {
-                            // Add to existing remittance amount or set it
                             $currentRemittance = $regularSavings->remittance_amount ?? 0;
                             $regularSavings->remittance_amount = $currentRemittance + $remainingSavings;
                             $regularSavings->save();
-
                             $distributionDetails[] = [
-                                'product' => 'Savings Deposit-Regular (Remaining)',
+                                'product' => 'Savings Deposit-Regular',
                                 'amount' => $remainingSavings,
-                                'deduction_amount' => 0
+                                'deduction_amount' => 0,
+                                'is_remaining' => true
                             ];
                         }
                     }
@@ -353,63 +344,6 @@ class RemittanceImport implements ToCollection, WithHeadingRow
         }
 
         return $result;
-    }
-
-    protected function findMemberByName($nameParts)
-    {
-        if (count($nameParts) < 2) {
-            return null;
-        }
-
-        $possibleCombinations = $this->getNameCombinations($nameParts);
-
-        foreach ($possibleCombinations as $combination) {
-            $member = Member::where(function ($query) use ($combination) {
-                $query->whereRaw('LOWER(fname) LIKE ?', ['%' . strtolower($combination['fname']) . '%'])
-                    ->whereRaw('LOWER(lname) LIKE ?', ['%' . strtolower($combination['lname']) . '%']);
-            })->first();
-
-            if ($member) {
-                return $member;
-            }
-        }
-
-        return null;
-    }
-
-    protected function getNameCombinations($nameParts)
-    {
-        $combinations = [];
-
-        // Case 1: First word as fname, rest as lname
-        $combinations[] = [
-            'fname' => $nameParts[0],
-            'lname' => implode(' ', array_slice($nameParts, 1))
-        ];
-
-        // Case 2: First two words as fname, rest as lname (if applicable)
-        if (count($nameParts) >= 3) {
-            $combinations[] = [
-                'fname' => implode(' ', array_slice($nameParts, 0, 2)),
-                'lname' => implode(' ', array_slice($nameParts, 2))
-            ];
-        }
-
-        // Case 3: Last word as lname, rest as fname
-        $combinations[] = [
-            'fname' => implode(' ', array_slice($nameParts, 0, -1)),
-            'lname' => end($nameParts)
-        ];
-
-        // Case 4: Last two words as lname, rest as fname (if applicable)
-        if (count($nameParts) >= 3) {
-            $combinations[] = [
-                'fname' => implode(' ', array_slice($nameParts, 0, -2)),
-                'lname' => implode(' ', array_slice($nameParts, -2))
-            ];
-        }
-
-        return $combinations;
     }
 
     public function getResults()

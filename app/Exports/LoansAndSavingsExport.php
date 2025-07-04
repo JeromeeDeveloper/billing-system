@@ -35,101 +35,64 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
     {
         $exportRows = new Collection();
 
-        foreach ($this->remittanceData as $record) {
-            if (empty($record->member_id)) {
+        // Group remittance data by member_id
+        $remittanceByMember = collect($this->remittanceData)->groupBy('member_id');
+
+        foreach ($remittanceByMember as $memberId => $records) {
+            if (empty($memberId)) {
                 continue;
             }
 
-            $member = Member::with(['branch', 'loanForecasts', 'savings.savingProduct'])->find($record->member_id);
-
+            $member = Member::with(['branch', 'loanForecasts', 'savings.savingProduct'])->find($memberId);
             if (!$member) {
-                Log::warning('Member not found for record: ' . json_encode($record));
+                Log::warning('Member not found for record: ' . json_encode($records));
                 continue;
             }
 
-            Log::info("Processing member {$member->id} ({$member->fname} {$member->lname}) with " . $member->savings->count() . " savings accounts");
-            foreach ($member->savings as $savings) {
-                Log::info("Member savings account: {$savings->account_number}, product: " . ($savings->savingProduct ? $savings->savingProduct->product_name : 'N/A'));
-            }
-
-            // Handle loan payments
-            if ($record->loans > 0) {
-                foreach ($member->loanForecasts as $forecast) {
-                    if ($forecast->total_due_after_remittance > 0) {
-                        $originalAccountNumber = $forecast->loan_acct_no;
-                        $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
-
-                        Log::info("Loan account number transformation: '{$originalAccountNumber}' -> '{$formattedAccountNumber}'");
-
-                        $exportRows->push([
-                            'branch_code' => $member->branch->code ?? '',
-                            'product_code/dr' => '',
-                            'gl/sl cct no' => '',
-                            'amt' => '',
-                            'product_code/cr' => '4', // Assuming 4 is for Loans
-                            'gl/sl acct no' => $formattedAccountNumber,
-                            'amount' => number_format($forecast->total_due_after_remittance, 2, '.', '')
-                        ]);
-                    }
-                }
-            }
-
-            // Handle savings
-            if (!empty($record->savings)) {
-                // Handle new savings structure with total and distribution
-                $savingsTotal = 0;
-                $savingsDistribution = [];
-
-                if (is_array($record->savings) && isset($record->savings['total'])) {
-                    // New format: {total: amount, distribution: [...]}
-                    $savingsTotal = $record->savings['total'];
-                    $savingsDistribution = $record->savings['distribution'] ?? [];
-                } elseif (is_array($record->savings)) {
-                    // Old format: {product_name: amount, ...}
-                    $savingsTotal = collect($record->savings)->sum();
-                    foreach ($record->savings as $productName => $amount) {
-                        if ($amount > 0) {
-                            $savingsDistribution[] = [
-                                'product' => $productName,
-                                'amount' => $amount
-                            ];
+            // Handle loan payments (per record, as before)
+            foreach ($records as $record) {
+                if ($record->loans > 0) {
+                    foreach ($member->loanForecasts as $forecast) {
+                        if ($forecast->total_due_after_remittance > 0) {
+                            $originalAccountNumber = $forecast->loan_acct_no;
+                            $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+                            $exportRows->push([
+                                'branch_code' => $member->branch->code ?? '',
+                                'product_code/dr' => '',
+                                'gl/sl cct no' => '',
+                                'amt' => '',
+                                'product_code/cr' => '4',
+                                'gl/sl acct no' => $formattedAccountNumber,
+                                'amount' => number_format($forecast->total_due_after_remittance, 2, '.', '')
+                            ]);
                         }
                     }
                 }
+            }
 
-                if ($savingsTotal > 0) {
-                    // Process each distribution entry
+            // Output deduction rows for all savings except regular and mortuary
+            foreach ($records as $record) {
+                if (!empty($record->savings)) {
+                    $savingsDistribution = [];
+                    if (is_array($record->savings) && isset($record->savings['distribution'])) {
+                        $savingsDistribution = $record->savings['distribution'];
+                    }
                     foreach ($savingsDistribution as $distribution) {
                         $productName = $distribution['product'];
-                        $amountFromImport = $distribution['amount'];
-
-                        if ($amountFromImport <= 0) {
+                        $amount = floatval($distribution['amount']);
+                        $deductionAmount = floatval($distribution['deduction_amount'] ?? 0);
+                        // Exclude mortuary
+                        if (stripos($productName, 'Mortuary') !== false || strtolower($productName) === 'special fund - mortuary') {
                             continue;
                         }
-
-                        // Exclude savings products named 'Mortuary'
-                        if (stripos($productName, 'Mortuary') !== false) {
-                            continue;
-                        }
-
-
-                        // Find the specific savings account for this member and product name
-                        $savingAccount = $member->savings->first(function ($s) use ($productName) {
-                            return $s->savingProduct && strtolower($s->savingProduct->product_name) === strtolower($productName);
-                        });
-
-                        if ($savingAccount) {
-                            $deductionAmount = $savingAccount->deduction_amount ?? 0;
-
-                            Log::info("Processing savings account for product '{$productName}': {$savingAccount->account_number}");
-
-                            // Add a row for the deduction amount, if it exists
-                            if ($deductionAmount > 0) {
+                        // Output deduction row for each product (except regular)
+                        if (strtolower($productName) !== 'savings deposit-regular') {
+                            $savingAccount = $member->savings->first(function ($s) use ($productName) {
+                                return $s->savingProduct && strtolower($s->savingProduct->product_name) === strtolower($productName) && $s->savingProduct->product_code !== '20313';
+                            });
+                            if ($savingAccount && $deductionAmount > 0) {
                                 $originalAccountNumber = $savingAccount->account_number;
                                 $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
-
-                                Log::info("Deduction account number transformation: '{$originalAccountNumber}' -> '{$formattedAccountNumber}'");
-
                                 $exportRows->push([
                                     'branch_code' => $member->branch->code ?? '',
                                     'product_code/dr' => '',
@@ -140,84 +103,49 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                                     'amount' => number_format($deductionAmount, 2, '.', '')
                                 ]);
                             }
-
-                            // Add a row for the remaining amount from the import to Regular Savings
-                            $remainingAmount = $amountFromImport - $deductionAmount;
-                            if ($remainingAmount > 0) {
-                                // Find Savings Deposit-Regular account for this member
-                                $regularSavings = $member->savings->first(function ($s) {
-                                    return $s->savingProduct && strtolower($s->savingProduct->product_name) === 'savings deposit-regular';
-                                });
-                                if ($regularSavings) {
-                                    Log::info("Found Savings Deposit-Regular account: {$regularSavings->account_number}");
-                                    $originalAccountNumber = $regularSavings->account_number;
-                                    $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
-
-                                    Log::info("Regular savings account number transformation: '{$originalAccountNumber}' -> '{$formattedAccountNumber}'");
-
-                                    $exportRows->push([
-                                        'branch_code' => $member->branch->code ?? '',
-                                        'product_code/dr' => '',
-                                        'gl/sl cct no' => '',
-                                        'amt' => '',
-                                        'product_code/cr' => '1',
-                                        'gl/sl acct no' => $formattedAccountNumber,
-                                        'amount' => number_format($remainingAmount, 2, '.', '')
-                                    ]);
-                                } else {
-                                    Log::warning("No Savings Deposit-Regular account found for member {$member->id}");
-                                }
-                            }
-                        } else {
-                            Log::warning("No savings account found for member {$member->id} with product name '{$productName}'");
-                        }
-                    }
-                }
-
-                // Add regular savings based on account number pattern
-                // Check for account numbers with third segment indicating regular savings (e.g., 20101)
-                foreach ($member->savings as $savings) {
-                    $accountNumber = $savings->account_number;
-                    $segments = explode('-', $accountNumber);
-
-                    Log::info("Checking savings account: {$accountNumber}, segments: " . json_encode($segments));
-
-                    // Check if third segment (index 2) indicates regular savings
-                    if (count($segments) >= 3 && $segments[2] === '20101') {
-                        // This is a regular savings account based on account number pattern
-                        $remittanceAmount = $savings->remittance_amount ?? 0;
-                        $deductionAmount = $savings->deduction_amount ?? 0;
-
-                        // Apply deduction: remaining amount = remittance - deduction
-                        $remainingAmount = $remittanceAmount - $deductionAmount;
-
-                        if ($remainingAmount > 0) {
-                            $originalAccountNumber = $savings->account_number;
-                            $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
-
-                            Log::info("Account number transformation details:");
-                            Log::info("  Original: '{$originalAccountNumber}' (type: " . gettype($originalAccountNumber) . ", length: " . strlen($originalAccountNumber) . ")");
-                            Log::info("  After preg_replace: '{$formattedAccountNumber}' (type: " . gettype($formattedAccountNumber) . ", length: " . strlen($formattedAccountNumber) . ")");
-                            Log::info("  Original segments: " . json_encode(explode('-', $originalAccountNumber)));
-                            Log::info("  Expected result: " . implode('', explode('-', $originalAccountNumber)));
-
-                            $exportRows->push([
-                                'branch_code' => $member->branch->code ?? '',
-                                'product_code/dr' => '',
-                                'gl/sl cct no' => '',
-                                'amt' => '',
-                                'product_code/cr' => '1',
-                                'gl/sl acct no' => $formattedAccountNumber,
-                                'amount' => number_format($remainingAmount, 2, '.', '')
-                            ]);
-
-                            Log::info("Added regular savings export row for member {$member->id}, account: {$originalAccountNumber}, remittance: {$remittanceAmount}, deduction: {$deductionAmount}, remaining: {$remainingAmount}");
                         }
                     }
                 }
             }
-        }
 
+            // Sum all remaining for regular savings (Savings Deposit-Regular, is_remaining=true)
+            $totalRegularRemaining = 0;
+            foreach ($records as $record) {
+                if (!empty($record->savings)) {
+                    $savingsDistribution = [];
+                    if (is_array($record->savings) && isset($record->savings['distribution'])) {
+                        $savingsDistribution = $record->savings['distribution'];
+                    }
+                    foreach ($savingsDistribution as $distribution) {
+                        if (
+                            strtolower($distribution['product']) === 'savings deposit-regular' &&
+                            (isset($distribution['is_remaining']) && $distribution['is_remaining'])
+                        ) {
+                            $totalRegularRemaining += floatval($distribution['amount']);
+                        }
+                    }
+                }
+            }
+            if ($totalRegularRemaining > 0) {
+                // Find the member's regular savings account (product code 20101)
+                $regularSavings = $member->savings->first(function ($s) {
+                    return $s->savingProduct && $s->savingProduct->product_code === '20101';
+                });
+                if ($regularSavings) {
+                    $originalAccountNumber = $regularSavings->account_number;
+                    $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+                    $exportRows->push([
+                        'branch_code' => $member->branch->code ?? '',
+                        'product_code/dr' => '',
+                        'gl/sl cct no' => '',
+                        'amt' => '',
+                        'product_code/cr' => '1',
+                        'gl/sl acct no' => $formattedAccountNumber,
+                        'amount' => number_format($totalRegularRemaining, 2, '.', '')
+                    ]);
+                }
+            }
+        }
         return $exportRows;
     }
 }

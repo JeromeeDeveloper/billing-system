@@ -136,7 +136,7 @@
                                                 enctype="multipart/form-data">
                                                 @csrf
                                                 <div class="form-group">
-                                                    <label class="font-weight-bold">Select Excel File</label>
+                                                    <label class="font-weight-bold">Upload Savings and Loans Remittance</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" name="file"
                                                             id="file" accept=".xlsx,.xls,.csv" required>
@@ -149,7 +149,7 @@
                                                             <li>Excel format (.xlsx, .xls, .csv,)</li>
                                                             <li>Required headers:
                                                                 <ul class="pl-3">
-                                                                    <li>EmpId</li>
+                                                                    <li>CID</li>
                                                                     <li>Name</li>
                                                                     <li>Loans</li>
                                                                     <li>Savings Product Names</li>

@@ -66,12 +66,14 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-chart-pie-36"></i><span class="nav-text">Products</span>
+                        <i class="icon icon-chart-pie-36"></i><span class="nav-text">Configuration</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('loans') }}">Loan Products</a></li>
                         <li><a href="{{ route('saving-products.index') }}">Saving Products</a></li>
                         <li><a href="{{ route('share-products.index') }}">Share Products</a></li>
+                        <li><a href="#" data-toggle="modal" data-target="#pgbMembersUploadModal"></i>PGB Members File Upload</a></li>
+                        <li><a href="#" data-toggle="modal" data-target="#savingsSharesUploadModal"></i>Savings & Shares Deduction File Upload</a></li>
                     </ul>
                 </li>
 
@@ -179,5 +181,64 @@
 
             @endif
         </ul>
+    </div>
+</div>
+
+{{-- Modals for sidebar uploads --}}
+<div class="modal fade" id="pgbMembersUploadModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <form action="{{ route('master.upload.coreid') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-upload me-2"></i>PGB Members File Upload</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">
+                        Upload CoreID file to set member tagging to PGB.<br>
+                        File should have "Customer No" header in A1 and CID values below.<br>
+                        CIDs will be padded to 9 digits (e.g., 123 becomes 000000123).
+                    </p>
+                    <input type="file" name="coreid_file" class="form-control-file" accept=".xlsx,.xls,.csv" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fa fa-upload me-1"></i>Upload PGB Members
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="savingsSharesUploadModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <form action="{{ route('master.upload.savings-shares-product') }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fa fa-upload me-2"></i>Savings & Shares Deduction File Upload</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">
+                        Upload file with savings and shares product codes to set deduction amounts.<br>
+                        File should have "CoreID" header in A1, product codes in row 1 (columns B onwards),<br>
+                        and deduction amounts below. CIDs will be padded to 9 digits.
+                    </p>
+                    <input type="file" name="savings_shares_file" class="form-control-file" accept=".xlsx,.xls,.csv" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info">
+                        <i class="fa fa-upload me-1"></i>Upload Products
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>

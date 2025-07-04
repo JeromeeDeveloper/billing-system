@@ -260,75 +260,6 @@
                                 </div>
                             </div>
 
-                            <!-- CoreID Upload Section -->
-                            <div class="card-body border-bottom">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <h6 class="text-primary mb-3">
-                                            <i class="fa fa-upload me-2"></i>PGB Members File Upload
-                                        </h6>
-                                        <p class="text-muted mb-3">
-                                            Upload CoreID file to set member tagging to PGB.
-                                            File should have "Customer No" header in A1 and CID values below.
-                                            CIDs will be padded to 9 digits (e.g., 123 becomes 000000123).
-                                        </p>
-
-                                    </div>
-                                    <div class="col-md-4">
-                                        <form action="{{ route('master.upload.coreid') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" style="gap: 10px;">
-                                            @csrf
-                                            <input type="file" name="coreid_file" class="form-control-file" accept=".xlsx,.xls,.csv" required>
-                                            <button type="submit" class="btn btn-warning">
-                                                <i class="fa fa-upload me-1"></i>Upload PGB Members
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                @if(session('success') && str_contains(session('success'), 'CoreID import'))
-                                    <div class="mt-3">
-                                        <div class="alert alert-success">
-                                            <i class="fa fa-check-circle me-2"></i>
-                                            {{ session('success') }}
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-
-                            <!-- Savings & Shares Product Upload Section -->
-                            <div class="card-body border-bottom">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <h6 class="text-primary mb-3">
-                                            <i class="fa fa-upload me-2"></i>Savings & Shares Deduction File Upload
-                                        </h6>
-                                        <p class="text-muted mb-3">
-                                            Upload file with savings and shares product codes to set deduction amounts.
-                                            File should have "CoreID" header in A1, product codes in row 1 (columns B onwards),
-                                            and deduction amounts below. CIDs will be padded to 9 digits.
-                                        </p>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <form action="{{ route('master.upload.savings-shares-product') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" style="gap: 10px;">
-                                            @csrf
-                                            <input type="file" name="savings_shares_file" class="form-control-file" accept=".xlsx,.xls,.csv" required>
-                                            <button type="submit" class="btn btn-info">
-                                                <i class="fa fa-upload me-1"></i>Upload Products
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-
-                                @if(session('success') && str_contains(session('success'), 'Savings & Shares Product import'))
-                                    <div class="mt-3">
-                                        <div class="alert alert-success">
-                                            <i class="fa fa-check-circle me-2"></i>
-                                            {{ session('success') }}
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table id="masterlistTable" class="table table-striped table-bordered display">
@@ -965,12 +896,12 @@
                                                 <input type="text" class="form-control" id="bulkApprovalNo">
                                             </div>
                                             <div class="form-group mb-3">
-                                                <label>Start Hold Date</label>
-                                                <input type="date" class="form-control" id="bulkStartHold">
+                                                <label>Start Hold (YYYY-MM)</label>
+                                                <input type="month" class="form-control" id="bulkStartHold">
                                             </div>
                                             <div class="form-group mb-3">
-                                                <label>Expiry Date</label>
-                                                <input type="date" class="form-control" id="bulkExpiryDate">
+                                                <label>Expiry Date (YYYY-MM)</label>
+                                                <input type="month" class="form-control" id="bulkExpiryDate">
                                             </div>
                                             <div class="form-group mb-3">
                                                 <label>Request for Hold</label>

@@ -91,6 +91,8 @@ class RemittanceController extends Controller
 
     public function upload(Request $request)
     {
+        ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', 2000);
         $request->validate([
             'file' => 'required|file|max:10240', // max 10MB
         ]);
@@ -116,7 +118,7 @@ class RemittanceController extends Controller
             foreach ($results as $result) {
                 RemittancePreview::create([
                     'user_id' => Auth::id(),
-                    'emp_id' => $result['emp_id'],
+                    'emp_id' => $result['cid'],
                     'name' => $result['name'],
                     'member_id' => $result['member_id'],
                     'loans' => $result['loans'],
@@ -145,6 +147,8 @@ class RemittanceController extends Controller
 
     public function uploadShare(Request $request)
     {
+        ini_set('memory_limit', '-1');
+        ini_set('max_execution_time', 2000);
         $request->validate([
             'file' => 'required|file|max:10240', // max 10MB
         ]);
@@ -171,7 +175,7 @@ class RemittanceController extends Controller
             foreach ($results as $result) {
                 RemittancePreview::create([
                     'user_id' => Auth::id(),
-                    'emp_id' => $result['emp_id'],
+                    'emp_id' => $result['cid'],
                     'name' => $result['name'],
                     'member_id' => $result['member_id'],
                     'loans' => 0,
