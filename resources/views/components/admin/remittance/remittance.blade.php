@@ -189,7 +189,7 @@
                                                             <li>Excel format (.xlsx, .xls, .csv)</li>
                                                             <li>Required headers:
                                                                 <ul class="pl-3">
-                                                                    <li>EmpId (can be null)</li>
+                                                                    <li>CID</li>
                                                                     <li>Name (format: LASTNAME, FIRSTNAME)</li>
                                                                     <li>Share (amount)</li>
                                                                 </ul>
@@ -283,7 +283,7 @@
                                                     <thead>
                                                         <tr>
                                                             <th>Status</th>
-                                                            <th>EmpId</th>
+                                                            <th>CID</th>
                                                             <th>Name</th>
                                                             @if(isset($preview[0]) && $preview[0]->share_amount > 0)
                                                                 <th>Share Amount</th>
@@ -413,25 +413,25 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><code>EmpId</code></td>
-                                    <td>Employee ID</td>
+                                    <td><code>cid</code></td>
+                                    <td>CID</td>
                                     <td><span class="badge badge-success">Yes</span></td>
-                                    <td>EMP001</td>
+                                    <td>000000123</td>
                                 </tr>
                                 <tr>
-                                    <td><code>Name</code></td>
-                                    <td>Employee Full Name</td>
-                                    <td><span class="badge badge-success">Yes</span></td>
-                                    <td>John Doe</td>
+                                    <td><code>name</code></td>
+                                    <td>Name</td>
+                                    <td><span class="badge badge-success">No</span></td>
+                                    <td>John</td>
                                 </tr>
                                 <tr>
-                                    <td><code>Loans</code></td>
+                                    <td><code>loans</code></td>
                                     <td>Total Loan Payment Amount</td>
-                                    <td><span class="badge badge-success">Yes</span></td>
+                                    <td><span class="badge badge-success">No</span></td>
                                     <td>1500.00</td>
                                 </tr>
                                 <tr>
-                                    <td><code>Savings</code></td>
+                                    <td><code>savings</code></td>
                                     <td>Total Savings Amount (will be distributed automatically based on deduction_amount)</td>
                                     <td><span class="badge badge-warning">Optional</span></td>
                                     <td>1000.00</td>
@@ -445,28 +445,28 @@
                         <table class="table table-bordered table-sm">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>EmpId</th>
-                                    <th>Name</th>
-                                    <th>Loans</th>
-                                    <th>Savings</th>
+                                    <th>cid</th>
+                                    <th>name</th>
+                                    <th>loans</th>
+                                    <th>savings</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>EMP001</td>
-                                    <td>John Doe</td>
+                                    <td>000000123</td>
+                                    <td>John</td>
                                     <td>1500.00</td>
                                     <td>1000.00</td>
                                 </tr>
                                 <tr>
-                                    <td>EMP002</td>
-                                    <td>Jane Smith</td>
+                                    <td>000000001</td>
+                                    <td>Jane</td>
                                     <td>2000.00</td>
                                     <td>750.00</td>
                                 </tr>
                                 <tr>
-                                    <td>EMP003</td>
-                                    <td>Bob Johnson</td>
+                                    <td>000000002</td>
+                                    <td>Bob</td>
                                     <td>1200.00</td>
                                     <td>0</td>
                                 </tr>
@@ -485,7 +485,6 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-
                 </div>
             </div>
         </div>
@@ -528,7 +527,7 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><code>EmpId</code></td>
+                                    <td><code>CID</code></td>
                                     <td>Employee ID (can be empty)</td>
                                     <td><span class="badge badge-warning">Optional</span></td>
                                     <td>EMP001</td>
@@ -554,24 +553,24 @@
                         <table class="table table-bordered table-sm">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th>EmpId</th>
+                                    <th>CID</th>
                                     <th>Name</th>
                                     <th>Share</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>EMP001</td>
+                                    <td>000000123</td>
                                     <td>DOE, JOHN</td>
                                     <td>1000.00</td>
                                 </tr>
                                 <tr>
-                                    <td></td>
+                                    <td>000000001</td>
                                     <td>SMITH, JANE</td>
                                     <td>1500.00</td>
                                 </tr>
                                 <tr>
-                                    <td>EMP003</td>
+                                    <td>000000002</td>
                                     <td>JOHNSON, BOB</td>
                                     <td>750.00</td>
                                 </tr>
@@ -583,7 +582,7 @@
                         <h6><i class="fa fa-exclamation-triangle"></i> Important Notes:</h6>
                         <ul class="mb-0">
                             <li><strong>Name Format:</strong> Must be "LASTNAME, FIRSTNAME" (comma and space required)</li>
-                            <li><strong>EmpId:</strong> Can be empty for non-employee members</li>
+                            <li><strong>CID:</strong> Can be empty for non-employee members</li>
                             <li><strong>Share Amount:</strong> Must be a positive number</li>
                         </ul>
                     </div>
