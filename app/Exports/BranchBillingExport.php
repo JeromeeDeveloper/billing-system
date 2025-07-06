@@ -15,7 +15,8 @@ class BranchBillingExport implements WithMultipleSheets
 
     public function __construct($billingPeriod, $branchId)
     {
-        $this->billingPeriod = $billingPeriod;
+        // Extract year-month from billing period (e.g., "2025-07-01" becomes "2025-07")
+        $this->billingPeriod = \Carbon\Carbon::parse($billingPeriod)->format('Y-m');
         $this->branchId = $branchId;
     }
 
@@ -92,12 +93,13 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
                     });
             })
             ->whereHas('loanForecasts', function ($query) {
-                $query->where('billing_period', $this->billingPeriod);
+                $query->where(function($q) {
+                    $q->whereNull('amortization_due_date')
+                      ->orWhereRaw("DATE_FORMAT(amortization_due_date, '%Y-%m') = ?", [$this->billingPeriod]);
+                });
             })
             ->where('loan_balance', '>', 0)
-            ->with(['loanForecasts' => function ($query) {
-                $query->where('billing_period', $this->billingPeriod);
-            }, 'loanProductMembers.loanProduct'])
+            ->with(['loanForecasts', 'loanProductMembers.loanProduct'])
             ->get();
 
         return $members->map(function ($member) {

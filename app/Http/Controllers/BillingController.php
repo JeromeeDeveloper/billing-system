@@ -102,11 +102,11 @@ class BillingController extends Controller
 
     public function export(Request $request)
     {
-        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
 
         // Generate the Excel file
-        $export = new BillingExcelExport();
-        $filename = 'billing_export_' . $billingPeriod . '.xlsx';
+        $export = new BillingExcelExport($billingPeriod);
+        $filename = 'billing_export_' . \Carbon\Carbon::parse($billingPeriod)->format('Y-m') . '.xlsx';
 
         // Store the file
         Excel::store($export, 'exports/' . $filename, 'public');
@@ -355,12 +355,12 @@ class BillingController extends Controller
 
     public function export_branch(Request $request)
     {
-        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
         $branchId = Auth::user()->branch_id;
 
         // Generate the Excel file
         $export = new \App\Exports\BranchBillingExport($billingPeriod, $branchId);
-        $filename = 'branch_billing_export_' . $billingPeriod . '.xlsx';
+        $filename = 'branch_billing_export_' . \Carbon\Carbon::parse($billingPeriod)->format('Y-m') . '.xlsx';
 
         // Store the file
         Excel::store($export, 'exports/' . $filename, 'public');
@@ -473,5 +473,45 @@ class BillingController extends Controller
             Log::error('Error generating members no branch report: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error generating members no branch report: ' . $e->getMessage());
         }
+    }
+
+    public function testBillingPeriod()
+    {
+        $userBillingPeriod = Auth::user()->billing_period;
+        $extractedPeriod = \Carbon\Carbon::parse($userBillingPeriod)->format('Y-m');
+        
+        // Get a sample member with loan forecasts
+        $member = \App\Models\Member::with(['loanForecasts', 'loanProductMembers'])
+            ->where('loan_balance', '>', 0)
+            ->first();
+            
+        if (!$member) {
+            return response()->json(['error' => 'No members found with loan balance > 0']);
+        }
+        
+        $loanForecasts = $member->loanForecasts->map(function($lf) use ($extractedPeriod) {
+            $dueDateMonth = $lf->amortization_due_date ? \Carbon\Carbon::parse($lf->amortization_due_date)->format('Y-m') : null;
+            return [
+                'id' => $lf->id,
+                'loan_acct_no' => $lf->loan_acct_no,
+                'billing_period' => $lf->billing_period,
+                'amortization_due_date' => $lf->amortization_due_date,
+                'due_date_month' => $dueDateMonth,
+                'extracted_period' => $extractedPeriod,
+                'matches' => $dueDateMonth === $extractedPeriod
+            ];
+        });
+        
+        return response()->json([
+            'user_billing_period' => $userBillingPeriod,
+            'extracted_period' => $extractedPeriod,
+            'member' => [
+                'id' => $member->id,
+                'name' => $member->fname . ' ' . $member->lname,
+                'loan_balance' => $member->loan_balance,
+                'has_loan_products' => $member->loanProductMembers->count() > 0
+            ],
+            'loan_forecasts' => $loanForecasts
+        ]);
     }
 }

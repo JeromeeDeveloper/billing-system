@@ -241,6 +241,12 @@
                                                 style="width: 250px; height: 40px;" />
                                         </div>
 
+                                        <div class="input-group">
+                                            <input type="date" name="amortization_due_date" value="{{ request('amortization_due_date') }}"
+                                                class="form-control" placeholder="Amortization Due Date"
+                                                style="width: 200px; height: 40px;" />
+                                        </div>
+
                                         <button type="submit" class="btn btn-primary d-flex align-items-center"
                                             style="height: 40px;">
                                             <i class="fa fa-search me-2"></i>
