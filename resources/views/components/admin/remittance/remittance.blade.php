@@ -233,6 +233,11 @@
 
                                     <div class="col-12">
                                         @if (isset($preview) && $preview)
+                                            <div class="mb-3 d-flex justify-content-end">
+                                                <a href="{{ route('remittance.exportPreview') }}" class="btn btn-success">
+                                                    <i class="fa fa-file-excel-o"></i> Export Remittance Preview to Excel
+                                                </a>
+                                            </div>
                                             <div class="row mb-4">
                                                 <div class="col-md-4">
                                                     <a href="{{ route('remittance.index', ['filter' => 'matched']) }}"
@@ -385,6 +390,53 @@
                         </div>
                     </div>
                 </div>
+
+                @if(isset($comparisonReport) && count($comparisonReport) > 0)
+                    <div class="mb-3 d-flex justify-content-end">
+                        <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
+                            <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
+                        </a>
+                    </div>
+                <div class="card mt-5">
+                    <div class="card-header">
+                        <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>CID</th>
+                                        <th>Member Name</th>
+                                        <th>Amortization</th>
+                                        <th>Total Billed</th>
+                                      
+                                        <th>Remitted Loans</th>
+                                        <th>Remitted Savings</th>
+                                        <th>Remitted Shares</th>
+                                        <th>Remaining Loan Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($comparisonReport as $row)
+                                        <tr>
+                                            <td>{{ $row['cid'] }}</td>
+                                            <td>{{ $row['member_name'] }}</td>
+                                            <td>₱{{ number_format($row['amortization'], 2) }}</td>
+                                            <td>₱{{ number_format($row['total_billed'], 2) }}</td>
+
+                                            <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
+                                            <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
+                                            <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
+                                            <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 

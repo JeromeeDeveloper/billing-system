@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Imports\ShareRemittanceImport;
 use Illuminate\Support\Facades\Log;
+use App\Models\RemittanceReport;
 
 class RemittanceController extends Controller
 {
@@ -103,7 +104,8 @@ class RemittanceController extends Controller
             $preview = null;
         }
 
-        return view('components.admin.remittance.remittance', compact('dates', 'preview', 'stats'));
+        $comparisonReport = $this->getRemittanceComparisonReport();
+        return view('components.admin.remittance.remittance', compact('dates', 'preview', 'stats', 'comparisonReport'));
     }
 
     public function upload(Request $request)
@@ -131,7 +133,7 @@ class RemittanceController extends Controller
                 ->where('billing_period', $currentBillingPeriod)
                 ->delete();
 
-            // Store new preview data
+            // Store new preview data and accumulate remitted values
             foreach ($results as $result) {
                 RemittancePreview::create([
                     'user_id' => Auth::id(),
@@ -149,6 +151,16 @@ class RemittanceController extends Controller
                     'type' => 'admin',
                     'billing_period' => $currentBillingPeriod
                 ]);
+
+                // Accumulate remitted values in remittance_reports
+                $report = RemittanceReport::firstOrNew([
+                    'cid' => $result['cid'],
+                    'period' => $currentBillingPeriod,
+                ]);
+                $report->member_name = $result['name'];
+                $report->remitted_loans += $result['loans'];
+                $report->remitted_savings += $result['savings_total'] ?? 0;
+                $report->save();
             }
 
             DB::commit();
@@ -188,7 +200,7 @@ class RemittanceController extends Controller
                 ->where('billing_period', $currentBillingPeriod)
                 ->delete();
 
-            // Store new preview data
+            // Store new preview data and accumulate remitted shares
             foreach ($results as $result) {
                 RemittancePreview::create([
                     'user_id' => Auth::id(),
@@ -203,6 +215,15 @@ class RemittanceController extends Controller
                     'type' => 'admin',
                     'billing_period' => $currentBillingPeriod
                 ]);
+
+                // Accumulate remitted shares in remittance_reports
+                $report = RemittanceReport::firstOrNew([
+                    'cid' => $result['cid'],
+                    'period' => $currentBillingPeriod,
+                ]);
+                $report->member_name = $result['name'];
+                $report->remitted_shares += $result['share'];
+                $report->save();
             }
 
             DB::commit();
@@ -276,5 +297,62 @@ class RemittanceController extends Controller
         }
 
         return $loanAmount - $remainingAmount; // Return amount actually deducted
+    }
+
+    public function getRemittanceComparisonReport($period = null)
+    {
+        $period = $period ?: Auth::user()->billing_period;
+        // Get all forecasts for the period
+        $forecasts = \App\Models\LoanForecast::where('billing_period', $period)
+            ->with('member')
+            ->get();
+        $remitted = \App\Models\RemittanceReport::where('period', $period)->get()->keyBy('cid');
+
+        $report = [];
+        $memberTotals = [];
+        foreach ($forecasts as $forecast) {
+            $cid = $forecast->member->cid ?? null;
+            if (!$cid) continue;
+            if (!isset($memberTotals[$cid])) {
+                $memberTotals[$cid] = [
+                    'cid' => $cid,
+                    'member_name' => trim(($forecast->member->fname ?? '') . ' ' . ($forecast->member->lname ?? '')),
+                    'amortization' => 0,
+                    'total_billed' => 0,
+                    'remitted_loans' => 0,
+                    'remitted_savings' => 0,
+                    'remitted_shares' => 0,
+                    'remaining_loan_balance' => 0,
+                ];
+            }
+            $memberTotals[$cid]['amortization'] += $forecast->total_due;
+            $memberTotals[$cid]['total_billed'] += $forecast->total_billed;
+        }
+        foreach ($memberTotals as $cid => &$row) {
+            $remit = $remitted[$cid] ?? null;
+            $row['remitted_loans'] = $remit->remitted_loans ?? 0;
+            $row['remitted_savings'] = $remit->remitted_savings ?? 0;
+            $row['remitted_shares'] = $remit->remitted_shares ?? 0;
+            $row['remaining_loan_balance'] = ($row['total_billed'] ?? 0) - ($row['remitted_loans'] ?? 0);
+        }
+        unset($row);
+        return array_values($memberTotals);
+    }
+
+    public function exportPreview()
+    {
+        $currentBillingPeriod = Auth::user()->billing_period;
+        $preview = \App\Models\RemittancePreview::where('user_id', Auth::id())
+            ->where('type', 'admin')
+            ->where('billing_period', $currentBillingPeriod)
+            ->get();
+        return Excel::download(new \App\Exports\RemittanceExport($preview), 'remittance_preview_' . $currentBillingPeriod . '.xlsx');
+    }
+
+    public function exportComparison()
+    {
+        $currentBillingPeriod = Auth::user()->billing_period;
+        $report = $this->getRemittanceComparisonReport($currentBillingPeriod);
+        return Excel::download(new \App\Exports\ComparisonReportExport($report), 'billed_vs_remitted_comparison_' . $currentBillingPeriod . '.xlsx');
     }
 }

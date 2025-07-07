@@ -171,6 +171,9 @@ Route::get('/special-billing', [SpecialBillingController::class, 'index'])->name
 Route::post('/special-billing/import', [SpecialBillingController::class, 'import'])->name('special-billing.import');
 Route::get('/special-billing/export', [SpecialBillingController::class, 'export'])->name('special-billing.export');
 
+Route::get('admin/remittance/export-preview', [\App\Http\Controllers\RemittanceController::class, 'exportPreview'])->name('remittance.exportPreview');
+Route::get('admin/remittance/export-comparison', [\App\Http\Controllers\RemittanceController::class, 'exportComparison'])->name('remittance.exportComparison');
+
 });
 
 Route::middleware([BranchMiddleware::class])->group(function () {
