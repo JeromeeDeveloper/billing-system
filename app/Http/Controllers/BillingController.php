@@ -37,7 +37,15 @@ class BillingController extends Controller
 
         // Query with eager loading branch to avoid N+1 query problem
         $query = Member::with('branch')
-            ->where('billing_period', $billingPeriod);
+            ->where('billing_period', $billingPeriod)
+            ->whereHas('loanForecasts', function ($query) use ($billingPeriod) {
+                $query->where(function($q) use ($billingPeriod) {
+                    $q->whereNull('amortization_due_date')
+                      ->orWhereRaw("DATE_FORMAT(amortization_due_date, '%Y-%m') = ?", [\Carbon\Carbon::parse($billingPeriod)->format('Y-m')]);
+                });
+            })
+            ->whereHas('loanProductMembers')
+            ->where('loan_balance', '>', 0);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -78,7 +86,15 @@ class BillingController extends Controller
         // Query with eager loading branch to avoid N+1 query problem
         $query = Member::with('branch')
             ->where('billing_period', $billingPeriod)
-            ->where('branch_id', $userBranchId);
+            ->where('branch_id', $userBranchId)
+            ->whereHas('loanForecasts', function ($query) use ($billingPeriod) {
+                $query->where(function($q) use ($billingPeriod) {
+                    $q->whereNull('amortization_due_date')
+                      ->orWhereRaw("DATE_FORMAT(amortization_due_date, '%Y-%m') = ?", [\Carbon\Carbon::parse($billingPeriod)->format('Y-m')]);
+                });
+            })
+            ->whereHas('loanProductMembers')
+            ->where('loan_balance', '>', 0);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -479,16 +495,16 @@ class BillingController extends Controller
     {
         $userBillingPeriod = Auth::user()->billing_period;
         $extractedPeriod = \Carbon\Carbon::parse($userBillingPeriod)->format('Y-m');
-        
+
         // Get a sample member with loan forecasts
         $member = \App\Models\Member::with(['loanForecasts', 'loanProductMembers'])
             ->where('loan_balance', '>', 0)
             ->first();
-            
+
         if (!$member) {
             return response()->json(['error' => 'No members found with loan balance > 0']);
         }
-        
+
         $loanForecasts = $member->loanForecasts->map(function($lf) use ($extractedPeriod) {
             $dueDateMonth = $lf->amortization_due_date ? \Carbon\Carbon::parse($lf->amortization_due_date)->format('Y-m') : null;
             return [
@@ -501,7 +517,7 @@ class BillingController extends Controller
                 'matches' => $dueDateMonth === $extractedPeriod
             ];
         });
-        
+
         return response()->json([
             'user_billing_period' => $userBillingPeriod,
             'extracted_period' => $extractedPeriod,

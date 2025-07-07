@@ -1508,7 +1508,7 @@
                         <p><strong>Loan Account No.:</strong> ${loan.loan_acct_no || 'N/A'}</p>
                         <p><strong>Product Name:</strong> ${productInfo.product_name}</p>
                         <p><strong>Billing Type:</strong> <span class="badge ${productInfo.billing_type === 'special' ? 'badge-warning' : 'badge-info'}">${productInfo.billing_type}</span></p>
-                        <p><strong>Amount Due:</strong> ${loan.amount_due || '0.00'}</p>
+                    
                         <p><strong>Open Date:</strong> ${loan.open_date || 'N/A'}</p>
                         <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>

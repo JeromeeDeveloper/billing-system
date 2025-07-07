@@ -236,7 +236,9 @@ class BranchAtmController extends Controller
 
                 // First try to find Regular Savings
                 $regularSavings = $member->savings()
-                    ->where('product_type', 'regular')
+                    ->whereHas('savingProduct', function($q) {
+                        $q->where('product_type', 'regular');
+                    })
                     ->first();
 
                 // If not found, try to find any savings account

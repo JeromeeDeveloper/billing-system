@@ -75,7 +75,7 @@
                                         @endphp
 
                                         {{-- main function --}}
-                                        
+
                                         {{-- <a href="{{ $allBranchApproved && !$hasMembersNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
                                             class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved || $hasMembersNoBranch ? 'disabled' : '' }}"
                                             @if (!$allBranchApproved)
@@ -302,7 +302,7 @@
                                                         class="form-control">
                                                 </div>
                                                 <div class="form-group col-md-6">
-                                                    <label>Loan Balance</label>
+                                                    <label>Amort Due</label>
                                                     <input type="number" step="0.01" name="loan_balance"
                                                         id="edit-loan_balance" class="form-control">
                                                 </div>
@@ -349,7 +349,7 @@
                                             <p><strong>Name:</strong> <span id="view-name"></span></p>
                                             <p><strong>Start Date:</strong> <span id="view-start_date"></span></p>
                                             <p><strong>End Date:</strong> <span id="view-end_date"></span></p>
-                                            <p><strong>Loan Balance:</strong> ₱<span id="view-loan_balance"></span></p>
+                                            <p><strong>Amort Due:</strong> ₱<span id="view-loan_balance"></span></p>
                                             <p><strong>Principal:</strong> ₱<span id="view-principal"></span></p>
                                             <p><strong>Office:</strong> <span id="view-office"></span></p>
                                         </div>

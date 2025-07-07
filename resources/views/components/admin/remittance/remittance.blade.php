@@ -408,13 +408,12 @@
                                     <tr>
                                         <th>CID</th>
                                         <th>Member Name</th>
-                                        <th>Amortization</th>
                                         <th>Total Billed</th>
-                                      
                                         <th>Remitted Loans</th>
+                                        <th>Remaining Loan Balance</th>
                                         <th>Remitted Savings</th>
                                         <th>Remitted Shares</th>
-                                        <th>Remaining Loan Balance</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -423,12 +422,11 @@
                                             <td>{{ $row['cid'] }}</td>
                                             <td>{{ $row['member_name'] }}</td>
                                             <td>₱{{ number_format($row['amortization'], 2) }}</td>
-                                            <td>₱{{ number_format($row['total_billed'], 2) }}</td>
-
                                             <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
+                                            <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
                                             <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
                                             <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
-                                            <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
+
                                         </tr>
                                     @endforeach
                                 </tbody>
