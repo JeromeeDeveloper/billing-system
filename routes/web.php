@@ -128,6 +128,8 @@ Route::post('/master/upload-coreid', [MasterController::class, 'uploadCoreId'])-
 Route::post('/master/upload-savings-shares-product', [MasterController::class, 'uploadSavingsSharesProduct'])->name('master.upload.savings-shares-product');
 Route::get('/master/export-member-details', [MasterController::class, 'exportMemberDetails'])->name('master.exportMemberDetails');
 Route::get('/master/export-member-details-branch', [MasterController::class, 'exportMemberDetailsBranch'])->name('master.exportMemberDetailsBranch');
+Route::get('/master/export-members-no-regular-savings', [MasterController::class, 'exportMembersNoRegularSavings'])->name('master.exportMembersNoRegularSavings');
+Route::get('/master/export-members-no-regular-savings-branch', [MasterController::class, 'exportMembersNoRegularSavingsBranch'])->name('master.exportMembersNoRegularSavingsBranch');
 
 //Savings
 Route::get('/savings', [SavingsController::class, 'index'])->name('savings');

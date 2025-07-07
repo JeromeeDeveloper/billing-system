@@ -251,6 +251,10 @@
                                         <i class="fa fa-download"></i> Export Member Details (CSV)
                                     </a>
 
+                                    <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-warning">
+                                        <i class="fa fa-exclamation-triangle"></i> Export Members No Regular Savings (Excel)
+                                    </a>
+
                                 </div>
                             </div>
 

@@ -132,7 +132,7 @@
                                 <div class="row">
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">
-                                            <form action="{{ route('document.upload') }}" method="POST" enctype="multipart/form-data">
+                                            <form action="{{ route('document.upload') }}" method="POST" enctype="multipart/form-data" id="installmentForm">
                                                 @csrf
                                                 <div class="form-group">
                                                     <label for="remit_installment_file" class="font-weight-bold mb-2">📁 Installment Forecast File</label>
@@ -142,7 +142,9 @@
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
-                                                    <button type="submit" class="btn btn-primary">Upload Installment File</button>
+                                                    <button type="submit" class="btn btn-primary" id="installmentSubmitBtn">
+                                                        <i class="fa fa-upload"></i> Upload Installment File
+                                                    </button>
                                                 </div>
                                             </form>
                                         </div>
@@ -151,7 +153,7 @@
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">
                                             <form action="{{ route('remittance.upload') }}" method="POST"
-                                                enctype="multipart/form-data">
+                                                enctype="multipart/form-data" id="loansSavingsForm">
                                                 @csrf
                                                 <div class="form-group">
                                                     <label class="font-weight-bold">Upload Savings and Loans Remittance</label>
@@ -179,7 +181,7 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <button type="submit" class="btn btn-info btn-block">
+                                                <button type="submit" class="btn btn-info btn-block" id="loansSavingsSubmitBtn">
                                                     <i class="fa fa-upload"></i> Upload and Process Loans & Savings Remittance
                                                 </button>
 
@@ -193,7 +195,7 @@
 
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">
-                                            <form action="{{ route('remittance.upload.share') }}" method="POST" enctype="multipart/form-data">
+                                            <form action="{{ route('remittance.upload.share') }}" method="POST" enctype="multipart/form-data" id="shareForm">
                                                 @csrf
                                                 <div class="form-group">
                                                     <label class="font-weight-bold">Upload Share Remittance</label>
@@ -218,7 +220,7 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <button type="submit" class="btn btn-info btn-block">
+                                                <button type="submit" class="btn btn-info btn-block" id="shareSubmitBtn">
                                                     <i class="fa fa-upload"></i> Upload and Process Share Remittance
                                                 </button>
 
@@ -621,8 +623,9 @@
     </div>
 
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        
+
         // // Update custom file input label
         // $('.custom-file-input').on('change', function() {
         //     let fileName = $(this).val().split('\\').pop();
@@ -654,27 +657,92 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Explicitly select both upload forms by their action attribute
-            var loansSavingsForm = document.querySelector('form[action*="remittance.upload"]');
-            var sharesForm = document.querySelector('form[action*="remittance.upload.share"]');
-            [loansSavingsForm, sharesForm].forEach(function(form) {
-                if (form) {
-                    form.addEventListener('submit', function(e) {
-                        // Prevent double submit
-                        if (form.classList.contains('loading')) {
-                            e.preventDefault();
-                            return false;
+            // Installment form
+            const installmentForm = document.getElementById('installmentForm');
+            if (installmentForm) {
+                installmentForm.addEventListener('submit', function(e) {
+                    const submitBtn = document.getElementById('installmentSubmitBtn');
+                    const originalText = submitBtn.innerHTML;
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading...';
+
+                    Swal.fire({
+                        title: 'Uploading Installment File...',
+                        html: 'Please wait while we process your installment forecast file. This may take a few moments.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
                         }
-                        form.classList.add('loading');
-                        Swal.fire({
-                            title: 'Uploading...',
-                            text: 'Please wait while your file is being processed.',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
+                    });
+                });
+            }
+
+            // Loans and Savings form
+            const loansSavingsForm = document.getElementById('loansSavingsForm');
+            if (loansSavingsForm) {
+                loansSavingsForm.addEventListener('submit', function(e) {
+                    const submitBtn = document.getElementById('loansSavingsSubmitBtn');
+                    const originalText = submitBtn.innerHTML;
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+                    Swal.fire({
+                        title: 'Processing Loans & Savings Remittance...',
+                        html: 'Please wait while we match and process your remittance data. This may take a few moments.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                });
+            }
+
+            // Share form
+            const shareForm = document.getElementById('shareForm');
+            if (shareForm) {
+                shareForm.addEventListener('submit', function(e) {
+                    const submitBtn = document.getElementById('shareSubmitBtn');
+                    const originalText = submitBtn.innerHTML;
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+                    Swal.fire({
+                        title: 'Processing Share Remittance...',
+                        html: 'Please wait while we match and process your share remittance data. This may take a few moments.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                });
+            }
+
+            // File input change handlers
+            $('.custom-file-input').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+
+                // Show file info
+                if (fileName) {
+                    const file = this.files[0];
+                    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'File Selected',
+                        html: `
+                            <p><strong>File:</strong> ${fileName}</p>
+                            <p><strong>Size:</strong> ${fileSize} MB</p>
+                            <p><strong>Type:</strong> ${file.type || 'Unknown'}</p>
+                        `,
+                        timer: 2000,
+                        showConfirmButton: false
                     });
                 }
             });

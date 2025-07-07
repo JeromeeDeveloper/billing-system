@@ -261,7 +261,11 @@
                                     </a>
 
                                     <a href="{{ route('master.exportMemberDetails') }}" class="btn btn-success">
-                                        <i class="fa fa-download"></i> Export Member Details (CSV)
+                                        <i class="fa fa-download"></i> Export Member Details
+                                    </a>
+
+                                    <a href="{{ route('master.exportMembersNoRegularSavings') }}" class="btn btn-warning">
+                                        <i class="fa fa-exclamation-triangle"></i> Export Members No Regular Savings
                                     </a>
                                 </div>
                             </div>
@@ -542,13 +546,13 @@
                                                     </div>
                                                     <div id="savings-counter" class="alert alert-info mb-3"></div>
                                                     <div id="edit-savings-container"></div>
-                                                    <div class="d-flex justify-content-between mt-2">
+                                                    <div class="d-flex justify-content-end mt-2 gap-2">
                                                         <button type="button" id="btnPrevSavings"
-                                                            class="btn btn-outline-primary">
+                                                            class="btn btn-outline-primary ml-2">
                                                             <i class="fa fa-arrow-left me-1"></i>Previous
                                                         </button>
                                                         <button type="button" id="btnNextSavings"
-                                                            class="btn btn-outline-primary">
+                                                            class="btn btn-outline-primary ml-2">
                                                             Next<i class="fa fa-arrow-right ms-1"></i>
                                                         </button>
                                                     </div>
@@ -567,13 +571,13 @@
                                                     </div>
                                                     <div id="shares-counter" class="alert alert-info mb-3"></div>
                                                     <div id="edit-shares-container"></div>
-                                                    <div class="d-flex justify-content-between mt-2">
+                                                    <div class="d-flex justify-content-end mt-2">
                                                         <button type="button" id="btnPrevShares"
-                                                            class="btn btn-outline-primary">
+                                                            class="btn btn-outline-primary ml-2">
                                                             <i class="fa fa-arrow-left me-1"></i>Previous
                                                         </button>
                                                         <button type="button" id="btnNextShares"
-                                                            class="btn btn-outline-primary">
+                                                            class="btn btn-outline-primary ml-2">
                                                             Next<i class="fa fa-arrow-right ms-1"></i>
                                                         </button>
                                                     </div>

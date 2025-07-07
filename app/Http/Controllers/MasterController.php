@@ -1010,4 +1010,15 @@ class MasterController extends Controller
         $branchId = Auth::user()->branch_id;
         return \Maatwebsite\Excel\Facades\Excel::download(new MemberDetailsExport($branchId), 'member_details_branch.csv', \Maatwebsite\Excel\Excel::CSV);
     }
+
+    public function exportMembersNoRegularSavings()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\MembersNoRegularSavingsExport(), 'members_no_regular_savings.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
+
+    public function exportMembersNoRegularSavingsBranch()
+    {
+        $branchId = Auth::user()->branch_id;
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\MembersNoRegularSavingsExport($branchId), 'members_no_regular_savings_branch.xlsx', \Maatwebsite\Excel\Excel::XLSX);
+    }
 }

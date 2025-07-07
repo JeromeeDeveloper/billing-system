@@ -142,7 +142,7 @@
                                             </div>
                                             <div class="card-body">
                                                 <p class="text-muted small">Generate collection file for loans and savings remittance data.</p>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block">
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block" onclick="showExportLoading('Loans & Savings')">
                                                     <i class="fa fa-download"></i> Export Loans & Savings
                                                 </a>
                                             </div>
@@ -155,7 +155,7 @@
                                             </div>
                                             <div class="card-body">
                                                 <p class="text-muted small">Generate collection file for shares remittance data.</p>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block">
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block" onclick="showExportLoading('Shares')">
                                                     <i class="fa fa-download"></i> Export Shares
                                                 </a>
                                             </div>
@@ -349,6 +349,7 @@
 
     @include('layouts.partials.footer')
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
             // Custom file input
@@ -362,6 +363,18 @@
                 $('.alert').fadeOut('slow');
             }, 5000);
         });
+
+        function showExportLoading(type) {
+            Swal.fire({
+                title: 'Generating Export...',
+                html: `Please wait while we generate the ${type} collection file for your branch. This may take a few moments.`,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
     </script>
 </body>
 
