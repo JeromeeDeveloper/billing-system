@@ -127,9 +127,7 @@ Route::post('Admin/master/add', [MasterController::class, 'store'])->name('membe
 Route::post('/master/upload-coreid', [MasterController::class, 'uploadCoreId'])->name('master.upload.coreid');
 Route::post('/master/upload-savings-shares-product', [MasterController::class, 'uploadSavingsSharesProduct'])->name('master.upload.savings-shares-product');
 Route::get('/master/export-member-details', [MasterController::class, 'exportMemberDetails'])->name('master.exportMemberDetails');
-Route::get('/master/export-member-details-branch', [MasterController::class, 'exportMemberDetailsBranch'])->name('master.exportMemberDetailsBranch');
 Route::get('/master/export-members-no-regular-savings', [MasterController::class, 'exportMembersNoRegularSavings'])->name('master.exportMembersNoRegularSavings');
-Route::get('/master/export-members-no-regular-savings-branch', [MasterController::class, 'exportMembersNoRegularSavingsBranch'])->name('master.exportMembersNoRegularSavingsBranch');
 
 //Savings
 Route::get('/savings', [SavingsController::class, 'index'])->name('savings');
@@ -227,6 +225,9 @@ Route::get('/branch/special-billing/export', [BranchSpecialBillingController::cl
 // Branch Remittance Routes
 Route::get('/branch/remittance', [BranchRemittanceController::class, 'index'])->name('branch.remittance.index');
 Route::get('/branch/remittance/generate-export', [BranchRemittanceController::class, 'generateExport'])->name('branch.remittance.generateExport');
+
+Route::get('/master/export-member-details-branch', [MasterController::class, 'exportMemberDetailsBranch'])->name('master.exportMemberDetailsBranch');
+Route::get('/master/export-members-no-regular-savings-branch', [MasterController::class, 'exportMembersNoRegularSavingsBranch'])->name('master.exportMembersNoRegularSavingsBranch');
 
 });
 

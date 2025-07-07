@@ -142,7 +142,7 @@
                                             </div>
                                             <div class="card-body">
                                                 <p class="text-muted small">Generate collection file for loans and savings remittance data.</p>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block" onclick="showExportLoading('Loans & Savings')">
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block">
                                                     <i class="fa fa-download"></i> Export Loans & Savings
                                                 </a>
                                             </div>
@@ -155,7 +155,7 @@
                                             </div>
                                             <div class="card-body">
                                                 <p class="text-muted small">Generate collection file for shares remittance data.</p>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block" onclick="showExportLoading('Shares')">
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block">
                                                     <i class="fa fa-download"></i> Export Shares
                                                 </a>
                                             </div>
