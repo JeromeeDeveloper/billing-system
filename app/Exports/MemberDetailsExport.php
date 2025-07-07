@@ -28,8 +28,8 @@ class MemberDetailsExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             'Branch', 'CID', 'Emp ID', 'First Name', 'Last Name', 'Address', 'Birth Date', 'Date Registered', 'Gender',
-            'Customer Type', 'Customer Classification', 'Occupation', 'Industry', 'Area Officer', 'Area', 'Member Tagging',
-            'Status'
+            'Customer Type', 'Customer Classification', 'Occupation', 'Industry', 'Area Officer', 'Area', 'Member Tagging'
+
         ];
     }
 
@@ -61,7 +61,7 @@ class MemberDetailsExport implements FromCollection, WithHeadings, WithMapping
             $member->area_officer,
             $member->area,
             $member->member_tagging,
-            $member->status,
+          
         ];
     }
 }

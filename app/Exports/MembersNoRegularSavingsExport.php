@@ -57,8 +57,8 @@ class MembersNoRegularSavingsExport implements FromCollection, WithHeadings, Wit
             'Last Name',
 
             'Member Tagging',
-            'Status',
-            'Account Status',
+
+
 
 
             'Savings Product Types'
@@ -84,8 +84,8 @@ class MembersNoRegularSavingsExport implements FromCollection, WithHeadings, Wit
             $member->lname ?? '',
 
             $member->member_tagging ?? '',
-            $member->status ?? '',
-            $member->account_status ?? '',
+
+        
 
             $savingsProductTypes
         ];

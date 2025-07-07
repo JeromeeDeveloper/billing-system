@@ -160,10 +160,10 @@
                                                                 data-toggle="modal" data-target="#postPaymentModal{{ $member->id }}">
                                                                 <i class="fa fa-money-bill"></i> Post Payment
                                                             </button>
-                                                            <button type="button" class="btn btn-primary btn-sm mb-2 mb-md-0 mr-md-2 w-100" style="min-width: 120px;"
+                                                            {{-- <button type="button" class="btn btn-primary btn-sm mb-2 mb-md-0 mr-md-2 w-100" style="min-width: 120px;"
                                                                 data-toggle="modal" data-target="#editBalanceModal{{ $member->id }}">
                                                                 <i class="fa fa-edit"></i> Edit Balance
-                                                            </button>
+                                                            </button> --}}
                                                             <button type="button" class="btn btn-info btn-sm w-100" style="min-width: 120px;"
                                                                 data-toggle="modal" data-target="#viewModal{{ $member->id }}">
                                                                 <i class="fa fa-eye"></i> View
