@@ -25,7 +25,7 @@ class BillingExport implements WithMultipleSheets
             $userBillingPeriod = \Illuminate\Support\Facades\Auth::user()->billing_period ?? now()->format('Y-m-01');
             $this->billingPeriod = \Carbon\Carbon::parse($userBillingPeriod)->format('Y-m');
         }
-        
+
         // Debug: Log the billing period being used
         \Illuminate\Support\Facades\Log::info('BillingExport - Billing Period: ' . $this->billingPeriod);
     }
@@ -85,25 +85,25 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
     public function collection()
     {
         \Illuminate\Support\Facades\Log::info('BillingExport - Starting collection with billing period: ' . $this->billingPeriod);
-        
+
         // Step 1: Check total members
         $totalMembers = Member::count();
         \Illuminate\Support\Facades\Log::info('BillingExport - Total members in database: ' . $totalMembers);
-        
+
         // Step 2: Check members with loan balance > 0
         $membersWithLoanBalance = Member::where('loan_balance', '>', 0)->count();
         \Illuminate\Support\Facades\Log::info('BillingExport - Members with loan_balance > 0: ' . $membersWithLoanBalance);
-        
+
         // Step 3: Check members with loan product members
         $membersWithLoanProducts = Member::whereHas('loanProductMembers')->count();
         \Illuminate\Support\Facades\Log::info('BillingExport - Members with loan product members: ' . $membersWithLoanProducts);
-        
+
         // Step 4: Check members with loan forecasts in billing period
         $membersWithLoanForecasts = Member::whereHas('loanForecasts', function ($query) {
             $query->where('billing_period', $this->billingPeriod);
         })->count();
         \Illuminate\Support\Facades\Log::info('BillingExport - Members with loan forecasts in billing period: ' . $membersWithLoanForecasts);
-        
+
         // Step 5: Check members with loan forecasts that have amortization_due_date in billing period
         $membersWithDueDate = Member::whereHas('loanForecasts', function ($query) {
             $query->where('billing_period', $this->billingPeriod)
@@ -113,39 +113,39 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
                   });
         })->count();
         \Illuminate\Support\Facades\Log::info('BillingExport - Members with amortization_due_date in billing period: ' . $membersWithDueDate);
-        
+
         // Debug: Check what amortization_due_date values exist
         $sampleLoanForecasts = \App\Models\LoanForecast::select('id', 'member_id', 'loan_acct_no', 'billing_period', 'amortization_due_date')
             ->where('billing_period', $this->billingPeriod)
             ->limit(10)
             ->get();
-            
+
         \Illuminate\Support\Facades\Log::info('BillingExport - Sample loan forecasts in billing period: ' . $sampleLoanForecasts->toJson());
-        
+
         // Debug: Check all unique amortization_due_date values
         $uniqueDueDates = \App\Models\LoanForecast::whereNotNull('amortization_due_date')
             ->selectRaw('DISTINCT amortization_due_date, DATE_FORMAT(amortization_due_date, "%Y-%m") as month_year')
             ->limit(20)
             ->get();
-            
+
         \Illuminate\Support\Facades\Log::info('BillingExport - Sample unique amortization_due_date values: ' . $uniqueDueDates->toJson());
-        
+
         // Debug: Check what billing_period values exist in loan_forecast
         $uniqueBillingPeriods = \App\Models\LoanForecast::selectRaw('DISTINCT billing_period')
             ->whereNotNull('billing_period')
             ->limit(20)
             ->get();
-            
+
         \Illuminate\Support\Facades\Log::info('BillingExport - Unique billing_period values in loan_forecast: ' . $uniqueBillingPeriods->toJson());
-        
+
         // Debug: Check loan forecasts with amortization_due_date in July 2025
         $julyLoanForecasts = \App\Models\LoanForecast::select('id', 'member_id', 'loan_acct_no', 'billing_period', 'amortization_due_date')
             ->whereRaw("DATE_FORMAT(amortization_due_date, '%Y-%m') = ?", [$this->billingPeriod])
             ->limit(10)
             ->get();
-            
+
         \Illuminate\Support\Facades\Log::info('BillingExport - Loan forecasts with amortization_due_date in July 2025: ' . $julyLoanForecasts->toJson());
-        
+
         // Step 6: Check account status filter
         $membersWithValidStatus = Member::where(function ($query) {
             $query->where('account_status', 'deduction')
@@ -158,7 +158,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
                 });
         })->count();
         \Illuminate\Support\Facades\Log::info('BillingExport - Members with valid account status: ' . $membersWithValidStatus);
-        
+
         $members = Member::where(function ($query) {
             $query->where('account_status', 'deduction')
                 ->orWhere(function ($query) {
@@ -172,19 +172,19 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
             ->whereHas('loanForecasts', function ($query) {
                 $query->where(function($q) {
                     $q->whereNull('amortization_due_date')
-                      ->orWhereRaw("DATE_FORMAT(amortization_due_date, '%Y-%m') = ?", [$this->billingPeriod]);
+                      ->orWhereRaw("amortization_due_date <= ?", [\Carbon\Carbon::parse($this->billingPeriod . '-01')->endOfMonth()->toDateString()]);
                 });
             })
             ->whereHas('loanProductMembers') // Include members who have at least one registered loan product
             ->where('loan_balance', '>', 0) // Only include members with loan balance greater than 0
             ->with(['loanForecasts', 'loanProductMembers.loanProduct'])
             ->get();
-            
+
         \Illuminate\Support\Facades\Log::info('BillingExport - Found ' . $members->count() . ' members after all filters');
 
         return $members->map(function ($member) {
             \Illuminate\Support\Facades\Log::info('Processing member: ' . $member->id . ' - ' . $member->fname . ' ' . $member->lname);
-            
+
             // Debug: Show member's loan product memberships
             $loanProductMemberships = $member->loanProductMembers->map(function($lpm) {
                 return [
@@ -194,7 +194,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
                 ];
             });
             \Illuminate\Support\Facades\Log::info('Member loan product memberships: ' . $loanProductMemberships->toJson());
-            
+
             // Debug: Show member's loan forecasts
             $loanForecastsDebug = $member->loanForecasts->map(function($lf) {
                 $productCode = explode('-', $lf->loan_acct_no)[2] ?? null;
@@ -207,7 +207,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
                 ];
             });
             \Illuminate\Support\Facades\Log::info('Member loan forecasts: ' . $loanForecastsDebug->toJson());
-            
+
             $forecast = $member->loanForecasts->first();
 
             // Calculate amortization as sum of total_due for all loans except those marked as 'special'
@@ -217,24 +217,16 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
             // Get all loan forecasts for this member
             foreach ($member->loanForecasts as $loanForecast) {
                 \Illuminate\Support\Facades\Log::info('Processing loan forecast: ' . $loanForecast->loan_acct_no . ' for member: ' . $member->id);
-                
-                // Check if this loan forecast is due in the current billing period
-                $isDueInBillingPeriod = true;
+
+                // Check if this loan forecast is due on or before the end of the billing period
+                $isDue = true;
                 if ($loanForecast->amortization_due_date) {
-                    $dueDateMonth = \Carbon\Carbon::parse($loanForecast->amortization_due_date)->format('Y-m');
-                    $isDueInBillingPeriod = ($dueDateMonth === $this->billingPeriod);
-                    
-                    \Illuminate\Support\Facades\Log::info('Loan Forecast Debug - Member: ' . $member->id . 
-                        ', Loan: ' . $loanForecast->loan_acct_no . 
-                        ', Due Date: ' . $loanForecast->amortization_due_date . 
-                        ', Due Month: ' . $dueDateMonth . 
-                        ', Billing Period: ' . $this->billingPeriod . 
-                        ', Is Due: ' . ($isDueInBillingPeriod ? 'YES' : 'NO'));
+                    $dueDate = \Carbon\Carbon::parse($loanForecast->amortization_due_date);
+                    $billingEnd = \Carbon\Carbon::parse($this->billingPeriod . '-01')->endOfMonth();
+                    $isDue = $dueDate->lte($billingEnd);
                 }
-                
-                // Skip if not due in current billing period
-                if (!$isDueInBillingPeriod) {
-                    \Illuminate\Support\Facades\Log::info('Skipping loan forecast - not due in billing period');
+                if (!$isDue) {
+                    \Illuminate\Support\Facades\Log::info('Skipping loan forecast - not due on or before billing period');
                     continue;
                 }
 
@@ -257,7 +249,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
                 }
                 // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
                 $productCode = explode('-', $loanForecast->loan_acct_no)[2] ?? null;
-                
+
                 \Illuminate\Support\Facades\Log::info('Product code extracted: ' . $productCode . ' from loan: ' . $loanForecast->loan_acct_no);
 
                 if ($productCode) {
@@ -275,7 +267,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
                             $query->where('product_code', $productCode);
                         })
                         ->exists();
-                        
+
                     \Illuminate\Support\Facades\Log::info('Product checks - Has Special: ' . ($hasSpecialProduct ? 'YES' : 'NO') . ', Has Registered: ' . ($hasRegisteredProduct ? 'YES' : 'NO'));
 
                     // Only include loans that have registered products and are not marked as 'special'

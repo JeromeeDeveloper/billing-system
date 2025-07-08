@@ -42,8 +42,12 @@ class AtmController extends Controller
             })
             ->when($request->filled('cid'), function ($query) use ($request) {
                 $query->where('cid', 'like', '%' . $request->cid . '%');
-            })
-            ->whereHas('atmPayments');
+            });
+
+        // Only filter by atmPayments if no search is being performed
+        if (!$request->filled('name') && !$request->filled('emp_id') && !$request->filled('cid')) {
+            $query->whereHas('atmPayments');
+        }
 
         $members = $query->paginate(10);
 

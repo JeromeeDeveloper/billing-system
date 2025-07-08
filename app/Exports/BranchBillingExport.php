@@ -95,7 +95,7 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
             ->whereHas('loanForecasts', function ($query) {
                 $query->where(function($q) {
                     $q->whereNull('amortization_due_date')
-                      ->orWhereRaw("DATE_FORMAT(amortization_due_date, '%Y-%m') = ?", [$this->billingPeriod]);
+                      ->orWhereRaw("amortization_due_date <= ?", [\Carbon\Carbon::parse($this->billingPeriod . '-01')->endOfMonth()->toDateString()]);
                 });
             })
             ->where('loan_balance', '>', 0)
