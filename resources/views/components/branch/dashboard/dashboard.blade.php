@@ -201,30 +201,25 @@
                                     </ul>
                                 </div>
                                 <div class="row">
-                                    <div class="col-md-3 mb-3">
-                                        <a href="{{ route('branch.atm.export.list-of-profile') }}" class="btn btn-success btn-block">
-                                            <i class="fas fa-file-excel me-2"></i> Export List of Profile
-                                        </a>
+                                    <div class="col-md-12">
+                                      <a href="{{ route('branch.atm.export.list-of-profile') }}" class="btn btn-success btn-block w-100 mb-2">
+                                        <i class="fas fa-file-excel me-2"></i> Export List of Profile
+                                      </a>
+                                      <a href="{{ route('branch.atm.export.remittance-report-consolidated') }}" class="btn btn-primary btn-block w-100 mb-2">
+                                        <i class="fas fa-file-excel me-2"></i> Export Remittance Report Consolidated
+                                      </a>
+                                      <a href="{{ route('branch.atm.export.remittance-report-per-branch') }}" class="btn btn-info btn-block w-100 mb-2">
+                                        <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch
+                                      </a>
+                                      <a href="{{ route('branch.atm.export.remittance-report-per-branch-member') }}" class="btn btn-warning btn-block w-100">
+                                        <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch Member
+                                      </a>
                                     </div>
-                                    <div class="col-md-3 mb-3">
-                                        <a href="{{ route('branch.atm.export.remittance-report-consolidated') }}" class="btn btn-primary btn-block">
-                                            <i class="fas fa-file-excel me-2"></i> Export Remittance Report Consolidated
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <a href="{{ route('branch.atm.export.remittance-report-per-branch') }}" class="btn btn-info btn-block">
-                                            <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch
-                                        </a>
-                                    </div>
-                                    <div class="col-md-3 mb-3">
-                                        <a href="{{ route('branch.atm.export.remittance-report-per-branch-member') }}" class="btn btn-warning btn-block">
-                                            <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch Member
-                                        </a>
-                                    </div>
-                                </div>
+                                  </div>
+
                             </div>
                         </div>
-                        
+
                     </div>
                 </div>
                 <!-- Branch Report Generation Section -->

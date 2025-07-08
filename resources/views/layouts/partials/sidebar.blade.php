@@ -242,3 +242,39 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // PGB Members Upload
+    const pgbForm = document.querySelector('#pgbMembersUploadModal form');
+    if (pgbForm) {
+        pgbForm.addEventListener('submit', function (e) {
+            Swal.fire({
+                title: 'Uploading... Please wait',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+        });
+    }
+
+    // Savings & Shares Deduction Upload
+    const savingsSharesForm = document.querySelector('#savingsSharesUploadModal form');
+    if (savingsSharesForm) {
+        savingsSharesForm.addEventListener('submit', function (e) {
+            Swal.fire({
+                title: 'Uploading... Please wait',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+        });
+    }
+
+    // Optionally, handle server response via flash session or AJAX for feedback
+    // Example for Laravel flash session (if used):
+    @if(session('success'))
+        Swal.fire('Success', @json(session('success')), 'success');
+    @elseif(session('error'))
+        Swal.fire('Error', @json(session('error')), 'error');
+    @endif
+});
+</script>

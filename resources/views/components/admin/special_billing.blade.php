@@ -44,7 +44,7 @@
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> Special Billing Flow & User Guide (Admin)</h5>
                                     <ol class="mb-2">
-                                        <li><strong>Upload:</strong> Admin uploads special billing files (forecast and detail).</li>
+                                        <li><strong>Upload:</strong> Admin uploads special billing files (forecast and Loan).</li>
                                         <li><strong>Processing:</strong> System processes only loans with special billing type and calculates amortization.</li>
                                         <li><strong>Review & Search:</strong> Admin can search, review, and export special billing data for all branches.</li>
                                         <li><strong>Export:</strong> Export the processed special billing data as needed.</li>
@@ -78,10 +78,10 @@
                                             <input type="file" class="custom-file-input" name="forecast_file" id="forecast_file" accept=".xlsx,.xls,.csv" required>
                                             <label class="custom-file-label" for="forecast_file">Choose forecast file</label>
                                         </div>
-                                        <label class="font-weight-bold">Detail File</label>
+                                        <label class="font-weight-bold">Loan File</label>
                                         <div class="custom-file">
                                             <input type="file" class="custom-file-input" name="detail_file" id="detail_file" accept=".xlsx,.xls,.csv" required>
-                                            <label class="custom-file-label" for="detail_file">Choose detail file</label>
+                                            <label class="custom-file-label" for="detail_file">Choose Loan file</label>
                                         </div>
                                     </div>
                                     <button type="submit" class="btn btn-info">
@@ -168,13 +168,12 @@
     <script src="{{ asset('js/quixnav-init.js') }}"></script>
     <script src="{{ asset('js/custom.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <!-- File Input Display Script -->
     <script>
         // Update file input labels to show selected filenames
         document.addEventListener('DOMContentLoaded', function() {
             const forecastFile = document.getElementById('forecast_file');
             const detailFile = document.getElementById('detail_file');
+            const uploadForm = document.querySelector('form[action="{{ route('special-billing.import') }}"]');
 
             forecastFile.addEventListener('change', function() {
                 const fileName = this.files[0] ? this.files[0].name : 'Choose forecast file';
@@ -185,6 +184,17 @@
                 const fileName = this.files[0] ? this.files[0].name : 'Choose detail file';
                 this.nextElementSibling.textContent = fileName;
             });
+
+            // Show loading swal on upload form submit
+            if (uploadForm) {
+                uploadForm.addEventListener('submit', function(e) {
+                    Swal.fire({
+                        title: 'Uploading... Please wait',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                });
+            }
         });
     </script>
 
@@ -193,7 +203,7 @@
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
-                text: '{{ session('success') }}',
+                text: @json(session('success')),
                 showConfirmButton: false,
                 timer: 1500
             });
@@ -204,7 +214,8 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
-                text: '{{ session('error') }}'
+                text: @json(session('error')),
+                showConfirmButton: true
             });
         </script>
     @endif
