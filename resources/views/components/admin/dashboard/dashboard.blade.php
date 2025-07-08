@@ -3,6 +3,9 @@
 
 @include('layouts.partials.head')
 
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <body>
 
     <div id="preloader">
@@ -51,8 +54,8 @@
                         <div class="card">
                             <div class="stat-widget-two card-body">
                                 <div class="stat-content">
-                                    <div class="stat-text">Active Loans</div>
-                                    <div class="stat-digit">{{ number_format($totalActiveLoans) }}</div>
+                                    <div class="stat-text">Total Branches</div>
+                                    <div class="stat-digit">{{ number_format($totalBranches ?? 0) }}</div>
                                 </div>
                                 <div class="progress">
                                     <div class="progress-bar progress-bar-primary w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
@@ -64,8 +67,8 @@
                         <div class="card">
                             <div class="stat-widget-two card-body">
                                 <div class="stat-content">
-                                    <div class="stat-text">Total Loan Amount</div>
-                                    <div class="stat-digit">₱{{ number_format($totalLoanAmount, 2) }}</div>
+                                    <div class="stat-text">Active Loans</div>
+                                    <div class="stat-digit">{{ number_format($totalActiveLoans ?? 0) }}</div>
                                 </div>
                                 <div class="progress">
                                     <div class="progress-bar progress-bar-warning w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
@@ -77,8 +80,8 @@
                         <div class="card">
                             <div class="stat-widget-two card-body">
                                 <div class="stat-content">
-                                    <div class="stat-text">Total Savings</div>
-                                    <div class="stat-digit">₱{{ number_format($totalSavings, 2) }}</div>
+                                    <div class="stat-text">Count of Loan Products</div>
+                                    <div class="stat-digit">{{ number_format($totalLoanProducts) }}</div>
                                 </div>
                                 <div class="progress">
                                     <div class="progress-bar progress-bar-danger w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
@@ -91,18 +94,84 @@
                     <div class="col-xl-8 col-lg-8 col-md-8">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title">Monthly Loan Overview</h4>
+                                <h4 class="card-title">Members Overview</h4>
                             </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-xl-12 col-lg-8">
-                                        <div id="morris-bar-chart"></div>
+                                        <div id="branch-members-chart">
+                                            <div class="row">
+                                                @foreach($branches as $index => $branch)
+                                                    @php
+                                                        $memberCount = $memberCounts[$index];
+                                                        $percentage = $totalMembers > 0 ? round(($memberCount / $totalMembers) * 100, 1) : 0;
+                                                        $colors = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#20c997'];
+                                                        $color = $colors[$index % count($colors)];
+                                                    @endphp
+                                                    <div class="col-lg-6 col-md-6 mb-4">
+                                                        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid {{ $color }} !important;">
+                                                            <div class="card-body p-4">
+                                                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                                                    <div>
+                                                                        <h6 class="card-title mb-1 text-dark font-weight-bold">{{ $branch }}</h6>
+                                                                        <small class="text-muted">Branch</small>
+                                                                    </div>
+                                                                    <div class="text-right">
+                                                                        <h3 class="mb-0 font-weight-bold" style="color: {{ $color }}">{{ number_format($memberCount) }}</h3>
+                                                                        <small class="text-muted">Members</small>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="progress mb-2" style="height: 8px; background-color: #f8f9fa;">
+                                                                    <div class="progress-bar" role="progressbar"
+                                                                         style="width: {{ $percentage }}%; background-color: {{ $color }};"
+                                                                         aria-valuenow="{{ $percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <small class="text-muted">{{ $percentage }}% of total</small>
+                                                                    @if($memberCount > 0)
+                                                                        <span class="badge badge-pill" style="background-color: {{ $color }}; color: white;">
+                                                                            {{ $memberCount > 1000 ? 'Large' : ($memberCount > 100 ? 'Medium' : 'Small') }}
+                                                                        </span>
+                                                                    @else
+                                                                        <span class="badge badge-pill badge-secondary">No Members</span>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+
+                                            <!-- Summary Card -->
+                                            <div class="row mt-4">
+                                                <div class="col-12">
+                                                    <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                                        <div class="card-body p-4 text-white">
+                                                            <div class="row align-items-center">
+                                                                <div class="col-md-8">
+                                                                    <h4 class="mb-2 font-weight-bold">Total Overview</h4>
+                                                                    <p class="mb-0 opacity-75">Across all {{ count($branches) }} branches</p>
+                                                                </div>
+                                                                <div class="col-md-4 text-right">
+                                                                    <h2 class="mb-0 font-weight-bold">{{ number_format($totalMembers) }}</h2>
+                                                                    <small class="opacity-75">Total Members</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-xl-4 col-lg-4 col-md-4">
+
                         <div class="card">
                             <div class="card-body text-center">
                                 <div class="m-t-10">
@@ -113,19 +182,14 @@
                                     <i class="ti-control-shuffle pa"></i>
                                 </div>
                                 <ul class="widget-line-list m-b-15">
-                                    <li class="border-right">{{ $deductionPercentage }}% <br><span class="text-success"><i
-                                                class="ti-hand-point-up"></i> Deduction</span></li>
-                                    <li>{{ $nonDeductionPercentage }}% <br><span class="text-danger"><i
-                                                class="ti-hand-point-down"></i>Non-Deduction</span></li>
+                                    <li class="border-right">{{ $pgbPercentage }}% <br><span class="text-success"><i
+                                                class="ti-hand-point-up"></i> PGB</span></li>
+                                    <li>{{ $newPercentage }}% <br><span class="text-danger"><i
+                                                class="ti-hand-point-down"></i>New</span></li>
                                 </ul>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Report Generation Section -->
-                <div class="row">
-                    <div class="col-12">
                         <div class="card">
                             <div class="card-header">
                                 <h4 class="card-title">Report Center</h4>
@@ -168,6 +232,55 @@
                                 </div>
                             </div>
                         </div>
+                        
+                    </div>
+                </div>
+
+                <!-- Report Generation Section -->
+                <div class="row">
+                    <div class="col-12">
+                        {{-- <div class="card">
+                            <div class="card-header">
+                                <h4 class="card-title">Report Center</h4>
+                            </div>
+                            <div class="card-body">
+                                <!-- Information Note -->
+                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h5><i class="fa fa-info-circle"></i> Available Reports</h5>
+                                    <ul class="mb-2">
+                                        <li><strong>List of Profile:</strong> Export comprehensive member profile data</li>
+                                        <li><strong>Remittance Report Consolidated:</strong> Consolidated remittance data across all branches</li>
+                                        <li><strong>Remittance Report Per Branch:</strong> Branch-specific remittance reports</li>
+                                        <li><strong>Remittance Report Per Branch Member:</strong> Export records of all members per branch</li>
+                                    </ul>
+                                    <p class="mb-0"><small><strong>Note:</strong> All reports are generated for the current billing period and include the latest data.</small></p>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <a href="{{ route('atm.export.list-of-profile') }}" class="btn btn-success btn-block">
+                                            <i class="fas fa-file-excel me-2"></i> Export List of Profile
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <a href="{{ route('atm.export.remittance-report-consolidated') }}" class="btn btn-primary btn-block">
+                                            <i class="fas fa-file-excel me-2"></i> Export Remittance Report Consolidated
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <a href="{{ route('atm.export.remittance-report-per-branch') }}" class="btn btn-info btn-block">
+                                            <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <a href="{{ route('atm.export.remittance-report-per-branch-member') }}" class="btn btn-warning btn-block">
+                                            <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch Member
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>
@@ -237,35 +350,17 @@
     </script>
     @endif
 
-    @push('scripts')
+                @push('scripts')
     <script>
-        // Morris bar chart
-        Morris.Bar({
-            element: 'morris-bar-chart',
-            data: [
-                @foreach($months as $index => $month)
-                {
-                    y: '{{ $month }}',
-                    a: {{ $loanAmounts[$index] ?? 0 }},
-                    b: {{ $loanCounts[$index] ?? 0 }}
-                }{{ !$loop->last ? ',' : '' }}
-                @endforeach
-            ],
-            xkey: 'y',
-            ykeys: ['a', 'b'],
-            labels: ['Loan Amount', 'Number of Loans'],
-            barColors: ['#343957', '#5873FE'],
-            hideHover: 'auto',
-            gridLineColor: '#eef0f2',
-            resize: true
-        });
-
-        $('#info-circle-card').circleProgress({
-            value: {{ $deductionPercentage / 100 }},
-            size: 100,
-            fill: {
-                gradient: ["#a389d5"]
-            }
+        // Initialize circle progress for member status distribution
+        $(document).ready(function() {
+            $('#info-circle-card').circleProgress({
+                value: {{ $pgbPercentage / 100 }},
+                size: 100,
+                fill: {
+                    gradient: ["#a389d5"]
+                }
+            });
         });
     </script>
     @endpush

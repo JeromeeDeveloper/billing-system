@@ -7,6 +7,8 @@ use App\Models\LoanForecast;
 use App\Models\MasterList;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\Branch;
+use App\Models\LoanProduct;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -31,70 +33,64 @@ class DashboardController extends Controller
         // Get total members
         $totalMembers = Member::count();
 
+        // Get total branches
+        $totalBranches = Branch::count();
+
         // Get total active loans
         $totalActiveLoans = LoanForecast::where('billing_period', $billingPeriod)
             ->where('maturity_date', '>=', now())
             ->count();
 
-        // Get total loan amount due
-        $totalLoanAmount = LoanForecast::where('billing_period', $billingPeriod)
-            ->sum('total_due');
+        // Get total loan products count
+        $totalLoanProducts = LoanProduct::count();
 
-        // Get total savings balance
-        $totalSavings = Member::sum('savings_balance');
-
-        // Get monthly loan statistics for the chart
-        $monthlyStats = LoanForecast::where('billing_period', $billingPeriod)
-            ->select(
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw('SUM(total_due) as total_amount'),
-                DB::raw('COUNT(*) as loan_count')
-            )
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+        // Get branch-based member statistics for the chart
+        $branchStats = Branch::withCount('members')->get();
 
         // Format data for the chart
-        $months = [];
-        $loanAmounts = [];
-        $loanCounts = [];
+        $branches = [];
+        $memberCounts = [];
 
-        foreach ($monthlyStats as $stat) {
-            $months[] = Carbon::create()->month($stat->month)->format('M');
-            $loanAmounts[] = $stat->total_amount;
-            $loanCounts[] = $stat->loan_count;
+        foreach ($branchStats as $branch) {
+            $branches[] = $branch->name;
+            $memberCounts[] = $branch->members_count;
         }
 
-        // Get member status distribution
-        $memberStatusStats = MasterList::where('billing_period', $billingPeriod)
-            ->select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
+        // Debug: Log the data being generated for admin dashboard
+        \Illuminate\Support\Facades\Log::info('Admin Dashboard Data - Branches:', $branches);
+        \Illuminate\Support\Facades\Log::info('Admin Dashboard Data - Member Counts:', $memberCounts);
+        \Illuminate\Support\Facades\Log::info('Admin Dashboard Data - Branch Stats Count:', ['count' => count($branchStats)]);
+        \Illuminate\Support\Facades\Log::info('Admin Dashboard Data - Total Branches:', ['count' => $totalBranches]);
+
+        // Get member tagging distribution (PGB vs New)
+        $memberTaggingStats = Member::select('member_tagging', DB::raw('count(*) as count'))
+            ->whereNotNull('member_tagging')
+            ->groupBy('member_tagging')
             ->get();
 
-        // Calculate percentages
-        $totalStatusCount = $memberStatusStats->sum('count');
-        $deductionPercentage = 0;
-        $nonDeductionPercentage = 0;
+        // Calculate percentages for PGB and New
+        $totalTaggedMembers = $memberTaggingStats->sum('count');
+        $pgbPercentage = 0;
+        $newPercentage = 0;
 
-        foreach ($memberStatusStats as $stat) {
-            if ($stat->status === 'deduction') {
-                $deductionPercentage = round(($stat->count / $totalStatusCount) * 100);
-            } else if ($stat->status === 'non-deduction') {
-                $nonDeductionPercentage = round(($stat->count / $totalStatusCount) * 100);
+        foreach ($memberTaggingStats as $stat) {
+            if ($stat->member_tagging === 'PGB') {
+                $pgbPercentage = round(($stat->count / $totalTaggedMembers) * 100);
+            } else if ($stat->member_tagging === 'New') {
+                $newPercentage = round(($stat->count / $totalTaggedMembers) * 100);
             }
         }
 
         return view('components.admin.dashboard.dashboard', compact(
             'showPrompt',
             'totalMembers',
+            'totalBranches',
             'totalActiveLoans',
-            'totalLoanAmount',
-            'totalSavings',
-            'months',
-            'loanAmounts',
-            'loanCounts',
-            'deductionPercentage',
-            'nonDeductionPercentage'
+            'totalLoanProducts',
+            'branches',
+            'memberCounts',
+            'pgbPercentage',
+            'newPercentage'
         ));
     }
 
@@ -117,6 +113,9 @@ class DashboardController extends Controller
         // Get branch-specific statistics
         $totalMembers = Member::where('branch_id', $branchId)->count();
 
+        // Get total branches
+        $totalBranches = Branch::count();
+
         $totalActiveLoans = LoanForecast::whereHas('member', function($query) use ($branchId) {
             $query->where('branch_id', $branchId);
         })
@@ -133,64 +132,55 @@ class DashboardController extends Controller
         $totalSavings = Member::where('branch_id', $branchId)
             ->sum('savings_balance');
 
-        // Get monthly loan statistics for the branch
-        $monthlyStats = LoanForecast::whereHas('member', function($query) use ($branchId) {
-            $query->where('branch_id', $branchId);
-        })
-        ->where('billing_period', $billingPeriod)
-        ->select(
-            DB::raw('MONTH(created_at) as month'),
-            DB::raw('SUM(total_due) as total_amount'),
-            DB::raw('COUNT(*) as loan_count')
-        )
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get();
+        // Get branch-based member statistics for the chart (for branch dashboard, show all branches)
+        $branchStats = Branch::withCount('members')->get();
 
         // Format data for the chart
-        $months = [];
-        $loanAmounts = [];
-        $loanCounts = [];
+        $branches = [];
+        $memberCounts = [];
 
-        foreach ($monthlyStats as $stat) {
-            $months[] = Carbon::create()->month($stat->month)->format('M');
-            $loanAmounts[] = $stat->total_amount;
-            $loanCounts[] = $stat->loan_count;
+        foreach ($branchStats as $branch) {
+            $branches[] = $branch->name;
+            $memberCounts[] = $branch->members_count;
         }
 
-        // Get member status distribution for the branch
-        $memberStatusStats = MasterList::whereHas('member', function($query) use ($branchId) {
-            $query->where('branch_id', $branchId);
-        })
-        ->where('billing_period', $billingPeriod)
-        ->select('status', DB::raw('count(*) as count'))
-        ->groupBy('status')
-        ->get();
+        // Debug: Log the data being generated for branch dashboard
+        \Illuminate\Support\Facades\Log::info('Branch Dashboard Data - Branches:', $branches);
+        \Illuminate\Support\Facades\Log::info('Branch Dashboard Data - Member Counts:', $memberCounts);
+        \Illuminate\Support\Facades\Log::info('Branch Dashboard Data - Branch Stats Count:', ['count' => count($branchStats)]);
+        \Illuminate\Support\Facades\Log::info('Branch Dashboard Data - Total Branches:', ['count' => $totalBranches]);
 
-        // Calculate percentages
-        $totalStatusCount = $memberStatusStats->sum('count');
-        $deductionPercentage = 0;
-        $nonDeductionPercentage = 0;
+        // Get member tagging distribution for the branch (PGB vs New)
+        $memberTaggingStats = Member::where('branch_id', $branchId)
+            ->select('member_tagging', DB::raw('count(*) as count'))
+            ->whereNotNull('member_tagging')
+            ->groupBy('member_tagging')
+            ->get();
 
-        foreach ($memberStatusStats as $stat) {
-            if ($stat->status === 'deduction') {
-                $deductionPercentage = round(($stat->count / $totalStatusCount) * 100);
-            } else if ($stat->status === 'non-deduction') {
-                $nonDeductionPercentage = round(($stat->count / $totalStatusCount) * 100);
+        // Calculate percentages for PGB and New
+        $totalTaggedMembers = $memberTaggingStats->sum('count');
+        $pgbPercentage = 0;
+        $newPercentage = 0;
+
+        foreach ($memberTaggingStats as $stat) {
+            if ($stat->member_tagging === 'PGB') {
+                $pgbPercentage = round(($stat->count / $totalTaggedMembers) * 100);
+            } else if ($stat->member_tagging === 'New') {
+                $newPercentage = round(($stat->count / $totalTaggedMembers) * 100);
             }
         }
 
         return view('components.branch.dashboard.dashboard', compact(
             'showPrompt',
             'totalMembers',
+            'totalBranches',
             'totalActiveLoans',
             'totalLoanAmount',
             'totalSavings',
-            'months',
-            'loanAmounts',
-            'loanCounts',
-            'deductionPercentage',
-            'nonDeductionPercentage'
+            'branches',
+            'memberCounts',
+            'pgbPercentage',
+            'newPercentage'
         ));
     }
 

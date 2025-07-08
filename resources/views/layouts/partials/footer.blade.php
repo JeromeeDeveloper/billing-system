@@ -12,7 +12,9 @@
 <script src="{{ asset('vendor/jqvmap/js/jquery.vmap.min.js') }}"></script>
 <script src="{{ asset('vendor/jqvmap/js/jquery.vmap.usa.js') }}"></script>
 <script src="{{ asset('vendor/jquery.counterup/jquery.counterup.min.js') }}"></script>
-<script src="{{ asset('js/dashboard/dashboard-1.js') }}"></script>
 
 {{-- External CDN --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{{-- Stack for additional scripts --}}
+@stack('scripts')
