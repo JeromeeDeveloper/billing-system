@@ -257,26 +257,14 @@ class AtmController extends Controller
 
             // Add remaining amount to Regular Savings if available
             $savingsAccountNumber = null;
+            $savingsAllocation = 0;
             if ($remainingToSavings > 0) {
-                // Debug: Log all savings accounts for this member
-                $allSavings = $member->savings;
-                Log::info("Member {$member->id} has {$allSavings->count()} savings accounts:");
-                foreach ($allSavings as $saving) {
-                    Log::info("- Account: {$saving->account_number}, Product: {$saving->product_name}, Product Code: {$saving->product_code}");
-                }
-
                 // First try to find Regular Savings
                 $regularSavings = $member->savings()
                     ->whereHas('savingProduct', function($q) {
                         $q->where('product_type', 'regular');
                     })
                     ->first();
-
-                // If not found, try to find any savings account
-                if (!$regularSavings) {
-                    $regularSavings = $member->savings()->first();
-                    Log::info("Member {$member->id} has no Regular Savings, using first available savings account");
-                }
 
                 if ($regularSavings) {
                     // Update the amount_to_deduct field in savings
@@ -285,10 +273,11 @@ class AtmController extends Controller
                     ]);
 
                     $savingsAccountNumber = $regularSavings->account_number;
+                    $savingsAllocation = $remainingToSavings;
                     Log::info("Added remaining amount {$remainingToSavings} to savings account {$savingsAccountNumber} for member {$member->id}");
                     Log::info("Savings account details: Product: {$regularSavings->product_name}, Account: {$regularSavings->account_number}");
                 } else {
-                    Log::warning("Member {$member->id} has no savings accounts at all for remaining amount {$remainingToSavings}");
+                    Log::info("Member {$member->id} has no Regular Savings. Excess will not be allocated to any savings account.");
                 }
             } else {
                 Log::info("No remaining amount to allocate to savings for member {$member->id}");
@@ -299,7 +288,7 @@ class AtmController extends Controller
                 'member_id' => $member->id,
                 'withdrawal_amount' => $withdrawalAmount,
                 'total_loan_payment' => $totalLoanPayment,
-                'savings_allocation' => $remainingToSavings,
+                'savings_allocation' => $savingsAllocation,
                 'savings_account_number' => $savingsAccountNumber,
                 'payment_date' => $validated['payment_date'],
                 'reference_number' => $validated['payment_reference'],
