@@ -94,12 +94,12 @@
                                             </form>
                                         @endif
 
-                                        <a href="{{ route('billing.loan-report.branch') }}" class="btn btn-rounded btn-success text-white me-2">
+                                        {{-- <a href="{{ route('billing.loan-report.branch') }}" class="btn btn-rounded btn-success text-white me-2">
                                             <span class="btn-icon-left text-success">
                                                 <i class="fa fa-chart-line"></i>
                                             </span>
                                             Loan Report
-                                        </a>
+                                        </a> --}}
 
                                         <a href="{{ route('billing.exports.branch') }}" class="btn btn-rounded btn-info text-white ms-2">
                                             <span class="btn-icon-left text-info">

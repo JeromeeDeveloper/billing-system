@@ -101,12 +101,12 @@
 
 
 
-                                        <a href="{{ route('billing.loan-report') }}" class="btn btn-rounded btn-success text-white me-4">
+                                        {{-- <a href="{{ route('billing.loan-report') }}" class="btn btn-rounded btn-success text-white me-4">
                                             <span class="btn-icon-left text-success">
                                                 <i class="fa fa-chart-line"></i>
                                             </span>
                                             Loan Report
-                                        </a>
+                                        </a> --}}
 
                                         <a href="{{ route('billing.members-no-branch') }}" class="btn btn-rounded btn-warning text-white me-4">
                                             <span class="btn-icon-left text-warning">
