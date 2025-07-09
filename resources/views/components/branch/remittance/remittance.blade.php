@@ -230,6 +230,18 @@
                                                         Unmatched Only
                                                     </a>
                                                 </div>
+                                                <div>
+                                                    <form method="GET" class="form-inline">
+                                                        @if(request()->has('filter'))
+                                                            <input type="hidden" name="filter" value="{{ request('filter') }}">
+                                                        @endif
+                                                        <input type="text" name="search" value="{{ request('search') }}" class="form-control mr-2" placeholder="Search by name or emp_id">
+                                                        <button type="submit" class="btn btn-outline-secondary btn-sm">Search</button>
+                                                        @if(request()->has('search') || request()->has('filter'))
+                                                            <a href="{{ route('branch.remittance.index') }}" class="btn btn-outline-warning btn-sm ml-2">Clear</a>
+                                                        @endif
+                                                    </form>
+                                                </div>
                                             </div>
 
                                             <div class="table-responsive">

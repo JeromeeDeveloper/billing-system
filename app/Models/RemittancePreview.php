@@ -20,13 +20,15 @@ class RemittancePreview extends Model
         'status',
         'message',
         'type',
-        'billing_period'
+        'billing_period',
+        'remittance_type'
     ];
 
     protected $casts = [
         'savings' => 'array',
         'loans' => 'decimal:2',
-        'share_amount' => 'decimal:2'
+        'share_amount' => 'decimal:2',
+        'remittance_type' => 'string'
     ];
 
     public function user()

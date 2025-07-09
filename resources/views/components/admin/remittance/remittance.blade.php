@@ -32,6 +32,10 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
         }
+
+        h5.text-center {
+            padding: 18px;
+        }
     </style>
 </head>
 
@@ -82,16 +86,24 @@
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> Remittance Flow & User Guide (Admin)</h5>
                                     <ol class="mb-2">
-                                        <li><strong>Upload:</strong> Admin uploads remittance files for loans/savings and shares.</li>
-                                        <li><strong>Processing:</strong> System matches and processes payments based on prioritization and member data.</li>
-                                        <li><strong>Preview & Export:</strong> Admin can preview, process, and export remittance data for all branches.</li>
-                                        <li><strong>Branch Filtering:</strong> Remittance data is automatically filtered for each branch user.</li>
+                                        <li><strong>Upload:</strong> Admin uploads remittance files for loans/savings
+                                            and shares.</li>
+                                        <li><strong>Processing:</strong> System matches and processes payments based on
+                                            prioritization and member data.</li>
+                                        <li><strong>Preview & Export:</strong> Admin can preview, process, and export
+                                            remittance data for all branches.</li>
+                                        <li><strong>Branch Filtering:</strong> Remittance data is automatically filtered
+                                            for each branch user.</li>
                                     </ol>
                                     <ul class="mb-2">
-                                        <li><strong>File Requirements:</strong> Ensure files meet the required format and headers before uploading.</li>
-                                        <li><strong>History:</strong> View and download previous remittance uploads and exports.</li>
+                                        <li><strong>File Requirements:</strong> Ensure files meet the required format
+                                            and headers before uploading.</li>
+                                        <li><strong>History:</strong> View and download previous remittance uploads and
+                                            exports.</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> Only admin can upload remittance data. Branch users can only export and view data filtered to their branch.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> Only admin can upload remittance
+                                            data. Branch users can only export and view data filtered to their
+                                            branch.</small></p>
                                 </div>
 
                                 @if (session('success'))
@@ -132,17 +144,22 @@
                                 <div class="row">
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">
-                                            <form action="{{ route('document.upload') }}" method="POST" enctype="multipart/form-data" id="installmentForm">
+                                            <form action="{{ route('document.upload') }}" method="POST"
+                                                enctype="multipart/form-data" id="installmentForm">
                                                 @csrf
                                                 <div class="form-group">
-                                                    <label for="remit_installment_file" class="font-weight-bold mb-2">📁 Installment Forecast File</label>
+                                                    <label for="remit_installment_file" class="font-weight-bold mb-2">📁
+                                                        Installment Forecast File</label>
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" id="remit_installment_file" name="file">
-                                                        <label class="custom-file-label" for="remit_installment_file">Choose file...</label>
+                                                        <input type="file" class="custom-file-input"
+                                                            id="remit_installment_file" name="file">
+                                                        <label class="custom-file-label"
+                                                            for="remit_installment_file">Choose file...</label>
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
-                                                    <button type="submit" class="btn btn-primary" id="installmentSubmitBtn">
+                                                    <button type="submit" class="btn btn-primary"
+                                                        id="installmentSubmitBtn">
                                                         <i class="fa fa-upload"></i> Upload Installment File
                                                     </button>
                                                 </div>
@@ -156,7 +173,8 @@
                                                 enctype="multipart/form-data" id="loansSavingsForm">
                                                 @csrf
                                                 <div class="form-group">
-                                                    <label class="font-weight-bold">Upload Savings and Loans Remittance</label>
+                                                    <label class="font-weight-bold">Upload Savings and Loans
+                                                        Remittance</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" name="file"
                                                             id="file" accept=".xlsx,.xls,.csv" required>
@@ -176,16 +194,21 @@
                                                                 </ul>
                                                             </li>
                                                         </ul>
-                                                        <button type="button" class="btn btn-outline-info btn-sm" data-toggle="modal" data-target="#loansSavingsFormatModal">
+                                                        <button type="button" class="btn btn-outline-info btn-sm"
+                                                            data-toggle="modal"
+                                                            data-target="#loansSavingsFormatModal">
                                                             <i class="fa fa-eye"></i> View Expected Format
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <button type="submit" class="btn btn-info btn-block" id="loansSavingsSubmitBtn">
-                                                    <i class="fa fa-upload"></i> Upload and Process Loans & Savings Remittance
+                                                <button type="submit" class="btn btn-info btn-block"
+                                                    id="loansSavingsSubmitBtn">
+                                                    <i class="fa fa-upload"></i> Upload and Process Loans & Savings
+                                                    Remittance
                                                 </button>
 
-                                                <a href="javascript:void(0);" class="btn btn-primary btn-block" onclick="generateExport('loans_savings')">
+                                                <a href="javascript:void(0);" class="btn btn-primary btn-block"
+                                                    onclick="generateExport('loans_savings')">
                                                     Collection file for Loans & Savings
                                                 </a>
 
@@ -195,13 +218,17 @@
 
                                     <div class="col-12 mb-4">
                                         <div class="upload-section">
-                                            <form action="{{ route('remittance.upload.share') }}" method="POST" enctype="multipart/form-data" id="shareForm">
+                                            <form action="{{ route('remittance.upload.share') }}" method="POST"
+                                                enctype="multipart/form-data" id="shareForm">
                                                 @csrf
                                                 <div class="form-group">
                                                     <label class="font-weight-bold">Upload Share Remittance</label>
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" name="file" id="shareFile" accept=".xlsx,.xls,.csv" required>
-                                                        <label class="custom-file-label" for="shareFile">Choose file</label>
+                                                        <input type="file" class="custom-file-input"
+                                                            name="file" id="shareFile" accept=".xlsx,.xls,.csv"
+                                                            required>
+                                                        <label class="custom-file-label" for="shareFile">Choose
+                                                            file</label>
                                                     </div>
                                                     <div class="mt-3">
                                                         <h6 class="text-muted mb-2">File Requirements:</h6>
@@ -215,188 +242,198 @@
                                                                 </ul>
                                                             </li>
                                                         </ul>
-                                                        <button type="button" class="btn btn-outline-info btn-sm" data-toggle="modal" data-target="#sharesFormatModal">
+                                                        <button type="button" class="btn btn-outline-info btn-sm"
+                                                            data-toggle="modal" data-target="#sharesFormatModal">
                                                             <i class="fa fa-eye"></i> View Expected Format
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <button type="submit" class="btn btn-info btn-block" id="shareSubmitBtn">
+                                                <button type="submit" class="btn btn-info btn-block"
+                                                    id="shareSubmitBtn">
                                                     <i class="fa fa-upload"></i> Upload and Process Share Remittance
                                                 </button>
 
-                                                <a href="javascript:void(0);" class="btn btn-primary btn-block" onclick="generateExport('shares')">
+                                                <a href="javascript:void(0);" class="btn btn-primary btn-block"
+                                                    onclick="generateExport('shares')">
                                                     Collection file for Shares
                                                 </a>
                                             </form>
                                         </div>
                                     </div>
 
-                                    <div class="col-12">
-                                        @if (isset($preview) && $preview)
-                                            <div class="mb-3 d-flex justify-content-end">
-                                                <a href="{{ route('remittance.exportPreview') }}" class="btn btn-success">
-                                                    <i class="fa fa-file-excel-o"></i> Export Remittance Preview to Excel
+
+
+                                    {{-- Loans & Savings Remittance Preview --}}
+                                    <div class="row mb-2">
+                                        <div class="col-12">
+                                            <h5 class="text-center">Loans & Savings Remittance Preview</h5>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3 justify-content-between align-items-center">
+                                        <div class="col-12 col-md-7 mb-2 mb-md-0">
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('remittance.index') }}"
+                                                    class="btn {{ !request()->has('loans_filter') ? 'btn-primary' : 'btn-outline-primary' }} mr-2">
+                                                    All Records
+                                                </a>
+                                                <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'matched'])) }}"
+                                                    class="btn {{ request('loans_filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">
+                                                    Matched Only
+                                                </a>
+                                                <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'unmatched'])) }}"
+                                                    class="btn {{ request('loans_filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">
+                                                    Unmatched Only
+                                                </a>
+                                                <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'no_branch'])) }}"
+                                                    class="btn {{ request('loans_filter') === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">
+                                                    No Branch
                                                 </a>
                                             </div>
-                                            <div class="row mb-4">
-                                                <div class="col-md-4">
-                                                    <a href="{{ route('remittance.index', ['filter' => 'matched']) }}"
-                                                        class="text-decoration-none">
-                                                        <div class="card stats-card bg-success-light">
-                                                            <div class="card-body">
-                                                                <div class="media align-items-center">
-                                                                    <div class="media-body mr-3">
-                                                                        <h2 class="text-success">{{ $stats['matched'] ?? 0 }}</h2>
-                                                                        <span class="text-success">Matched Records</span>
-                                                                    </div>
-                                                                    <i class="fa fa-check-circle fa-3x text-success"></i>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <a href="{{ route('remittance.index', ['filter' => 'unmatched']) }}"
-                                                        class="text-decoration-none">
-                                                        <div class="card stats-card bg-danger-light">
-                                                            <div class="card-body">
-                                                                <div class="media align-items-center">
-                                                                    <div class="media-body mr-3">
-                                                                        <h2 class="text-danger">{{ $stats['unmatched'] ?? 0 }}</h2>
-                                                                        <span class="text-danger">Unmatched Records</span>
-                                                                    </div>
-                                                                    <i class="fa fa-exclamation-circle fa-3x text-danger"></i>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </a>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="card stats-card bg-info-light">
-                                                        <div class="card-body">
-                                                            <div class="media align-items-center">
-                                                                <div class="media-body mr-3">
-                                                                    <h2 class="text-info">₱{{ number_format($stats['total_amount'] ?? 0, 2) }}</h2>
-                                                                    <span class="text-info">Total Amount</span>
-                                                                </div>
-                                                                <i class="fa fa-money-bill fa-3x text-info"></i>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                                <div>
-                                                    <a href="{{ route('remittance.index') }}" class="btn {{ !request()->has('filter') ? 'btn-primary' : 'btn-outline-primary' }}">
-                                                        All Records
-                                                    </a>
-                                                    <a href="{{ route('remittance.index', ['filter' => 'matched']) }}" class="btn {{ request()->get('filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }}">
-                                                        Matched Only
-                                                    </a>
-                                                    <a href="{{ route('remittance.index', ['filter' => 'unmatched']) }}" class="btn {{ request()->get('filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }}">
-                                                        Unmatched Only
-                                                    </a>
-                                                    <a href="{{ route('remittance.index', array_merge(request()->except('page'), ['filter' => 'no_branch'])) }}" class="btn {{ request()->get('filter') === 'no_branch' ? 'btn-warning text-white' : 'btn-outline-warning' }}">
-                                                        No Branch
-                                                    </a>
-                                                </div>
-                                                <form method="GET" action="{{ route('remittance.index') }}" class="d-flex" style="max-width: 350px;">
-                                                    @foreach(request()->except('search', 'page') as $key => $value)
-                                                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                                                    @endforeach
-                                                    <input type="text" name="search" value="{{ request('search') }}" class="form-control me-2" placeholder="Search by CID or Name..." />
-                                                    <button type="submit" class="btn btn-outline-primary">Search</button>
-                                                </form>
-                                            </div>
-
-                                            <div class="table-responsive">
-                                                <table class="table table-striped table-bordered preview-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Status</th>
-                                                            <th>CID</th>
-                                                            <th>Name</th>
-                                                            @if(isset($preview[0]) && $preview[0]->share_amount > 0)
-                                                                <th>Share Amount</th>
-                                                            @else
-                                                                <th>Loans</th>
-                                                                <th>Savings</th>
-                                                            @endif
-                                                            <th>Message</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach ($preview as $record)
-                                                            <tr>
-                                                                <td>
-                                                                    @if ($record->status === 'success')
-                                                                        <span class="badge badge-success">Matched</span>
-                                                                    @else
-                                                                        <span class="badge badge-danger">Not Matched</span>
-                                                                    @endif
-                                                                </td>
-                                                                <td>{{ $record->emp_id ?? 'N/A' }}</td>
-                                                                <td>{{ $record->name }}</td>
-                                                                @if(isset($preview[0]) && $preview[0]->share_amount > 0)
-                                                                    <td>₱{{ number_format($record->share_amount ?? 0, 2) }}</td>
-                                                                @else
-                                                                    <td>₱{{ number_format($record->loans ?? 0, 2) }}</td>
-                                                                    <td>
-                                                                        @php
-                                                                            $savingsTotal = 0;
-                                                                            $savingsDistribution = [];
-                                                                            if (is_array($record->savings) && isset($record->savings['total'])) {
-                                                                                $savingsTotal = $record->savings['total'];
-                                                                                $savingsDistribution = $record->savings['distribution'] ?? [];
-                                                                            } elseif (is_array($record->savings)) {
-                                                                                $savingsTotal = collect($record->savings)->sum();
-                                                                            }
-                                                                        @endphp
-                                                                        ₱{{ number_format($savingsTotal, 2) }}
-                                                                        @if(count($savingsDistribution) > 0)
-                                                                            <br><small class="text-muted">
-                                                                                @foreach($savingsDistribution as $dist)
-                                                                                    {{ $dist['product'] }}: ₱{{ number_format($dist['amount'], 2) }}
-                                                                                    @if(!$loop->last), @endif
-                                                                                @endforeach
-                                                                            </small>
-                                                                        @endif
-                                                                    </td>
-                                                                @endif
-                                                                <td>
-                                                                    {{ $record->message }}
-                                                                </td>
-                                                            </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                </table>
-                                            </div>
-
-                                            @if(isset($preview) && $preview && method_exists($preview, 'appends'))
-                                                <div class="d-flex justify-content-center mt-4 text-center">
-                                                    {{ $preview->appends(request()->query())->links() }}
-                                                </div>
-                                            @endif
-                                        @else
-                                            <div class="text-center py-5">
-                                                <i class="fa fa-upload fa-4x text-muted mb-3"></i>
-                                                <h4 class="text-muted">Upload a remittance file to see preview</h4>
-                                            </div>
-                                        @endif
+                                        </div>
+                                        <div class="col-12 col-md-5 d-flex justify-content-md-end">
+                                            <form method="GET" class="form-inline w-100 justify-content-end">
+                                                @if (request()->has('loans_filter'))
+                                                    <input type="hidden" name="loans_filter"
+                                                        value="{{ request('loans_filter') }}">
+                                                @endif
+                                                <input type="text" name="loans_search"
+                                                    value="{{ request('loans_search') }}"
+                                                    class="form-control mr-2 w-auto"
+                                                    placeholder="Search by name or emp_id">
+                                                <button type="submit"
+                                                    class="btn btn-outline-secondary btn-sm mr-2">Search</button>
+                                                @if (request()->has('loans_search') || request()->has('loans_filter'))
+                                                    <a href="{{ route('remittance.index') }}"
+                                                        class="btn btn-outline-warning btn-sm">Clear</a>
+                                                @endif
+                                            </form>
+                                        </div>
                                     </div>
+                                    <table class="table table-bordered text-center">
+                                        <thead>
+                                            <tr>
+                                                <th>Member</th>
+                                                <th>Loans</th>
+                                                <th>Savings</th>
+                                                <th>Status</th>
+                                                <th>Message</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($loansSavingsPreviewPaginated as $row)
+                                                <tr>
+                                                    <td>{{ $row->name }}</td>
+                                                    <td>{{ $row->loans }}</td>
+                                                    <td>{{ is_array($row->savings) ? $row->savings['total'] ?? 0 : $row->savings }}
+                                                    </td>
+                                                    <td>{{ $row->status }}</td>
+                                                    <td>{{ $row->message }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">No records
+                                                        found.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                    <div class="row">
+                                        <div class="col-12 d-flex justify-content-center text-center">
+                                            {{ $loansSavingsPreviewPaginated->appends(request()->except('loans_page'))->links() }}
+                                        </div>
+                                    </div>
+
+                                    {{-- Shares Remittance Preview --}}
+                                    <div class="row mb-2">
+                                        <div class="col-12">
+                                            <h5 class="text-center">Shares Remittance Preview</h5>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3 justify-content-between align-items-center">
+                                        <div class="col-12 col-md-7 mb-2 mb-md-0">
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('remittance.index') }}"
+                                                    class="btn {{ !request()->has('shares_filter') ? 'btn-primary' : 'btn-outline-primary' }} mr-2">
+                                                    All Records
+                                                </a>
+                                                <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'matched'])) }}"
+                                                    class="btn {{ request('shares_filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">
+                                                    Matched Only
+                                                </a>
+                                                <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'unmatched'])) }}"
+                                                    class="btn {{ request('shares_filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">
+                                                    Unmatched Only
+                                                </a>
+                                                <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'no_branch'])) }}"
+                                                    class="btn {{ request('shares_filter') === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">
+                                                    No Branch
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-5 d-flex justify-content-md-end">
+                                            <form method="GET" class="form-inline w-100 justify-content-end">
+                                                @if (request()->has('shares_filter'))
+                                                    <input type="hidden" name="shares_filter"
+                                                        value="{{ request('shares_filter') }}">
+                                                @endif
+                                                <input type="text" name="shares_search"
+                                                    value="{{ request('shares_search') }}"
+                                                    class="form-control mr-2 w-auto"
+                                                    placeholder="Search by name or emp_id">
+                                                <button type="submit"
+                                                    class="btn btn-outline-secondary btn-sm mr-2">Search</button>
+                                                @if (request()->has('shares_search') || request()->has('shares_filter'))
+                                                    <a href="{{ route('remittance.index') }}"
+                                                        class="btn btn-outline-warning btn-sm">Clear</a>
+                                                @endif
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <table class="table table-bordered text-center">
+                                        <thead>
+                                            <tr>
+                                                <th>Member</th>
+                                                <th>Shares</th>
+                                                <th>Status</th>
+                                                <th>Message</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($sharesPreviewPaginated as $row)
+                                                <tr>
+                                                    <td>{{ $row->name }}</td>
+                                                    <td>{{ $row->share_amount }}</td>
+                                                    <td>{{ $row->status }}</td>
+                                                    <td>{{ $row->message }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center text-muted">No records
+                                                        found.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                    <div class="row">
+                                        <div class="col-12 d-flex justify-content-center text-center">
+                                            {{ $sharesPreviewPaginated->appends(request()->except('shares_page'))->links() }}
+                                        </div>
+                                    </div>
+
+
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                @if(isset($comparisonReport) && count($comparisonReport) > 0)
-                    <div class="mb-3 d-flex justify-content-end">
-                        <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
-                            <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
-                        </a>
-                    </div>
+            @if (isset($comparisonReportPaginated) && $comparisonReportPaginated->count() > 0)
+                <div class="mb-3 d-flex justify-content-end">
+                    <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
+                        <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
+                    </a>
+                </div>
                 <div class="card mt-5">
                     <div class="card-header">
                         <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
@@ -413,11 +450,10 @@
                                         <th>Remaining Loan Balance</th>
                                         <th>Remitted Savings</th>
                                         <th>Remitted Shares</th>
-
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($comparisonReport as $row)
+                                    @foreach ($comparisonReportPaginated as $row)
                                         <tr>
                                             <td>{{ $row['cid'] }}</td>
                                             <td>{{ $row['member_name'] }}</td>
@@ -426,36 +462,39 @@
                                             <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
                                             <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
                                             <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
-
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
+                            <div class="d-flex justify-content-center mt-2 text-center">
+                                {{ $comparisonReportPaginated->links() }}
+                            </div>
                         </div>
                     </div>
                 </div>
-                @endif
-            </div>
+            @endif
         </div>
+    </div>
 
-        <style>
-            .flex.justify-between.flex-1.sm\:hidden {
-                display: none;
-            }
-        </style>
+    <style>
+        .flex.justify-between.flex-1.sm\:hidden {
+            display: none;
+        }
+    </style>
 
-        <div class="footer">
-            <div class="copyright">
-                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/"
-                        target="_blank">MASS-SPECC COOPERATIVE</a>2025</p>
-            </div>
+    <div class="footer">
+        <div class="copyright">
+            <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/" target="_blank">MASS-SPECC
+                    COOPERATIVE</a>2025</p>
         </div>
+    </div>
     </div>
 
     @include('layouts.partials.footer')
 
     <!-- Loans & Savings Format Modal -->
-    <div class="modal fade" id="loansSavingsFormatModal" tabindex="-1" role="dialog" aria-labelledby="loansSavingsFormatModalLabel" aria-hidden="true">
+    <div class="modal fade" id="loansSavingsFormatModal" tabindex="-1" role="dialog"
+        aria-labelledby="loansSavingsFormatModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -509,7 +548,8 @@
                                 </tr>
                                 <tr>
                                     <td><code>savings</code></td>
-                                    <td>Total Savings Amount (will be distributed automatically based on deduction_amount)</td>
+                                    <td>Total Savings Amount (will be distributed automatically based on
+                                        deduction_amount)</td>
                                     <td><span class="badge badge-warning">Optional</span></td>
                                     <td>1000.00</td>
                                 </tr>
@@ -554,9 +594,12 @@
                     <div class="alert alert-warning mt-3">
                         <h6><i class="fa fa-info-circle"></i> Important Notes:</h6>
                         <ul class="mb-0">
-                            <li><strong>Savings Distribution:</strong> The total savings amount will be automatically distributed based on each member's <code>deduction_amount</code> settings</li>
-                            <li><strong>Prioritization:</strong> Distribution follows the product prioritization order</li>
-                            <li><strong>Remaining Amount:</strong> Any remaining amount after distribution goes to Regular Savings</li>
+                            <li><strong>Savings Distribution:</strong> The total savings amount will be automatically
+                                distributed based on each member's <code>deduction_amount</code> settings</li>
+                            <li><strong>Prioritization:</strong> Distribution follows the product prioritization order
+                            </li>
+                            <li><strong>Remaining Amount:</strong> Any remaining amount after distribution goes to
+                                Regular Savings</li>
                         </ul>
                     </div>
                 </div>
@@ -568,7 +611,8 @@
     </div>
 
     <!-- Shares Format Modal -->
-    <div class="modal fade" id="sharesFormatModal" tabindex="-1" role="dialog" aria-labelledby="sharesFormatModalLabel" aria-hidden="true">
+    <div class="modal fade" id="sharesFormatModal" tabindex="-1" role="dialog"
+        aria-labelledby="sharesFormatModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -675,7 +719,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-
         // // Update custom file input label
         // $('.custom-file-input').on('change', function() {
         //     let fileName = $(this).val().split('\\').pop();

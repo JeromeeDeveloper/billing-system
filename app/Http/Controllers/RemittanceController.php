@@ -22,90 +22,80 @@ class RemittanceController extends Controller
 {
     public function index(Request $request)
     {
-        // Get current billing period
-        $currentBillingPeriod = Auth::user()->billing_period;
+        $userId = Auth::id();
+        $billingPeriod = Auth::user()->billing_period;
+        $perPage = 10;
 
-        // Get preview data from database for current user and current billing period
-        $previewCollection = RemittancePreview::where('user_id', Auth::id())
+        // Loans & Savings
+        $loansQuery = \App\Models\RemittancePreview::where('user_id', $userId)
             ->where('type', 'admin')
-            ->where('billing_period', $currentBillingPeriod)
-            ->get();
+            ->where('billing_period', $billingPeriod)
+            ->where('remittance_type', 'loans_savings')
+            ->whereNotNull('name')
+            ->where('name', '!=', '');
 
-        // Calculate stats
-        $stats = [
-            'matched' => $previewCollection->where('status', 'success')->count(),
-            'unmatched' => $previewCollection->where('status', '!=', 'success')->count(),
-            'total_amount' => $previewCollection->sum(function ($record) {
-                $savingsTotal = 0;
-                if (is_array($record->savings) && isset($record->savings['total'])) {
-                    $savingsTotal = $record->savings['total'];
-                } elseif (is_array($record->savings)) {
-                    $savingsTotal = collect($record->savings)->sum();
-                }
-                return $record->loans + $savingsTotal;
-            })
-        ];
-
-        // Get unique dates for the dropdown
-        $dates = Remittance::select(DB::raw('DATE(created_at) as date'))
-            ->distinct()
-            ->orderBy('date', 'desc')
-            ->get()
-            ->map(function($item) {
-                return [
-                    'date' => $item->date,
-                    'formatted' => Carbon::parse($item->date)->format('M d, Y')
-                ];
+        $loansFilter = $request->get('loans_filter');
+        if ($loansFilter === 'matched') {
+            $loansQuery->where('status', 'success');
+        } elseif ($loansFilter === 'unmatched') {
+            $loansQuery->where('status', '!=', 'success');
+        } elseif ($loansFilter === 'no_branch') {
+            $loansQuery->whereHas('member', function($q) {
+                $q->whereNull('branch_id');
             });
-
-        // Filter preview data if filter is set
-        if ($previewCollection->isNotEmpty()) {
-            $filter = $request->get('filter');
-            if ($filter === 'matched') {
-                $previewCollection = $previewCollection->filter(function($record) {
-                    return $record->status === 'success';
-                });
-            } elseif ($filter === 'unmatched') {
-                $previewCollection = $previewCollection->filter(function($record) {
-                    return $record->status !== 'success';
-                });
-            } elseif ($filter === 'no_branch') {
-                $previewCollection = $previewCollection->filter(function($record) {
-                    if (!$record->member_id) return false;
-                    $member = \App\Models\Member::find($record->member_id);
-                    return $member && is_null($member->branch_id);
-                });
-            }
-
-            // Search filter (by CID or name)
-            $search = $request->get('search');
-            if ($search) {
-                $search = strtolower($search);
-                $previewCollection = $previewCollection->filter(function($record) use ($search) {
-                    $cid = strtolower($record->emp_id ?? '');
-                    $name = strtolower($record->name ?? '');
-                    return strpos($cid, $search) !== false || strpos($name, $search) !== false;
-                });
-            }
-
-            // Paginate the filtered collection
-            $perPage = 10;
-            $currentPage = $request->get('page', 1);
-            $pagedData = $previewCollection->forPage($currentPage, $perPage);
-
-            $preview = new \Illuminate\Pagination\LengthAwarePaginator(
-                $pagedData,
-                $previewCollection->count(),
-                $perPage,
-                $currentPage,
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
-        } else {
-            $preview = null;
         }
+        $loansSearch = $request->get('loans_search');
+        if ($loansSearch) {
+            $loansQuery->where(function($q) use ($loansSearch) {
+                $q->where('name', 'like', "%$loansSearch%")
+                  ->orWhere('emp_id', 'like', "%$loansSearch%") ;
+            });
+        }
+        $loansSavingsPreviewPaginated = $loansQuery->orderBy('id', 'desc')->paginate($perPage, ['*'], 'loans_page');
 
+        // Shares
+        $sharesQuery = \App\Models\RemittancePreview::where('user_id', $userId)
+            ->where('type', 'admin')
+            ->where('billing_period', $billingPeriod)
+            ->where('remittance_type', 'shares')
+            ->whereNotNull('name')
+            ->where('name', '!=', '');
+
+        $sharesFilter = $request->get('shares_filter');
+        if ($sharesFilter === 'matched') {
+            $sharesQuery->where('status', 'success');
+        } elseif ($sharesFilter === 'unmatched') {
+            $sharesQuery->where('status', '!=', 'success');
+        } elseif ($sharesFilter === 'no_branch') {
+            $sharesQuery->whereHas('member', function($q) {
+                $q->whereNull('branch_id');
+            });
+        }
+        $sharesSearch = $request->get('shares_search');
+        if ($sharesSearch) {
+            $sharesQuery->where(function($q) use ($sharesSearch) {
+                $q->where('name', 'like', "%$sharesSearch%")
+                  ->orWhere('emp_id', 'like', "%$sharesSearch%") ;
+            });
+        }
+        $sharesPreviewPaginated = $sharesQuery->orderBy('id', 'desc')->paginate($perPage, ['*'], 'shares_page');
+
+        // Comparison report (unchanged)
         $comparisonReport = $this->getRemittanceComparisonReport();
-        return view('components.admin.remittance.remittance', compact('dates', 'preview', 'stats', 'comparisonReport'));
+        $comparisonPage = $request->get('comparison_page', 1);
+        $comparisonReportPaginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            collect($comparisonReport)->forPage($comparisonPage, $perPage)->values(),
+            count($comparisonReport),
+            $perPage,
+            $comparisonPage,
+            ['pageName' => 'comparison_page', 'path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('components.admin.remittance.remittance', compact(
+            'loansSavingsPreviewPaginated',
+            'sharesPreviewPaginated',
+            'comparisonReportPaginated'
+        ));
     }
 
     public function upload(Request $request)
@@ -115,6 +105,8 @@ class RemittanceController extends Controller
         $request->validate([
             'file' => 'required|file|max:10240', // max 10MB
         ]);
+
+        $remittanceType2 = 'loans_savings';
 
         try {
             DB::beginTransaction();
@@ -127,10 +119,11 @@ class RemittanceController extends Controller
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;
 
-            // Clear previous preview data for this user and billing period
+            // Clear previous preview data for this user, billing period, and remittance type
             RemittancePreview::where('user_id', Auth::id())
                 ->where('type', 'admin')
                 ->where('billing_period', $currentBillingPeriod)
+                ->where('remittance_type', $remittanceType2)
                 ->delete();
 
             // Store new preview data and accumulate remitted values
@@ -149,7 +142,8 @@ class RemittanceController extends Controller
                     'status' => $result['status'],
                     'message' => $result['message'],
                     'type' => 'admin',
-                    'billing_period' => $currentBillingPeriod
+                    'billing_period' => $currentBillingPeriod,
+                    'remittance_type' => $remittanceType2
                 ]);
 
                 // Accumulate remitted values in remittance_reports
@@ -182,6 +176,8 @@ class RemittanceController extends Controller
             'file' => 'required|file|max:10240', // max 10MB
         ]);
 
+        $remittanceType = 'shares';
+
         try {
             DB::beginTransaction();
 
@@ -194,10 +190,11 @@ class RemittanceController extends Controller
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;
 
-            // Clear previous preview data for this user and billing period
+            // Clear previous preview data for this user, billing period, and remittance type
             RemittancePreview::where('user_id', Auth::id())
                 ->where('type', 'admin')
                 ->where('billing_period', $currentBillingPeriod)
+                ->where('remittance_type', $remittanceType)
                 ->delete();
 
             // Store new preview data and accumulate remitted shares
@@ -213,7 +210,8 @@ class RemittanceController extends Controller
                     'status' => $result['status'],
                     'message' => $result['message'],
                     'type' => 'admin',
-                    'billing_period' => $currentBillingPeriod
+                    'billing_period' => $currentBillingPeriod,
+                    'remittance_type' => $remittanceType
                 ]);
 
                 // Accumulate remitted shares in remittance_reports

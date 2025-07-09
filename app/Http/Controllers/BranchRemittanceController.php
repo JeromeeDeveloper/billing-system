@@ -22,19 +22,49 @@ class BranchRemittanceController extends Controller
         // Get the branch_id from the authenticated user
         $branch_id = Auth::user()->branch_id;
         $currentBillingPeriod = Auth::user()->billing_period;
+        $perPage = 10;
 
-        // Get all preview data and filter by branch members and current billing period
-        $previewCollection = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+        // Build the query for branch members with current billing period
+        $query = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })
         ->where('billing_period', $currentBillingPeriod)
-        ->get();
+        ->whereNotNull('name')
+        ->where('name', '!=', '');
 
-        // Calculate stats for branch members only
+        // Apply filters
+        $filter = $request->get('filter');
+        if ($filter === 'matched') {
+            $query->where('status', 'success');
+        } elseif ($filter === 'unmatched') {
+            $query->where('status', '!=', 'success');
+        }
+
+        // Apply search
+        $search = $request->get('search');
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('emp_id', 'like', "%$search%");
+            });
+        }
+
+        // Get paginated results
+        $preview = $query->orderBy('id', 'desc')->paginate($perPage);
+
+        // Calculate stats for branch members only (using the same query without pagination)
+        $statsQuery = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id);
+        })
+        ->where('billing_period', $currentBillingPeriod)
+        ->whereNotNull('name')
+        ->where('name', '!=', '');
+
+        $statsCollection = $statsQuery->get();
         $stats = [
-            'matched' => $previewCollection->where('status', 'success')->count(),
-            'unmatched' => $previewCollection->where('status', '!=', 'success')->count(),
-            'total_amount' => $previewCollection->sum(function ($record) {
+            'matched' => $statsCollection->where('status', 'success')->count(),
+            'unmatched' => $statsCollection->where('status', '!=', 'success')->count(),
+            'total_amount' => $statsCollection->sum(function ($record) {
                 $savingsTotal = 0;
                 if (is_array($record->savings) && isset($record->savings['total'])) {
                     $savingsTotal = $record->savings['total'];
@@ -59,35 +89,6 @@ class BranchRemittanceController extends Controller
                 'formatted' => Carbon::parse($item->date)->format('M d, Y')
             ];
         });
-
-        // Filter preview data if filter is set
-        if ($previewCollection->isNotEmpty()) {
-            $filter = $request->get('filter');
-            if ($filter === 'matched') {
-                $previewCollection = $previewCollection->filter(function($record) {
-                    return $record->status === 'success';
-                });
-            } elseif ($filter === 'unmatched') {
-                $previewCollection = $previewCollection->filter(function($record) {
-                    return $record->status !== 'success';
-                });
-            }
-
-            // Paginate the filtered collection
-            $perPage = 10;
-            $currentPage = $request->get('page', 1);
-            $pagedData = $previewCollection->forPage($currentPage, $perPage);
-
-            $preview = new \Illuminate\Pagination\LengthAwarePaginator(
-                $pagedData,
-                $previewCollection->count(),
-                $perPage,
-                $currentPage,
-                ['path' => $request->url(), 'query' => $request->query()]
-            );
-        } else {
-            $preview = null;
-        }
 
         return view('components.branch.remittance.remittance', compact('dates', 'preview', 'stats'));
     }
