@@ -172,7 +172,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         ]);
                     }
 
-                    // Get all loan forecasts and sort them by product prioritization
+                    // Get all loan forecasts and sort them by product prioritization, then by principal (desc), then by created_at (asc)
                     $forecasts = collect($member->loanForecasts)->map(function($forecast) use ($member) {
                         // Extract product code from loan_acct_no (e.g., 40102 from 0304-001-40102-000023-3)
                         $productCode = explode('-', $forecast->loan_acct_no)[2] ?? null;
@@ -187,12 +187,21 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'prioritization' => $loanProduct ? $loanProduct->prioritization : 999,
                             'product_code' => $productCode,
                             'total_due' => $forecast->total_due,
-                            'principal' => $forecast->principal ?? 0
+                            'principal' => $forecast->principal ?? 0,
+                            'created_at' => $forecast->created_at,
                         ];
-                    })->sortBy([
-                        ['prioritization', 'asc'],
-                        ['principal', 'desc']
-                    ]);
+                    })->sort(function($a, $b) {
+                        // Sort by prioritization (asc)
+                        if ($a['prioritization'] !== $b['prioritization']) {
+                            return $a['prioritization'] <=> $b['prioritization'];
+                        }
+                        // If same priority, sort by principal (desc)
+                        if ($a['principal'] !== $b['principal']) {
+                            return $b['principal'] <=> $a['principal'];
+                        }
+                        // If still tied, sort by created_at (asc)
+                        return $a['created_at'] <=> $b['created_at'];
+                    });
 
                     // Log the sorted forecasts for debugging
                     Log::info('Sorted forecasts for member ' . $member->id . ':');
