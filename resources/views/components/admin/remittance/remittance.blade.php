@@ -12,6 +12,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
     <link href="{{ asset('vendor/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet">
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
         .stats-card {
             transition: transform 0.2s;
@@ -106,319 +107,249 @@
                                             branch.</small></p>
                                 </div>
 
-                                @if (session('success'))
-                                    <div class="alert alert-success alert-dismissible fade show">
-                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                        <strong><i class="fa fa-check-circle"></i> Success!</strong>
-                                        {{ session('success') }}
+                                <!-- Alerts Section (Success, Error, Billing Period) -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-12 col-md-6">
+                                        @if (session('success'))
+                                            <div class="alert alert-success alert-dismissible fade show">
+                                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                                <strong><i class="fa fa-check-circle"></i> Success!</strong> {{ session('success') }}
+                                            </div>
+                                        @endif
+                                        @if (session('error'))
+                                            <div class="alert alert-danger alert-dismissible fade show">
+                                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                                <strong><i class="fa fa-exclamation-circle"></i> Error!</strong> {{ session('error') }}
+                                            </div>
+                                        @endif
                                     </div>
-                                @endif
-
-                                @if (session('error'))
-                                    <div class="alert alert-danger alert-dismissible fade show">
-                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                        <strong><i class="fa fa-exclamation-circle"></i> Error!</strong>
-                                        {{ session('error') }}
+                                    <div class="col-12 col-md-12">
+                                        <div class="alert alert-warning alert-dismissible fade show mb-0">
+                                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                            <h6 class="mb-1"><i class="fa fa-calendar"></i> Current Billing Period</h6>
+                                            <p class="mb-0">
+                                                <strong>Period:</strong>
+                                                @php
+                                                    $billingPeriod = auth()->user()->billing_period ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format('F Y') : 'Not Set';
+                                                @endphp
+                                                {{ $billingPeriod }}
+                                            </p>
+                                            <p class="mb-0 small text-muted">
+                                                <i class="fa fa-info-circle"></i> Remittance data will be filtered and exported only for this billing period.
+                                            </p>
+                                        </div>
                                     </div>
-                                @endif
-
-                                <!-- Current Billing Period Display -->
-                                <div class="alert alert-warning alert-dismissible fade show mb-4">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h6><i class="fa fa-calendar"></i> Current Billing Period</h6>
-                                    <p class="mb-0">
-                                        <strong>Period:</strong>
-                                        @php
-                                            $billingPeriod = auth()->user()->billing_period
-                                                ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format('F Y')
-                                                : 'Not Set';
-                                        @endphp
-                                        {{ $billingPeriod }}
-                                    </p>
-                                    <p class="mb-0 small text-muted">
-                                        <i class="fa fa-info-circle"></i>
-                                        Remittance data will be filtered and exported only for this billing period.
-                                    </p>
                                 </div>
 
-                                <div class="row">
-                                    <div class="col-12 mb-4">
-                                        <div class="upload-section">
-                                            <form action="{{ route('document.upload') }}" method="POST"
-                                                enctype="multipart/form-data" id="installmentForm">
-                                                @csrf
-                                                <div class="form-group">
-                                                    <label for="remit_installment_file" class="font-weight-bold mb-2">📁
-                                                        Installment Forecast File</label>
-                                                    <div class="custom-file">
-                                                        <input type="file" class="custom-file-input"
-                                                            id="remit_installment_file" name="file">
-                                                        <label class="custom-file-label"
-                                                            for="remit_installment_file">Choose file...</label>
+                                <!-- Modernized Remittance Upload Section (Installment Forecast on top, others below) -->
+                                <div class="row g-4 mb-4">
+                                    <div class="col-12 mb-3">
+                                        <div class="card shadow-sm h-100">
+                                            <div class="card-header bg-primary text-white">
+                                                <i class="fa fa-upload me-2"></i>Installment Forecast Upload
+                                            </div>
+                                            <div class="card-body">
+                                                <form action="{{ route('document.upload') }}" method="POST" enctype="multipart/form-data" id="installmentForm">
+                                                    @csrf
+                                                    <div class="mb-3">
+                                                        <label for="remit_installment_file" class="form-label">Select File</label>
+                                                        <input type="file" class="form-control" id="remit_installment_file" name="file">
                                                     </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <button type="submit" class="btn btn-primary"
-                                                        id="installmentSubmitBtn">
-                                                        <i class="fa fa-upload"></i> Upload Installment File
+                                                    <button type="submit" class="btn btn-primary w-100">
+                                                        <i class="fa fa-upload me-1"></i> Upload Installment File
                                                     </button>
-                                                </div>
-                                            </form>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div class="col-12 mb-4">
-                                        <div class="upload-section">
-                                            <form action="{{ route('remittance.upload') }}" method="POST"
-                                                enctype="multipart/form-data" id="loansSavingsForm">
-                                                @csrf
-                                                <div class="form-group">
-                                                    <label class="font-weight-bold">Upload Savings and Loans
-                                                        Remittance</label>
-                                                    <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" name="file"
-                                                            id="file" accept=".xlsx,.xls,.csv" required>
-                                                        <label class="custom-file-label" for="file">Choose
-                                                            file</label>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="card shadow-sm h-100">
+                                            <div class="card-header bg-success text-white">
+                                                <i class="fa fa-upload me-2"></i>Savings & Loans Remittance Upload
+                                            </div>
+                                            <div class="card-body">
+                                                <form action="{{ route('remittance.upload') }}" method="POST" enctype="multipart/form-data" id="loansSavingsForm">
+                                                    @csrf
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Select File</label>
+                                                        <input type="file" class="form-control" name="file" id="file" accept=".xlsx,.xls,.csv" required>
                                                     </div>
-                                                    <div class="mt-3">
-                                                        <h6 class="text-muted mb-2">File Requirements:</h6>
-                                                        <ul class="text-muted small pl-3">
-                                                            <li>Excel format (.xlsx, .xls, .csv,)</li>
-                                                            <li>Required headers:
-                                                                <ul class="pl-3">
-                                                                    <li>CID</li>
-                                                                    <li>Name</li>
-                                                                    <li>Loans</li>
-                                                                    <li>Savings Product Names</li>
-                                                                </ul>
-                                                            </li>
-                                                        </ul>
-                                                        <button type="button" class="btn btn-outline-info btn-sm"
-                                                            data-toggle="modal"
-                                                            data-target="#loansSavingsFormatModal">
-                                                            <i class="fa fa-eye"></i> View Expected Format
+                                                    <div class="mb-3">
+                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name, Loans, Savings Product Names.</small>
+                                                    </div>
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        <button type="submit" class="btn btn-success flex-fill">
+                                                            <i class="fa fa-upload me-1"></i> Upload and Process Loans & Savings Remittance
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-info flex-fill" data-toggle="modal" data-target="#loansSavingsFormatModal">
+                                                            <i class="fa fa-eye me-1"></i> View Expected Format
                                                         </button>
                                                     </div>
-                                                </div>
-                                                <button type="submit" class="btn btn-info btn-block"
-                                                    id="loansSavingsSubmitBtn">
-                                                    <i class="fa fa-upload"></i> Upload and Process Loans & Savings
-                                                    Remittance
-                                                </button>
-
-                                                <a href="javascript:void(0);" class="btn btn-primary btn-block"
-                                                    onclick="generateExport('loans_savings')">
-                                                    Collection file for Loans & Savings
-                                                </a>
-
-                                            </form>
+                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('loans_savings')">
+                                                        Collection file for Loans & Savings
+                                                    </a>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
-
-                                    <div class="col-12 mb-4">
-                                        <div class="upload-section">
-                                            <form action="{{ route('remittance.upload.share') }}" method="POST"
-                                                enctype="multipart/form-data" id="shareForm">
-                                                @csrf
-                                                <div class="form-group">
-                                                    <label class="font-weight-bold">Upload Share Remittance</label>
-                                                    <div class="custom-file">
-                                                        <input type="file" class="custom-file-input"
-                                                            name="file" id="shareFile" accept=".xlsx,.xls,.csv"
-                                                            required>
-                                                        <label class="custom-file-label" for="shareFile">Choose
-                                                            file</label>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="card shadow-sm h-100">
+                                            <div class="card-header bg-info text-white">
+                                                <i class="fa fa-upload me-2"></i>Share Remittance Upload
+                                            </div>
+                                            <div class="card-body">
+                                                <form action="{{ route('remittance.upload.share') }}" method="POST" enctype="multipart/form-data" id="shareForm">
+                                                    @csrf
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Select File</label>
+                                                        <input type="file" class="form-control" name="file" id="shareFile" accept=".xlsx,.xls,.csv" required>
                                                     </div>
-                                                    <div class="mt-3">
-                                                        <h6 class="text-muted mb-2">File Requirements:</h6>
-                                                        <ul class="text-muted small pl-3">
-                                                            <li>Excel format (.xlsx, .xls, .csv)</li>
-                                                            <li>Required headers:
-                                                                <ul class="pl-3">
-                                                                    <li>CID</li>
-                                                                    <li>Name (format: LASTNAME, FIRSTNAME)</li>
-                                                                    <li>Share (amount)</li>
-                                                                </ul>
-                                                            </li>
-                                                        </ul>
-                                                        <button type="button" class="btn btn-outline-info btn-sm"
-                                                            data-toggle="modal" data-target="#sharesFormatModal">
-                                                            <i class="fa fa-eye"></i> View Expected Format
+                                                    <div class="mb-3">
+                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name (LASTNAME, FIRSTNAME), Share (amount).</small>
+                                                    </div>
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        <button type="submit" class="btn btn-info flex-fill">
+                                                            <i class="fa fa-upload me-1"></i> Upload and Process Share Remittance
+                                                        </button>
+                                                        <button type="button" class="btn btn-outline-info flex-fill" data-toggle="modal" data-target="#sharesFormatModal">
+                                                            <i class="fa fa-eye me-1"></i> View Expected Format
                                                         </button>
                                                     </div>
-                                                </div>
-                                                <button type="submit" class="btn btn-info btn-block"
-                                                    id="shareSubmitBtn">
-                                                    <i class="fa fa-upload"></i> Upload and Process Share Remittance
-                                                </button>
-
-                                                <a href="javascript:void(0);" class="btn btn-primary btn-block"
-                                                    onclick="generateExport('shares')">
-                                                    Collection file for Shares
-                                                </a>
-                                            </form>
+                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('shares')">
+                                                        Collection file for Shares
+                                                    </a>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
+                                </div>
 
-
-
-                                    {{-- Loans & Savings Remittance Preview --}}
-                                    <div class="row mb-2">
-                                        <div class="col-12">
+                                <!-- Remittance Preview Section (unchanged, just add card and spacing) -->
+                                <div class="card shadow-sm mb-4">
+                                    <div class="card-body">
+                                        {{-- Loans & Savings Remittance Preview --}}
+                                        <div class="mb-4">
                                             <h5 class="text-center">Loans & Savings Remittance Preview</h5>
-                                        </div>
-                                    </div>
-                                    <div class="row mb-3 justify-content-between align-items-center">
-                                        <div class="col-12 col-md-7 mb-2 mb-md-0">
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('remittance.index') }}"
-                                                    class="btn {{ !request()->has('loans_filter') ? 'btn-primary' : 'btn-outline-primary' }} mr-2">
-                                                    All Records
-                                                </a>
-                                                <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'matched'])) }}"
-                                                    class="btn {{ request('loans_filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">
-                                                    Matched Only
-                                                </a>
-                                                <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'unmatched'])) }}"
-                                                    class="btn {{ request('loans_filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">
-                                                    Unmatched Only
-                                                </a>
-                                                <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'no_branch'])) }}"
-                                                    class="btn {{ request('loans_filter') === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">
-                                                    No Branch
-                                                </a>
+                                            <div class="row mb-3 justify-content-between align-items-center">
+                                                <div class="col-12 col-md-7 mb-2 mb-md-0">
+                                                    <div class="btn-group" role="group">
+                                                        <!-- Filter buttons (unchanged) -->
+                                                        @php $filter = request('loans_filter'); @endphp
+                                                        <a href="{{ route('remittance.index') }}" class="btn {{ !$filter ? 'btn-primary' : 'btn-outline-primary' }} mr-2">All Records</a>
+                                                        <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'matched'])) }}" class="btn {{ $filter === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">Matched Only</a>
+                                                        <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'unmatched'])) }}" class="btn {{ $filter === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">Unmatched Only</a>
+                                                        <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'no_branch'])) }}" class="btn {{ $filter === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">No Branch</a>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 col-md-5 d-flex justify-content-md-end">
+                                                    <form method="GET" class="form-inline w-100 justify-content-end">
+                                                        @if (request()->has('loans_filter'))
+                                                            <input type="hidden" name="loans_filter" value="{{ request('loans_filter') }}">
+                                                        @endif
+                                                        <input type="text" name="loans_search" value="{{ request('loans_search') }}" class="form-control mr-2 w-auto" placeholder="Search by name or emp_id">
+                                                        <button type="submit" class="btn btn-outline-secondary btn-sm mr-2">Search</button>
+                                                        @if (request()->has('loans_search') || request()->has('loans_filter'))
+                                                            <a href="{{ route('remittance.index') }}" class="btn btn-outline-warning btn-sm">Clear</a>
+                                                        @endif
+                                                    </form>
+                                                </div>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered text-center">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Member</th>
+                                                            <th>Loans</th>
+                                                            <th>Savings</th>
+                                                            <th>Status</th>
+                                                            <th>Message</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @forelse($loansSavingsPreviewPaginated as $row)
+                                                            <tr>
+                                                                <td>{{ $row->name }}</td>
+                                                                <td>{{ $row->loans }}</td>
+                                                                <td>{{ is_array($row->savings) ? $row->savings['total'] ?? 0 : $row->savings }}</td>
+                                                                <td>{{ $row->status }}</td>
+                                                                <td>{{ $row->message }}</td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="5" class="text-center text-muted">No records found.</td>
+                                                            </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12 d-flex justify-content-center text-center">
+                                                    {{ $loansSavingsPreviewPaginated->appends(request()->except('loans_page'))->links() }}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-12 col-md-5 d-flex justify-content-md-end">
-                                            <form method="GET" class="form-inline w-100 justify-content-end">
-                                                @if (request()->has('loans_filter'))
-                                                    <input type="hidden" name="loans_filter"
-                                                        value="{{ request('loans_filter') }}">
-                                                @endif
-                                                <input type="text" name="loans_search"
-                                                    value="{{ request('loans_search') }}"
-                                                    class="form-control mr-2 w-auto"
-                                                    placeholder="Search by name or emp_id">
-                                                <button type="submit"
-                                                    class="btn btn-outline-secondary btn-sm mr-2">Search</button>
-                                                @if (request()->has('loans_search') || request()->has('loans_filter'))
-                                                    <a href="{{ route('remittance.index') }}"
-                                                        class="btn btn-outline-warning btn-sm">Clear</a>
-                                                @endif
-                                            </form>
-                                        </div>
-                                    </div>
-                                    <table class="table table-bordered text-center">
-                                        <thead>
-                                            <tr>
-                                                <th>Member</th>
-                                                <th>Loans</th>
-                                                <th>Savings</th>
-                                                <th>Status</th>
-                                                <th>Message</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($loansSavingsPreviewPaginated as $row)
-                                                <tr>
-                                                    <td>{{ $row->name }}</td>
-                                                    <td>{{ $row->loans }}</td>
-                                                    <td>{{ is_array($row->savings) ? $row->savings['total'] ?? 0 : $row->savings }}
-                                                    </td>
-                                                    <td>{{ $row->status }}</td>
-                                                    <td>{{ $row->message }}</td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="5" class="text-center text-muted">No records
-                                                        found.</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                    <div class="row">
-                                        <div class="col-12 d-flex justify-content-center text-center">
-                                            {{ $loansSavingsPreviewPaginated->appends(request()->except('loans_page'))->links() }}
-                                        </div>
-                                    </div>
 
-                                    {{-- Shares Remittance Preview --}}
-                                    <div class="row mb-2">
-                                        <div class="col-12">
+                                        {{-- Shares Remittance Preview --}}
+                                        <div class="mb-4">
                                             <h5 class="text-center">Shares Remittance Preview</h5>
-                                        </div>
-                                    </div>
-                                    <div class="row mb-3 justify-content-between align-items-center">
-                                        <div class="col-12 col-md-7 mb-2 mb-md-0">
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('remittance.index') }}"
-                                                    class="btn {{ !request()->has('shares_filter') ? 'btn-primary' : 'btn-outline-primary' }} mr-2">
-                                                    All Records
-                                                </a>
-                                                <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'matched'])) }}"
-                                                    class="btn {{ request('shares_filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">
-                                                    Matched Only
-                                                </a>
-                                                <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'unmatched'])) }}"
-                                                    class="btn {{ request('shares_filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">
-                                                    Unmatched Only
-                                                </a>
-                                                <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'no_branch'])) }}"
-                                                    class="btn {{ request('shares_filter') === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">
-                                                    No Branch
-                                                </a>
+                                            <div class="row mb-3 justify-content-between align-items-center">
+                                                <div class="col-12 col-md-7 mb-2 mb-md-0">
+                                                    <div class="btn-group" role="group">
+                                                        <!-- Filter buttons (unchanged) -->
+                                                        @php $filter = request('shares_filter'); @endphp
+                                                        <a href="{{ route('remittance.index') }}" class="btn {{ !$filter ? 'btn-primary' : 'btn-outline-primary' }} mr-2">All Records</a>
+                                                        <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'matched'])) }}" class="btn {{ $filter === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">Matched Only</a>
+                                                        <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'unmatched'])) }}" class="btn {{ $filter === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">Unmatched Only</a>
+                                                        <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'no_branch'])) }}" class="btn {{ $filter === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">No Branch</a>
+                                                    </div>
+                                                </div>
+                                                <div class="col-12 col-md-5 d-flex justify-content-md-end">
+                                                    <form method="GET" class="form-inline w-100 justify-content-end">
+                                                        @if (request()->has('shares_filter'))
+                                                            <input type="hidden" name="shares_filter" value="{{ request('shares_filter') }}">
+                                                        @endif
+                                                        <input type="text" name="shares_search" value="{{ request('shares_search') }}" class="form-control mr-2 w-auto" placeholder="Search by name or emp_id">
+                                                        <button type="submit" class="btn btn-outline-secondary btn-sm mr-2">Search</button>
+                                                        @if (request()->has('shares_search') || request()->has('shares_filter'))
+                                                            <a href="{{ route('remittance.index') }}" class="btn btn-outline-warning btn-sm">Clear</a>
+                                                        @endif
+                                                    </form>
+                                                </div>
+                                            </div>
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered text-center">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Member</th>
+                                                            <th>Shares</th>
+                                                            <th>Status</th>
+                                                            <th>Message</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @forelse($sharesPreviewPaginated as $row)
+                                                            <tr>
+                                                                <td>{{ $row->name }}</td>
+                                                                <td>{{ $row->share_amount }}</td>
+                                                                <td>{{ $row->status }}</td>
+                                                                <td>{{ $row->message }}</td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr>
+                                                                <td colspan="4" class="text-center text-muted">No records found.</td>
+                                                            </tr>
+                                                        @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-12 d-flex justify-content-center text-center">
+                                                    {{ $sharesPreviewPaginated->appends(request()->except('shares_page'))->links() }}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="col-12 col-md-5 d-flex justify-content-md-end">
-                                            <form method="GET" class="form-inline w-100 justify-content-end">
-                                                @if (request()->has('shares_filter'))
-                                                    <input type="hidden" name="shares_filter"
-                                                        value="{{ request('shares_filter') }}">
-                                                @endif
-                                                <input type="text" name="shares_search"
-                                                    value="{{ request('shares_search') }}"
-                                                    class="form-control mr-2 w-auto"
-                                                    placeholder="Search by name or emp_id">
-                                                <button type="submit"
-                                                    class="btn btn-outline-secondary btn-sm mr-2">Search</button>
-                                                @if (request()->has('shares_search') || request()->has('shares_filter'))
-                                                    <a href="{{ route('remittance.index') }}"
-                                                        class="btn btn-outline-warning btn-sm">Clear</a>
-                                                @endif
-                                            </form>
-                                        </div>
                                     </div>
-                                    <table class="table table-bordered text-center">
-                                        <thead>
-                                            <tr>
-                                                <th>Member</th>
-                                                <th>Shares</th>
-                                                <th>Status</th>
-                                                <th>Message</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($sharesPreviewPaginated as $row)
-                                                <tr>
-                                                    <td>{{ $row->name }}</td>
-                                                    <td>{{ $row->share_amount }}</td>
-                                                    <td>{{ $row->status }}</td>
-                                                    <td>{{ $row->message }}</td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="4" class="text-center text-muted">No records
-                                                        found.</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                    <div class="row">
-                                        <div class="col-12 d-flex justify-content-center text-center">
-                                            {{ $sharesPreviewPaginated->appends(request()->except('shares_page'))->links() }}
-                                        </div>
-                                    </div>
+                                </div>
 
 
                                 </div>
@@ -713,6 +644,16 @@
 
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Forecast Upload Guide Pop-up -->
+    <div id="forecastGuidePopup" class="position-fixed" style="bottom: 24px; right: 24px; z-index: 1055; min-width: 320px; max-width: 90vw;">
+        <div class="alert alert-info alert-dismissible fade show shadow" role="alert">
+            <strong><i class="fa fa-info-circle"></i> Reminder:</strong> Please upload the <b>Installment Forecast</b> first before uploading any remittance files.<br>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
         </div>
     </div>
 

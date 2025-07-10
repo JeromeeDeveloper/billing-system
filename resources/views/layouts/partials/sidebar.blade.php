@@ -5,14 +5,13 @@
 
             {{-- Admin-only --}}
             @if (Auth::user()->role === 'admin')
-                <li><a href="{{ route('dashboard') }}"><i class="icon icon-single-04"></i><span class="nav-text">Admin
-                            Dashboard</span></a></li>
+                <li><a href="{{ route('dashboard') }}"><i class="bi bi-house"></i><span class="nav-text">Admin Dashboard</span></a></li>
 
                 <li class="nav-label">Transactions</li>
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="fa fa-upload"></i><span class="nav-text">File Uploads</span>
+                        <i class="bi bi-upload"></i><span class="nav-text">File Uploads</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('documents') }}">File Datatable</a></li>
@@ -21,7 +20,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-chart-pie-36"></i><span class="nav-text">Master List</span>
+                        <i class="bi bi-list"></i><span class="nav-text">Master List</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('master') }}">Master List Datatable</a></li>
@@ -30,7 +29,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-credit-card"></i><span class="nav-text">Billing</span>
+                        <i class="bi bi-credit-card"></i><span class="nav-text">Billing</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('billing') }}">Billing Datatable</a></li>
@@ -39,7 +38,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-wallet-90"></i><span class="nav-text">Remittance</span>
+                        <i class="bi bi-wallet2"></i><span class="nav-text">Remittance</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('remittance') }}">Remittance Datatable</a></li>
@@ -48,7 +47,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-payment"></i><span class="nav-text">ATM</span>
+                        <i class="bi bi-cash"></i><span class="nav-text">ATM</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('atm') }}">ATM Module</a></li>
@@ -57,7 +56,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-wallet-90"></i><span class="nav-text">Special Billing</span>
+                        <i class="bi bi-wallet2"></i><span class="nav-text">Special Billing</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('special-billing.index') }}">Special Billing Datatable</a></li>
@@ -66,7 +65,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-chart-pie-36"></i><span class="nav-text">Configuration</span>
+                        <i class="bi bi-gear"></i><span class="nav-text">Configuration</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('loans') }}">Loan Products</a></li>
@@ -94,7 +93,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-pin-3"></i><span class="nav-text">Branch</span>
+                        <i class="bi bi-building"></i><span class="nav-text">Branch</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('branch') }}">Branch Datatable</a></li>
@@ -111,15 +110,13 @@
                 </li> --}}
 
                 <li>
-                    <a href="{{ route('users') }}" aria-expanded="false">
-                        <i class="icon icon-single-04"></i><span class="nav-text">Users</span>
-                    </a>
+                    <a href="{{ route('users') }}" aria-expanded="false"><i class="bi bi-people"></i><span class="nav-text">Users</span></a>
                 </li>
             @endif
 
             {{-- Branch-only --}}
             @if (Auth::user()->role === 'branch')
-                <li><a href="{{ route('dashboard_branch') }}"><i class="icon icon-single-04"></i><span
+                <li><a href="{{ route('dashboard_branch') }}"><i class="bi bi-house"></i><span
                             class="nav-text">Branch Dashboard</span></a></li>
 
                 <li class="nav-label">Transactions</li>
@@ -135,7 +132,7 @@
 
                   <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-chart-pie-36"></i><span class="nav-text">Master List</span>
+                        <i class="bi bi-list"></i><span class="nav-text">Master List</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('master.branch') }}">Master List Datatable</a></li>
@@ -145,7 +142,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-credit-card"></i><span class="nav-text">Billing</span>
+                        <i class="bi bi-credit-card"></i><span class="nav-text">Billing</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('billing.branch') }}">Billing Datatable</a></li>
@@ -154,7 +151,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-wallet-90"></i><span class="nav-text">Remittance</span>
+                        <i class="bi bi-wallet2"></i><span class="nav-text">Remittance</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('branch.remittance.index') }}">Remittance Datatable</a></li>
@@ -163,7 +160,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-wallet-90"></i><span class="nav-text">ATM</span>
+                        <i class="bi bi-cash"></i><span class="nav-text">ATM</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('branch.atm') }}">ATM Datatable</a></li>
@@ -172,7 +169,7 @@
 
                 <li>
                     <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-wallet-90"></i><span class="nav-text">Special Billing</span>
+                        <i class="bi bi-wallet2"></i><span class="nav-text">Special Billing</span>
                     </a>
                     <ul aria-expanded="false">
                         <li><a href="{{ route('special-billing.index.branch') }}">Special Billing Datatable</a></li>

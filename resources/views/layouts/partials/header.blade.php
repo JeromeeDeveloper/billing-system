@@ -4,11 +4,11 @@
         @if (Auth::check())
             @if (Auth::user()->role === 'admin')
                 <a href="{{ route('dashboard') }}" class="brand-logo">
-                    <img class="logomsp" src="{{ asset('images/logomsp.png') }}" alt="">
+                    <img class="logomsp img-fluid" src="{{ asset('images/logomsp.png') }}" alt="Branch or User Logo">
                 </a>
             @elseif (Auth::user()->role === 'branch')
                 <a href="{{ route('dashboard_branch') }}" class="brand-logo">
-                    <img class="logomsp" src="{{ asset('images/logomsp.png') }}" alt="">
+                    <img class="logomsp img-fluid" src="{{ asset('images/logomsp.png') }}" alt="Branch or User Logo">
                 </a>
             @endif
         @endif
@@ -27,7 +27,7 @@
                     <div class="header-left">
                         <div class="search_bar dropdown">
                             <span class="search_icon p-3 c-pointer" data-toggle="dropdown">
-                                <i class="mdi mdi-magnify"></i>
+                                <i class="bi bi-search"></i>
                             </span>
                             <div class="dropdown-menu p-0 m-0">
                                 <form>
@@ -51,7 +51,7 @@
                         </li>
                         <li class="nav-item dropdown notification_dropdown">
                             <a class="nav-link" href="#" role="button" data-toggle="dropdown">
-                                <i class="mdi mdi-bell"></i>
+                                <i class="bi bi-bell"></i>
                                 <div class="pulse-css" id="notification-pulse"></div>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
@@ -63,7 +63,7 @@
                         </li>
                         <li class="nav-item dropdown header-profile">
                             <a class="nav-link" href="#" role="button" data-toggle="dropdown">
-                                <i class="mdi mdi-account"></i>
+                                <i class="bi bi-person"></i>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
                                 <a href="{{ route('profile') }}" class="dropdown-item">
@@ -76,7 +76,7 @@
 
                                 <a href="#" class="dropdown-item"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    <i class="icon-key"></i>
+                                    <i class="bi bi-box-arrow-right"></i>
                                     <span class="ml-2">Logout</span>
                                 </a>
                             </div>
