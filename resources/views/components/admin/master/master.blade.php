@@ -19,6 +19,7 @@
     <link href="{{ asset('icons/simple-line-icons/css/simple-line-icons.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/themify-icons/css/themify-icons.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/avasta/css/style.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 
 <body>

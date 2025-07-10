@@ -12,6 +12,7 @@
     <link rel="stylesheet" type="text/css" href="assets/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
     <!--===============================================================================================-->
     <link rel="stylesheet" type="text/css" href="assets/fonts/iconic/css/material-design-iconic-font.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     <link rel="stylesheet" type="text/css" href="assets/css/util.css">
     <link rel="stylesheet" type="text/css" href="assets/css/main.css">
@@ -57,7 +58,7 @@
                     </div>
 
                     <div class="text-center p-t-90">
-                        <a class="txt1" href="#">
+                        <a class="txt1" href="#" data-toggle="modal" data-target="#privacyPolicyModal">
                             Privacy Policy
                         </a>
                     </div>
@@ -67,8 +68,30 @@
         </div>
     </div>
 
+    <!-- Privacy Policy Modal -->
+    <div class="modal fade" id="privacyPolicyModal" tabindex="-1" role="dialog" aria-labelledby="privacyPolicyModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="privacyPolicyModalLabel">Privacy Policy</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>This application does not collect, store, or use any personal data from users. All information entered is used solely for authentication and is not shared with third parties. No tracking or analytics are implemented. For questions, contact the system administrator.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <div id="dropDownSelect1"></div>
+    <!-- Bootstrap 4 JS and CSS for modal functionality (CDN) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="assets/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
