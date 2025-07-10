@@ -11,8 +11,8 @@
 
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
 
-    <link href="./vendor/datatables/css/jquery.dataTables.min.css" rel="stylesheet">
-    <link href="./css/style.css" rel="stylesheet">
+    <link href="{{ asset('vendor/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
 </head>
 
 <body>
@@ -1508,7 +1508,7 @@
                         <p><strong>Loan Account No.:</strong> ${loan.loan_acct_no || 'N/A'}</p>
                         <p><strong>Product Name:</strong> ${productInfo.product_name}</p>
                         <p><strong>Billing Type:</strong> <span class="badge ${productInfo.billing_type === 'special' ? 'badge-warning' : 'badge-info'}">${productInfo.billing_type}</span></p>
-                    
+
                         <p><strong>Open Date:</strong> ${loan.open_date || 'N/A'}</p>
                         <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
