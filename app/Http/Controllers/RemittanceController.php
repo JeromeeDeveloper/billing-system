@@ -323,8 +323,8 @@ class RemittanceController extends Controller
                     'remaining_loan_balance' => 0,
                 ];
             }
-            $memberTotals[$cid]['amortization'] += $forecast->total_due;
-            $memberTotals[$cid]['total_billed'] += $forecast->total_billed;
+            $memberTotals[$cid]['amortization'] += $forecast->original_total_due ?? $forecast->total_due;
+            $memberTotals[$cid]['total_billed'] += $forecast->total_due;
         }
         foreach ($memberTotals as $cid => &$row) {
             $remit = $remitted[$cid] ?? null;

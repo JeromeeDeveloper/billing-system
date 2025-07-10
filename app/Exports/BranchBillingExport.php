@@ -140,12 +140,12 @@ class BranchLoanDeductionsSheet implements FromCollection, WithHeadings, WithTit
 
                     // Include all loans except those marked as 'special'
                     if (!$hasSpecialProduct) {
-                        $amortization += $loanForecast->total_due ?? 0;
+                        $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
                     }
                 } else {
                     // If no product code found, include the loan (default behavior)
-                    $amortization += $loanForecast->total_due ?? 0;
+                    $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                     $hasNonSpecialLoans = true;
                 }
             }
@@ -257,7 +257,7 @@ class BranchDynamicSavingsSheet implements FromCollection, WithHeadings, WithTit
                         })
                         ->exists();
                     if ($hasRegisteredProduct && !$hasSpecialProduct) {
-                        $amortization += $loanForecast->total_due ?? 0;
+                        $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
                     }
                 } else {
@@ -351,7 +351,7 @@ class BranchDynamicSharesSheet implements FromCollection, WithHeadings, WithTitl
                         })
                         ->exists();
                     if ($hasRegisteredProduct && !$hasSpecialProduct) {
-                        $amortization += $loanForecast->total_due ?? 0;
+                        $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
                     }
                 } else {
