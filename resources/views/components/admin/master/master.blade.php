@@ -1427,6 +1427,11 @@
             </div>
 
             <div class="form-group col-md-6">
+                <label>Original Total Due</label>
+                <input type="number" class="form-control" value="${loan.original_total_due !== undefined && loan.original_total_due !== null ? loan.original_total_due : ''}" readonly>
+            </div>
+
+            <div class="form-group col-md-6">
                 <label>Start Hold</label>
                 <input type="month" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
             </div>
@@ -1513,6 +1518,7 @@
                         <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
                         <p><strong>Total Due:</strong> ${loan.total_due || '0.00'}</p>
+                        <p><strong>Original Total Due:</strong> ${loan.original_total_due || '0.00'}</p>
                         <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
                         <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>

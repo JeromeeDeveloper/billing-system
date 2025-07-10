@@ -127,6 +127,7 @@ class Member extends Model
                     'maturity_date' => $loan->maturity_date ? Carbon::parse($loan->maturity_date)->format('Y-m-d') : null,
                     'amortization_due_date' => $loan->amortization_due_date ? Carbon::parse($loan->amortization_due_date)->format('Y-m-d') : null,
                     'total_due' => $loan->total_due,
+                    'original_total_due' => $loan->original_total_due,
                     'principal_due' => $loan->principal_due,
                     'interest_due' => $loan->interest_due,
                     'penalty_due' => $loan->penalty_due,

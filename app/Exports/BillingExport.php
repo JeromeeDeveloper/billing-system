@@ -272,9 +272,9 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
 
                     // Only include loans that have registered products and are not marked as 'special'
                     if ($hasRegisteredProduct && !$hasSpecialProduct) {
-                        $amortization += $loanForecast->total_due ?? 0;
+                        $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
-                        \Illuminate\Support\Facades\Log::info('Added to amortization: ' . ($loanForecast->total_due ?? 0));
+                        \Illuminate\Support\Facades\Log::info('Added to amortization: ' . ($loanForecast->original_total_due ?? $loanForecast->total_due ?? 0));
                     } else {
                         \Illuminate\Support\Facades\Log::info('Skipping loan - not registered or is special');
                     }
@@ -391,7 +391,7 @@ class DynamicSavingsSheet implements FromCollection, WithHeadings, WithTitle
                         })
                         ->exists();
                     if ($hasRegisteredProduct && !$hasSpecialProduct) {
-                        $amortization += $loanForecast->total_due ?? 0;
+                        $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
                     }
                 } else {
@@ -483,7 +483,7 @@ class DynamicSharesSheet implements FromCollection, WithHeadings, WithTitle
                         })
                         ->exists();
                     if ($hasRegisteredProduct && !$hasSpecialProduct) {
-                        $amortization += $loanForecast->total_due ?? 0;
+                        $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
                     }
                 } else {
