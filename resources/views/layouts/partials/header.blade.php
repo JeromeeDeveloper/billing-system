@@ -4,11 +4,11 @@
         @if (Auth::check())
             @if (Auth::user()->role === 'admin')
                 <a href="{{ route('dashboard') }}" class="brand-logo">
-                    <img class="logomsp" src="{{ asset('images/logomsp.png') }}" alt="">
+                    <img class="logomsp img-fluid" src="{{ asset('images/logomsp.png') }}" alt="Branch or User Logo">
                 </a>
             @elseif (Auth::user()->role === 'branch')
                 <a href="{{ route('dashboard_branch') }}" class="brand-logo">
-                    <img class="logomsp" src="{{ asset('images/logomsp.png') }}" alt="">
+                    <img class="logomsp img-fluid" src="{{ asset('images/logomsp.png') }}" alt="Branch or User Logo">
                 </a>
             @endif
         @endif
