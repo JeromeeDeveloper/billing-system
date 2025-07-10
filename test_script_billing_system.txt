@@ -1,0 +1,66 @@
+Billing System Manual Test Script
+================================
+
+Test Scope: Admin and Branch user flows, including billing, amortization, and loan type display logic.
+
+---
+
+1. LOGIN
+--------
+- [ ] 1.1 Login as Admin user
+- [ ] 1.2 Login as Branch user
+
+2. BILLING PAGE (ADMIN)
+-----------------------
+- [ ] 2.1 Navigate to Admin Billing page
+- [ ] 2.2 Verify the billing table loads with member rows
+- [ ] 2.3 For each member:
+    - [ ] Amortization column shows the sum of total_due for only regular loans
+    - [ ] If the sum is zero, the member is NOT shown in the table
+    - [ ] Name, Employee #, Start/End Date, Gross, Office, and Actions are correct
+- [ ] 2.4 Click 'Edit' on a member row
+    - [ ] Edit modal opens with correct member info
+    - [ ] Loan details show Product Name and Billing Type (read-only, correct for each loan)
+- [ ] 2.5 Click 'View' on a member row
+    - [ ] View modal opens with correct member info
+    - [ ] Loan details show Product Name and Billing Type (read-only, correct for each loan)
+
+3. BILLING PAGE (BRANCH)
+------------------------
+- [ ] 3.1 Login as Branch user and go to Branch Billing page
+- [ ] 3.2 Verify the billing table loads with member rows
+- [ ] 3.3 For each member:
+    - [ ] Amortization column shows the sum of total_due for only regular loans
+    - [ ] If the sum is zero, the member is NOT shown in the table
+    - [ ] Name, Employee #, Start/End Date, Gross, Office, and Actions are correct
+- [ ] 3.4 Click 'Edit' on a member row
+    - [ ] Edit modal opens with correct member info
+    - [ ] Loan details show Product Name and Billing Type (read-only, correct for each loan)
+- [ ] 3.5 Click 'View' on a member row
+    - [ ] View modal opens with correct member info
+    - [ ] Loan details show Product Name and Billing Type (read-only, correct for each loan)
+
+4. EXPORTS
+----------
+- [ ] 4.1 As Admin, generate a billing export (if all branches are approved)
+    - [ ] File downloads as CSV
+    - [ ] Data matches what is shown in the billing table
+- [ ] 4.2 As Branch, generate a billing export (if allowed)
+    - [ ] File downloads as CSV
+    - [ ] Data matches what is shown in the billing table
+
+5. DATA INTEGRITY
+-----------------
+- [ ] 5.1 Import loan data and verify that only regular loans are included in amortization
+- [ ] 5.2 Import special loans and verify they do NOT affect regular amortization
+- [ ] 5.3 Edit a member's loan and verify changes are reflected in the billing table
+
+6. UI/UX
+--------
+- [ ] 6.1 All modals open and close correctly
+- [ ] 6.2 No errors in the browser console during normal use
+- [ ] 6.3 Table pagination, search, and filters work as expected
+
+---
+
+End of Test Script
