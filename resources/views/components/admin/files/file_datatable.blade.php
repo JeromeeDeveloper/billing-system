@@ -14,6 +14,25 @@
 
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        /* Floating button styles */
+        #floatingFormatBtn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1050;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        #floatingFormatBtn .fa-eye {
+            font-size: 1.5rem;
+        }
+    </style>
 
 </head>
 
@@ -66,23 +85,6 @@
                                         </span>
                                         File Retention
                                     </a>
-                                    @if($isApproved)
-                                        <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
-                                            data-target="#exampleModalpopover">
-                                            <span class="btn-icon-left text-primary">
-                                                <i class="fa fa-upload"></i>
-                                            </span>
-                                            Upload
-                                        </button>
-                                                                                                                                                @else
-                                        <button type="button" class="btn btn-rounded btn-secondary" disabled
-                                            title="Upload is disabled. One or more branch users have been approved.">
-                                            <span class="btn-icon-left text-secondary">
-                                                <i class="fa fa-upload"></i>
-                                            </span>
-                                            Upload (Disabled)
-                                        </button>
-                                    @endif
                                 </div>
                             </div>
 
@@ -337,6 +339,159 @@
         });
     </script>
 
+    <!-- Floating View Format Button -->
+    <button id="floatingFormatBtn" class="btn btn-success btn-lg shadow" data-toggle="modal" data-target="#viewFormatModal" title="View File Format Guide">
+        <i class="fa fa-eye"></i>
+    </button>
+
+    <!-- View Format Modal -->
+    <div class="modal fade" id="viewFormatModal" tabindex="-1" role="dialog" aria-labelledby="viewFormatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewFormatModalLabel">File Upload Format Guide</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Below are the required formats for each file type. Please ensure your files match these formats before uploading.</p>
+                    <div class="accordion" id="formatAccordion">
+                        <div class="card">
+                            <div class="card-header" id="headingForecast">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseForecast" aria-expanded="true" aria-controls="collapseForecast">
+                                        📁 Installment Forecast File Format
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="collapseForecast" class="collapse show" aria-labelledby="headingForecast" data-parent="#formatAccordion">
+                                <div class="card-body">
+                                    <strong>Required Columns (Row 5 as header):</strong>
+                                    <ul>
+                                        <li>cid</li>
+                                        <li>branch_code</li>
+                                        <li>branch_name</li>
+                                        <li>name (Lastname, Firstname)</li>
+                                        <li>loan_account_no</li>
+                                        <li>open_date</li>
+                                        <li>maturity_date</li>
+                                        <li>amortization_due_date</li>
+                                        <li>total_due</li>
+                                        <li>principal_due</li>
+                                        <li>interest_due</li>
+                                        <li>penalty_due</li>
+                                    </ul>
+                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingSavings">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseSavings" aria-expanded="false" aria-controls="collapseSavings">
+                                        💰 Savings File Format
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="collapseSavings" class="collapse" aria-labelledby="headingSavings" data-parent="#formatAccordion">
+                                <div class="card-body">
+                                    <strong>Required Columns (Row 6 as header):</strong>
+                                    <ul>
+                                        <li>customer_no</li>
+                                        <li>account_no</li>
+                                        <li>product_code</li>
+                                        <li>open_date</li>
+                                        <li>current_bal</li>
+                                        <li>available_bal</li>
+                                        <li>interest_due_amount</li>
+                                        <li>status</li>
+                                        <li>last_trn_date</li>
+                                    </ul>
+                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingShares">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseShares" aria-expanded="false" aria-controls="collapseShares">
+                                        📊 Shares/CoreID File Format
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="collapseShares" class="collapse" aria-labelledby="headingShares" data-parent="#formatAccordion">
+                                <div class="card-body">
+                                    <strong>Required Columns (Row 1 as header):</strong>
+                                    <ul>
+                                        <li>coreid <em>or</em> customer_no <em>or</em> customer_no_ <em>or</em> cid <em>or</em> customer_number <em>or</em> customer_id</li>
+                                    </ul>
+                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingCIF">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseCIF" aria-expanded="false" aria-controls="collapseCIF">
+                                        👤 CIF File Format
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="collapseCIF" class="collapse" aria-labelledby="headingCIF" data-parent="#formatAccordion">
+                                <div class="card-body">
+                                    <strong>Required Columns (Row 4 as header):</strong>
+                                    <ul>
+                                        <li>customer_no</li>
+                                        <li>customer_name (Lastname, Firstname)</li>
+                                        <li>birth_date</li>
+                                        <li>date_registered</li>
+                                        <li>gender</li>
+                                        <li>customer_type</li>
+                                        <li>customer_classification</li>
+                                        <li>industry</li>
+                                        <li>area_officer</li>
+                                        <li>area</li>
+                                        <li>status</li>
+                                        <li>address</li>
+                                    </ul>
+                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header" id="headingLoans">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseLoans" aria-expanded="false" aria-controls="collapseLoans">
+                                        🏛️ Loans File Format
+                                    </button>
+                                </h2>
+                            </div>
+                            <div id="collapseLoans" class="collapse" aria-labelledby="headingLoans" data-parent="#formatAccordion">
+                                <div class="card-body">
+                                    <strong>Required Columns (Row 1 as header):</strong>
+                                    <ul>
+                                        <li>CID (Column A)</li>
+                                        <li>Account No. (Column B)</li>
+                                        <li>Start Date (Column H)</li>
+                                        <li>End Date (Column I)</li>
+                                        <li>Principal (Column L)</li>
+                                    </ul>
+                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <br><small class="text-muted">Note: Other columns may exist but are not required for import.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <p class="mb-0"><strong>Note:</strong> For best results, always use the provided template or sample file if available. If you have questions, contact your system administrator.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </body>
 
