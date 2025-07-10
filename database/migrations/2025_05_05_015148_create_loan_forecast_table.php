@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('start_hold', 7)->nullable();
             $table->string('expiry_date', 7)->nullable();
             $table->decimal('total_due_after_remittance', 12, 2)->default(0);
-            $table->decimal('total_billed', 15, 2)->nullable()->after('total_due_after_remittance');
+            $table->decimal('total_billed', 15, 2)->nullable();
             $table->enum('account_status', ['deduction', 'non-deduction'])->default('deduction');
             $table->text('remarks')->nullable();
             $table->timestamps();
