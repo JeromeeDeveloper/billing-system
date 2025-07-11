@@ -51,6 +51,11 @@ class BranchSharesExport implements FromCollection, WithHeadings
                 continue;
             }
 
+            // Skip members with no branch
+            if (empty($member->branch) || empty($member->branch->code)) {
+                continue;
+            }
+
             // Verify member belongs to the correct branch
             if ($member->branch_id !== $this->branch_id) {
                 Log::warning('Member ' . $member->id . ' does not belong to branch ' . $this->branch_id);
