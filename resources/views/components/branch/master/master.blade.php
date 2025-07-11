@@ -1281,6 +1281,10 @@
                         <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount || '0.00'}">
                     </div>
                     `}
+                    <div class="form-group col-md-12">
+                        <label>Remarks</label>
+                        <textarea name="savings[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${saving.remarks || ''}</textarea>
+                    </div>
                 </div>
             </div>`;
 
@@ -1343,6 +1347,10 @@
                         <label>Deduction Amount</label>
                         <input type="number" step="0.01" name="shares[${index}][deduction_amount]" class="form-control" value="${share.deduction_amount || '0.00'}">
                     </div>
+                    <div class="form-group col-md-12">
+                        <label>Remarks</label>
+                        <textarea name="shares[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${share.remarks || ''}</textarea>
+                    </div>
                 </div>
             </div>`;
 
@@ -1378,9 +1386,13 @@
                 <label>Billing Type</label>
                 <input type="text" class="form-control" value="${productInfo.billing_type}" readonly>
             </div>
-            <div class="form-group col-md-6" style="display: none;">
+            <div class="form-group col-md-6">
                 <label>Total Due</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || ''}" required>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || 0}" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Original Total Due</label>
+                <input type="number" class="form-control" value="${loan.original_total_due !== undefined && loan.original_total_due !== null ? loan.original_total_due : ''}" readonly>
             </div>
             <div class="form-group col-md-6" style="display: none;">
                 <label>Amount Due</label>
@@ -1430,6 +1442,14 @@
                     <option value="deduction" ${loan.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                     <option value="non-deduction" ${loan.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                 </select>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Deduction Amount</label>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][deduction_amount]" class="form-control" value="${loan.deduction_amount || '0.00'}">
+            </div>
+            <div class="form-group col-md-12">
+                <label>Remarks</label>
+                <textarea name="loan_forecasts[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${loan.remarks || ''}</textarea>
             </div>
         </div>
     </div>`;
@@ -1496,9 +1516,11 @@
                         <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
                         <p><strong>Total Due:</strong> ${loan.total_due || '0.00'}</p>
+                        <p><strong>Original Total Due:</strong> ${loan.original_total_due || '0.00'}</p>
                         <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
                         <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>
+                        <p><strong>Deduction Amount:</strong> ${loan.deduction_amount || '0.00'}</p>
                         <p><strong>Approval Number:</strong> ${loan.approval_no || 'N/A'}</p>
                         <p><strong>Start Hold:</strong> ${loan.start_hold || 'N/A'}</p>
                         <p><strong>Expiry Date:</strong> ${loan.expiry_date || 'N/A'}</p>
@@ -1541,6 +1563,7 @@
                         <p><strong>Start Hold:</strong> ${saving.start_hold || 'N/A'}</p>
                         <p><strong>Expiry Date:</strong> ${saving.expiry_date || 'N/A'}</p>
                         <p><strong>Account Status:</strong> ${saving.account_status || 'N/A'}</p>
+                        <p><strong>Deduction Amount:</strong> ${saving.deduction_amount || '0.00'}</p>
                         <p><em>Savings Account ${index + 1} of ${savings.length}</em></p>
                     </div>`;
 
@@ -1579,6 +1602,7 @@
                         <p><strong>Start Hold:</strong> ${share.start_hold || 'N/A'}</p>
                         <p><strong>Expiry Date:</strong> ${share.expiry_date || 'N/A'}</p>
                         <p><strong>Account Status:</strong> ${share.account_status || 'N/A'}</p>
+                        <p><strong>Deduction Amount:</strong> ${share.deduction_amount || '0.00'}</p>
                         <p><em>Share Account ${index + 1} of ${shares.length}</em></p>
                     </div>`;
 
