@@ -1468,7 +1468,10 @@
                 <label>Approval Number</label>
                 <input type="text" name="loan_forecasts[${index}][approval_no]" class="form-control" value="${loan.approval_no || ''}">
             </div>
-
+            <div class="form-group col-md-6">
+                <label>Deduction Amount</label>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][deduction_amount]" class="form-control" value="${loan.deduction_amount || '0.00'}">
+            </div>
             <div class="form-group col-md-12">
                 <label>Remarks</label>
                 <textarea name="loan_forecasts[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${loan.remarks || ''}</textarea>
@@ -1537,6 +1540,7 @@
                         <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
                         <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>
+                        <p><strong>Deduction Amount:</strong> ${loan.deduction_amount || '0.00'}</p>
                         <p><strong>Approval Number:</strong> ${loan.approval_no || 'N/A'}</p>
                         <p><strong>Start Hold:</strong> ${loan.start_hold || 'N/A'}</p>
                         <p><strong>Expiry Date:</strong> ${loan.expiry_date || 'N/A'}</p>
