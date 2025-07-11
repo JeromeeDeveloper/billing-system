@@ -45,7 +45,10 @@ class SpecialBillingController extends Controller
 
     public function import(Request $request)
     {
-        ini_set('max_execution_time', 600);
+        ini_set('upload_max_filesize', '1024M'); // 1GB
+        ini_set('post_max_size', '1024M');      // 1GB
+        ini_set('memory_limit', '-1');          // Unlimited memory
+        ini_set('max_execution_time', 0);       // Unlimited execution time
         $request->validate([
             'forecast_file' => 'required|file|max:10240',
             'detail_file' => 'required|file|max:10240',
