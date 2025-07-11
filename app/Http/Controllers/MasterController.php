@@ -865,6 +865,10 @@ class MasterController extends Controller
 
     public function uploadCoreId(Request $request)
     {
+        // Increase execution time and memory limit for large file processing
+        ini_set('max_execution_time', 300); // 5 minutes
+        ini_set('memory_limit', '512M'); // 512MB memory limit
+        
         $request->validate([
             'coreid_file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
         ]);
@@ -957,6 +961,10 @@ class MasterController extends Controller
 
     public function uploadSavingsSharesProduct(Request $request)
     {
+        // Increase execution time and memory limit for large file processing
+        ini_set('max_execution_time', 300); // 5 minutes
+        ini_set('memory_limit', '512M'); // 512MB memory limit
+        
         $request->validate([
             'savings_shares_file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
         ]);

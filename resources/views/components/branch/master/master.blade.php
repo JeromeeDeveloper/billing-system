@@ -1238,6 +1238,10 @@
                         <label>Current Balance</label>
                         <input type="number" step="0.01" name="savings[${index}][current_balance]" class="form-control" value="${saving.current_balance || '0.00'}">
                     </div>
+                    <div class="form-group col-md-6" style="display: none;">
+                        <label>Open Date</label>
+                        <input type="date" name="savings[${index}][open_date]" class="form-control" value="${formatDate(saving.open_date)}" readonly>
+                    </div>
 
                     <div class="form-group col-md-6">
                         <label>Approval Number</label>
@@ -1310,6 +1314,10 @@
                     <div class="form-group col-md-6" style="display: none;">
                         <label>Current Balance</label>
                         <input type="number" step="0.01" name="shares[${index}][current_balance]" class="form-control" value="${share.current_balance || ''}">
+                    </div>
+                    <div class="form-group col-md-6" style="display: none;">
+                        <label>Open Date</label>
+                        <input type="date" name="shares[${index}][open_date]" class="form-control" value="${formatDate(share.open_date)}" readonly>
                     </div>
 
                     <div class="form-group col-md-6">
@@ -1386,6 +1394,10 @@
             <div class="form-group col-md-6" style="display: none;">
                 <label>Amortization Due Date</label>
                 <input type="date" name="loan_forecasts[${index}][amortization_due_date]" class="form-control" value="${formatDate(loan.amortization_due_date)}" required>
+            </div>
+            <div class="form-group col-md-6" style="display: none;">
+                <label>Open Date</label>
+                <input type="date" name="loan_forecasts[${index}][open_date]" class="form-control" value="${formatDate(loan.open_date)}" readonly>
             </div>
             <div class="form-group col-md-6" style="display: none;">
                 <label>Principal Due</label>

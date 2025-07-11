@@ -62,9 +62,8 @@ class CoreIdImport implements ToCollection, WithHeadingRow
                 return str_pad($cid, 9, '0', STR_PAD_LEFT);
             })->toArray();
 
-            // Get all existing members
-            $existingMembers = Member::all();
-            $existingCids = $existingMembers->pluck('cid')->toArray();
+            // Create a set of uploaded CIDs for faster lookup
+            $uploadedCidsSet = array_flip($uploadedCids);
 
             // Process each row in the uploaded file
             foreach ($rows as $row) {
@@ -104,32 +103,35 @@ class CoreIdImport implements ToCollection, WithHeadingRow
             }
 
             // Remove members that are not in the uploaded file (except those with 'New' tagging)
-            $membersToRemove = Member::whereNotIn('cid', $uploadedCids)
+            // Use chunked processing to avoid memory issues with large datasets
+            $query = Member::whereNotIn('cid', $uploadedCids)
                 ->where(function($query) {
                     $query->where('member_tagging', '!=', 'New')
                           ->orWhereNull('member_tagging');
-                })
-                ->get();
+                });
 
-            Log::info('CoreID Import - Members to remove count: ' . $membersToRemove->count());
-            Log::info('CoreID Import - Uploaded CIDs: ' . implode(', ', $uploadedCids));
+            $totalToRemove = $query->count();
+            Log::info('CoreID Import - Members to remove count: ' . $totalToRemove);
 
-            foreach ($membersToRemove as $member) {
-                Log::info('CoreID Import - Removing member: ' . $member->cid . ' with tagging: ' . $member->member_tagging);
+            // Process in chunks to avoid memory issues
+            $query->chunk(1000, function($members) {
+                foreach ($members as $member) {
+                    Log::info('CoreID Import - Removing member: ' . $member->cid . ' with tagging: ' . $member->member_tagging);
 
-                // Force delete to bypass any soft deletes if they exist
-                $deleted = $member->forceDelete();
-                Log::info('CoreID Import - Delete result: ' . ($deleted ? 'success' : 'failed'));
+                    // Force delete to bypass any soft deletes if they exist
+                    $deleted = $member->forceDelete();
+                    Log::info('CoreID Import - Delete result: ' . ($deleted ? 'success' : 'failed'));
 
-                $this->stats['removed']++;
+                    $this->stats['removed']++;
 
-                $this->results[] = [
-                    'cid' => $member->cid,
-                    'status' => 'removed',
-                    'message' => 'Member removed (not in uploaded file)',
-                    'action' => 'removed'
-                ];
-            }
+                    $this->results[] = [
+                        'cid' => $member->cid,
+                        'status' => 'removed',
+                        'message' => 'Member removed (not in uploaded file)',
+                        'action' => 'removed'
+                    ];
+                }
+            });
 
             DB::commit();
 
