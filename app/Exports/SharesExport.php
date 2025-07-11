@@ -43,6 +43,11 @@ class SharesExport implements FromCollection, WithHeadings
             $member = Member::with(['branch', 'savings.savingProduct', 'shares'])->find($record['member_id']);
             if (!$member) continue;
 
+            // Skip members with no branch
+            if (empty($member->branch) || empty($member->branch->code)) {
+                continue;
+            }
+
             $remitted = $record['share_amount'];
 
             // 1. Mortuary rows: all savings with product_type 'mortuary' and deduction_amount > 0
