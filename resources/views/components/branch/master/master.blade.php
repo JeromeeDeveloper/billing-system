@@ -1234,6 +1234,10 @@
                         <label>Account Number</label>
                         <input type="text" name="savings[${index}][account_number]" class="form-control" value="${saving.account_number || ''}" readonly>
                     </div>
+                    <div class="form-group col-md-6">
+                        <label>Product Name</label>
+                        <input type="text" class="form-control" value="${saving.product_name || 'N/A'}" readonly>
+                    </div>
                     <div class="form-group col-md-6" style="display: none;">
                         <label>Current Balance</label>
                         <input type="number" step="0.01" name="savings[${index}][current_balance]" class="form-control" value="${saving.current_balance || '0.00'}">
@@ -1314,6 +1318,10 @@
                     <div class="form-group col-md-6">
                         <label>Account Number</label>
                         <input type="text" name="shares[${index}][account_number]" class="form-control" value="${share.account_number || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Product Name</label>
+                        <input type="text" class="form-control" value="${share.product_name || 'N/A'}" readonly>
                     </div>
                     <div class="form-group col-md-6" style="display: none;">
                         <label>Current Balance</label>
@@ -1443,10 +1451,7 @@
                     <option value="non-deduction" ${loan.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                 </select>
             </div>
-            <div class="form-group col-md-6">
-                <label>Deduction Amount</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][deduction_amount]" class="form-control" value="${loan.deduction_amount || '0.00'}">
-            </div>
+
             <div class="form-group col-md-12">
                 <label>Remarks</label>
                 <textarea name="loan_forecasts[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${loan.remarks || ''}</textarea>
@@ -1520,7 +1525,6 @@
                         <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
                         <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>
-                        <p><strong>Deduction Amount:</strong> ${loan.deduction_amount || '0.00'}</p>
                         <p><strong>Approval Number:</strong> ${loan.approval_no || 'N/A'}</p>
                         <p><strong>Start Hold:</strong> ${loan.start_hold || 'N/A'}</p>
                         <p><strong>Expiry Date:</strong> ${loan.expiry_date || 'N/A'}</p>
