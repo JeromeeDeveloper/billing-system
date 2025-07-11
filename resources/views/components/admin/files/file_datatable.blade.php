@@ -85,6 +85,23 @@
                                         </span>
                                         File Retention
                                     </a>
+                                    @if($isApproved)
+                                        <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
+                                            data-target="#exampleModalpopover">
+                                            <span class="btn-icon-left text-primary">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            Upload
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn btn-rounded btn-secondary" disabled
+                                            title="File upload is currently disabled because one or more branch users have been approved.">
+                                            <span class="btn-icon-left text-secondary">
+                                                <i class="fa fa-upload"></i>
+                                            </span>
+                                            Upload (Disabled)
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
 
