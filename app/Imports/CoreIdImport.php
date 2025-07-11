@@ -116,21 +116,21 @@ class CoreIdImport implements ToCollection, WithHeadingRow
             // Process in chunks to avoid memory issues
             $query->chunk(1000, function($members) {
                 foreach ($members as $member) {
-                    Log::info('CoreID Import - Removing member: ' . $member->cid . ' with tagging: ' . $member->member_tagging);
+                Log::info('CoreID Import - Removing member: ' . $member->cid . ' with tagging: ' . $member->member_tagging);
 
-                    // Force delete to bypass any soft deletes if they exist
-                    $deleted = $member->forceDelete();
-                    Log::info('CoreID Import - Delete result: ' . ($deleted ? 'success' : 'failed'));
+                // Force delete to bypass any soft deletes if they exist
+                $deleted = $member->forceDelete();
+                Log::info('CoreID Import - Delete result: ' . ($deleted ? 'success' : 'failed'));
 
-                    $this->stats['removed']++;
+                $this->stats['removed']++;
 
-                    $this->results[] = [
-                        'cid' => $member->cid,
-                        'status' => 'removed',
-                        'message' => 'Member removed (not in uploaded file)',
-                        'action' => 'removed'
-                    ];
-                }
+                $this->results[] = [
+                    'cid' => $member->cid,
+                    'status' => 'removed',
+                    'message' => 'Member removed (not in uploaded file)',
+                    'action' => 'removed'
+                ];
+            }
             });
 
             DB::commit();
