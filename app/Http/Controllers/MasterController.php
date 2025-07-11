@@ -770,6 +770,7 @@ class MasterController extends Controller
                                     'expiry_date' => isset($loanData['expiry_date']) ? substr($loanData['expiry_date'], 0, 7) : null,
                                     'account_status' => $loanData['account_status'],
                                     'approval_no' => $loanData['approval_no'],
+                                    'deduction_amount' => $loanData['deduction_amount'] ?? null,
                                     'remarks' => $loanData['remarks'] ?? null,
                                 ];
 
