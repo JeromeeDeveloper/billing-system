@@ -1268,6 +1268,10 @@
                         <label>Account Number</label>
                         <input type="text" name="savings[${index}][account_number]" class="form-control" value="${saving.account_number || ''}" readonly>
                     </div>
+                    <div class="form-group col-md-6">
+                        <label>Product Name</label>
+                        <input type="text" class="form-control" value="${saving.product_name || 'N/A'}" readonly>
+                    </div>
                     <div class="form-group col-md-6" style="display: none;">
                         <label>Current Balance</label>
                         <input type="number" step="0.01" name="savings[${index}][current_balance]" class="form-control" value="${saving.current_balance || '0.00'}">
@@ -1347,6 +1351,10 @@
                     <div class="form-group col-md-6">
                         <label>Account Number</label>
                         <input type="text" name="shares[${index}][account_number]" class="form-control" value="${share.account_number || ''}" readonly>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Product Name</label>
+                        <input type="text" class="form-control" value="${share.product_name || 'N/A'}" readonly>
                     </div>
                     <div class="form-group col-md-6" style="display: none;">
                         <label>Current Balance</label>
