@@ -8,12 +8,71 @@ use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $notifications = Notification::with('user')
-            ->orderBy('created_at', 'desc')
-            ->get();
-        return view('notifications.index', compact('notifications'));
+        $query = Notification::with('user')
+            ->orderBy('created_at', 'desc');
+
+        // Time filter
+        $timeFilter = $request->input('time_filter', 'all');
+        switch ($timeFilter) {
+            case 'today':
+                $query->whereDate('created_at', today());
+                break;
+            case 'yesterday':
+                $query->whereDate('created_at', today()->subDay());
+                break;
+            case 'week':
+                $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                break;
+            case 'month':
+                $query->whereMonth('created_at', now()->month)
+                      ->whereYear('created_at', now()->year);
+                break;
+            case 'last_month':
+                $query->whereMonth('created_at', now()->subMonth()->month)
+                      ->whereYear('created_at', now()->subMonth()->year);
+                break;
+            case 'custom':
+                $startDate = $request->input('start_date');
+                $endDate = $request->input('end_date');
+                if ($startDate && $endDate) {
+                    $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+                }
+                break;
+        }
+
+        // Type filter
+        $typeFilter = $request->input('type_filter');
+        if ($typeFilter && $typeFilter !== 'all') {
+            $query->where('type', $typeFilter);
+        }
+
+        // Status filter
+        $statusFilter = $request->input('status_filter');
+        if ($statusFilter && $statusFilter !== 'all') {
+            $query->where('is_read', $statusFilter === 'read');
+        }
+
+        // Per page options
+        $perPage = $request->input('perPage', 15);
+        if (!in_array($perPage, [10, 15, 25, 50, 100])) {
+            $perPage = 15;
+        }
+
+        $notifications = $query->paginate($perPage)->appends([
+            'time_filter' => $timeFilter,
+            'type_filter' => $typeFilter,
+            'status_filter' => $statusFilter,
+            'perPage' => $perPage,
+            'start_date' => $request->input('start_date'),
+            'end_date' => $request->input('end_date'),
+        ]);
+
+        // Get unique notification types for filter dropdown
+        $notificationTypes = Notification::distinct()->pluck('type')->sort();
+
+        return view('notifications.index', compact('notifications', 'timeFilter', 'typeFilter', 'statusFilter', 'perPage', 'notificationTypes'));
     }
 
     public function getUnreadCount()

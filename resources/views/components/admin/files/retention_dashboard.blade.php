@@ -107,8 +107,8 @@
                         <div class="widget-stat card">
                             <div class="card-body p-4">
                                 <div class="media ai-icon">
-                                    <span class="mr-3 bgl-info text-info">
-                                        <i class="fa fa-company"></i>
+                                    <span class="mr-3 bgl-danger text-info">
+                                        <i class="fa fa-file"></i>
                                     </span>
                                     <div class="media-body">
                                         <h3 class="mb-0 text-black"><span class="counter ml-0">{{ $maxFilesPerType }}</span></h3>
