@@ -75,13 +75,8 @@
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">Branch</label>
-                                                    <select class="form-control" name="branch_id">
-                                                        <option value="">Select Branch</option>
-                                                        @foreach ($branches as $branch)
-                                                            <option value="{{ $branch->id }}">{{ $branch->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
+                                                    <input type="hidden" name="branch_id" value="{{ Auth::user()->branch_id }}">
+                                                    <input type="text" class="form-control" value="{{ Auth::user()->branch ? Auth::user()->branch->name : '' }}" readonly>
                                                 </div>
                                             </div>
 

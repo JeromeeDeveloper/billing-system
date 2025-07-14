@@ -38,6 +38,14 @@ body, html {
 	font-family: Poppins-Regular, sans-serif;
 }
 
+body, .form-control, .table, .card, .modal-content, .breadcrumb, .text-muted, .text-secondary, .text-primary, .text-info, .text-warning, .text-success, .text-danger, .text-dark, .navbar, .dropdown-menu, .dropdown-item, .btn, .alert, .page-title, .section-title, .card-title, .card-header, .card-body, .footer, .copyright {
+    color: #000 !important;
+}
+
+label, h1, h2, h3, h4, h5, h6, p, span, div, th, td, a, small {
+    color: #000 !important;
+}
+
 /*---------------------------------------------*/
 a {
 	font-family: Poppins-Regular;

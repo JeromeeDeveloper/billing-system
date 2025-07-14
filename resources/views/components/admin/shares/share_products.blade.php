@@ -80,6 +80,7 @@
                                             <tr>
                                                 <th>Product Name</th>
                                                 <th>Product Code</th>
+                                                <th>Amount to Deduct</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -88,6 +89,7 @@
                                             <tr>
                                                 <td>{{ $product->product_name }}</td>
                                                 <td>{{ $product->product_code }}</td>
+                                                <td>{{ $product->amount_to_deduct}}</td>
                                                 <td>
                                                     <button type="button" class="btn btn-rounded btn-info"
                                                         data-toggle="modal" data-target="#viewModal{{ $product->id }}">
@@ -142,6 +144,10 @@
                             <label>Product Code</label>
                             <input type="text" class="form-control" name="product_code" required>
                         </div>
+                        <div class="form-group">
+                            <label>Amount to Deduct</label>
+                            <input type="number" step="0.01" class="form-control" name="amount_to_deduct" value="{{ isset($product) && $product->amount_to_deduct > 0 ? $product->amount_to_deduct : '' }}" placeholder="Enter amount (optional)">
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -173,7 +179,10 @@
                             <label>Product Code</label>
                             <input type="text" class="form-control" name="product_code" value="{{ $product->product_code }}" required>
                         </div>
-
+                        <div class="form-group">
+                            <label>Amount to Deduct</label>
+                            <input type="number" step="0.01" class="form-control" name="amount_to_deduct" value="{{ $product->amount_to_deduct }}" placeholder="Enter amount (optional)">
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

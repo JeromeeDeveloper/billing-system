@@ -107,6 +107,7 @@
                                                         <option value="">Select Billing Type</option>
                                                         <option value="regular">Regular</option>
                                                         <option value="special">Special</option>
+                                                        <option value="not_billed">Not Billed</option>
                                                     </select>
                                                 </div>
 
@@ -227,6 +228,7 @@
                                                         <option value="">Select Billing Type</option>
                                                         <option value="regular">Regular</option>
                                                         <option value="special">Special</option>
+                                                        <option value="not_billed">Not Billed</option>
                                                     </select>
                                                 </div>
 
