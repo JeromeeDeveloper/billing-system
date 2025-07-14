@@ -172,6 +172,10 @@ Route::get('/special-billing/export', [SpecialBillingController::class, 'export'
 Route::get('admin/remittance/export-preview', [\App\Http\Controllers\RemittanceController::class, 'exportPreview'])->name('remittance.exportPreview');
 Route::get('admin/remittance/export-comparison', [\App\Http\Controllers\RemittanceController::class, 'exportComparison'])->name('remittance.exportComparison');
 
+Route::get('/admin/contra', [App\Http\Controllers\ContraController::class, 'showAdmin'])->name('admin.contra');
+Route::post('/admin/contra', [App\Http\Controllers\ContraController::class, 'storeAdmin']);
+Route::get('/admin/contra/accounts', [App\Http\Controllers\ContraController::class, 'getAccountsByType'])->name('admin.contra.accounts');
+
 });
 
 Route::middleware([BranchMiddleware::class])->group(function () {
@@ -229,6 +233,15 @@ Route::get('/branch/remittance/generate-export', [BranchRemittanceController::cl
 Route::get('/master/export-member-details-branch', [MasterController::class, 'exportMemberDetailsBranch'])->name('master.exportMemberDetailsBranch');
 Route::get('/master/export-members-no-regular-savings-branch', [MasterController::class, 'exportMembersNoRegularSavingsBranch'])->name('master.exportMembersNoRegularSavingsBranch');
 
+// Remove branch contra routes
+// Route::get('/branch/contra', [App\Http\Controllers\ContraController::class, 'showBranch'])->name('branch.contra');
+// Route::post('/branch/contra', [App\Http\Controllers\ContraController::class, 'storeBranch']);
+
 });
+
+// Contra routes
+
+
+
 
 

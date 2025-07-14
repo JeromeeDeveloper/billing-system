@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('product_name');
             $table->string('product_code')->unique();
+            $table->decimal('amount_to_deduct', 12, 2)->nullable();
 
             $table->timestamps();
         });
@@ -20,7 +21,7 @@ return new class extends Migration
 
     public function down()
     {
-       
+
         Schema::dropIfExists('share_products');
     }
 };

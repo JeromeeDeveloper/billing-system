@@ -75,13 +75,8 @@
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">Branch</label>
-                                                    <select class="form-control" name="branch_id">
-                                                        <option value="">Select Branch</option>
-                                                        @foreach ($branches as $branch)
-                                                            <option value="{{ $branch->id }}">{{ $branch->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
+                                                    <input type="hidden" name="branch_id" value="{{ Auth::user()->branch_id }}">
+                                                    <input type="text" class="form-control" value="{{ Auth::user()->branch ? Auth::user()->branch->name : '' }}" readonly>
                                                 </div>
                                             </div>
 
@@ -1451,10 +1446,7 @@
                     <option value="non-deduction" ${loan.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                 </select>
             </div>
-            <div class="form-group col-md-6">
-                <label>Deduction Amount</label>
-                <input type="number" step="0.01" name="loan_forecasts[${index}][deduction_amount]" class="form-control" value="${loan.deduction_amount || '0.00'}">
-            </div>
+
             <div class="form-group col-md-12">
                 <label>Remarks</label>
                 <textarea name="loan_forecasts[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${loan.remarks || ''}</textarea>

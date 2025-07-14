@@ -31,7 +31,7 @@ class LoansController extends Controller
             'product' => 'required|string|max:255',
             'product_code' => 'required|string|max:255',
             'prioritization' => 'required|string|max:255',
-            'billing_type' => 'nullable|string|in:regular,special',
+            'billing_type' => 'nullable|string|in:regular,special,not_billed',
         ]);
 
         $loan->update($request->only(['product', 'prioritization', 'product_code', 'billing_type']));
@@ -52,7 +52,7 @@ class LoansController extends Controller
             'product' => 'required|string|max:255',
             'product_code' => 'required|string|max:255',
             'prioritization' => 'required|string|max:255',
-            'billing_type' => 'nullable|string|in:regular,special',
+            'billing_type' => 'nullable|string|in:regular,special,not_billed',
         ]);
 
         LoanProduct::create($request->only(['product', 'prioritization', 'product_code', 'billing_type']));

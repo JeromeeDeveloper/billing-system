@@ -51,8 +51,8 @@ class MemberDetailsExport implements FromCollection, WithHeadings, WithMapping
             $member->fname,
             $member->lname,
             $member->address,
-            $member->birth_date,
-            $member->date_registered,
+            $member->birth_date ? $member->birth_date->format('m/d/Y') : '',
+            $member->date_registered ? $member->date_registered->format('m/d/Y') : '',
             $member->gender,
             $member->customer_type,
             $member->customer_classification,
@@ -61,7 +61,7 @@ class MemberDetailsExport implements FromCollection, WithHeadings, WithMapping
             $member->area_officer,
             $member->area,
             $member->member_tagging,
-          
+
         ];
     }
 }

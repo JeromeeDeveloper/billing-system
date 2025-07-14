@@ -261,6 +261,14 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
                         })
                         ->exists();
 
+                    // Check if this member has a loan product with this product code that is marked as 'not_billed'
+                    $hasNotBilledProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'not_billed');
+                        })
+                        ->exists();
+
                     // Check if this product code is registered in loan products
                     $hasRegisteredProduct = $member->loanProductMembers()
                         ->whereHas('loanProduct', function($query) use ($productCode) {
@@ -268,10 +276,10 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
                         })
                         ->exists();
 
-                    \Illuminate\Support\Facades\Log::info('Product checks - Has Special: ' . ($hasSpecialProduct ? 'YES' : 'NO') . ', Has Registered: ' . ($hasRegisteredProduct ? 'YES' : 'NO'));
+                    \Illuminate\Support\Facades\Log::info('Product checks - Has Special: ' . ($hasSpecialProduct ? 'YES' : 'NO') . ', Has Not Billed: ' . ($hasNotBilledProduct ? 'YES' : 'NO') . ', Has Registered: ' . ($hasRegisteredProduct ? 'YES' : 'NO'));
 
-                    // Only include loans that have registered products and are not marked as 'special'
-                    if ($hasRegisteredProduct && !$hasSpecialProduct) {
+                    // Only include loans that have registered products and are not marked as 'special' or 'not_billed'
+                    if ($hasRegisteredProduct && !$hasSpecialProduct && !$hasNotBilledProduct) {
                         $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
                         \Illuminate\Support\Facades\Log::info('Added to amortization: ' . ($loanForecast->original_total_due ?? $loanForecast->total_due ?? 0));
@@ -385,12 +393,18 @@ class DynamicSavingsSheet implements FromCollection, WithHeadings, WithTitle
                                   ->where('billing_type', 'special');
                         })
                         ->exists();
+                    $hasNotBilledProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'not_billed');
+                        })
+                        ->exists();
                     $hasRegisteredProduct = $member->loanProductMembers()
                         ->whereHas('loanProduct', function($query) use ($productCode) {
                             $query->where('product_code', $productCode);
                         })
                         ->exists();
-                    if ($hasRegisteredProduct && !$hasSpecialProduct) {
+                    if ($hasRegisteredProduct && !$hasSpecialProduct && !$hasNotBilledProduct) {
                         $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
                     }
@@ -477,12 +491,18 @@ class DynamicSharesSheet implements FromCollection, WithHeadings, WithTitle
                                   ->where('billing_type', 'special');
                         })
                         ->exists();
+                    $hasNotBilledProduct = $member->loanProductMembers()
+                        ->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'not_billed');
+                        })
+                        ->exists();
                     $hasRegisteredProduct = $member->loanProductMembers()
                         ->whereHas('loanProduct', function($query) use ($productCode) {
                             $query->where('product_code', $productCode);
                         })
                         ->exists();
-                    if ($hasRegisteredProduct && !$hasSpecialProduct) {
+                    if ($hasRegisteredProduct && !$hasSpecialProduct && !$hasNotBilledProduct) {
                         $amortization += $loanForecast->original_total_due ?? $loanForecast->total_due ?? 0;
                         $hasNonSpecialLoans = true;
                     }

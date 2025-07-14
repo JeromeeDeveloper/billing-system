@@ -14,11 +14,13 @@ class ShareProduct extends Model
 
     protected $fillable = [
         'product_name',
-        'product_code'
+        'product_code',
+        'amount_to_deduct'
     ];
 
     protected $casts = [
         'interest' => 'decimal:2',
+        'amount_to_deduct' => 'decimal:2',
     ];
 
     /**

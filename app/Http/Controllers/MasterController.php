@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\MemberDetailsExport;
+use App\Models\Notification;
 
 class MasterController extends Controller
 {
@@ -404,6 +405,16 @@ class MasterController extends Controller
                 }
 
                 DB::commit();
+
+                // Log notification for edit
+                Notification::create([
+                    'type' => 'member_edit',
+                    'user_id' => Auth::id(),
+                    'related_id' => $member->id,
+                    'message' => Auth::user()->name . " edited member {$member->fname} {$member->lname} (CID: {$member->cid})",
+                    'billing_period' => $member->billing_period ?? Auth::user()->billing_period,
+                    'is_read' => false,
+                ]);
 
                 // Return JSON response for AJAX requests
                 if ($request->wantsJson() || $request->ajax()) {
@@ -809,6 +820,16 @@ class MasterController extends Controller
 
                 DB::commit();
 
+                // Log notification for edit (branch)
+                Notification::create([
+                    'type' => 'member_edit',
+                    'user_id' => Auth::id(),
+                    'related_id' => $member->id,
+                    'message' => Auth::user()->name . " edited member {$member->fname} {$member->lname} (CID: {$member->cid}) via branch",
+                    'billing_period' => $member->billing_period ?? Auth::user()->billing_period,
+                    'is_read' => false,
+                ]);
+
                 // Return JSON response for AJAX requests
                 if ($request->wantsJson() || $request->ajax()) {
                     return response()->json([
@@ -870,7 +891,7 @@ class MasterController extends Controller
         // Increase execution time and memory limit for large file processing
         ini_set('max_execution_time', 300); // 5 minutes
         ini_set('memory_limit', '512M'); // 512MB memory limit
-        
+
         $request->validate([
             'coreid_file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
         ]);
@@ -966,7 +987,7 @@ class MasterController extends Controller
         // Increase execution time and memory limit for large file processing
         ini_set('max_execution_time', 300); // 5 minutes
         ini_set('memory_limit', '512M'); // 512MB memory limit
-        
+
         $request->validate([
             'savings_shares_file' => 'required|file|mimes:xlsx,xls,csv|max:2048'
         ]);

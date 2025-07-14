@@ -71,6 +71,7 @@
                         <li><a href="{{ route('loans') }}">Loan Products</a></li>
                         <li><a href="{{ route('saving-products.index') }}">Saving Products</a></li>
                         <li><a href="{{ route('share-products.index') }}">Share Products</a></li>
+                        <li><a href="{{ route('admin.contra') }}">Contra Account</a></li>
                         <li><a href="#" data-toggle="modal" data-target="#pgbMembersUploadModal"></i>PGB Members File Upload</a></li>
                         <li><a href="#" data-toggle="modal" data-target="#savingsSharesUploadModal"></i>Savings & Shares Deduction File Upload</a></li>
                     </ul>
