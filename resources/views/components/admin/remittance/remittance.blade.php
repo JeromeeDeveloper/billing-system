@@ -188,6 +188,9 @@
                                                     <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('loans_savings')">
                                                         Collection file for Loans & Savings
                                                     </a>
+                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2" onclick="generateExport('loans_savings_with_product')">
+                                                        Collection file for Loans & Savings (with Product Name)
+                                                    </a>
                                                 </form>
                                             </div>
                                         </div>
@@ -217,6 +220,9 @@
                                                     </div>
                                                     <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('shares')">
                                                         Collection file for Shares
+                                                    </a>
+                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2" onclick="generateExport('shares_with_product')">
+                                                        Collection file for Shares (with Product Name)
                                                     </a>
                                                 </form>
                                             </div>
