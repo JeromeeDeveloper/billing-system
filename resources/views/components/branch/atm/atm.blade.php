@@ -144,9 +144,11 @@
                                                         @endforeach
                                                     </td>
                                                     <td>
-                                                        @foreach ($member->loanForecasts as $loan)
-                                                            <div>{{ $loan->loan_acct_no }}:
-                                                                ₱{{ number_format($loan->total_due, 2) }}</div>
+                                                        @foreach ($member->loanForecasts as $index => $loan)
+                                                            @if (floatval($loan->total_due) > 0)
+                                                                <div>{{ $loan->loan_acct_no }}:
+                                                                    ₱{{ number_format($loan->total_due, 2) }}</div>
+                                                            @endif
                                                         @endforeach
                                                     </td>
                                                     <td>
@@ -242,42 +244,44 @@
                                                                         </div>
                                                                         <div class="loan-selection-container" id="loan-selection{{ $member->id }}">
                                                                             @foreach ($member->loanForecasts as $index => $loan)
-                                                                                <div class="loan-option mb-3 p-3 border rounded">
-                                                                                    <div class="form-check">
-                                                                                        <input class="form-check-input loan-checkbox" type="checkbox"
-                                                                                               name="selected_loans[]"
-                                                                                               value="{{ $loan->loan_acct_no }}"
-                                                                                               id="loan{{ $member->id }}_{{ $index }}"
-                                                                                               data-total-due="{{ $loan->total_due }}"
-                                                                                               data-member-id="{{ $member->id }}">
-                                                                                        <label class="form-check-label fw-bold" for="loan{{ $member->id }}_{{ $index }}">
-                                                                                            <i class="fa fa-credit-card me-2 text-primary"></i>
-                                                                                            <strong>{{ $loan->loan_acct_no }}</strong>
-                                                                                            <span class="badge bg-info ms-2">
-                                                                                                Balance: ₱ {{ number_format($loan->total_due, 2) }}
-                                                                                            </span>
-                                                                                        </label>
-                                                                                    </div>
-                                                                                    <div class="ml-4 mt-2">
-                                                                                        <div class="row">
-                                                                                            <div class="col-md-6">
-                                                                                                <label class="form-label small">Amount to Pay:</label>
-                                                                                                <input type="number" step="0.01" class="form-control loan-amount-input"
-                                                                                                       name="loan_amounts[{{ $loan->loan_acct_no }}]"
-                                                                                                       placeholder="Enter amount"
-                                                                                                       data-total-due="{{ $loan->total_due }}"
-                                                                                                       data-member-id="{{ $member->id }}">
-                                                                                            </div>
-                                                                                            <div class="col-md-6">
-                                                                                                <div class="loan-details small text-muted">
-                                                                                                    <div><strong>Principal:</strong> ₱{{ number_format($loan->principal_due, 2) }}</div>
-                                                                                                    <div><strong>Interest:</strong> ₱{{ number_format($loan->interest_due, 2) }}</div>
-                                                                                                    <div><strong>Penalty:</strong> ₱{{ number_format($loan->penalty_due, 2) }}</div>
+                                                                                @if (floatval($loan->total_due) > 0)
+                                                                                    <div class="loan-option mb-3 p-3 border rounded">
+                                                                                        <div class="form-check">
+                                                                                            <input class="form-check-input loan-checkbox" type="checkbox"
+                                                                                                   name="selected_loans[]"
+                                                                                                   value="{{ $loan->loan_acct_no }}"
+                                                                                                   id="loan{{ $member->id }}_{{ $index }}"
+                                                                                                   data-total-due="{{ $loan->total_due }}"
+                                                                                                   data-member-id="{{ $member->id }}">
+                                                                                            <label class="form-check-label fw-bold" for="loan{{ $member->id }}_{{ $index }}">
+                                                                                                <i class="fa fa-credit-card me-2 text-primary"></i>
+                                                                                                <strong>{{ $loan->loan_acct_no }}</strong>
+                                                                                                <span class="badge bg-info ms-2">
+                                                                                                    Balance: ₱ {{ number_format($loan->total_due, 2) }}
+                                                                                                </span>
+                                                                                            </label>
+                                                                                        </div>
+                                                                                        <div class="ml-4 mt-2">
+                                                                                            <div class="row">
+                                                                                                <div class="col-md-6">
+                                                                                                    <label class="form-label small">Amount to Pay:</label>
+                                                                                                    <input type="number" step="0.01" class="form-control loan-amount-input"
+                                                                                                           name="loan_amounts[{{ $loan->loan_acct_no }}]"
+                                                                                                           placeholder="Enter amount"
+                                                                                                           data-total-due="{{ $loan->total_due }}"
+                                                                                                           data-member-id="{{ $member->id }}">
+                                                                                                </div>
+                                                                                                <div class="col-md-6">
+                                                                                                    <div class="loan-details small text-muted">
+                                                                                                        <div><strong>Principal:</strong> ₱{{ number_format($loan->principal_due, 2) }}</div>
+                                                                                                        <div><strong>Interest:</strong> ₱{{ number_format($loan->interest_due, 2) }}</div>
+                                                                                                        <div><strong>Penalty:</strong> ₱{{ number_format($loan->penalty_due, 2) }}</div>
+                                                                                                    </div>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
                                                                                     </div>
-                                                                                </div>
+                                                                                @endif
                                                                             @endforeach
                                                                         </div>
                                                                     </div>
@@ -328,6 +332,20 @@
                                                         const withdrawalInput = $('#withdrawal_amount' + memberId);
                                                         const loanCheckboxes = $('.loan-checkbox[data-member-id="' + memberId + '"]');
                                                         const loanAmountInputs = $('.loan-amount-input[data-member-id="' + memberId + '"]');
+
+                                                        // Hide loan options with zero balance when modal is shown
+                                                        $('#postPaymentModal{{ $member->id }}').on('shown.bs.modal', function () {
+                                                            $(this).find('.loan-option').each(function() {
+                                                                var balanceText = $(this).find('.badge.bg-info').text();
+                                                                var match = balanceText.match(/Balance: ₱\s*([\d,.]+)/);
+                                                                var balance = match ? parseFloat(match[1].replace(/,/g, '')) : 0;
+                                                                if (balance === 0) {
+                                                                    $(this).hide();
+                                                                } else {
+                                                                    $(this).show();
+                                                                }
+                                                            });
+                                                        });
 
                                                         // Function to update payment summary
                                                         function updatePaymentSummary() {
