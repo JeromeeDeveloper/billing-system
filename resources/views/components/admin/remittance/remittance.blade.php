@@ -366,45 +366,53 @@
             </div>
 
             @if (isset($comparisonReportPaginated) && $comparisonReportPaginated->count() > 0)
-                <div class="mb-3 d-flex justify-content-end">
-                    <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
-                        <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
-                    </a>
-                </div>
-                <div class="card mt-5">
-                    <div class="card-header">
-                        <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>CID</th>
-                                        <th>Member Name</th>
-                                        <th>Total Billed</th>
-                                        <th>Remitted Loans</th>
-                                        <th>Remaining Loan Balance</th>
-                                        <th>Remitted Savings</th>
-                                        <th>Remitted Shares</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($comparisonReportPaginated as $row)
-                                        <tr>
-                                            <td>{{ $row['cid'] }}</td>
-                                            <td>{{ $row['member_name'] }}</td>
-                                            <td>₱{{ number_format($row['amortization'], 2) }}</td>
-                                            <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
-                                            <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
-                                            <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
-                                            <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            <div class="d-flex justify-content-center mt-2 text-center">
-                                {{ $comparisonReportPaginated->links() }}
+                <div class="content-body">
+                    <div class="col-12">
+                        <div class="mb-3 d-flex justify-content-end">
+                            <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
+                                <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
+                            </a>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered text-center">
+                                        <thead>
+                                            <tr>
+                                                <th>CID</th>
+                                                <th>Member Name</th>
+                                                <th>Total Billed</th>
+                                                <th>Remitted Loans</th>
+                                                <th>Remaining Loan Balance</th>
+                                                <th>Remitted Savings</th>
+                                                <th>Remitted Shares</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse ($comparisonReportPaginated as $row)
+                                                <tr>
+                                                    <td>{{ $row['cid'] }}</td>
+                                                    <td>{{ $row['member_name'] }}</td>
+                                                    <td>₱{{ number_format($row['amortization'], 2) }}</td>
+                                                    <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
+                                                    <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
+                                                    <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
+                                                    <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="7" class="text-center text-muted">No records found.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                    <div class="d-flex justify-content-center mt-2 text-center">
+                                        {{ $comparisonReportPaginated->links() }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
