@@ -8,9 +8,19 @@ use Illuminate\Support\Facades\DB;
 
 class ContraController extends Controller
 {
-    public function showAdmin()
+    public function showAdmin(Request $request)
     {
-        return view('components.admin.Contra.contra');
+        $query = DB::table('contra_acc');
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('account_number', 'like', "%$search%")
+                  ->orWhere('loan_acc_no', 'like', "%$search%")
+                  ->orWhere('type', 'like', "%$search%") ;
+            });
+        }
+        $contraAccs = $query->orderByDesc('id')->paginate(10)->appends($request->all());
+        return view('components.admin.Contra.contra', compact('contraAccs'));
     }
 
     public function storeAdmin(Request $request)
@@ -22,14 +32,16 @@ class ContraController extends Controller
     {
         $request->validate([
             'type' => 'required|in:shares,savings,loans',
-            'account_numbers' => 'required|array|min:1',
-            'account_numbers.*' => 'required|string',
+            'account_numbers' => 'required|string',
         ]);
 
-        foreach ($request->account_numbers as $account_number) {
+        // Split comma-separated input, trim whitespace, remove empty
+        $accountNumbers = array_filter(array_map('trim', explode(',', $request->account_numbers)));
+
+        foreach ($accountNumbers as $account_number) {
             $data = [
                 'type' => $request->type,
-                'account_number' => null,
+                'account_number' => $account_number,
                 'loan_acc_no' => null,
                 'savings_id' => null,
                 'shares_id' => null,
@@ -37,27 +49,7 @@ class ContraController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
-
-            if ($request->type === 'loans') {
-                $data['loan_acc_no'] = $account_number;
-                $loan = DB::table('loan_forecast')->where('loan_acct_no', $account_number)->first();
-                if ($loan) {
-                    $data['loan_forecast_id'] = $loan->id;
-                }
-            } else if ($request->type === 'shares') {
-                $data['account_number'] = $account_number;
-                $share = DB::table('shares')->where('account_number', $account_number)->first();
-                if ($share) {
-                    $data['shares_id'] = $share->id;
-                }
-            } else if ($request->type === 'savings') {
-                $data['account_number'] = $account_number;
-                $saving = DB::table('savings')->where('account_number', $account_number)->first();
-                if ($saving) {
-                    $data['savings_id'] = $saving->id;
-                }
-            }
-
+            // No more lookups for related tables; just store the GL account number
             DB::table('contra_acc')->insert($data);
         }
 
@@ -77,5 +69,27 @@ class ContraController extends Controller
             $accounts = DB::table('savings')->select('account_number as value')->distinct()->pluck('value');
         }
         return response()->json($accounts);
+    }
+
+    // Update contra account (admin)
+    public function updateAdmin(Request $request, $id)
+    {
+        $request->validate([
+            'type' => 'required|in:shares,savings,loans',
+            'account_number' => 'required|string',
+        ]);
+        DB::table('contra_acc')->where('id', $id)->update([
+            'type' => $request->type,
+            'account_number' => $request->account_number,
+            'updated_at' => now(),
+        ]);
+        return back()->with('success', 'Contra account updated successfully.');
+    }
+
+    // Delete contra account (admin)
+    public function deleteAdmin($id)
+    {
+        DB::table('contra_acc')->where('id', $id)->delete();
+        return back()->with('success', 'Contra account deleted successfully.');
     }
 }

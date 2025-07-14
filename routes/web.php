@@ -175,6 +175,8 @@ Route::get('admin/remittance/export-comparison', [\App\Http\Controllers\Remittan
 Route::get('/admin/contra', [App\Http\Controllers\ContraController::class, 'showAdmin'])->name('admin.contra');
 Route::post('/admin/contra', [App\Http\Controllers\ContraController::class, 'storeAdmin']);
 Route::get('/admin/contra/accounts', [App\Http\Controllers\ContraController::class, 'getAccountsByType'])->name('admin.contra.accounts');
+Route::put('/admin/contra/{id}', [App\Http\Controllers\ContraController::class, 'updateAdmin'])->name('admin.contra.update');
+Route::delete('/admin/contra/{id}', [App\Http\Controllers\ContraController::class, 'deleteAdmin'])->name('admin.contra.delete');
 
 });
 
