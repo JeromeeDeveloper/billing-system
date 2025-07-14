@@ -412,6 +412,7 @@ class MasterController extends Controller
                     'user_id' => Auth::id(),
                     'related_id' => $member->id,
                     'message' => Auth::user()->name . " edited member {$member->fname} {$member->lname} (CID: {$member->cid})",
+                    'billing_period' => $member->billing_period ?? Auth::user()->billing_period,
                     'is_read' => false,
                 ]);
 
@@ -825,6 +826,7 @@ class MasterController extends Controller
                     'user_id' => Auth::id(),
                     'related_id' => $member->id,
                     'message' => Auth::user()->name . " edited member {$member->fname} {$member->lname} (CID: {$member->cid}) via branch",
+                    'billing_period' => $member->billing_period ?? Auth::user()->billing_period,
                     'is_read' => false,
                 ]);
 
