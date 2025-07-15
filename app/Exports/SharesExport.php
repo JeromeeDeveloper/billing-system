@@ -58,13 +58,16 @@ class SharesExport implements FromCollection, WithHeadings
                     $saving->savingProduct->product_type === 'mortuary' &&
                     ($saving->deduction_amount ?? 0) > 0
                 ) {
+                    $originalAccountNumber = $saving->account_number;
+                    $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
                         'product_code/cr' => '1',
-                        'gl/sl acct no' => str_replace('-', '', $saving->account_number),
+                        'gl/sl acct no' => $formattedAccountNumber,
                         'amount' => number_format($saving->deduction_amount, 2, '.', '')
                     ]);
                     $remitted -= $saving->deduction_amount;
@@ -87,13 +90,16 @@ class SharesExport implements FromCollection, WithHeadings
             if ($shareAccount) {
                 // The amount for this row is the total of all share deduction_amounts
                 if ($shareDeduction > 0 && $remitted >= $shareDeduction) {
+                    $originalAccountNumber = $shareAccount->account_number;
+                    $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
                         'product_code/cr' => '2',
-                        'gl/sl acct no' => str_replace('-', '', $shareAccount->account_number),
+                        'gl/sl acct no' => $formattedAccountNumber,
                         'amount' => number_format($shareDeduction, 2, '.', '')
                     ]);
                     $remitted -= $shareDeduction;
@@ -102,13 +108,16 @@ class SharesExport implements FromCollection, WithHeadings
 
             // 3. Remaining to Regular Savings
             if ($regularSaving && $remitted > 0) {
+                $originalAccountNumber = $regularSaving->account_number;
+                $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
                 $exportRows->push([
                     'branch_code' => $member->branch->code ?? '',
                     'product_code/dr' => '',
                     'gl/sl cct no' => '',
                     'amt' => '',
                     'product_code/cr' => '1',
-                    'gl/sl acct no' => str_replace('-', '', $regularSaving->account_number),
+                    'gl/sl acct no' => $formattedAccountNumber,
                     'amount' => number_format($remitted, 2, '.', '')
                 ]);
             }
@@ -161,13 +170,16 @@ class SharesWithProductExport implements FromCollection, WithHeadings
                     $saving->savingProduct->product_type === 'mortuary' &&
                     ($saving->deduction_amount ?? 0) > 0
                 ) {
+                    $originalAccountNumber = $saving->account_number;
+                    $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
                         'product_code/cr' => '1',
-                        'gl/sl acct no' => str_replace('-', '', $saving->account_number),
+                        'gl/sl acct no' => $formattedAccountNumber,
                         'amount' => number_format($saving->deduction_amount, 2, '.', ''),
                         'product_name' => $saving->savingProduct->name ?? '',
                     ]);
@@ -185,13 +197,16 @@ class SharesWithProductExport implements FromCollection, WithHeadings
             // Share row
             if ($shareAccount) {
                 if ($shareDeduction > 0 && $remitted >= $shareDeduction) {
+                    $originalAccountNumber = $shareAccount->account_number;
+                    $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
                         'product_code/cr' => '2',
-                        'gl/sl acct no' => str_replace('-', '', $shareAccount->account_number),
+                        'gl/sl acct no' => $formattedAccountNumber,
                         'amount' => number_format($shareDeduction, 2, '.', ''),
                         'product_name' => $shareAccount->shareProduct->name ?? '',
                     ]);
@@ -200,13 +215,16 @@ class SharesWithProductExport implements FromCollection, WithHeadings
             }
             // Remaining to Regular Savings
             if ($regularSaving && $remitted > 0) {
+                $originalAccountNumber = $regularSaving->account_number;
+                $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
                 $exportRows->push([
                     'branch_code' => $member->branch->code ?? '',
                     'product_code/dr' => '',
                     'gl/sl cct no' => '',
                     'amt' => '',
                     'product_code/cr' => '1',
-                    'gl/sl acct no' => str_replace('-', '', $regularSaving->account_number),
+                    'gl/sl acct no' => $formattedAccountNumber,
                     'amount' => number_format($remitted, 2, '.', ''),
                     'product_name' => $regularSaving->savingProduct->name ?? '',
                 ]);

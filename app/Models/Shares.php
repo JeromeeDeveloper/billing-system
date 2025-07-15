@@ -36,4 +36,12 @@ class Shares extends Model
     {
         return $this->belongsTo(Member::class);
     }
+
+    /**
+     * Relationship to the ShareProduct model.
+     */
+    public function shareProduct()
+    {
+        return $this->belongsTo(ShareProduct::class, 'product_code', 'product_code');
+    }
 }
