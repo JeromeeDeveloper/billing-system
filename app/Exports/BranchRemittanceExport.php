@@ -107,6 +107,10 @@ class BranchRemittanceExport implements FromCollection, WithHeadings
                         Log::info("- Payment Amount: {$deductionAmount}");
                         Log::info("- Remaining Payment Before: {$remainingPayment}");
 
+                        // Format account number with single quote prefix
+                        $originalAccountNumber = $forecast->loan_acct_no;
+                        $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
                         // Add loan deduction row with the actual deduction amount
                         $exportRows->push([
                             'branch_code' => $member->branch->code ?? '',
@@ -114,7 +118,7 @@ class BranchRemittanceExport implements FromCollection, WithHeadings
                             'dr' => '',
                             'gl/sl cct no' => '',
                             'amt' => '',
-                            'account_number' => str_replace('-', '', $forecast->loan_acct_no),
+                            'account_number' => $formattedAccountNumber,
                             'amount' => number_format($deductionAmount, 2, '.', '') // Use actual deduction amount
                         ]);
 
@@ -157,6 +161,10 @@ class BranchRemittanceExport implements FromCollection, WithHeadings
                     Log::info('Raw account number from database: [' . $savings->account_number . ']');
                     Log::info('Remittance amount from database: [' . $savings->remittance_amount . ']');
 
+                    // Format account number with single quote prefix
+                    $originalAccountNumber = $savings->getRawOriginal('account_number');
+                    $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
                     // Add savings row
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
@@ -164,7 +172,7 @@ class BranchRemittanceExport implements FromCollection, WithHeadings
                         'dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
-                        'account_number' => str_replace('-', '', $savings->getRawOriginal('account_number')),
+                        'account_number' => $formattedAccountNumber,
                         'amount' => number_format($savings->remittance_amount, 2, '.', '')
                     ]);
                 }
@@ -182,6 +190,10 @@ class BranchRemittanceExport implements FromCollection, WithHeadings
                         Log::info('Processing shares for member: ' . $member->id . ', account: ' . $share->account_number);
                         Log::info('Share amount from database: [' . $remittance->share_dep . ']');
 
+                        // Format account number with single quote prefix
+                        $originalAccountNumber = $share->getRawOriginal('account_number');
+                        $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
                         // Add share row
                         $exportRows->push([
                             'branch_code' => $member->branch->code ?? '',
@@ -189,7 +201,7 @@ class BranchRemittanceExport implements FromCollection, WithHeadings
                             'dr' => '',
                             'gl/sl cct no' => '',
                             'amt' => '',
-                            'account_number' => str_replace('-', '', $share->getRawOriginal('account_number')),
+                            'account_number' => $formattedAccountNumber,
                             'amount' => number_format($remittance->share_dep, 2, '.', '')
                         ]);
                     } else {

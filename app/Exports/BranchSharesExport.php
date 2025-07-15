@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\Member;
 use App\Models\SavingProduct;
+use App\Models\ContraAcc;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -36,6 +37,10 @@ class BranchSharesExport implements FromCollection, WithHeadings
     public function collection()
     {
         $exportRows = new Collection();
+        $branchTotals = [
+            'shares' => 0,
+            'savings' => 0
+        ];
 
         foreach ($this->remittanceData as $record) {
             if (empty($record->member_id) || $record->share_amount <= 0) {
@@ -83,6 +88,7 @@ class BranchSharesExport implements FromCollection, WithHeadings
                     ]);
                     $remitted -= $saving->deduction_amount;
                     $totalMortuaryDeduction += $saving->deduction_amount;
+                    $branchTotals['savings'] += $saving->deduction_amount;
                 }
             }
 
@@ -111,6 +117,7 @@ class BranchSharesExport implements FromCollection, WithHeadings
                         'amount' => number_format($shareDeduction, 2, '.', '')
                     ]);
                     $remitted -= $shareDeduction;
+                    $branchTotals['shares'] += $shareDeduction;
                 }
             }
 
@@ -124,6 +131,44 @@ class BranchSharesExport implements FromCollection, WithHeadings
                     'product_code/cr' => '1',
                     'gl/sl acct no' => "'" . str_replace('-', '', $regularSaving->account_number),
                     'amount' => number_format($remitted, 2, '.', '')
+                ]);
+                $branchTotals['savings'] += $remitted;
+            }
+        }
+
+        // Get branch info for summary rows
+        $branch = Member::where('branch_id', $this->branch_id)->with('branch')->first();
+        $branchCode = $branch->branch->code ?? '';
+
+        // Add branch totals summary rows
+        if ($branchTotals['shares'] > 0) {
+            // Get contra account for shares
+            $sharesContra = ContraAcc::where('type', 'shares')->first();
+            if ($sharesContra) {
+                $exportRows->push([
+                    'branch_code' => $branchCode,
+                    'product_code/dr' => 'shares',
+                    'gl/sl cct no' => $sharesContra->account_number,
+                    'amt' => number_format($branchTotals['shares'], 2, '.', ''),
+                    'product_code/cr' => '',
+                    'gl/sl acct no' => '',
+                    'amount' => ''
+                ]);
+            }
+        }
+
+        if ($branchTotals['savings'] > 0) {
+            // Get contra account for savings
+            $savingsContra = ContraAcc::where('type', 'savings')->first();
+            if ($savingsContra) {
+                $exportRows->push([
+                    'branch_code' => $branchCode,
+                    'product_code/dr' => 'savings',
+                    'gl/sl cct no' => $savingsContra->account_number,
+                    'amt' => number_format($branchTotals['savings'], 2, '.', ''),
+                    'product_code/cr' => '',
+                    'gl/sl acct no' => '',
+                    'amount' => ''
                 ]);
             }
         }

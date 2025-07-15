@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Member;
+use App\Models\ContraAcc;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -34,6 +35,7 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
     public function collection()
     {
         $exportRows = new Collection();
+        $branchTotals = []; // To store totals for each branch
 
         // Group remittance data by member_id
         $remittanceByMember = collect($this->remittanceData)->groupBy('member_id');
@@ -49,6 +51,16 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                 continue;
             }
 
+            $branchCode = $member->branch->code ?? '';
+
+            // Initialize branch totals if not exists
+            if (!isset($branchTotals[$branchCode])) {
+                $branchTotals[$branchCode] = [
+                    'savings_total' => 0,
+                    'loans_total' => 0
+                ];
+            }
+
             // Handle loan payments (per record, as before)
             foreach ($records as $record) {
                 if ($record->loans > 0) {
@@ -56,8 +68,12 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                         if ($forecast->total_due_after_remittance > 0) {
                             $originalAccountNumber = $forecast->loan_acct_no;
                             $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
+                            // Add to branch totals
+                            $branchTotals[$branchCode]['loans_total'] += $forecast->total_due_after_remittance;
+
                             $exportRows->push([
-                                'branch_code' => $member->branch->code ?? '',
+                                'branch_code' => $branchCode,
                                 'product_code/dr' => '',
                                 'gl/sl cct no' => '',
                                 'amt' => '',
@@ -93,8 +109,12 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                             if ($savingAccount && $deductionAmount > 0) {
                                 $originalAccountNumber = $savingAccount->account_number;
                                 $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
+                                // Add to branch totals
+                                $branchTotals[$branchCode]['savings_total'] += $deductionAmount;
+
                                 $exportRows->push([
-                                    'branch_code' => $member->branch->code ?? '',
+                                    'branch_code' => $branchCode,
                                     'product_code/dr' => '',
                                     'gl/sl cct no' => '',
                                     'amt' => '',
@@ -137,8 +157,12 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                 if ($regularSavings) {
                     $originalAccountNumber = $regularSavings->account_number;
                     $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
+                    // Add to branch totals
+                    $branchTotals[$branchCode]['savings_total'] += $totalRegularRemaining;
+
                     $exportRows->push([
-                        'branch_code' => $member->branch->code ?? '',
+                        'branch_code' => $branchCode,
                         'product_code/dr' => '',
                         'gl/sl cct no' => '',
                         'amt' => '',
@@ -152,6 +176,40 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                 }
             }
         }
+
+        // Add totals for each branch at the bottom
+        foreach ($branchTotals as $branchCode => $totals) {
+            // Get contra account for savings
+            $savingsContraAcc = ContraAcc::where('type', 'savings')->first();
+            $loansContraAcc = ContraAcc::where('type', 'loans')->first();
+
+            // Add savings total row
+            if ($totals['savings_total'] > 0) {
+                $exportRows->push([
+                    'branch_code' => $branchCode,
+                    'product_code/dr' => 'savings',
+                    'gl/sl cct no' => $savingsContraAcc ? $savingsContraAcc->account_number : '',
+                    'amt' => number_format($totals['savings_total'], 2, '.', ''),
+                    'product_code/cr' => '',
+                    'gl/sl acct no' => '',
+                    'amount' => ''
+                ]);
+            }
+
+            // Add loans total row
+            if ($totals['loans_total'] > 0) {
+                $exportRows->push([
+                    'branch_code' => $branchCode,
+                    'product_code/dr' => 'loans',
+                    'gl/sl cct no' => $loansContraAcc ? $loansContraAcc->account_number : '',
+                    'amt' => number_format($totals['loans_total'], 2, '.', ''),
+                    'product_code/cr' => '',
+                    'gl/sl acct no' => '',
+                    'amount' => ''
+                ]);
+            }
+        }
+
         return $exportRows;
     }
 }
