@@ -181,7 +181,7 @@ class BranchLoansAndSavingsExport implements FromCollection, WithHeadings
             if ($loansContra) {
                 $exportRows->push([
                     'branch_code' => $branchCode,
-                    'product_code/dr' => 'loans',
+                    'product_code/dr' => '4',
                     'gl/sl cct no' => $loansContra->account_number,
                     'amt' => number_format($branchTotals['loans'], 2, '.', ''),
                     'product_code/cr' => '',
@@ -197,7 +197,7 @@ class BranchLoansAndSavingsExport implements FromCollection, WithHeadings
             if ($savingsContra) {
                 $exportRows->push([
                     'branch_code' => $branchCode,
-                    'product_code/dr' => 'savings',
+                    'product_code/dr' => '1',
                     'gl/sl cct no' => $savingsContra->account_number,
                     'amt' => number_format($branchTotals['savings'], 2, '.', ''),
                     'product_code/cr' => '',

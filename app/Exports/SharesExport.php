@@ -154,7 +154,7 @@ class SharesExport implements FromCollection, WithHeadings
             if ($totals['shares_total'] > 0) {
                 $exportRows->push([
                     'branch_code' => $branchCode,
-                    'product_code/dr' => 'shares',
+                    'product_code/dr' => '2',
                     'gl/sl cct no' => $sharesContraAcc ? $sharesContraAcc->account_number : '',
                     'amt' => number_format($totals['shares_total'], 2, '.', ''),
                     'product_code/cr' => '',
@@ -167,7 +167,7 @@ class SharesExport implements FromCollection, WithHeadings
             if ($totals['savings_total'] > 0) {
                 $exportRows->push([
                     'branch_code' => $branchCode,
-                    'product_code/dr' => 'savings',
+                    'product_code/dr' => '1',
                     'gl/sl cct no' => $savingsContraAcc ? $savingsContraAcc->account_number : '',
                     'amt' => number_format($totals['savings_total'], 2, '.', ''),
                     'product_code/cr' => '',

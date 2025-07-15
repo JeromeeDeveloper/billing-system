@@ -146,6 +146,9 @@
                                                 <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block">
                                                     <i class="fa fa-download"></i> Export Loans & Savings
                                                 </a>
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings_with_product']) }}" class="btn btn-outline-primary btn-block mt-2">
+                                                    <i class="fa fa-download"></i> Export Loans & Savings (with Product Name)
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
@@ -158,6 +161,9 @@
                                                 <p class="text-muted small">Generate collection file for shares remittance data.</p>
                                                 <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block">
                                                     <i class="fa fa-download"></i> Export Shares
+                                                </a>
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares_with_product']) }}" class="btn btn-outline-success btn-block mt-2">
+                                                    <i class="fa fa-download"></i> Export Shares (with Product Name)
                                                 </a>
                                             </div>
                                         </div>

@@ -147,7 +147,7 @@ class BranchSharesExport implements FromCollection, WithHeadings
             if ($sharesContra) {
                 $exportRows->push([
                     'branch_code' => $branchCode,
-                    'product_code/dr' => 'shares',
+                    'product_code/dr' => '2',
                     'gl/sl cct no' => $sharesContra->account_number,
                     'amt' => number_format($branchTotals['shares'], 2, '.', ''),
                     'product_code/cr' => '',
@@ -163,7 +163,7 @@ class BranchSharesExport implements FromCollection, WithHeadings
             if ($savingsContra) {
                 $exportRows->push([
                     'branch_code' => $branchCode,
-                    'product_code/dr' => 'savings',
+                    'product_code/dr' => '1',
                     'gl/sl cct no' => $savingsContra->account_number,
                     'amt' => number_format($branchTotals['savings'], 2, '.', ''),
                     'product_code/cr' => '',

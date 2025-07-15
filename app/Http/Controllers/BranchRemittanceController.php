@@ -119,6 +119,12 @@ class BranchRemittanceController extends Controller
             if ($type === 'shares') {
                 $export = new \App\Exports\BranchSharesExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
+            } else if ($type === 'shares_with_product') {
+                $export = new \App\Exports\BranchSharesWithProductExport($remittanceData, $branch_id);
+                $filename = 'branch_shares_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
+            } else if ($type === 'loans_savings_with_product') {
+                $export = new \App\Exports\BranchLoansAndSavingsWithProductExport($remittanceData, $branch_id);
+                $filename = 'branch_loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             } else {
                 $export = new \App\Exports\BranchLoansAndSavingsExport($remittanceData, $branch_id);
                 $filename = 'branch_loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
