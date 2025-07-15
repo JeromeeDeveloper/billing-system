@@ -101,9 +101,9 @@
                                         <div class="col-md-3 d-flex align-items-end">
                                             <button type="submit" class="btn btn-primary mr-2">Search</button>
                                             <a href="{{ route('atm') }}" class="btn btn-secondary mr-2">Reset</a>
-                                            <a href="{{ route('atm.export-posted-payments') }}" class="btn btn-success">
+                                            {{-- <a href="{{ route('atm.export-posted-payments') }}" class="btn btn-success">
                                                 <i class="fa fa-file-excel"></i> Export Posted Payments
-                                            </a>
+                                            </a> --}}
                                         </div>
                                     </div>
                                 </form>
@@ -111,6 +111,29 @@
                         </div>
                     </div>
                 </div>
+
+                <form method="GET" action="{{ route('atm.export-posted-payments') }}" class="form-inline mb-2" id="exportPostedPaymentsForm">
+                    <div class="form-group mr-2">
+                        <label for="export_date" class="mr-2">Export Date:</label>
+                        <input type="date" id="export_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates')) disabled @endif>
+                    </div>
+                    <div class="form-group mr-2">
+                        <input type="checkbox" id="all_dates" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
+                        <label for="all_dates" class="ml-1">All Dates</label>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa fa-file-excel"></i> Export Posted Payments
+                    </button>
+                </form>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var allDatesCheckbox = document.getElementById('all_dates');
+                        var dateInput = document.getElementById('export_date');
+                        allDatesCheckbox.addEventListener('change', function() {
+                            dateInput.disabled = this.checked;
+                        });
+                    });
+                </script>
 
 
                 <!-- Account Balances Table -->

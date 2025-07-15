@@ -324,10 +324,10 @@ class RemittanceController extends Controller
                     'member_name' => trim(($forecast->member->fname ?? '') . ' ' . ($forecast->member->lname ?? '')),
                     'amortization' => 0,
                     'total_billed' => 0,
+                    'remaining_loan_balance' => 0,
                     'remitted_loans' => 0,
                     'remitted_savings' => 0,
                     'remitted_shares' => 0,
-                    'remaining_loan_balance' => 0,
                 ];
             }
             $memberTotals[$cid]['amortization'] += $forecast->original_total_due ?? $forecast->total_due;

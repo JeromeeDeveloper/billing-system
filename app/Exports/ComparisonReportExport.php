@@ -26,10 +26,11 @@ class ComparisonReportExport implements FromArray, WithHeadings
             'Member Name',
             'Amortization',
             'Total Billed',
-            'Remitted Loans',
+            'Loan Payment',
+            'Loan Remaining',
             'Remitted Savings',
             'Remitted Shares',
-            'Remaining Loan Balance',
+
         ];
     }
 }

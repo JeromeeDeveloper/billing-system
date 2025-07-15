@@ -350,26 +350,26 @@ class AtmController extends Controller
         }
     }
 
-    public function exportPostedPayments()
+    public function exportPostedPayments(Request $request)
     {
         try {
-            // Get all ATM payments for today
-            $atmPayments = AtmPayment::with(['member.branch'])
-                ->whereDate('payment_date', now()->toDateString())
-                ->get();
+            $allDates = $request->input('all_dates');
+            $date = $request->input('date', now()->toDateString());
 
-            Log::info("Found {$atmPayments->count()} ATM payments for today");
+            $atmPaymentsQuery = AtmPayment::with(['member.branch']);
+            if (!$allDates) {
+                $atmPaymentsQuery->whereDate('payment_date', $date);
+            }
+            $atmPayments = $atmPaymentsQuery->get();
+
+            $logDate = $allDates ? 'ALL DATES' : $date;
+            Log::info("Found {$atmPayments->count()} ATM payments for export on {$logDate}");
 
             if ($atmPayments->isEmpty()) {
-                return redirect()->back()->with('error', 'No posted payments found for today.');
+                return redirect()->back()->with('error', 'No posted payments found for the selected date(s).');
             }
 
-            // Log details of each ATM payment
-            foreach ($atmPayments as $atmPayment) {
-                Log::info("ATM Payment ID: {$atmPayment->id}, Member: {$atmPayment->member_id}, Withdrawal: {$atmPayment->withdrawal_amount}, Loan Payment: {$atmPayment->total_loan_payment}, Savings: {$atmPayment->savings_allocation}, Account: {$atmPayment->savings_account_number}");
-            }
-
-            $filename = 'posted_payments_' . now()->format('Y-m-d') . '.csv';
+            $filename = 'posted_payments_' . ($allDates ? 'all' : $date) . '.csv';
 
             Excel::store(
                 new PostedPaymentsExport($atmPayments),
