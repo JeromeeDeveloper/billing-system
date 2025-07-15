@@ -5,6 +5,7 @@ namespace App\Exports;
 use App\Models\Member;
 use App\Models\LoanPayment;
 use App\Models\AtmPayment;
+use App\Models\SavingsPayment;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Collection;
@@ -69,40 +70,22 @@ class PostedPaymentsExport implements FromCollection, WithHeadings
                 Log::info("Added loan payment row: {$payment->loanForecast->loan_acct_no} - {$payment->amount}");
             }
 
-            // Add savings allocation row if there is one
-            if ($atmPayment->savings_allocation > 0) {
-                if ($atmPayment->savings_account_number) {
-                    $exportRows->push([
-                        'branch_code' => $member->branch->code ?? '',
-                        'product_code/dr' => '',
-                        'gl/sl cct no' => '',
-                        'amt' => '',
-                        'product_code/cr' => '1',
-                        'gl/sl acct no' => str_replace('-', '', $atmPayment->savings_account_number),
-                        'amount' => number_format($atmPayment->savings_allocation, 2, '.', '')
-                    ]);
-
-                    Log::info("Added savings allocation row: {$atmPayment->savings_account_number} - {$atmPayment->savings_allocation}");
-                } else {
-                    // If no account number, try to find the member's savings account
-                    $memberSavings = $member->savings()->first();
-                    if ($memberSavings) {
-                        $exportRows->push([
-                            'branch_code' => $member->branch->code ?? '',
-                            'product_code/dr' => '',
-                            'gl/sl cct no' => '',
-                            'amt' => '',
-                            'product_code/cr' => '1',
-                            'gl/sl acct no' => str_replace('-', '', $memberSavings->account_number),
-                            'amount' => number_format($atmPayment->savings_allocation, 2, '.', '')
-                        ]);
-
-                        Log::info("Added savings allocation row (fallback): {$memberSavings->account_number} - {$atmPayment->savings_allocation}");
-                    } else {
-                        Log::warning("ATM Payment {$atmPayment->id} has savings allocation {$atmPayment->savings_allocation} but no savings account found for member {$member->id}");
-                    }
-                }
+            // Add savings payment rows for all savings deposits for this ATM payment
+            $savingsPayments = SavingsPayment::where('atm_payment_id', $atmPayment->id)->get();
+            foreach ($savingsPayments as $savingPayment) {
+                $exportRows->push([
+                    'branch_code' => $member->branch->code ?? '',
+                    'product_code/dr' => '',
+                    'gl/sl cct no' => '',
+                    'amt' => '',
+                    'product_code/cr' => '1',
+                    'gl/sl acct no' => str_replace('-', '', $savingPayment->account_number),
+                    'amount' => number_format($savingPayment->amount, 2, '.', '')
+                ]);
+                Log::info("Added savings payment row: {$savingPayment->account_number} - {$savingPayment->amount}");
             }
+
+            // (Retain the old single allocation logic as fallback if needed)
         }
 
         Log::info("Total export rows generated: {$exportRows->count()}");
