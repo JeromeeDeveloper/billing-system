@@ -17,6 +17,15 @@
     <link rel="stylesheet" type="text/css" href="assets/css/util.css">
     <link rel="stylesheet" type="text/css" href="assets/css/main.css">
     <!--===============================================================================================-->
+    <style>
+        body, .login100-form-title, .input100, .txt1, label, .modal-content, .modal-title, .modal-body, .modal-footer, .login100-form-btn {
+            color: #fff !important;
+        }
+        .modal-content, .modal-title, .modal-body, .modal-footer {
+            color: #222 !important;
+            background: #fff !important;
+        }
+    </style>
 </head>
 
 <body>
