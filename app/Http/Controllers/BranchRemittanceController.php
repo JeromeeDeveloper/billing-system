@@ -95,6 +95,8 @@ class BranchRemittanceController extends Controller
 
     public function generateExport(Request $request)
     {
+        set_time_limit(600); // Allow up to 5 minutes for export
+
         try {
             // Get branch_id from authenticated user
             $branch_id = Auth::user()->branch_id;

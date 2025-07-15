@@ -236,6 +236,8 @@ class RemittanceController extends Controller
 
     public function generateExport(Request $request)
     {
+        set_time_limit(600); // Allow up to 5 minutes for export
+
         try {
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;

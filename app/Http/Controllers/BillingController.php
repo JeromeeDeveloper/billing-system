@@ -118,6 +118,8 @@ class BillingController extends Controller
 
     public function export(Request $request)
     {
+        set_time_limit(600); // Allow up to 10 minutes for export
+
         $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
 
         // Generate the Excel file
@@ -371,6 +373,8 @@ class BillingController extends Controller
 
     public function export_branch(Request $request)
     {
+        set_time_limit(600); // Allow up to 10 minutes for export
+
         $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
         $branchId = Auth::user()->branch_id;
 
