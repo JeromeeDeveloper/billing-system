@@ -395,7 +395,7 @@
         $('.edit-btn').on('click', function() {
             const button = $(this);
             const id = button.data('id');
-            $('#editForm').attr('action', `/billing/${id}`);
+            $('#editForm').attr('action', `/Branch/billing/${id}`);
 
             $('#edit-id').val(id);
             $('#edit-emp_id').val(button.data('emp_id'));
