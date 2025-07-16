@@ -239,6 +239,17 @@ Route::get('/master/export-members-no-regular-savings-branch', [MasterController
 // Route::get('/branch/contra', [App\Http\Controllers\ContraController::class, 'showBranch'])->name('branch.contra');
 // Route::post('/branch/contra', [App\Http\Controllers\ContraController::class, 'storeBranch']);
 
+    // Branch File Retention Management
+    Route::get('/Branch/file-retention', [FileRetentionController::class, 'index_branch'])->name('file.retention.dashboard.branch');
+    Route::get('/Branch/file-retention/files', [FileRetentionController::class, 'getFiles_branch'])->name('file.retention.files.branch');
+    Route::get('/Branch/file-retention/download/{type}/{id}', [FileRetentionController::class, 'download_branch'])->name('file.retention.download.branch');
+    Route::post('/Branch/file-retention/cleanup-type', [FileRetentionController::class, 'cleanupType_branch'])->name('file.retention.cleanup.type.branch');
+    Route::post('/Branch/file-retention/cleanup-all', [FileRetentionController::class, 'cleanupAll_branch'])->name('file.retention.cleanup.all.branch');
+    Route::get('/Branch/file-retention/stats', [FileRetentionController::class, 'getStats_branch'])->name('file.retention.stats.branch');
+    Route::post('/Branch/file-retention/preview', [FileRetentionController::class, 'previewCleanup_branch'])->name('file.retention.preview.branch');
+    Route::post('/Branch/file-retention/backup', [FileRetentionController::class, 'createBackup_branch'])->name('file.retention.backup.branch');
+    Route::get('/Branch/file-retention/backup/{filename}/download', [FileRetentionController::class, 'downloadBackup_branch'])->name('file.retention.download.backup.branch');
+
 });
 
 // Contra routes

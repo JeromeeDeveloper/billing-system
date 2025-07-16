@@ -51,7 +51,7 @@
                                     <small class="text-muted">Showing latest 5 files total for current billing period</small>
                                 </div>
                                 <div class="d-flex align-items-center" style="gap: 10px;">
-                                    <a href="{{ route('file.retention.dashboard') }}" class="btn btn-rounded btn-info">
+                                    <a href="{{ route('file.retention.dashboard.branch') }}" class="btn btn-rounded btn-info">
                                         <span class="btn-icon-left text-info">
                                             <i class="fa fa-cogs"></i>
                                         </span>
