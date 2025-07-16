@@ -177,14 +177,15 @@
                                                     <div class="mb-3">
                                                         <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name, Loans, Savings Product Names.</small>
                                                     </div>
-                                                    <div class="d-flex flex-wrap gap-2">
-                                                        <button type="submit" class="btn btn-success flex-fill">
+
+                                                    <button type="submit" class="btn btn-success btn-block mt-2">
                                                             <i class="fa fa-upload me-1"></i> Upload and Process Loans & Savings Remittance
                                                         </button>
-                                                        <button type="button" class="btn btn-outline-info flex-fill" data-toggle="modal" data-target="#loansSavingsFormatModal">
+
+                                                    <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#loansSavingsFormatModal">
                                                             <i class="fa fa-eye me-1"></i> View Expected Format
-                                                        </button>
-                                                    </div>
+                                                    </button>
+
                                                     <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('loans_savings')">
                                                         Collection file for Loans & Savings
                                                     </a>
@@ -210,14 +211,14 @@
                                                     <div class="mb-3">
                                                         <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name (LASTNAME, FIRSTNAME), Share (amount).</small>
                                                     </div>
-                                                    <div class="d-flex flex-wrap gap-2">
-                                                        <button type="submit" class="btn btn-info flex-fill">
+
+                                                        <button type="submit" class="btn btn-success btn-block mt-2">
                                                             <i class="fa fa-upload me-1"></i> Upload and Process Share Remittance
                                                         </button>
-                                                        <button type="button" class="btn btn-outline-info flex-fill" data-toggle="modal" data-target="#sharesFormatModal">
+                                                        <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#sharesFormatModal">
                                                             <i class="fa fa-eye me-1"></i> View Expected Format
                                                         </button>
-                                                    </div>
+
                                                     <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('shares')">
                                                         Collection file for Shares
                                                     </a>
@@ -363,61 +364,61 @@
                         </div>
                     </div>
                 </div>
-            </div>
+
 
             @if (isset($comparisonReportPaginated) && $comparisonReportPaginated->count() > 0)
-                <div class="content-body">
-                    <div class="col-12">
-                        <div class="mb-3 d-flex justify-content-end">
-                            <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
-                                <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
-                            </a>
-                        </div>
-                        <div class="card">
-                            <div class="card-header">
-                                <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-bordered text-center">
-                                        <thead>
-                                            <tr>
-                                                <th>CID</th>
-                                                <th>Member Name</th>
-                                                <th>Total Billed</th>
-                                                <th>Remitted Loans</th>
-                                                <th>Remaining Loan Balance</th>
-                                                <th>Remitted Savings</th>
-                                                <th>Remitted Shares</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse ($comparisonReportPaginated as $row)
-                                                <tr>
-                                                    <td>{{ $row['cid'] }}</td>
-                                                    <td>{{ $row['member_name'] }}</td>
-                                                    <td>₱{{ number_format($row['amortization'], 2) }}</td>
-                                                    <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
-                                                    <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
-                                                    <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
-                                                    <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="7" class="text-center text-muted">No records found.</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                    <div class="d-flex justify-content-center mt-2 text-center">
-                                        {{ $comparisonReportPaginated->links() }}
-                                    </div>
-                                </div>
+
+            <div class="container-fluid">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
+                        <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
+                            <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered text-center">
+                                <thead>
+                                    <tr>
+                                        <th>CID</th>
+                                        <th>Member Name</th>
+                                        <th>Total Billed</th>
+                                        <th>Remitted Loans</th>
+                                        <th>Remaining Loan Balance</th>
+                                        <th>Remitted Savings</th>
+                                        <th>Remitted Shares</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($comparisonReportPaginated as $row)
+                                        <tr>
+                                            <td>{{ $row['cid'] }}</td>
+                                            <td>{{ $row['member_name'] }}</td>
+                                            <td>₱{{ number_format($row['amortization'], 2) }}</td>
+                                            <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
+                                            <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
+                                            <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
+                                            <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted">No records found.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                            <div class="d-flex justify-content-center mt-2 text-center">
+                                {{ $comparisonReportPaginated->links() }}
                             </div>
                         </div>
                     </div>
                 </div>
-            @endif
+            </div>
+
+
+    @endif
+</div>
         </div>
     </div>
 

@@ -19,4 +19,9 @@ class RemittanceReport extends Model
         'remitted_shares',
         'period',
     ];
+
+    public function member()
+    {
+        return $this->belongsTo(Member::class, 'cid', 'cid');
+    }
 }

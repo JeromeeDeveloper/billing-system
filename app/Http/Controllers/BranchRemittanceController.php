@@ -19,78 +19,82 @@ class BranchRemittanceController extends Controller
 {
     public function index(Request $request)
     {
-        // Get the branch_id from the authenticated user
         $branch_id = Auth::user()->branch_id;
         $currentBillingPeriod = Auth::user()->billing_period;
         $perPage = 10;
 
-        // Build the query for branch members with current billing period
-        $query = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })
-        ->where('billing_period', $currentBillingPeriod)
-        ->whereNotNull('name')
-        ->where('name', '!=', '');
+        // Loans & Savings Preview (branch)
+        $loansQuery = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+                $query->where('branch_id', $branch_id);
+            })
+            ->where('billing_period', $currentBillingPeriod)
+            ->where('remittance_type', 'loans_savings')
+            ->whereNotNull('name')
+            ->where('name', '!=', '');
 
-        // Apply filters
-        $filter = $request->get('filter');
-        if ($filter === 'matched') {
-            $query->where('status', 'success');
-        } elseif ($filter === 'unmatched') {
-            $query->where('status', '!=', 'success');
-        }
-
-        // Apply search
-        $search = $request->get('search');
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
-                  ->orWhere('emp_id', 'like', "%$search%");
+        $loansFilter = $request->get('loans_filter');
+        if ($loansFilter === 'matched') {
+            $loansQuery->where('status', 'success');
+        } elseif ($loansFilter === 'unmatched') {
+            $loansQuery->where('status', '!=', 'success');
+        } elseif ($loansFilter === 'no_branch') {
+            $loansQuery->whereHas('member', function($q) {
+                $q->whereNull('branch_id');
             });
         }
+        $loansSearch = $request->get('loans_search');
+        if ($loansSearch) {
+            $loansQuery->where(function($q) use ($loansSearch) {
+                $q->where('name', 'like', "%$loansSearch%")
+                  ->orWhere('emp_id', 'like', "%$loansSearch%") ;
+            });
+        }
+        $loansSavingsPreviewPaginated = $loansQuery->orderBy('id', 'desc')->paginate($perPage, ['*'], 'loans_page');
 
-        // Get paginated results
-        $preview = $query->orderBy('id', 'desc')->paginate($perPage);
-
-        // Calculate stats for branch members only (using the same query without pagination)
-        $statsQuery = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })
-        ->where('billing_period', $currentBillingPeriod)
-        ->whereNotNull('name')
-        ->where('name', '!=', '');
-
-        $statsCollection = $statsQuery->get();
-        $stats = [
-            'matched' => $statsCollection->where('status', 'success')->count(),
-            'unmatched' => $statsCollection->where('status', '!=', 'success')->count(),
-            'total_amount' => $statsCollection->sum(function ($record) {
-                $savingsTotal = 0;
-                if (is_array($record->savings) && isset($record->savings['total'])) {
-                    $savingsTotal = $record->savings['total'];
-                } elseif (is_array($record->savings)) {
-                    $savingsTotal = collect($record->savings)->sum();
-                }
-                return $record->loans + $savingsTotal;
+        // Shares Preview (branch)
+        $sharesQuery = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+                $query->where('branch_id', $branch_id);
             })
-        ];
+            ->where('billing_period', $currentBillingPeriod)
+            ->where('remittance_type', 'shares')
+            ->whereNotNull('name')
+            ->where('name', '!=', '');
 
-        // Get unique dates for the dropdown (only for this branch)
-        $dates = Remittance::whereHas('member', function($query) use ($branch_id) {
-            $query->where('branch_id', $branch_id);
-        })
-        ->select(DB::raw('DATE(created_at) as date'))
-        ->distinct()
-        ->orderBy('date', 'desc')
-        ->get()
-        ->map(function($item) {
-            return [
-                'date' => $item->date,
-                'formatted' => Carbon::parse($item->date)->format('M d, Y')
-            ];
-        });
+        $sharesFilter = $request->get('shares_filter');
+        if ($sharesFilter === 'matched') {
+            $sharesQuery->where('status', 'success');
+        } elseif ($sharesFilter === 'unmatched') {
+            $sharesQuery->where('status', '!=', 'success');
+        } elseif ($sharesFilter === 'no_branch') {
+            $sharesQuery->whereHas('member', function($q) {
+                $q->whereNull('branch_id');
+            });
+        }
+        $sharesSearch = $request->get('shares_search');
+        if ($sharesSearch) {
+            $sharesQuery->where(function($q) use ($sharesSearch) {
+                $q->where('name', 'like', "%$sharesSearch%")
+                  ->orWhere('emp_id', 'like', "%$sharesSearch%") ;
+            });
+        }
+        $sharesPreviewPaginated = $sharesQuery->orderBy('id', 'desc')->paginate($perPage, ['*'], 'shares_page');
 
-        return view('components.branch.remittance.remittance', compact('dates', 'preview', 'stats'));
+        // Comparison Report (branch)
+        $comparisonReport = $this->getRemittanceComparisonReport($branch_id, $currentBillingPeriod);
+        $comparisonPage = $request->get('comparison_page', 1);
+        $comparisonReportPaginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            collect($comparisonReport)->forPage($comparisonPage, $perPage)->values(),
+            count($comparisonReport),
+            $perPage,
+            $comparisonPage,
+            ['pageName' => 'comparison_page', 'path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('components.branch.remittance.remittance', compact(
+            'loansSavingsPreviewPaginated',
+            'sharesPreviewPaginated',
+            'comparisonReportPaginated'
+        ));
     }
 
     public function generateExport(Request $request)
@@ -139,5 +143,52 @@ class BranchRemittanceController extends Controller
             Log::error('Stack trace: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
+    }
+
+    // Add a branch-specific comparison report method
+    private function getRemittanceComparisonReport($branch_id, $period)
+    {
+        // Get all forecasts for the period and branch
+        $forecasts = \App\Models\LoanForecast::where('billing_period', $period)
+            ->whereHas('member', function($q) use ($branch_id) {
+                $q->where('branch_id', $branch_id);
+            })
+            ->with('member')
+            ->get();
+        $remitted = \App\Models\RemittanceReport::where('period', $period)
+            ->whereHas('member', function($q) use ($branch_id) {
+                $q->where('branch_id', $branch_id);
+            })
+            ->get()->keyBy('cid');
+
+        $report = [];
+        $memberTotals = [];
+        foreach ($forecasts as $forecast) {
+            $cid = $forecast->member->cid ?? null;
+            if (!$cid) continue;
+            if (!isset($memberTotals[$cid])) {
+                $memberTotals[$cid] = [
+                    'cid' => $cid,
+                    'member_name' => trim(($forecast->member->fname ?? '') . ' ' . ($forecast->member->lname ?? '')),
+                    'amortization' => 0,
+                    'total_billed' => 0,
+                    'remaining_loan_balance' => 0,
+                    'remitted_loans' => 0,
+                    'remitted_savings' => 0,
+                    'remitted_shares' => 0,
+                ];
+            }
+            $memberTotals[$cid]['amortization'] += $forecast->original_total_due ?? $forecast->total_due;
+            $memberTotals[$cid]['total_billed'] += $forecast->total_due;
+        }
+        foreach ($memberTotals as $cid => &$row) {
+            $remit = $remitted[$cid] ?? null;
+            $row['remitted_loans'] = $remit->remitted_loans ?? 0;
+            $row['remitted_savings'] = $remit->remitted_savings ?? 0;
+            $row['remitted_shares'] = $remit->remitted_shares ?? 0;
+            $row['remaining_loan_balance'] = ($row['total_billed'] ?? 0) - ($row['remitted_loans'] ?? 0);
+        }
+        unset($row);
+        return array_values($memberTotals);
     }
 }
