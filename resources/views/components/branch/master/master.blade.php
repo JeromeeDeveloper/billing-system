@@ -262,9 +262,9 @@
                                                 <th>CID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-                                                <th>Savings</th>
+                                                {{-- <th>Savings</th>
                                                 <th>Share Balance</th>
-                                                <th>Loan Balance</th>
+                                                <th>Loan Balance</th> --}}
 
                                                 <th>Actions</th>
                                             </tr>
@@ -276,9 +276,9 @@
                                                     <td>{{ $item->member->lname ?? '' }},
                                                         {{ $item->member->fname ?? '' }}</td>
                                                     <td>{{ $item->member->branch ? $item->member->branch->name : 'N/A' }}</td>
-                                                    <td>{{ $item->member->savings_balance ?? '' }}</td>
+                                                    {{-- <td>{{ $item->member->savings_balance ?? '' }}</td>
                                                     <td>{{ $item->member->share_balance ?? 'N/A' }}</td>
-                                                    <td>{{ $item->member->loan_balance ?? 'N/A' }}</td>
+                                                    <td>{{ $item->member->loan_balance ?? 'N/A' }}</td> --}}
 
 
                                                     <td>
@@ -357,9 +357,9 @@
                                                 <th>CID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-                                                <th>Savings</th>
+                                                {{-- <th>Savings</th>
                                                 <th>Share Balance</th>
-                                                <th>Loan Balance</th>
+                                                <th>Loan Balance</th> --}}
 
                                                 <th>Actions</th>
                                             </tr>
@@ -708,8 +708,8 @@
                                                         </p>
                                                         <p><strong>Address:</strong> <span id="view-address"></span>
                                                         </p>
-                                                        <p><strong>Additional Address:</strong> <span
-                                                                id="view-additional_address"></span></p>
+                                                        {{-- <p><strong>Additional Address:</strong> <span
+                                                                id="view-additional_address"></span></p> --}}
                                                         <p><strong>Branch:</strong> <span id="view-branch"></span></p>
                                                         <p><strong>Area Officer:</strong> <span
                                                                 id="view-area_officer"></span></p>
@@ -732,15 +732,15 @@
                                                                 id="view-occupation"></span></p>
                                                         <p><strong>Industry:</strong> <span id="view-industry"></span>
                                                         </p>
-                                                        <p><strong>Status:</strong> <span id="view-status"></span></p>
+                                                        {{-- <p><strong>Status:</strong> <span id="view-status"></span></p> --}}
                                                         <p><strong>Account Status:</strong> <span
                                                                 id="view-account_status"></span></p>
-                                                        <p><strong>Savings Balance:</strong> <span
+                                                        {{-- <p><strong>Savings Balance:</strong> <span
                                                                 id="view-savings_balance"></span></p>
                                                         <p><strong>Share Balance:</strong> <span
                                                                 id="view-share_balance"></span></p>
                                                         <p><strong>Loan Balance:</strong> <span
-                                                                id="view-loan_balance"></span></p>
+                                                                id="view-loan_balance"></span></p> --}}
                                                     </div>
                                                 </div>
 
@@ -1000,17 +1000,20 @@
         function formatDate(dateString) {
             if (!dateString || dateString === 'null' || dateString === 'undefined') return '';
 
+            // If it's already in YYYY-MM format, return as is
+            if (/^\d{4}-\d{2}$/.test(dateString)) return dateString;
+
+            // If it's already in YYYY-MM-DD format, return as is
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+
+            // Handle datetime format with timezone
+            if (dateString.includes('T')) {
+                // Extract just the date part without timezone conversion
+                return dateString.split('T')[0];
+            }
+
+            // For other formats, parse without timezone conversion
             try {
-                // If it's already in YYYY-MM-DD format, return it
-                if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
-
-                // Handle datetime format with timezone
-                if (dateString.includes('T')) {
-                    // Extract just the date part without timezone conversion
-                    return dateString.split('T')[0];
-                }
-
-                // For other formats, parse without timezone conversion
                 const parts = new Date(dateString).toISOString().split('T')[0];
                 return parts;
             } catch (error) {
@@ -1090,25 +1093,22 @@
             // Format dates for all accounts
             loans = loans.map(loan => ({
                 ...loan,
-
                 maturity_date: formatDate(loan.maturity_date),
                 amortization_due_date: formatDate(loan.amortization_due_date),
-                start_hold: formatDate(loan.start_hold),
-                expiry_date: formatDate(loan.expiry_date)
+                start_hold: loan.start_hold || '',
+                expiry_date: loan.expiry_date || ''
             }));
 
             savings = savings.map(saving => ({
                 ...saving,
-
-                start_hold: formatDate(saving.start_hold),
-                expiry_date: formatDate(saving.expiry_date)
+                start_hold: saving.start_hold || '',
+                expiry_date: saving.expiry_date || ''
             }));
 
             shares = shares.map(share => ({
                 ...share,
-
-                start_hold: formatDate(share.start_hold),
-                expiry_date: formatDate(share.expiry_date)
+                start_hold: share.start_hold || '',
+                expiry_date: share.expiry_date || ''
             }));
 
             // Reset indices
@@ -1248,11 +1248,11 @@
                     </div>
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
-                        <input type="month" name="savings[${index}][start_hold]" class="form-control" value="${formatDate(saving.start_hold)}">
+                        <input type="month" name="savings[${index}][start_hold]" class="form-control" value="${saving.start_hold || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Expiry Date</label>
-                        <input type="month" name="savings[${index}][expiry_date]" class="form-control" value="${formatDate(saving.expiry_date)}">
+                        <input type="month" name="savings[${index}][expiry_date]" class="form-control" value="${saving.expiry_date || ''}">
                     </div>
                     <div class="form-group col-md-6">
                         <label>Request for Hold</label>
