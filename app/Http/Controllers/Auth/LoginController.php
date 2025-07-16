@@ -42,6 +42,11 @@ class LoginController extends Controller
             (Carbon::parse($user->billing_period)->format('Y-m') !== Carbon::now()->format('Y-m'))) {
             User::where('id', $user->id)->update(['billing_period' => $currentBillingPeriod]);
 
+            // Update all members: if member_tagging is 'New' and billing_period != currentBillingPeriod, set to 'PGB'
+            \App\Models\Member::where('member_tagging', 'New')
+                ->where('billing_period', '!=', $currentBillingPeriod)
+                ->update(['member_tagging' => 'PGB']);
+
             // Create a notification about the billing period update
             \App\Models\Notification::create([
                 'type' => 'billing_period_update',
