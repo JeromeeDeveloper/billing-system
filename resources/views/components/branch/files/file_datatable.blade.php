@@ -57,7 +57,7 @@
                                         </span>
                                         File Retention
                                     </a>
-                                    @if($isApproved)
+                                    {{-- @if($isApproved)
                                         <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
                                             data-target="#exampleModalpopover">
                                             <span class="btn-icon-left text-primary">
@@ -73,7 +73,7 @@
                                             </span>
                                             Upload (Approved - Disabled)
                                         </button>
-                                    @endif
+                                    @endif --}}
                                 </div>
                             </div>
 
