@@ -121,27 +121,36 @@ class BillingController extends Controller
         set_time_limit(600); // Allow up to 10 minutes for export
 
         $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
+        $userId = Auth::id();
+
+        // Validation: Only allow one export per user per month
+        $alreadyExported = BillingExport::where('billing_period', $billingPeriod)
+            ->where('generated_by', $userId)
+            ->exists();
+        if ($alreadyExported) {
+            return back()->with('error', 'You have already generated billing for this month.');
+        }
 
         // Generate the Excel file
         $export = new BillingExcelExport($billingPeriod);
         $filename = 'billing_export_' . \Carbon\Carbon::parse($billingPeriod)->format('Y-m') . '.xlsx';
 
         // Store the file
-        Excel::store($export, 'exports/' . $filename, 'public');
+        \Maatwebsite\Excel\Facades\Excel::store($export, 'exports/' . $filename, 'public');
 
         // Save export record
         $billingExport = BillingExport::create([
             'billing_period' => $billingPeriod,
             'filename' => $filename,
             'filepath' => 'exports/' . $filename,
-            'generated_by' => Auth::id()
+            'generated_by' => $userId
         ]);
 
         // Add notification
-        NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
+        NotificationController::createNotification('billing_report', $userId, $billingExport->id);
 
         // Download the file
-        return Excel::download($export, $filename);
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
     }
 
     public function viewExports(Request $request)
@@ -377,27 +386,36 @@ class BillingController extends Controller
 
         $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
         $branchId = Auth::user()->branch_id;
+        $userId = Auth::id();
+
+        // Validation: Only allow one export per user per month
+        $alreadyExported = BillingExport::where('billing_period', $billingPeriod)
+            ->where('generated_by', $userId)
+            ->exists();
+        if ($alreadyExported) {
+            return back()->with('error', 'You have already generated billing for this month.');
+        }
 
         // Generate the Excel file
         $export = new \App\Exports\BranchBillingExport($billingPeriod, $branchId);
         $filename = 'branch_billing_export_' . \Carbon\Carbon::parse($billingPeriod)->format('Y-m') . '.xlsx';
 
         // Store the file
-        Excel::store($export, 'exports/' . $filename, 'public');
+        \Maatwebsite\Excel\Facades\Excel::store($export, 'exports/' . $filename, 'public');
 
         // Save export record
         $billingExport = BillingExport::create([
             'billing_period' => $billingPeriod,
             'filename' => $filename,
             'filepath' => 'exports/' . $filename,
-            'generated_by' => Auth::id()
+            'generated_by' => $userId
         ]);
 
         // Add notification
-        NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
+        NotificationController::createNotification('billing_report', $userId, $billingExport->id);
 
         // Download the file
-        return Excel::download($export, $filename);
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
     }
 
     public function exportLoanReport(Request $request)

@@ -39,6 +39,21 @@
         </div>
     </div>
 
+    @if (session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '{{ session('error') }}',
+                    timer: 4000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            });
+        </script>
+    @endif
+
     <div id="main-wrapper">
 
         @include('layouts.partials.header')
@@ -78,7 +93,7 @@
 
                                         {{-- main function --}}
 
-                                        {{-- <a href="{{ $allBranchApproved && !$hasMembersNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
+                                        <a href="{{ $allBranchApproved && !$hasMembersNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
                                             class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved || $hasMembersNoBranch ? 'disabled' : '' }}"
                                             @if (!$allBranchApproved)
                                                 onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;"
@@ -89,16 +104,16 @@
                                                 <i class="fa fa-file"></i>
                                             </span>
                                             Generate Billing
-                                        </a> --}}
+                                        </a>
 
                                         {{-- for testing --}}
-                                        <a href="{{ route('billing.export', ['billing_period' => now()->format('Y-m')]) }}"
+                                        {{-- <a href="{{ route('billing.export', ['billing_period' => now()->format('Y-m')]) }}"
                                             class="btn btn-rounded btn-primary text-white me-4">
                                             <span class="btn-icon-left text-primary">
                                                 <i class="fa fa-file"></i>
                                             </span>
                                             Generate Billing
-                                        </a>
+                                        </a> --}}
 
 
 
