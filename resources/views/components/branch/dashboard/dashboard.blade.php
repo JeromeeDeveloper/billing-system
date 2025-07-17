@@ -142,7 +142,7 @@
                                             </div>
 
                                             <!-- Summary Card -->
-                                            <div class="row mt-4">
+                                            {{-- <div class="row mt-4">
                                                 <div class="col-12">
                                                     <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                                         <div class="card-body p-4 text-white">
@@ -159,7 +159,7 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </div> --}}
                                         </div>
                                     </div>
                                 </div>
