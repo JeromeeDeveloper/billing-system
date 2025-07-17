@@ -98,17 +98,18 @@
                                                     Approve Billing
                                                 </button>
                                             </form>
-                                        @else
+                                        @endif
+                                        @if(Auth::user()->status === 'approved')
                                             <form action="{{ route('billing.cancel-approval') }}" method="POST" class="m-0">
                                                 @csrf
-                                                <button type="submit" class="btn btn-rounded btn-warning text-white">
+                                                <button type="submit" class="btn btn-rounded btn-warning text-white {{ $alreadyExported ? 'disabled' : '' }}" @if($alreadyExported) disabled @endif>
                                                     <span class="btn-icon-left text-warning">
                                                         <i class="fa fa-times"></i>
                                                     </span>
                                                     Cancel Approval
                                                 </button>
                                             </form>
-                                        @endif
+
 
                                         {{-- <a href="{{ route('billing.loan-report.branch') }}" class="btn btn-rounded btn-success text-white me-2">
                                             <span class="btn-icon-left text-success">
@@ -124,6 +125,13 @@
                                             View Export History
                                         </a>
                                     </div>
+
+                                    @if($alreadyExported)
+                                    <div class="text-danger small mt-2">
+                                        You have already generated billing for this month. Cancel approval is disabled until next month.
+                                    </div>
+                                @endif
+                            @endif
 
                                     @if (!$allBranchApproved)
                                         <div class="text-danger small">

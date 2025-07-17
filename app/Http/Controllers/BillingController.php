@@ -67,8 +67,20 @@ class BillingController extends Controller
         return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved'));
     }
 
+    private function syncUserBillingPeriod()
+    {
+        $user = Auth::user();
+        $currentMonth = now()->format('Y-m-01');
+        if ($user->billing_period !== $currentMonth) {
+            $user->billing_period = $currentMonth;
+            $user->status = 'pending';
+            $user->save();
+        }
+    }
+
     public function index_branch(Request $request)
     {
+        $this->syncUserBillingPeriod();
         $billingPeriod = Auth::user()->billing_period;
         $userBranchId = Auth::user()->branch_id;
         $search = $request->input('search');
@@ -79,9 +91,9 @@ class BillingController extends Controller
             $perPage = 10;
         }
 
-         $allBranchApproved = User::where('role', 'branch')
-        ->where('status', '!=', 'approved')
-        ->doesntExist(); // true if all are approved
+        $allBranchApproved = User::where('role', 'branch')
+            ->where('status', '!=', 'approved')
+            ->doesntExist(); // true if all are approved
 
         // Query with eager loading branch to avoid N+1 query problem
         $query = Member::with('branch')
@@ -113,7 +125,13 @@ class BillingController extends Controller
             'perPage' => $perPage,
         ]);
 
-        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved'));
+        // Check if user has already generated billing for this month
+        $userId = Auth::id();
+        $alreadyExported = \App\Models\BillingExport::where('billing_period', $billingPeriod)
+            ->where('generated_by', $userId)
+            ->exists();
+
+        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'alreadyExported'));
     }
 
     public function export(Request $request)

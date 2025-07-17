@@ -40,7 +40,13 @@ class LoginController extends Controller
 
         if (!$user->billing_period ||
             (Carbon::parse($user->billing_period)->format('Y-m') !== Carbon::now()->format('Y-m'))) {
-            User::where('id', $user->id)->update(['billing_period' => $currentBillingPeriod]);
+            User::where('id', $user->id)->update([
+                'billing_period' => $currentBillingPeriod,
+                'status' => 'pending'
+            ]);
+
+            // Refresh the user session so new values are available immediately
+            Auth::setUser(User::find($user->id));
 
             // Update all members: if member_tagging is 'New' and billing_period != currentBillingPeriod, set to 'PGB'
             \App\Models\Member::where('member_tagging', 'New')
