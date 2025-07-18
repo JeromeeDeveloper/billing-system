@@ -198,6 +198,18 @@
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h5><i class="fa fa-info-circle"></i> Billing Period Management</h5>
+                                    <p class="mb-2">You can manually close the current billing period and move all users to the next period. This is useful if remittances are late or you want to control the period closing date.</p>
+                                    <form method="POST" action="{{ route('billing.close-period') }}" id="closePeriodForm">
+                                        @csrf
+                                        <button type="button" class="btn btn-danger mt-2" data-toggle="modal" data-target="#closePeriodModal">
+                                            <i class="fa fa-calendar-times-o"></i> Close Billing Period
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> Available Reports</h5>
                                     <ul class="mb-2">
                                         <li><strong>List of Profile:</strong> Export comprehensive member profile data</li>
@@ -359,6 +371,43 @@
         });
     </script>
     @endpush
+
+    <!-- Custom Bootstrap Modal for Confirmation -->
+    <div class="modal fade" id="closePeriodModal" tabindex="-1" role="dialog" aria-labelledby="closePeriodModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="closePeriodModalLabel"><i class="fa fa-exclamation-triangle"></i> Are you absolutely sure?</h5>
+            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="text-center">
+              <p><b>This will close the current billing period for <span class="text-danger">ALL users</span> and move to the next period.</b></p>
+              <p class="text-danger font-weight-bold">This action cannot be undone.</p>
+              <p><b>If there are late remittances or unfinished tasks for this period, they will be <span class="text-danger">locked out</span>.</b></p>
+              <p class="text-danger">Please double-check with your team before proceeding.</p>
+            </div>
+          </div>
+          <div class="modal-footer justify-content-center">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirmClosePeriod">Yes, Close Billing Period</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var confirmBtn = document.getElementById('confirmClosePeriod');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    document.getElementById('closePeriodForm').submit();
+                });
+            }
+        });
+    </script>
 
 </body>
 

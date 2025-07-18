@@ -570,4 +570,36 @@ class BillingController extends Controller
             'loan_forecasts' => $loanForecasts
         ]);
     }
+
+    public function closeBillingPeriod(Request $request)
+    {
+        // Only allow admin
+        if (!Auth::user() || Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        // Get the current max billing period among users
+        $currentPeriod = \App\Models\User::max('billing_period');
+        $current = \Carbon\Carbon::parse($currentPeriod);
+        $next = $current->copy()->addMonth()->format('Y-m-01');
+
+        // Update all users' billing_period
+        \App\Models\User::query()->update(['billing_period' => $next]);
+        // Set all branch users' status to pending
+        \App\Models\User::where('role', 'branch')->update(['status' => 'pending']);
+
+        // Notify all users
+        $userIds = \App\Models\User::pluck('id');
+        foreach ($userIds as $id) {
+            \App\Models\Notification::create([
+                'type' => 'billing_period_closed',
+                'user_id' => $id,
+                'related_id' => $id,
+                'message' => 'Billing period has been closed. New billing period: ' . \Carbon\Carbon::parse($next)->format('F Y'),
+                'billing_period' => $next
+            ]);
+        }
+
+        return back()->with('success', 'Billing period closed. All users moved to next period: ' . \Carbon\Carbon::parse($next)->format('F Y'));
+    }
 }

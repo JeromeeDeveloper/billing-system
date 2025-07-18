@@ -61,6 +61,9 @@ Route::get('/billing/loan-report', [BillingController::class, 'exportLoanReport'
 Route::get('/billing/members-no-branch', [BillingController::class, 'exportMembersNoBranch'])->name('billing.members-no-branch');
 Route::get('/billing/test-period', [BillingController::class, 'testBillingPeriod'])->name('billing.test-period');
 
+// Close Billing Period (manual trigger)
+Route::post('/billing/close-period', [BillingController::class, 'closeBillingPeriod'])->name('billing.close-period');
+
 //Billing Export History
 Route::get('/billing/exports', [BillingController::class, 'viewExports'])->name('billing.exports');
 Route::get('/billing/exports/data', [BillingController::class, 'getExportsData'])->name('billing.exports.data');
