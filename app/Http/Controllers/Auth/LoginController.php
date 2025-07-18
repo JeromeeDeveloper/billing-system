@@ -112,6 +112,14 @@ class LoginController extends Controller
         $data = $request->only(['name', 'email', 'role', 'status', 'branch_id']);
         $data['password'] = Hash::make($request->password);
 
+        // Set billing period based on admin's current billing period
+        $adminBillingPeriod = Auth::user()->billing_period;
+        if (!$adminBillingPeriod) {
+            // Fallback to current date if admin doesn't have billing period set
+            $adminBillingPeriod = Carbon::now()->format('Y-m-01');
+        }
+        $data['billing_period'] = $adminBillingPeriod;
+
         User::create($data);
 
         return redirect()->back()->with('success', 'User created successfully.');
