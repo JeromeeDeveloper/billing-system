@@ -67,20 +67,8 @@ class BillingController extends Controller
         return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved'));
     }
 
-    private function syncUserBillingPeriod()
-    {
-        $user = Auth::user();
-        $currentMonth = now()->format('Y-m-01');
-        if ($user->billing_period !== $currentMonth) {
-            $user->billing_period = $currentMonth;
-            $user->status = 'pending';
-            $user->save();
-        }
-    }
-
     public function index_branch(Request $request)
     {
-        $this->syncUserBillingPeriod();
         $billingPeriod = Auth::user()->billing_period;
         $userBranchId = Auth::user()->branch_id;
         $search = $request->input('search');
