@@ -217,40 +217,32 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center bg-light py-3">
-                                <div>
-                                    <h4 class="card-title mb-0 text-primary">Member Datatable</h4>
-                                    <small class="text-muted">Manage all members in the system</small>
-                                </div>
-
-                                <div class="d-flex align-items-center" style="gap: 15px;">
-                                    <form method="GET" action="{{ url()->current() }}">
-                                        <div class="input-group">
-                                            <input type="text" name="search" value="{{ request('search') }}"
-                                                class="form-control" placeholder="Search members..."
-                                                style="width: 250px; height: 40px;" />
-                                            <button type="submit" class="btn btn-primary d-flex align-items-center"
-                                                style="height: 40px;">
-                                                <i class="fa fa-search me-2"></i>
-                                                Search
+                            <div class="card-header bg-white border-0 px-3 py-3">
+                                <div class="row w-100 align-items-center g-2">
+                                    <div class="col-12 col-md-4 mb-2 mb-md-0">
+                                        <h4 class="card-title mb-0 text-primary">Member Datatable</h4>
+                                        <small class="text-muted">Manage all members in your branch</small>
+                                    </div>
+                                    <div class="col-12 col-md-8 d-flex flex-column align-items-md-end align-items-center">
+                                        <form method="GET" action="{{ url()->current() }}" class="d-flex flex-grow-1 flex-md-grow-0 gap-2 align-items-center mb-2 mb-md-0 justify-content-md-end w-100" style="max-width: 400px;">
+                                            <input type="text" name="search" value="{{ request('search') }}" class="form-control flex-grow-1" placeholder="Search members..." />
+                                            <button type="submit" class="btn btn-primary d-flex align-items-center px-3">
+                                                <i class="fa fa-search me-2"></i> <span class="d-none d-md-inline">Search</span>
                                             </button>
-                                        </div>
-                                    </form>
+                                        </form>
 
-                                    <a href="#" class="btn btn-success d-flex align-items-center"
-                                        data-toggle="modal" data-target="#addModal" style="height: 40px;">
-                                        <i class="fa fa-plus-circle me-2"></i>
-                                        Add New Member
-                                    </a>
-
-                                    <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-success">
-                                        <i class="fa fa-download"></i> Export Member Details (CSV)
-                                    </a>
-
-                                    <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-warning">
-                                        <i class="fa fa-exclamation-triangle"></i> Export Members No Regular Savings (Excel)
-                                    </a>
-
+                                    </div>
+                                    <div class="action-bar d-flex flex-wrap flex-md-nowrap gap-2 justify-content-center align-items-center p-2 rounded shadow-sm mt-2 w-100" style="background: #f8f9fa;">
+                                        <a href="#" class="btn btn-success d-flex align-items-center px-3" data-toggle="modal" data-target="#addModal">
+                                            <i class="fa fa-plus-circle me-2 mr-2"></i> <span class="d-none d-md-inline">Add New Member</span>
+                                        </a>
+                                        <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-outline-success d-flex align-items-center px-3">
+                                            <i class="fa fa-download me-2 mr-2"></i> <span class="d-none d-md-inline">Export Details (CSV)</span>
+                                        </a>
+                                        <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-outline-warning d-flex align-items-center px-3">
+                                            <i class="fa fa-exclamation-triangle me-2"></i> <span class="d-none d-md-inline">No Regular Savings (Excel)</span>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
 
