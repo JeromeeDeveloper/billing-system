@@ -31,7 +31,10 @@ class LoanForecast extends Model
         'approval_no',
         'total_due_after_remittance',
         'loan_payment',
-        'remarks'
+        'remarks',
+        'principal',
+        'interest',
+        'total_amort'
     ];
 
     protected $casts = [
@@ -44,7 +47,10 @@ class LoanForecast extends Model
         'principal_due' => 'decimal:2',
         'interest_due' => 'decimal:2',
         'penalty_due' => 'decimal:2',
-        'loan_payment' => 'decimal:2'
+        'loan_payment' => 'decimal:2',
+        'principal' => 'decimal:2',
+        'interest' => 'decimal:2',
+        'total_amort' => 'decimal:2'
     ];
 
     public function member()

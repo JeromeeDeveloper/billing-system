@@ -107,13 +107,13 @@
                                         </a>
 
                                         {{-- for testing --}}
-                                        {{-- <a href="{{ route('billing.export', ['billing_period' => now()->format('Y-m')]) }}"
+                                        <a href="{{ route('billing.export', ['billing_period' => now()->format('Y-m')]) }}"
                                             class="btn btn-rounded btn-primary text-white me-4">
                                             <span class="btn-icon-left text-primary">
                                                 <i class="fa fa-file"></i>
                                             </span>
                                             Generate Billing
-                                        </a> --}}
+                                        </a>
 
 
 

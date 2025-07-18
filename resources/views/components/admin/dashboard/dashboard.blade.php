@@ -173,24 +173,6 @@
                     <div class="col-xl-4 col-lg-4 col-md-4">
 
                         <div class="card">
-                            <div class="card-body text-center">
-                                <div class="m-t-10">
-                                    <h4 class="card-title">Member Status Distribution</h4>
-                                    <h2 class="mt-3">{{ number_format($totalMembers) }}</h2>
-                                </div>
-                                <div class="widget-card-circle mt-5 mb-5" id="info-circle-card">
-                                    <i class="ti-control-shuffle pa"></i>
-                                </div>
-                                <ul class="widget-line-list m-b-15">
-                                    <li class="border-right">{{ $pgbPercentage }}% <br><span class="text-success"><i
-                                                class="ti-hand-point-up"></i> PGB</span></li>
-                                    <li>{{ $newPercentage }}% <br><span class="text-danger"><i
-                                                class="ti-hand-point-down"></i>New</span></li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <div class="card">
                             <div class="card-header">
                                 <h4 class="card-title">Report Center</h4>
                             </div>
@@ -217,7 +199,7 @@
                                         <li><strong>Remittance Report Per Branch:</strong> Branch-specific remittance reports</li>
                                         <li><strong>Remittance Report Per Branch Member:</strong> Export records of all members per branch</li>
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> All reports are generated for the current billing period and include the latest data.</small></p>
+                                  
                                 </div>
 
                                 <div class="row">
@@ -239,6 +221,26 @@
 
                             </div>
                         </div>
+
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <div class="m-t-10">
+                                    <h4 class="card-title">Member Status Distribution</h4>
+                                    <h2 class="mt-3">{{ number_format($totalMembers) }}</h2>
+                                </div>
+                                <div class="widget-card-circle mt-5 mb-5" id="info-circle-card">
+                                    <i class="ti-control-shuffle pa"></i>
+                                </div>
+                                <ul class="widget-line-list m-b-15">
+                                    <li class="border-right">{{ $pgbPercentage }}% <br><span class="text-success"><i
+                                                class="ti-hand-point-up"></i> PGB</span></li>
+                                    <li>{{ $newPercentage }}% <br><span class="text-danger"><i
+                                                class="ti-hand-point-down"></i>New</span></li>
+                                </ul>
+                            </div>
+                        </div>
+
+
 
                     </div>
                 </div>

@@ -1437,12 +1437,12 @@
             </div>
 
             <div class="form-group col-md-6">
-                <label>Total Due</label>
+                <label>Total Amort Due</label>
                 <input type="number" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || 0}" step="0.01">
             </div>
 
             <div class="form-group col-md-6">
-                <label>Original Total Due</label>
+                <label>Total Billed</label>
                 <input type="number" class="form-control" value="${loan.original_total_due !== undefined && loan.original_total_due !== null ? loan.original_total_due : ''}" readonly>
             </div>
 
@@ -1532,8 +1532,8 @@
                         <p><strong>Open Date:</strong> ${loan.open_date || 'N/A'}</p>
                         <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
-                        <p><strong>Total Due:</strong> ${loan.total_due || '0.00'}</p>
-                        <p><strong>Original Total Due:</strong> ${loan.original_total_due || '0.00'}</p>
+                        <p><strong>Total Amort Due:</strong> ${loan.total_due || '0.00'}</p>
+                        <p><strong>Total Billed:</strong> ${loan.original_total_due || '0.00'}</p>
                         <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
                         <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>
