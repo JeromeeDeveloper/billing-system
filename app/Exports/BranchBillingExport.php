@@ -22,15 +22,13 @@ class BranchBillingExport implements WithMultipleSheets
             // Extract year-month from billing period (e.g., "2025-07-01" becomes "2025-07")
             $this->billingPeriod = \Carbon\Carbon::parse($billingPeriod)->format('Y-m');
         } else {
-            // Fallback to current user's billing period
-            $userBillingPeriod = \Illuminate\Support\Facades\Auth::user()->billing_period ?? now()->format('Y-m-01');
+            // Always use the current user's billing_period
+            $userBillingPeriod = \Illuminate\Support\Facades\Auth::user()->billing_period;
             $this->billingPeriod = \Carbon\Carbon::parse($userBillingPeriod)->format('Y-m');
         }
-
         $this->branchId = $branchId;
-
         // Debug: Log the billing period being used
-        \Illuminate\Support\Facades\Log::info('BranchBillingExport - Billing Period: ' . $this->billingPeriod . ', Branch ID: ' . $this->branchId);
+        \Illuminate\Support\Facades\Log::info('BranchBillingExport - Billing Period: ' . $this->billingPeriod);
     }
 
     public function sheets(): array

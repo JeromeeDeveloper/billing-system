@@ -96,9 +96,9 @@
                                         <div class="col-md-3 d-flex align-items-end">
                                             <button type="submit" class="btn btn-primary mr-2">Search</button>
                                             <a href="{{ route('branch.atm') }}" class="btn btn-secondary mr-2">Reset</a>
-                                            <a href="{{ route('branch.atm.export-posted-payments') }}" class="btn btn-success">
+                                            {{-- <a href="{{ route('branch.atm.export-posted-payments') }}" class="btn btn-success">
                                                 <i class="fa fa-file-excel"></i> Export Posted Payments
-                                            </a>
+                                            </a> --}}
                                         </div>
                                     </div>
                                 </form>
@@ -106,6 +106,32 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Export Posted Payments Filter Form -->
+                <form method="GET" action="{{ route('branch.atm.export-posted-payments') }}" class="form-inline mb-2" id="exportPostedPaymentsForm">
+                    <div class="form-group mr-2">
+                        <label for="export_date" class="mr-2">Export Date:</label>
+                        <input type="date" id="export_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates')) disabled @endif>
+                    </div>
+                    <div class="form-group mr-2">
+                        <input type="checkbox" id="all_dates" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
+                        <label for="all_dates" class="ml-1">All Dates</label>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa fa-file-excel"></i> Export Posted Payments
+                    </button>
+                </form>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var allDatesCheckbox = document.getElementById('all_dates');
+                        var dateInput = document.getElementById('export_date');
+                        if (allDatesCheckbox && dateInput) {
+                            allDatesCheckbox.addEventListener('change', function() {
+                                dateInput.disabled = this.checked;
+                            });
+                        }
+                    });
+                </script>
 
                 <!-- Account Balances Table -->
                 <div class="row">
@@ -144,9 +170,11 @@
                                                         @endforeach
                                                     </td>
                                                     <td>
-                                                        @foreach ($member->loanForecasts as $loan)
-                                                            <div>{{ $loan->loan_acct_no }}:
-                                                                ₱{{ number_format($loan->total_due, 2) }}</div>
+                                                        @foreach ($member->loanForecasts as $index => $loan)
+                                                            @if (floatval($loan->total_due) > 0)
+                                                                <div>{{ $loan->loan_acct_no }}:
+                                                                    ₱{{ number_format($loan->total_due, 2) }}</div>
+                                                            @endif
                                                         @endforeach
                                                     </td>
                                                     <td>
@@ -230,6 +258,30 @@
                                                                         </small>
                                                                     </div>
 
+                                                                    <!-- Savings Post Payment Section -->
+                                                                    <div class="row mb-4">
+                                                                        <div class="col-12">
+                                                                            <div class="card bg-light border-success">
+                                                                                <div class="card-body">
+                                                                                    <h6 class="card-title text-success mb-3">
+                                                                                        <i class="fa fa-piggy-bank me-2"></i>Post Payment for Savings
+                                                                                    </h6>
+                                                                                    <div class="row">
+                                                                                        @foreach ($member->savings as $saving)
+                                                                                            <div class="col-md-6 mb-2">
+                                                                                                <label class="form-label small">
+                                                                                                    <span class="fw-bold">{{ $saving->savingProduct->product_name ?? 'Unknown Product' }}</span>
+                                                                                                    <span class="ml-2">({{ $saving->account_number }})</span>
+                                                                                                </label>
+                                                                                                <input type="number" step="0.01" class="form-control savings-amount-input" name="savings_amounts[{{ $saving->account_number }}]" placeholder="Enter deposit amount" data-member-id="{{ $member->id }}" data-product-name="{{ $saving->savingProduct->product_name ?? '' }}">
+                                                                                            </div>
+                                                                                        @endforeach
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
                                                                     <!-- Loan Selection Section -->
                                                                     <div class="form-group mt-4">
                                                                         <label class="form-label fw-bold">
@@ -242,42 +294,44 @@
                                                                         </div>
                                                                         <div class="loan-selection-container" id="loan-selection{{ $member->id }}">
                                                                             @foreach ($member->loanForecasts as $index => $loan)
-                                                                                <div class="loan-option mb-3 p-3 border rounded">
-                                                                                    <div class="form-check">
-                                                                                        <input class="form-check-input loan-checkbox" type="checkbox"
-                                                                                               name="selected_loans[]"
-                                                                                               value="{{ $loan->loan_acct_no }}"
-                                                                                               id="loan{{ $member->id }}_{{ $index }}"
-                                                                                               data-total-due="{{ $loan->total_due }}"
-                                                                                               data-member-id="{{ $member->id }}">
-                                                                                        <label class="form-check-label fw-bold" for="loan{{ $member->id }}_{{ $index }}">
-                                                                                            <i class="fa fa-credit-card me-2 text-primary"></i>
-                                                                                            <strong>{{ $loan->loan_acct_no }}</strong>
-                                                                                            <span class="badge bg-info ms-2">
-                                                                                                Balance: ₱ {{ number_format($loan->total_due, 2) }}
-                                                                                            </span>
-                                                                                        </label>
-                                                                                    </div>
-                                                                                    <div class="ml-4 mt-2">
-                                                                                        <div class="row">
-                                                                                            <div class="col-md-6">
-                                                                                                <label class="form-label small">Amount to Pay:</label>
-                                                                                                <input type="number" step="0.01" class="form-control loan-amount-input"
-                                                                                                       name="loan_amounts[{{ $loan->loan_acct_no }}]"
-                                                                                                       placeholder="Enter amount"
-                                                                                                       data-total-due="{{ $loan->total_due }}"
-                                                                                                       data-member-id="{{ $member->id }}">
-                                                                                            </div>
-                                                                                            <div class="col-md-6">
-                                                                                                <div class="loan-details small text-muted">
-                                                                                                    <div><strong>Principal:</strong> ₱{{ number_format($loan->principal_due, 2) }}</div>
-                                                                                                    <div><strong>Interest:</strong> ₱{{ number_format($loan->interest_due, 2) }}</div>
-                                                                                                    <div><strong>Penalty:</strong> ₱{{ number_format($loan->penalty_due, 2) }}</div>
+                                                                                @if (floatval($loan->total_due) > 0)
+                                                                                    <div class="loan-option mb-3 p-3 border rounded">
+                                                                                        <div class="form-check">
+                                                                                            <input class="form-check-input loan-checkbox" type="checkbox"
+                                                                                                   name="selected_loans[]"
+                                                                                                   value="{{ $loan->loan_acct_no }}"
+                                                                                                   id="loan{{ $member->id }}_{{ $index }}"
+                                                                                                   data-total-due="{{ $loan->total_due }}"
+                                                                                                   data-member-id="{{ $member->id }}">
+                                                                                            <label class="form-check-label fw-bold" for="loan{{ $member->id }}_{{ $index }}">
+                                                                                                <i class="fa fa-credit-card me-2 text-primary"></i>
+                                                                                                <strong>{{ $loan->loan_acct_no }}</strong>
+                                                                                                <span class="badge bg-info ms-2">
+                                                                                                    Balance: ₱ {{ number_format($loan->total_due, 2) }}
+                                                                                                </span>
+                                                                                            </label>
+                                                                                        </div>
+                                                                                        <div class="ml-4 mt-2">
+                                                                                            <div class="row">
+                                                                                                <div class="col-md-6">
+                                                                                                    <label class="form-label small">Amount to Pay:</label>
+                                                                                                    <input type="number" step="0.01" class="form-control loan-amount-input"
+                                                                                                           name="loan_amounts[{{ $loan->loan_acct_no }}]"
+                                                                                                           placeholder="Enter amount"
+                                                                                                           data-total-due="{{ $loan->total_due }}"
+                                                                                                           data-member-id="{{ $member->id }}">
+                                                                                                </div>
+                                                                                                <div class="col-md-6">
+                                                                                                    <div class="loan-details small text-muted">
+                                                                                                        <div><strong>Principal:</strong> ₱{{ number_format($loan->principal_due, 2) }}</div>
+                                                                                                        <div><strong>Interest:</strong> ₱{{ number_format($loan->interest_due, 2) }}</div>
+                                                                                                        <div><strong>Penalty:</strong> ₱{{ number_format($loan->penalty_due, 2) }}</div>
+                                                                                                    </div>
                                                                                                 </div>
                                                                                             </div>
                                                                                         </div>
                                                                                     </div>
-                                                                                </div>
+                                                                                @endif
                                                                             @endforeach
                                                                         </div>
                                                                     </div>
@@ -328,11 +382,27 @@
                                                         const withdrawalInput = $('#withdrawal_amount' + memberId);
                                                         const loanCheckboxes = $('.loan-checkbox[data-member-id="' + memberId + '"]');
                                                         const loanAmountInputs = $('.loan-amount-input[data-member-id="' + memberId + '"]');
+                                                        const savingsAmountInputs = $('.savings-amount-input[data-member-id="' + memberId + '"]');
+
+                                                        // Hide loan options with zero balance when modal is shown
+                                                        $('#postPaymentModal{{ $member->id }}').on('shown.bs.modal', function () {
+                                                            $(this).find('.loan-option').each(function() {
+                                                                var balanceText = $(this).find('.badge.bg-info').text();
+                                                                var match = balanceText.match(/Balance: ₱\s*([\d,.]+)/);
+                                                                var balance = match ? parseFloat(match[1].replace(/,/g, '')) : 0;
+                                                                if (balance === 0) {
+                                                                    $(this).hide();
+                                                                } else {
+                                                                    $(this).show();
+                                                                }
+                                                            });
+                                                        });
 
                                                         // Function to update payment summary
                                                         function updatePaymentSummary() {
                                                             const withdrawalAmount = parseFloat(withdrawalInput.val()) || 0;
                                                             let totalLoanPayment = 0;
+                                                            let totalSavingsDeposit = 0;
 
                                                             loanAmountInputs.each(function() {
                                                                 const amount = parseFloat($(this).val()) || 0;
@@ -341,10 +411,18 @@
                                                                 }
                                                             });
 
-                                                            const remainingToSavings = withdrawalAmount - totalLoanPayment;
+                                                            savingsAmountInputs.each(function() {
+                                                                const amount = parseFloat($(this).val()) || 0;
+                                                                if (amount > 0) {
+                                                                    totalSavingsDeposit += amount;
+                                                                }
+                                                            });
+
+                                                            const remainingToSavings = withdrawalAmount - totalLoanPayment - totalSavingsDeposit;
 
                                                             $('#total-withdrawal' + memberId).text('₱' + withdrawalAmount.toFixed(2));
                                                             $('#total-loan-payment' + memberId).text('₱' + totalLoanPayment.toFixed(2));
+                                                            $('#total-savings-deposit' + memberId).text('₱' + totalSavingsDeposit.toFixed(2));
                                                             $('#remaining-to-savings' + memberId).text('₱' + remainingToSavings.toFixed(2));
 
                                                             // Highlight if remaining amount is negative
@@ -406,12 +484,26 @@
                                                             updatePaymentSummary();
                                                         });
 
+                                                        // Handle savings amount input changes
+                                                        savingsAmountInputs.on('input', function() {
+                                                            const input = $(this);
+                                                            const amount = parseFloat(input.val()) || 0;
+                                                            const memberId = input.data('member-id');
+                                                            const productName = input.data('product-name');
+
+                                                            // Update the corresponding input in the form
+                                                            $('#postPaymentForm' + memberId).find(`input[name="savings_amounts[${input.attr('name').split('[')[1].replace(']', '')}]"]`).val(amount.toFixed(2));
+
+                                                            updatePaymentSummary();
+                                                        });
+
                                                         // Form submission
                                                         $('#postPaymentForm' + memberId).on('submit', function(e) {
                                                             e.preventDefault();
 
                                                             const withdrawalAmount = parseFloat(withdrawalInput.val()) || 0;
                                                             let totalLoanPayment = 0;
+                                                            let totalSavingsDeposit = 0;
                                                             let hasSelectedLoans = false;
 
                                                             // Check which loans have amounts entered
@@ -429,7 +521,15 @@
                                                                 }
                                                             });
 
-                                                            const remainingToSavings = withdrawalAmount - totalLoanPayment;
+                                                            // Check which savings have amounts entered
+                                                            savingsAmountInputs.each(function() {
+                                                                const amount = parseFloat($(this).val()) || 0;
+                                                                if (amount > 0) {
+                                                                    totalSavingsDeposit += amount;
+                                                                }
+                                                            });
+
+                                                            const remainingToSavings = withdrawalAmount - totalLoanPayment - totalSavingsDeposit;
 
                                                             // Validation
                                                             if (withdrawalAmount <= 0) {
@@ -467,6 +567,7 @@
                                                                     <div class="text-left">
                                                                         <p><strong>Withdrawal Amount:</strong> ₱${withdrawalAmount.toFixed(2)}</p>
                                                                         <p><strong>Total Loan Payment:</strong> ₱${totalLoanPayment.toFixed(2)}</p>
+                                                                        <p><strong>Total Savings Deposit:</strong> ₱${totalSavingsDeposit.toFixed(2)}</p>
                                                                         <p><strong>Remaining to Savings:</strong> ₱${remainingToSavings.toFixed(2)}</p>
                                                                     </div>
                                                                 `,
@@ -713,7 +814,6 @@
     <script src="{{ asset('vendor/global/global.min.js') }}"></script>
     <script src="{{ asset('vendor/bootstrap-select/dist/js/bootstrap-select.min.js') }}"></script>
     <script src="{{ asset('js/custom.min.js') }}"></script>
-    <script src="{{ asset('js/deznav-init.js') }}"></script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->

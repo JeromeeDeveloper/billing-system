@@ -234,46 +234,32 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center bg-light py-3">
-                                <div>
-                                    <h4 class="card-title mb-0 text-primary">Member Datatable</h4>
-                                    <small class="text-muted">Manage all members in the system</small>
-                                </div>
+                            <div class="card-header bg-white border-0 px-3 py-3">
+                                <div class="row w-100 align-items-center g-2">
+                                    <div class="col-12 col-md-4 mb-2 mb-md-0">
+                                        <h4 class="card-title mb-0 text-primary">Member Datatable</h4>
+                                        <small class="text-muted">Manage all members in the system</small>
+                                    </div>
+                                    <div class="col-12 col-md-8 d-flex flex-column align-items-md-end align-items-center">
+                                        <form method="GET" action="{{ url()->current() }}" class="d-flex flex-grow-1 flex-md-grow-0 gap-2 align-items-center mb-2 mb-md-0 justify-content-md-end w-100" style="max-width: 400px;">
+                                            <input type="text" name="search" value="{{ request('search') }}" class="form-control flex-grow-1" placeholder="Search members..." />
+                                            <button type="submit" class="btn btn-primary d-flex align-items-center px-3">
+                                                <i class="fa fa-search me-2"></i> <span class="d-none d-md-inline">Search</span>
+                                            </button>
+                                        </form>
 
-                                <div class="d-flex align-items-center" style="gap: 15px;">
-                                    <form method="GET" action="{{ url()->current() }}" class="d-flex align-items-center" style="gap: 15px;">
-                                        <div class="input-group">
-                                            <input type="text" name="search" value="{{ request('search') }}"
-                                                class="form-control" placeholder="Search members..."
-                                                style="width: 250px; height: 40px;" />
-                                        </div>
-
-                                        {{-- <div class="input-group">
-                                            <input type="date" name="amortization_due_date" value="{{ request('amortization_due_date') }}"
-                                                class="form-control" placeholder="Amortization Due Date"
-                                                style="width: 200px; height: 40px;" />
-                                        </div> --}}
-
-                                        <button type="submit" class="btn btn-primary d-flex align-items-center"
-                                            style="height: 40px;">
-                                            <i class="fa fa-search me-2"></i>
-                                            Search
-                                        </button>
-                                    </form>
-
-                                    <a href="#" class="btn btn-success d-flex align-items-center"
-                                        data-toggle="modal" data-target="#addModal" style="height: 40px;">
-                                        <i class="fa fa-plus-circle me-2"></i>
-                                        Add New Member
-                                    </a>
-
-                                    <a href="{{ route('master.exportMemberDetails') }}" class="btn btn-success">
-                                        <i class="fa fa-download"></i> Export Member Details
-                                    </a>
-
-                                    <a href="{{ route('master.exportMembersNoRegularSavings') }}" class="btn btn-warning">
-                                        <i class="fa fa-exclamation-triangle"></i> Export Members No Regular Savings
-                                    </a>
+                                    </div>
+                                    <div class="action-bar d-flex flex-wrap flex-md-nowrap gap-2 justify-content-center align-items-center p-2 rounded shadow-sm mt-2 w-100" style="background: #f8f9fa;">
+                                        <a href="#" class="btn btn-success d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
+                                            <i class="fa fa-plus-circle me-2"></i> <span class="d-none d-md-inline">Add New Member</span>
+                                        </a>
+                                        <a href="{{ route('master.exportMemberDetails') }}" class="btn btn-outline-success mr-2 d-flex align-items-center px-3">
+                                            <i class="fa fa-download me-2"></i> <span class="d-none d-md-inline">Export Details</span>
+                                        </a>
+                                        <a href="{{ route('master.exportMembersNoRegularSavings') }}" class="btn btn-outline-warning d-flex align-items-center px-3">
+                                            <i class="fa fa-exclamation-triangle me-2"></i> <span class="d-none d-md-inline">No Regular Savings</span>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
 
@@ -1437,12 +1423,12 @@
             </div>
 
             <div class="form-group col-md-6">
-                <label>Total Due</label>
+                <label>Total Amort Due</label>
                 <input type="number" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || 0}" step="0.01">
             </div>
 
             <div class="form-group col-md-6">
-                <label>Original Total Due</label>
+                <label>Total Billed</label>
                 <input type="number" class="form-control" value="${loan.original_total_due !== undefined && loan.original_total_due !== null ? loan.original_total_due : ''}" readonly>
             </div>
 
@@ -1532,8 +1518,8 @@
                         <p><strong>Open Date:</strong> ${loan.open_date || 'N/A'}</p>
                         <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
-                        <p><strong>Total Due:</strong> ${loan.total_due || '0.00'}</p>
-                        <p><strong>Original Total Due:</strong> ${loan.original_total_due || '0.00'}</p>
+                        <p><strong>Total Amort Due:</strong> ${loan.total_due || '0.00'}</p>
+                        <p><strong>Total Billed:</strong> ${loan.original_total_due || '0.00'}</p>
                         <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
                         <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>

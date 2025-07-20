@@ -177,16 +177,20 @@
                                                     <div class="mb-3">
                                                         <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name, Loans, Savings Product Names.</small>
                                                     </div>
-                                                    <div class="d-flex flex-wrap gap-2">
-                                                        <button type="submit" class="btn btn-success flex-fill">
+
+                                                    <button type="submit" class="btn btn-success btn-block mt-2">
                                                             <i class="fa fa-upload me-1"></i> Upload and Process Loans & Savings Remittance
                                                         </button>
-                                                        <button type="button" class="btn btn-outline-info flex-fill" data-toggle="modal" data-target="#loansSavingsFormatModal">
+
+                                                    <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#loansSavingsFormatModal">
                                                             <i class="fa fa-eye me-1"></i> View Expected Format
-                                                        </button>
-                                                    </div>
+                                                    </button>
+
                                                     <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('loans_savings')">
                                                         Collection file for Loans & Savings
+                                                    </a>
+                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2" onclick="generateExport('loans_savings_with_product')">
+                                                        Collection file for Loans & Savings (with Product Name)
                                                     </a>
                                                 </form>
                                             </div>
@@ -207,16 +211,19 @@
                                                     <div class="mb-3">
                                                         <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name (LASTNAME, FIRSTNAME), Share (amount).</small>
                                                     </div>
-                                                    <div class="d-flex flex-wrap gap-2">
-                                                        <button type="submit" class="btn btn-info flex-fill">
+
+                                                        <button type="submit" class="btn btn-success btn-block mt-2">
                                                             <i class="fa fa-upload me-1"></i> Upload and Process Share Remittance
                                                         </button>
-                                                        <button type="button" class="btn btn-outline-info flex-fill" data-toggle="modal" data-target="#sharesFormatModal">
+                                                        <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#sharesFormatModal">
                                                             <i class="fa fa-eye me-1"></i> View Expected Format
                                                         </button>
-                                                    </div>
+
                                                     <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('shares')">
                                                         Collection file for Shares
+                                                    </a>
+                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2" onclick="generateExport('shares_with_product')">
+                                                        Collection file for Shares (with Product Name)
                                                     </a>
                                                 </form>
                                             </div>
@@ -357,21 +364,21 @@
                         </div>
                     </div>
                 </div>
-            </div>
+
 
             @if (isset($comparisonReportPaginated) && $comparisonReportPaginated->count() > 0)
-                <div class="mb-3 d-flex justify-content-end">
-                    <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
-                        <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
-                    </a>
-                </div>
-                <div class="card mt-5">
+
+            <div class="container-fluid">
+                <div class="card">
                     <div class="card-header">
                         <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
+                        <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
+                            <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
+                        </a>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
+                            <table class="table table-bordered text-center">
                                 <thead>
                                     <tr>
                                         <th>CID</th>
@@ -384,7 +391,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($comparisonReportPaginated as $row)
+                                    @forelse ($comparisonReportPaginated as $row)
                                         <tr>
                                             <td>{{ $row['cid'] }}</td>
                                             <td>{{ $row['member_name'] }}</td>
@@ -394,7 +401,11 @@
                                             <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
                                             <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
                                         </tr>
-                                    @endforeach
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted">No records found.</td>
+                                        </tr>
+                                    @endforelse
                                 </tbody>
                             </table>
                             <div class="d-flex justify-content-center mt-2 text-center">
@@ -403,7 +414,11 @@
                         </div>
                     </div>
                 </div>
-            @endif
+            </div>
+
+
+    @endif
+</div>
         </div>
     </div>
 

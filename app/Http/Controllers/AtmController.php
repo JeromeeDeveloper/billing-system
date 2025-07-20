@@ -19,6 +19,7 @@ use App\Exports\RemittanceReportConsolidatedExport;
 use App\Models\LoanPayment;
 use Illuminate\Support\Facades\Log;
 use App\Exports\PostedPaymentsExport;
+use App\Models\SavingsPayment;
 
 class AtmController extends Controller
 {
@@ -185,6 +186,7 @@ class AtmController extends Controller
             $withdrawalAmount = $validated['withdrawal_amount'];
             $selectedLoans = $validated['selected_loans'];
             $loanAmounts = $validated['loan_amounts'];
+            $savingsAmounts = $request->input('savings_amounts', []); // New: get savings payments from modal
 
             // Validate loan amounts for selected loans only
             foreach ($selectedLoans as $loanAcctNo) {
@@ -205,12 +207,20 @@ class AtmController extends Controller
                 }
             }
 
-            // Calculate remaining amount for savings
-            $remainingToSavings = $withdrawalAmount - $totalLoanPayment;
+            // Calculate total savings payment (from modal)
+            $totalSavingsPayment = 0;
+            foreach ($savingsAmounts as $acctNo => $amount) {
+                if (is_numeric($amount) && $amount > 0) {
+                    $totalSavingsPayment += $amount;
+                }
+            }
 
-            // Validate that total loan payment doesn't exceed withdrawal amount
-            if ($totalLoanPayment > $withdrawalAmount) {
-                return redirect()->back()->with('error', 'Total loan payment amount cannot exceed withdrawal amount');
+            // Calculate remaining amount for regular savings
+            $remainingToSavings = $withdrawalAmount - ($totalLoanPayment + $totalSavingsPayment);
+
+            // Validate that total loan + savings payment doesn't exceed withdrawal amount
+            if ($totalLoanPayment + $totalSavingsPayment > $withdrawalAmount) {
+                return redirect()->back()->with('error', 'Total loan and savings payment amount cannot exceed withdrawal amount');
             }
 
             DB::beginTransaction();
@@ -255,32 +265,17 @@ class AtmController extends Controller
                 ]);
             }
 
-            // Add remaining amount to Regular Savings if available
-            $savingsAccountNumber = null;
+            // Find regular savings account
+            $regularSavings = $member->savings()->whereHas('savingProduct', function($q) {
+                $q->where('product_type', 'regular');
+            })->first();
+
+            // Determine savings allocation details for the main ATM payment record
             $savingsAllocation = 0;
-            if ($remainingToSavings > 0) {
-                // First try to find Regular Savings
-                $regularSavings = $member->savings()
-                    ->whereHas('savingProduct', function($q) {
-                        $q->where('product_type', 'regular');
-                    })
-                    ->first();
-
-                if ($regularSavings) {
-                    // Update the amount_to_deduct field in savings
-                    $regularSavings->update([
-                        'amount_to_deduct' => $remainingToSavings
-                    ]);
-
-                    $savingsAccountNumber = $regularSavings->account_number;
-                    $savingsAllocation = $remainingToSavings;
-                    Log::info("Added remaining amount {$remainingToSavings} to savings account {$savingsAccountNumber} for member {$member->id}");
-                    Log::info("Savings account details: Product: {$regularSavings->product_name}, Account: {$regularSavings->account_number}");
-                } else {
-                    Log::info("Member {$member->id} has no Regular Savings. Excess will not be allocated to any savings account.");
-                }
-            } else {
-                Log::info("No remaining amount to allocate to savings for member {$member->id}");
+            $savingsAccountNumber = null;
+            if ($remainingToSavings > 0 && $regularSavings) {
+                $savingsAllocation = $remainingToSavings;
+                $savingsAccountNumber = $regularSavings->account_number;
             }
 
             // Create ATM payment record to track the complete transaction
@@ -294,15 +289,47 @@ class AtmController extends Controller
                 'reference_number' => $validated['payment_reference'],
                 'notes' => $validated['notes']
             ]);
+            Log::info("Created ATM payment record: ID {$atmPayment->id}");
 
-            Log::info("Created ATM payment record: ID {$atmPayment->id}, Savings allocation: {$atmPayment->savings_allocation}, Account: {$atmPayment->savings_account_number}");
+            // Process manual savings payments from the modal
+            foreach ($savingsAmounts as $acctNo => $amount) {
+                if (!is_numeric($amount) || $amount <= 0) continue;
+                $saving = $member->savings()->where('account_number', $acctNo)->first();
+                if ($saving) {
+                    SavingsPayment::create([
+                        'member_id' => $member->id,
+                        'savings_id' => $saving->id,
+                        'atm_payment_id' => $atmPayment->id,
+                        'account_number' => $saving->account_number,
+                        'amount' => $amount,
+                        'payment_date' => $validated['payment_date'],
+                        'reference_number' => $validated['payment_reference'],
+                    ]);
+                    Log::info("Created SavingsPayment for manual deposit: {$amount} to {$acctNo}");
+                }
+            }
+
+            // Create a savings payment record for the remaining amount
+            if ($savingsAllocation > 0 && $regularSavings) {
+                SavingsPayment::create([
+                    'member_id' => $member->id,
+                    'savings_id' => $regularSavings->id,
+                    'atm_payment_id' => $atmPayment->id,
+                    'account_number' => $regularSavings->account_number,
+                    'amount' => $savingsAllocation,
+                    'payment_date' => $validated['payment_date'],
+                    'reference_number' => $validated['payment_reference'],
+                ]);
+                Log::info("Created SavingsPayment for remaining allocation: {$savingsAllocation} to Regular Savings");
+            }
 
             // Recalculate and update member's total loan balance
             $totalLoanBalance = $member->loanForecasts ? $member->loanForecasts->sum('total_due') : 0;
             $member->update(['loan_balance' => $totalLoanBalance]);
 
-            Log::info("Updated member {$member->id} total loan balance to: {$totalLoanBalance}");
-            Log::info("Processed withdrawal: {$withdrawalAmount}, Loan payments: {$totalLoanPayment}, Remaining to savings: {$remainingToSavings}");
+            $totalSavingsDeposit = $totalSavingsPayment + $savingsAllocation;
+
+            Log::info("Processed withdrawal: {$withdrawalAmount}, Loan payments: {$totalLoanPayment}, Total savings deposit: {$totalSavingsDeposit}");
 
             DB::commit();
 
@@ -310,8 +337,8 @@ class AtmController extends Controller
             $message .= "Withdrawal: ₱" . number_format($withdrawalAmount, 2) . ", ";
             $message .= "Loan payments: ₱" . number_format($totalLoanPayment, 2);
 
-            if ($remainingToSavings > 0) {
-                $message .= ", Remaining to savings: ₱" . number_format($remainingToSavings, 2);
+            if ($totalSavingsDeposit > 0) {
+                $message .= ", Total savings deposit: ₱" . number_format($totalSavingsDeposit, 2);
             }
 
             return redirect()->back()->with('success', $message);
@@ -323,26 +350,26 @@ class AtmController extends Controller
         }
     }
 
-    public function exportPostedPayments()
+    public function exportPostedPayments(Request $request)
     {
         try {
-            // Get all ATM payments for today
-            $atmPayments = AtmPayment::with(['member.branch'])
-                ->whereDate('payment_date', now()->toDateString())
-                ->get();
+            $allDates = $request->input('all_dates');
+            $date = $request->input('date', now()->toDateString());
 
-            Log::info("Found {$atmPayments->count()} ATM payments for today");
+            $atmPaymentsQuery = AtmPayment::with(['member.branch']);
+            if (!$allDates) {
+                $atmPaymentsQuery->whereDate('payment_date', $date);
+            }
+            $atmPayments = $atmPaymentsQuery->get();
+
+            $logDate = $allDates ? 'ALL DATES' : $date;
+            Log::info("Found {$atmPayments->count()} ATM payments for export on {$logDate}");
 
             if ($atmPayments->isEmpty()) {
-                return redirect()->back()->with('error', 'No posted payments found for today.');
+                return redirect()->back()->with('error', 'No posted payments found for the selected date(s).');
             }
 
-            // Log details of each ATM payment
-            foreach ($atmPayments as $atmPayment) {
-                Log::info("ATM Payment ID: {$atmPayment->id}, Member: {$atmPayment->member_id}, Withdrawal: {$atmPayment->withdrawal_amount}, Loan Payment: {$atmPayment->total_loan_payment}, Savings: {$atmPayment->savings_allocation}, Account: {$atmPayment->savings_account_number}");
-            }
-
-            $filename = 'posted_payments_' . now()->format('Y-m-d') . '.csv';
+            $filename = 'posted_payments_' . ($allDates ? 'all' : $date) . '.csv';
 
             Excel::store(
                 new PostedPaymentsExport($atmPayments),

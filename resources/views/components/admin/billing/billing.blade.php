@@ -39,6 +39,21 @@
         </div>
     </div>
 
+    @if (session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '{{ session('error') }}',
+                    timer: 4000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            });
+        </script>
+    @endif
+
     <div id="main-wrapper">
 
         @include('layouts.partials.header')
@@ -78,7 +93,7 @@
 
                                         {{-- main function --}}
 
-                                        {{-- <a href="{{ $allBranchApproved && !$hasMembersNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
+                                        <a href="{{ $allBranchApproved && !$hasMembersNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
                                             class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved || $hasMembersNoBranch ? 'disabled' : '' }}"
                                             @if (!$allBranchApproved)
                                                 onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;"
@@ -89,7 +104,7 @@
                                                 <i class="fa fa-file"></i>
                                             </span>
                                             Generate Billing
-                                        </a> --}}
+                                        </a>
 
                                         {{-- for testing --}}
                                         <a href="{{ route('billing.export', ['billing_period' => now()->format('Y-m')]) }}"
@@ -309,7 +324,7 @@
                                                         id="edit-loan_balance" class="form-control">
                                                 </div>
                                                 <div class="form-group col-md-6">
-                                                    <label>Principal</label>
+                                                    <label>Gross</label>
                                                     <input type="number" step="0.01" name="principal"
                                                         id="edit-principal" class="form-control">
                                                 </div>
@@ -352,7 +367,7 @@
                                             <p><strong>Start Date:</strong> <span id="view-start_date"></span></p>
                                             <p><strong>End Date:</strong> <span id="view-end_date"></span></p>
                                             <p><strong>Amort Due:</strong> ₱<span id="view-loan_balance"></span></p>
-                                            <p><strong>Principal:</strong> ₱<span id="view-principal"></span></p>
+                                            <p><strong>Gross:</strong> ₱<span id="view-principal"></span></p>
                                             <p><strong>Office:</strong> <span id="view-office"></span></p>
                                         </div>
                                         <div class="modal-footer">

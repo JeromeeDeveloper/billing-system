@@ -500,9 +500,11 @@ class MasterController extends Controller
         $masterlists->getCollection()->transform(function ($item) {
             $member = $item->member;
 
-            // Format savings dates
+            // Format savings dates for input type=month
             $member->savings->transform(function ($saving) {
                 $saving->open_date = $saving->open_date ?: null;
+                $saving->start_hold = $saving->start_hold ? substr($saving->start_hold, 0, 7) : null;
+                $saving->expiry_date = $saving->expiry_date ? substr($saving->expiry_date, 0, 7) : null;
                 return $saving;
             });
 

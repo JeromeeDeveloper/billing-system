@@ -139,12 +139,15 @@
                                     <div class="col-md-6">
                                         <div class="card border-primary">
                                             <div class="card-header bg-primary text-white">
-                                                <h6 class="mb-0"><i class="fa fa-file-excel"></i> Loans & Savings Collection</h6>
+                                                <h6 class="mb-0 text-white"><i class="fa fa-file-excel"></i> Loans & Savings Collection</h6>
                                             </div>
                                             <div class="card-body">
                                                 <p class="text-muted small">Generate collection file for loans and savings remittance data.</p>
                                                 <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block">
-                                                    <i class="fa fa-download"></i> Export Loans & Savings
+                                                    <i class="fa fa-download"></i> Collection File for Loans & Savings
+                                                </a>
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings_with_product']) }}" class="btn btn-outline-primary btn-block mt-2">
+                                                    <i class="fa fa-download"></i> Collection File for Loans & Savings (with Product Name)
                                                 </a>
                                             </div>
                                         </div>
@@ -152,12 +155,15 @@
                                     <div class="col-md-6">
                                         <div class="card border-success">
                                             <div class="card-header bg-success text-white">
-                                                <h6 class="mb-0"><i class="fa fa-file-excel"></i> Shares Collection</h6>
+                                                <h6 class="mb-0 text-white"><i class="fa fa-file-excel"></i> Shares Collection</h6>
                                             </div>
                                             <div class="card-body">
                                                 <p class="text-muted small">Generate collection file for shares remittance data.</p>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block">
-                                                    <i class="fa fa-download"></i> Export Shares
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block  text-white">
+                                                    <i class="fa fa-download"></i> Collection File for Shares
+                                                </a>
+                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares_with_product']) }}" class="btn btn-outline-success btn-block mt-2">
+                                                    <i class="fa fa-download"></i> Collection File for Shares (with Product Name)
                                                 </a>
                                             </div>
                                         </div>
@@ -167,178 +173,137 @@
                                 <!-- Preview Section -->
                                 <div class="row">
                                     <div class="col-12">
-                                        @if (isset($preview) && $preview)
-                                            <div class="row mb-4">
-                                                <div class="col-md-4">
-                                                    <a href="{{ route('branch.remittance.index', ['filter' => 'matched']) }}"
-                                                        class="text-decoration-none">
-                                                        <div class="card stats-card bg-success-light">
-                                                            <div class="card-body">
-                                                                <div class="media align-items-center">
-                                                                    <div class="media-body mr-3">
-                                                                        <h2 class="text-success">{{ $stats['matched'] ?? 0 }}</h2>
-                                                                        <span class="text-success">Matched Records</span>
-                                                                    </div>
-                                                                    <i class="fa fa-check-circle fa-3x text-success"></i>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </a>
+                                        {{-- Loans & Savings Remittance Preview --}}
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <h5 class="text-center">Loans & Savings Remittance Preview</h5>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered text-center">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Member</th>
+                                                                <th>Loans</th>
+                                                                <th>Savings</th>
+                                                                <th>Status</th>
+                                                                <th>Message</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @forelse($loansSavingsPreviewPaginated ?? [] as $row)
+                                                                <tr>
+                                                                    <td>{{ $row->name }}</td>
+                                                                    <td>{{ $row->loans }}</td>
+                                                                    <td>{{ is_array($row->savings) ? $row->savings['total'] ?? 0 : $row->savings }}</td>
+                                                                    <td>{{ $row->status }}</td>
+                                                                    <td>{{ $row->message }}</td>
+                                                                </tr>
+                                                            @empty
+                                                                <tr>
+                                                                    <td colspan="5" class="text-center text-muted">No records found.</td>
+                                                                </tr>
+                                                            @endforelse
+                                                        </tbody>
+                                                    </table>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <a href="{{ route('branch.remittance.index', ['filter' => 'unmatched']) }}"
-                                                        class="text-decoration-none">
-                                                        <div class="card stats-card bg-danger-light">
-                                                            <div class="card-body">
-                                                                <div class="media align-items-center">
-                                                                    <div class="media-body mr-3">
-                                                                        <h2 class="text-danger">{{ $stats['unmatched'] ?? 0 }}</h2>
-                                                                        <span class="text-danger">Unmatched Records</span>
-                                                                    </div>
-                                                                    <i class="fa fa-exclamation-circle fa-3x text-danger"></i>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </a>
+                                                <div class="row">
+                                                    <div class="col-12 d-flex justify-content-center text-center">
+                                                        {{ $loansSavingsPreviewPaginated->appends(request()->except('loans_page'))->links() ?? '' }}
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <div class="card stats-card bg-info-light">
-                                                        <div class="card-body">
-                                                            <div class="media align-items-center">
-                                                                <div class="media-body mr-3">
-                                                                    <h2 class="text-info">₱{{ number_format($stats['total_amount'] ?? 0, 2) }}</h2>
-                                                                    <span class="text-info">Total Amount</span>
-                                                                </div>
-                                                                <i class="fa fa-money-bill fa-3x text-info"></i>
-                                                            </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Shares Remittance Preview --}}
+                                        <div class="card mb-4">
+                                            <div class="card-body">
+                                                <h5 class="text-center">Shares Remittance Preview</h5>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered text-center">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Member</th>
+                                                                <th>Shares</th>
+                                                                <th>Status</th>
+                                                                <th>Message</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @forelse($sharesPreviewPaginated ?? [] as $row)
+                                                                <tr>
+                                                                    <td>{{ $row->name }}</td>
+                                                                    <td>{{ $row->share_amount }}</td>
+                                                                    <td>{{ $row->status }}</td>
+                                                                    <td>{{ $row->message }}</td>
+                                                                </tr>
+                                                            @empty
+                                                                <tr>
+                                                                    <td colspan="4" class="text-center text-muted">No records found.</td>
+                                                                </tr>
+                                                            @endforelse
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-12 d-flex justify-content-center text-center">
+                                                        {{ $sharesPreviewPaginated->appends(request()->except('shares_page'))->links() ?? '' }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Billed vs Remitted Comparison Report --}}
+                                        @if (isset($comparisonReportPaginated) && $comparisonReportPaginated->count() > 0)
+                                            <div class="card mb-4">
+                                                <div class="card-header">
+                                                    <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
+                                                </div>
+                                                <div class="card-body">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered text-center">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>CID</th>
+                                                                    <th>Member Name</th>
+                                                                    <th>Total Billed</th>
+                                                                    <th>Remitted Loans</th>
+                                                                    <th>Remaining Amort Due</th>
+                                                                    <th>Remitted Savings</th>
+                                                                    <th>Remitted Shares</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @forelse ($comparisonReportPaginated as $row)
+                                                                    <tr>
+                                                                        <td>{{ $row['cid'] }}</td>
+                                                                        <td>{{ $row['member_name'] }}</td>
+                                                                        <td>₱{{ number_format($row['amortization'], 2) }}</td>
+                                                                        <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
+                                                                        <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
+                                                                        <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
+                                                                        <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
+                                                                    </tr>
+                                                                @empty
+                                                                    <tr>
+                                                                        <td colspan="7" class="text-center text-muted">No records found.</td>
+                                                                    </tr>
+                                                                @endforelse
+                                                            </tbody>
+                                                        </table>
+                                                        <div class="d-flex justify-content-center mt-2 text-center">
+                                                            {{ $comparisonReportPaginated->links() }}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                                <div>
-                                                    <a href="{{ route('branch.remittance.index') }}"
-                                                        class="btn {{ !request()->has('filter') ? 'btn-primary' : 'btn-outline-primary' }}">
-                                                        All Records
-                                                    </a>
-                                                    <a href="{{ route('branch.remittance.index', ['filter' => 'matched']) }}"
-                                                        class="btn {{ request()->get('filter') === 'matched' ? 'btn-success' : 'btn-outline-success' }}">
-                                                        Matched Only
-                                                    </a>
-                                                    <a href="{{ route('branch.remittance.index', ['filter' => 'unmatched']) }}"
-                                                        class="btn {{ request()->get('filter') === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }}">
-                                                        Unmatched Only
-                                                    </a>
-                                                </div>
-                                                <div>
-                                                    <form method="GET" class="form-inline">
-                                                        @if(request()->has('filter'))
-                                                            <input type="hidden" name="filter" value="{{ request('filter') }}">
-                                                        @endif
-                                                        <input type="text" name="search" value="{{ request('search') }}" class="form-control mr-2" placeholder="Search by name or emp_id">
-                                                        <button type="submit" class="btn btn-outline-secondary btn-sm">Search</button>
-                                                        @if(request()->has('search') || request()->has('filter'))
-                                                            <a href="{{ route('branch.remittance.index') }}" class="btn btn-outline-warning btn-sm ml-2">Clear</a>
-                                                        @endif
-                                                    </form>
-                                                </div>
-                                            </div>
-
-                                            <div class="table-responsive">
-                                                <table class="table table-striped table-bordered preview-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th style="width: 90px;">Status</th>
-                                                            <th>EmpId</th>
-                                                            <th>Name</th>
-                                                            <th class="text-right">Loans</th>
-                                                            <th class="text-right">Savings</th>
-                                                            <th>Message</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @forelse ($preview as $row)
-                                                            <tr>
-                                                                <td>
-                                                                    @if ($row->status === 'success')
-                                                                        <span class="badge badge-success">
-                                                                            <i class="fa fa-check"></i> Matched
-                                                                        </span>
-                                                                    @else
-                                                                        <span class="badge badge-danger">
-                                                                            <i class="fa fa-times"></i> Unmatched
-                                                                        </span>
-                                                                    @endif
-                                                                </td>
-                                                                <td>{{ $row->emp_id }}</td>
-                                                                <td>{{ $row->name }}</td>
-                                                                <td class="text-right">
-                                                                    ₱{{ number_format($row->loans ?? 0, 2) }}
-                                                                </td>
-                                                                <td class="text-right">
-                                                                    @php
-                                                                        $savingsTotal = 0;
-                                                                        $savingsDistribution = [];
-                                                                        if (is_array($row->savings) && isset($row->savings['total'])) {
-                                                                            $savingsTotal = $row->savings['total'];
-                                                                            $savingsDistribution = $row->savings['distribution'] ?? [];
-                                                                        } elseif (is_array($row->savings)) {
-                                                                            $savingsTotal = collect($row->savings)->sum();
-                                                                            foreach ($row->savings as $productName => $amount) {
-                                                                                if ($amount > 0) {
-                                                                                    $savingsDistribution[] = [
-                                                                                        'product' => $productName,
-                                                                                        'amount' => $amount
-                                                                                    ];
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    @endphp
-                                                                    ₱{{ number_format($savingsTotal, 2) }}
-                                                                    @if(count($savingsDistribution) > 0)
-                                                                        <br><small class="text-muted">
-                                                                            @foreach($savingsDistribution as $dist)
-                                                                                {{ $dist['product'] }}: ₱{{ number_format($dist['amount'], 2) }}
-                                                                                @if(!$loop->last), @endif
-                                                                            @endforeach
-                                                                        </small>
-                                                                    @endif
-                                                                </td>
-                                                                <td>
-                                                                    @if ($row->status !== 'success')
-                                                                        <i class="fa fa-exclamation-circle text-danger"></i>
-                                                                    @endif
-                                                                    {{ $row->message }}
-                                                                </td>
-                                                            </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="6" class="text-center">
-                                                                    <div class="py-4">
-                                                                        <i class="fa fa-info-circle fa-2x text-muted mb-2"></i>
-                                                                        <p class="text-muted">No records found.</p>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        @else
-                                            <div class="text-center py-5">
-                                                <i class="fa fa-file-excel fa-4x text-muted mb-3"></i>
-                                                <h4 class="text-muted">No remittance data available for your branch</h4>
-                                                <p class="text-muted">Remittance data is uploaded by admin and will appear here when available for your branch members.</p>
+                                        @endif
+                                        {{-- If variables are missing, add a comment for the developer --}}
+                                        @if (!isset($loansSavingsPreviewPaginated) || !isset($sharesPreviewPaginated) || !isset($comparisonReportPaginated))
+                                            <div class="alert alert-warning mt-4">
+                                                <strong>Note:</strong> Please ensure the controller passes <code>$loansSavingsPreviewPaginated</code>, <code>$sharesPreviewPaginated</code>, and <code>$comparisonReportPaginated</code> to this view, as in the admin remittance controller.
                                             </div>
                                         @endif
                                     </div>
                                 </div>
-                                @if($preview && $preview->count() > 0)
-                                    <div class="d-flex justify-content-center mt-4 text-center">
-                                        {{ $preview->appends(request()->query())->links() }}
-                                    </div>
-                                @endif
                             </div>
                         </div>
                     </div>

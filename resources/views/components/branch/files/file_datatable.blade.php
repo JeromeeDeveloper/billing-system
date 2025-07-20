@@ -51,13 +51,13 @@
                                     <small class="text-muted">Showing latest 5 files total for current billing period</small>
                                 </div>
                                 <div class="d-flex align-items-center" style="gap: 10px;">
-                                    <a href="{{ route('file.retention.dashboard') }}" class="btn btn-rounded btn-info">
+                                    <a href="{{ route('file.retention.dashboard.branch') }}" class="btn btn-rounded btn-info">
                                         <span class="btn-icon-left text-info">
                                             <i class="fa fa-cogs"></i>
                                         </span>
                                         File Retention
                                     </a>
-                                    @if($isApproved)
+                                    {{-- @if($isApproved)
                                         <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
                                             data-target="#exampleModalpopover">
                                             <span class="btn-icon-left text-primary">
@@ -73,7 +73,7 @@
                                             </span>
                                             Upload (Approved - Disabled)
                                         </button>
-                                    @endif
+                                    @endif --}}
                                 </div>
                             </div>
 

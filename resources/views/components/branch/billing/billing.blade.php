@@ -1,15 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     @include('layouts.partials.head')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
+    <style>
+        .card-header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .status-badge {
+            min-width: 160px;
+        }
+        .info-note-toggle {
+            cursor: pointer;
+        }
+        .table-responsive {
+            margin-top: 1rem;
+        }
+        .pagination-container {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
-
 <body>
-
     <div id="preloader">
         <div class="sk-three-bounce">
             <div class="sk-child sk-bounce1"></div>
@@ -17,14 +33,23 @@
             <div class="sk-child sk-bounce3"></div>
         </div>
     </div>
-
+    @if (session('error'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '{{ session('error') }}',
+                    timer: 4000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+            });
+        </script>
+    @endif
     <div id="main-wrapper">
-
         @include('layouts.partials.header')
-
-
         @include('layouts.partials.sidebar')
-
         <div class="content-body">
             <div class="container-fluid">
                 <div class="row page-titles mx-0">
@@ -41,131 +66,104 @@
                         </ol>
                     </div>
                 </div>
-
+                <!-- Search/Filter Form -->
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <form method="GET" action="{{ url()->current() }}" class="d-flex flex-wrap align-items-center gap-2 bg-light p-3 rounded shadow-sm">
+                            <div class="me-3">
+                                <label for="perPage" class="me-1">Show</label>
+                                <select name="perPage" id="perPage" onchange="this.form.submit()" class="form-select d-inline-block w-auto">
+                                    <option value="10" {{ request('perPage') == 10 ? 'selected' : '' }}>10</option>
+                                    <option value="25" {{ request('perPage') == 25 ? 'selected' : '' }}>25</option>
+                                    <option value="50" {{ request('perPage') == 50 ? 'selected' : '' }}>50</option>
+                                    <option value="100" {{ request('perPage') == 100 ? 'selected' : '' }}>100</option>
+                                </select>
+                                <label class="ms-1">entries</label>
+                            </div>
+                            <div class="flex-grow-1 d-flex align-items-center">
+                                <input type="text" name="search" value="{{ request('search') }}" class="form-control" placeholder="Search..." />
+                                <button type="submit" class="btn btn-primary ms-2">Search</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">Billing Datatable</h4>
-
-                                <div class="d-flex flex-column align-items-end">
-                                    <!-- Status Indicator -->
-                                    <div class="mb-2">
+                            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-2">
+                                <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+                                    <h4 class="card-title mb-0 me-3">Billing Datatable</h4>
+                                    <span class="status-badge">
                                         @if(Auth::user()->status === 'pending')
-                                            <span class="badge badge-warning">
-                                                <i class="fa fa-clock"></i> Status: Pending Approval
-                                            </span>
+                                            <span class="badge badge-warning"><i class="fa fa-clock"></i> Status: Pending Approval</span>
                                         @else
-                                            <span class="badge badge-success">
-                                                <i class="fa fa-check-circle"></i> Status: Approved
-                                            </span>
+                                            <span class="badge badge-success"><i class="fa fa-check-circle"></i> Status: Approved</span>
                                         @endif
-                                    </div>
-
-                                    <div class="d-flex mb-1 buttons-header">
-                                        <a href="{{ $allBranchApproved ? route('billing.export.branch', ['billing_period' => now()->format('Y-m')]) : '#' }}"
-                                            class="btn btn-rounded btn-primary text-white me-2 {{ !$allBranchApproved ? 'disabled' : '' }}"
-                                            @if (!$allBranchApproved) onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;" @endif>
-                                            <span class="btn-icon-left text-primary">
-                                                <i class="fa fa-file"></i>
-                                            </span>
-                                            Generate Billing
-                                        </a>
-
-                                        @if(Auth::user()->status === 'pending')
-                                            <form action="{{ route('billing.approve') }}" method="POST" class="m-0">
-                                                @csrf
-                                                <button type="submit" class="btn btn-rounded btn-success text-white">
-                                                    <span class="btn-icon-left text-success">
-                                                        <i class="fa fa-check"></i>
-                                                    </span>
-                                                    Approve Billing
-                                                </button>
-                                            </form>
-                                        @else
-                                            <form action="{{ route('billing.cancel-approval') }}" method="POST" class="m-0">
-                                                @csrf
-                                                <button type="submit" class="btn btn-rounded btn-warning text-white">
-                                                    <span class="btn-icon-left text-warning">
-                                                        <i class="fa fa-times"></i>
-                                                    </span>
-                                                    Cancel Approval
-                                                </button>
-                                            </form>
-                                        @endif
-
-                                        {{-- <a href="{{ route('billing.loan-report.branch') }}" class="btn btn-rounded btn-success text-white me-2">
-                                            <span class="btn-icon-left text-success">
-                                                <i class="fa fa-chart-line"></i>
-                                            </span>
-                                            Loan Report
-                                        </a> --}}
-
+                                    </span>
+                                </div>
+                                <div class="card-header-actions">
+                                    <a href="{{ $allBranchApproved ? route('billing.export.branch', ['billing_period' => now()->format('Y-m')]) : '#' }}"
+                                        class="btn btn-rounded btn-primary text-white {{ !$allBranchApproved ? 'disabled' : '' }}"
+                                        @if (!$allBranchApproved) onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;" @endif>
+                                        <span class="btn-icon-left text-primary"><i class="fa fa-file"></i></span>
+                                        Generate Billing
+                                    </a>
+                                    @if(Auth::user()->status === 'pending')
+                                        <form action="{{ route('billing.approve') }}" method="POST" class="m-0">
+                                            @csrf
+                                            <button type="submit" class="btn btn-rounded btn-success text-white">
+                                                <span class="btn-icon-left text-success"><i class="fa fa-check"></i></span>
+                                                Approve Billing
+                                            </button>
+                                        </form>
+                                    @endif
+                                    @if(Auth::user()->status === 'approved')
+                                        <form action="{{ route('billing.cancel-approval') }}" method="POST" class="m-0">
+                                            @csrf
+                                            <button type="submit" class="btn btn-rounded btn-warning text-white {{ $alreadyExported ? 'disabled' : '' }}" @if($alreadyExported) disabled @endif>
+                                                <span class="btn-icon-left text-warning"><i class="fa fa-times"></i></span>
+                                                Cancel Approval
+                                            </button>
+                                        </form>
                                         <a href="{{ route('billing.exports.branch') }}" class="btn btn-rounded btn-info text-white ms-2">
-                                            <span class="btn-icon-left text-info">
-                                                <i class="fa fa-history"></i>
-                                            </span>
+                                            <span class="btn-icon-left text-info"><i class="fa fa-history"></i></span>
                                             View Export History
                                         </a>
-                                    </div>
-
-                                    @if (!$allBranchApproved)
-                                        <div class="text-danger small">
-                                            * Not all branch users has approved yet.
-                                        </div>
                                     @endif
                                 </div>
                             </div>
-
-
-                            <form method="GET" action="{{ url()->current() }}"
-                                class="card-header d-flex justify-content-between align-items-center">
-
-                                <div>
-                                    <label for="perPage">Show</label>
-                                    <select name="perPage" id="perPage" onchange="this.form.submit()"
-                                        class="form-select d-inline-block w-auto">
-                                        <option value="10" {{ request('perPage') == 10 ? 'selected' : '' }}>10
-                                        </option>
-                                        <option value="25" {{ request('perPage') == 25 ? 'selected' : '' }}>25
-                                        </option>
-                                        <option value="50" {{ request('perPage') == 50 ? 'selected' : '' }}>50
-                                        </option>
-                                        <option value="100" {{ request('perPage') == 100 ? 'selected' : '' }}>100
-                                        </option>
-                                    </select>
-                                    <label>entries</label>
+                            @if($alreadyExported)
+                                <div class="alert alert-danger text-center small mb-0 mt-2">
+                                    You have already generated billing for this month. Cancel approval is disabled until next month.
                                 </div>
-
-                                <div class="d-flex">
-                                    <input type="text" name="search" value="{{ request('search') }}"
-                                        class="form-control" placeholder="Search..." />
-                                    <button type="submit" class="btn btn-primary ms-2">Search</button>
+                            @endif
+                            @if (!$allBranchApproved)
+                                <div class="alert alert-danger text-center small mb-0 mt-2">
+                                    * Not all branch users have approved yet.
                                 </div>
-
-                            </form>
-
-
+                            @endif
+                            <!-- Collapsible Information Note -->
                             <div class="card-body">
-                                <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                <div class="alert alert-info alert-dismissible fade show mb-4" id="infoNote">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Branch Billing Flow & User Guide</h5>
-                                    <ol class="mb-2">
-                                        <li><strong>Review & Edit:</strong> Branch users can view and edit billing records for their branch only.</li>
-                                        <li><strong>Amortization:</strong> Only regular loans are included in the amortization column. Members with zero amortization are hidden.</li>
-                                        <li><strong>Approval:</strong> Once all records are correct, approve your branch's billing. Admin cannot generate the consolidated export until all branches approve.</li>
-                                        <li><strong>Export:</strong> Export your branch's billing data (if allowed) and view export history.</li>
-                                        <li><strong>Loan Reports:</strong> Generate detailed loan reports showing total billed vs remitted amounts for your branch members.</li>
-                                    </ol>
-                                    <ul class="mb-2">
-                                        <li><strong>Search & Filter:</strong> Use the search bar and filters to quickly find members or billing records within your branch.</li>
-                                        <li><strong>Record Management:</strong> Edit or delete billing records as needed using the Actions column.</li>
-                                    </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> Only regular loans are included in amortization calculations. Approval is required before admin can generate the final report.</small></p>
+                                    <h5 class="info-note-toggle" data-bs-toggle="collapse" data-bs-target="#infoNoteContent" aria-expanded="true" aria-controls="infoNoteContent" style="user-select:none;">
+                                        <i class="fa fa-info-circle"></i> Branch Billing Flow & User Guide <i class="fa fa-chevron-down ms-2"></i>
+                                    </h5>
+                                    <div class="collapse show" id="infoNoteContent">
+                                        <ol class="mb-2">
+                                            <li><strong>Review & Edit:</strong> Branch users can view and edit billing records for their branch only.</li>
+                                            <li><strong>Amortization:</strong> Only regular loans are included in the amortization column. Members with zero amortization are hidden.</li>
+                                            <li><strong>Approval:</strong> Once all records are correct, approve your branch's billing. Admin cannot generate the consolidated export until all branches approve.</li>
+                                            <li><strong>Export:</strong> Export your branch's billing data (if allowed) and view export history.</li>
+                                            <li><strong>Loan Reports:</strong> Generate detailed loan reports showing total billed vs remitted amounts for your branch members.</li>
+                                        </ol>
+                                        <ul class="mb-2">
+                                            <li><strong>Search & Filter:</strong> Use the search bar and filters to quickly find members or billing records within your branch.</li>
+                                            <li><strong>Record Management:</strong> Edit or delete billing records as needed using the Actions column.</li>
+                                        </ul>
+                                        <p class="mb-0"><small><strong>Note:</strong> Only regular loans are included in amortization calculations. Approval is required before admin can generate the final report.</small></p>
+                                    </div>
                                 </div>
-
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered display">
                                         <thead>
@@ -180,7 +178,6 @@
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
-
                                         <tbody>
                                             @php
                                                 $productMap = json_decode(file_get_contents(public_path('loan_product_map.json')), true);
@@ -203,8 +200,7 @@
                                                         <td>{{ number_format($member->principal, 2) }}</td>
                                                         <td>{{ $member->area ?? '' }}</td>
                                                         <td>
-                                                            <button class="btn btn-rounded btn-primary edit-btn"
-                                                                data-toggle="modal" data-target="#editModal"
+                                                            <button class="btn btn-rounded btn-primary edit-btn" data-toggle="modal" data-target="#editModal"
                                                                 data-id="{{ $member->id }}"
                                                                 data-emp_id="{{ $member->emp_id }}"
                                                                 data-fname="{{ $member->fname }}"
@@ -214,9 +210,7 @@
                                                                 data-area="{{ $member->area }}"
                                                                 data-start_date="{{ optional($member->start_date)->format('Y-m-d') }}"
                                                                 data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}">Edit</button>
-
-                                                            <button class="btn btn-rounded btn-info view-btn"
-                                                                data-toggle="modal" data-target="#viewModal"
+                                                            <button class="btn btn-rounded btn-info view-btn" data-toggle="modal" data-target="#viewModal"
                                                                 data-emp_id="{{ $member->emp_id }}"
                                                                 data-name="{{ $member->fname }} {{ $member->lname }}"
                                                                 data-loan_balance="{{ $member->loan_balance }}"
@@ -224,16 +218,12 @@
                                                                 data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}"
                                                                 data-principal="{{ $member->principal }}"
                                                                 data-office="{{ $member->area }}">View</button>
-
-                                                            <button class="btn btn-rounded btn-danger delete-btn"
-                                                                data-toggle="modal" data-target="#deleteModal"
-                                                                data-id="{{ $member->id }}">Delete</button>
+                                                            <button class="btn btn-rounded btn-danger delete-btn" data-toggle="modal" data-target="#deleteModal" data-id="{{ $member->id }}">Delete</button>
                                                         </td>
                                                     </tr>
                                                 @endif
                                             @endforeach
                                         </tbody>
-
                                         <tfoot>
                                             <tr>
                                                 <th>Employee #</th>
@@ -248,73 +238,68 @@
                                         </tfoot>
                                     </table>
                                 </div>
+                                <div class="pagination-container d-flex flex-column align-items-center">
+                                    <div>
+                                        Showing {{ $billing->firstItem() }} to {{ $billing->lastItem() }} of {{ $billing->total() }} results
+                                    </div>
+                                    <nav aria-label="Page navigation" class="mt-3">
+                                        {{ $billing->links('pagination::bootstrap-5') }}
+                                    </nav>
+                                </div>
                             </div>
-
+                            <!-- Modals remain unchanged for logic, but cleaned up for spacing -->
                             <div class="modal fade" id="editModal" tabindex="-1" role="dialog">
                                 <div class="modal-dialog modal-lg" role="document">
-                                    <form method="POST" action="{{ route('billing.update.branch', 0) }}"
-                                        id="editForm">
+                                    <form method="POST" action="{{ route('billing.update.branch', 0) }}" id="editForm">
                                         @csrf
                                         @method('PUT')
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5>Edit Member</h5>
                                             </div>
-                                            <div class="modal-body row">
+                                            <div class="modal-body row g-3">
                                                 <input type="hidden" name="id" id="edit-id">
-
                                                 <div class="form-group col-md-6">
                                                     <label>Employee #</label>
-                                                    <input type="text" name="emp_id" id="edit-emp_id"
-                                                        class="form-control">
+                                                    <input type="text" name="emp_id" id="edit-emp_id" class="form-control">
                                                 </div>
                                                 <div class="form-group col-md-6">
                                                     <label>First Name</label>
-                                                    <input type="text" name="fname" id="edit-fname"
-                                                        class="form-control">
+                                                    <input type="text" name="fname" id="edit-fname" class="form-control">
                                                 </div>
                                                 <div class="form-group col-md-6">
                                                     <label>Last Name</label>
-                                                    <input type="text" name="lname" id="edit-lname"
-                                                        class="form-control">
+                                                    <input type="text" name="lname" id="edit-lname" class="form-control">
                                                 </div>
                                                 <div class="form-group col-md-6">
-                                                    <label>Loan Balance</label>
-                                                    <input type="number" step="0.01" name="loan_balance"
-                                                        id="edit-loan_balance" class="form-control">
+                                                    <label>Amort Due</label>
+                                                    <input type="number" step="0.01" name="loan_balance" id="edit-loan_balance" class="form-control">
                                                 </div>
                                                 <div class="form-group col-md-6">
-                                                    <label>Principal</label>
-                                                    <input type="number" step="0.01" name="principal"
-                                                        id="edit-principal" class="form-control">
+                                                    <label>Gross</label>
+                                                    <input type="number" step="0.01" name="principal" id="edit-principal" class="form-control">
                                                 </div>
                                                 <div class="form-group col-md-6">
                                                     <label>Start Date</label>
-                                                    <input type="date" name="start_date" id="edit-start_date"
-                                                        class="form-control">
+                                                    <input type="date" name="start_date" id="edit-start_date" class="form-control">
                                                 </div>
                                                 <div class="form-group col-md-6">
                                                     <label>End Date</label>
-                                                    <input type="date" name="end_date" id="edit-end_date"
-                                                        class="form-control">
+                                                    <input type="date" name="end_date" id="edit-end_date" class="form-control">
                                                 </div>
                                                 <div class="form-group col-md-6">
                                                     <label>Office</label>
-                                                    <input type="text" name="area" id="edit-area"
-                                                        class="form-control">
+                                                    <input type="text" name="area" id="edit-area" class="form-control">
                                                 </div>
                                             </div>
-
                                             <div class="modal-footer">
                                                 <button type="submit" class="btn btn-success">Update</button>
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-dismiss="modal">Close</button>
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                             </div>
                                         </div>
                                     </form>
                                 </div>
                             </div>
-
                             <div class="modal fade" id="viewModal" tabindex="-1" role="dialog">
                                 <div class="modal-dialog modal-md" role="document">
                                     <div class="modal-content">
@@ -326,8 +311,8 @@
                                             <p><strong>Name:</strong> <span id="view-name"></span></p>
                                             <p><strong>Start Date:</strong> <span id="view-start_date"></span></p>
                                             <p><strong>End Date:</strong> <span id="view-end_date"></span></p>
-                                            <p><strong>Loan Balance:</strong> ₱<span id="view-loan_balance"></span></p>
-                                            <p><strong>Principal:</strong> ₱<span id="view-principal"></span></p>
+                                            <p><strong>Amort Due:</strong> ₱<span id="view-loan_balance"></span></p>
+                                            <p><strong>Gross:</strong> ₱<span id="view-principal"></span></p>
                                             <p><strong>Office:</strong> <span id="view-office"></span></p>
                                         </div>
                                         <div class="modal-footer">
@@ -336,7 +321,6 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
                                 <div class="modal-dialog" role="document">
                                     <form method="POST" action="" id="deleteForm">
@@ -355,48 +339,23 @@
                                     </form>
                                 </div>
                             </div>
-
-                            <style>
-                                p.small.text-muted {
-                                    display: none;
-                                }
-                            </style>
-
-                            <div class="d-flex flex-column align-items-center my-4">
-                                <div>
-                                    Showing {{ $billing->firstItem() }} to {{ $billing->lastItem() }} of
-                                    {{ $billing->total() }} results
-                                </div>
-                                <nav aria-label="Page navigation" class="mt-3">
-                                    {{ $billing->links('pagination::bootstrap-5') }}
-                                </nav>
-                            </div>
-
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
-
         <div class="footer">
             <div class="copyright">
-                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/"
-                        target="_blank">MASS-SPECC
-                        COOPERATIVE</a>2025</p>
+                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/" target="_blank">MASS-SPECC COOPERATIVE</a>2025</p>
             </div>
         </div>
-
     </div>
-
     @include('layouts.partials.footer')
-
     <script>
         $('.edit-btn').on('click', function() {
             const button = $(this);
             const id = button.data('id');
-            $('#editForm').attr('action', `/billing/${id}`);
-
+            $('#editForm').attr('action', `/Branch/billing/${id}`);
             $('#edit-id').val(id);
             $('#edit-emp_id').val(button.data('emp_id'));
             $('#edit-fname').val(button.data('fname'));
@@ -407,8 +366,6 @@
             $('#edit-end_date').val(button.data('end_date'));
             $('#edit-area').val(button.data('area'));
         });
-
-
         $('.view-btn').on('click', function() {
             const button = $(this);
             $('#view-emp_id').text(button.data('emp_id'));
@@ -419,58 +376,10 @@
             $('#view-principal').text(parseFloat(button.data('principal')).toFixed(2));
             $('#view-office').text(button.data('office'));
         });
-
         $('.delete-btn').on('click', function() {
             const id = $(this).data('id');
             $('#deleteForm').attr('action', `/billing/${id}`);
         });
     </script>
-
-    <script>
-        document.getElementById('generateBillingBtn').addEventListener('click', function(event) {
-            event.preventDefault(); // prevent default navigation
-
-            Swal.fire({
-                title: 'Processing Billing',
-                text: 'Please wait...',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    Swal.showLoading()
-                }
-            });
-
-            // Redirect to href after showing loader
-            window.location.href = this.href;
-        });
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script>
-        @if (session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Success',
-                text: '{{ session('success') }}',
-                timer: 3000,
-                timerProgressBar: true,
-                showConfirmButton: false
-            });
-        @endif
-
-        @if (session('info'))
-            Swal.fire({
-                icon: 'info',
-                title: 'Info',
-                text: '{{ session('info') }}',
-                timer: 3000,
-                timerProgressBar: true,
-                showConfirmButton: false
-            });
-        @endif
-    </script>
-
 </body>
-
 </html>

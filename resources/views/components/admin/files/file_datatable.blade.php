@@ -433,15 +433,23 @@
                             <div class="card-header" id="headingShares">
                                 <h2 class="mb-0">
                                     <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseShares" aria-expanded="false" aria-controls="collapseShares">
-                                        📊 Shares/CoreID File Format
+                                        📊 Shares File Format
                                     </button>
                                 </h2>
                             </div>
                             <div id="collapseShares" class="collapse" aria-labelledby="headingShares" data-parent="#formatAccordion">
                                 <div class="card-body">
-                                    <strong>Required Columns (Row 1 as header):</strong>
+                                    <strong>Required Columns (Row 6 as header):</strong>
                                     <ul>
-                                        <li>coreid <em>or</em> customer_no <em>or</em> customer_no_ <em>or</em> cid <em>or</em> customer_number <em>or</em> customer_id</li>
+                                        <li>customer_no</li>
+                                        <li>account_no</li>
+                                        <li>product_code</li>
+                                        <li>open_date</li>
+                                        <li>current_bal</li>
+                                        <li>available_bal</li>
+                                        <li>interest_due_amount</li>
+                                        <li>status</li>
+                                        <li>last_trn_date</li>
                                     </ul>
                                     <small class="text-muted">File type: .csv or .xlsx</small>
                                 </div>

@@ -34,23 +34,8 @@ class LoginController extends Controller
 
         $user = Auth::user();
 
-        // Automatically set billing period to current month and year if not already set
-        // or if the current billing period is from a previous month
-        $currentBillingPeriod = Carbon::now()->format('Y-m') . '-01'; // Format as YYYY-MM-01
-
-        if (!$user->billing_period ||
-            (Carbon::parse($user->billing_period)->format('Y-m') !== Carbon::now()->format('Y-m'))) {
-            User::where('id', $user->id)->update(['billing_period' => $currentBillingPeriod]);
-
-            // Create a notification about the billing period update
-            \App\Models\Notification::create([
-                'type' => 'billing_period_update',
-                'user_id' => $user->id,
-                'related_id' => $user->id,
-                'message' => 'Your billing period has been automatically updated to ' . Carbon::parse($currentBillingPeriod)->format('F Y'),
-                'billing_period' => $currentBillingPeriod
-            ]);
-        }
+        // Remove logic that sets billing_period based on current date
+        // The user's billing_period should only be updated by the admin's manual close action.
 
         if ($user->role === 'admin') {
             return redirect()->route('dashboard')->with('success', 'Welcome, Admin!');
@@ -126,6 +111,14 @@ class LoginController extends Controller
 
         $data = $request->only(['name', 'email', 'role', 'status', 'branch_id']);
         $data['password'] = Hash::make($request->password);
+
+        // Set billing period based on admin's current billing period
+        $adminBillingPeriod = Auth::user()->billing_period;
+        if (!$adminBillingPeriod) {
+            // Fallback to current date if admin doesn't have billing period set
+            $adminBillingPeriod = Carbon::now()->format('Y-m-01');
+        }
+        $data['billing_period'] = $adminBillingPeriod;
 
         User::create($data);
 

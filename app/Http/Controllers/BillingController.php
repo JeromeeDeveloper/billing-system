@@ -79,9 +79,9 @@ class BillingController extends Controller
             $perPage = 10;
         }
 
-         $allBranchApproved = User::where('role', 'branch')
-        ->where('status', '!=', 'approved')
-        ->doesntExist(); // true if all are approved
+        $allBranchApproved = User::where('role', 'branch')
+            ->where('status', '!=', 'approved')
+            ->doesntExist(); // true if all are approved
 
         // Query with eager loading branch to avoid N+1 query problem
         $query = Member::with('branch')
@@ -113,33 +113,50 @@ class BillingController extends Controller
             'perPage' => $perPage,
         ]);
 
-        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved'));
+        // Check if user has already generated billing for this month
+        $userId = Auth::id();
+        $alreadyExported = \App\Models\BillingExport::where('billing_period', $billingPeriod)
+            ->where('generated_by', $userId)
+            ->exists();
+
+        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'alreadyExported'));
     }
 
     public function export(Request $request)
     {
+        set_time_limit(600); // Allow up to 10 minutes for export
+
         $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
+        $userId = Auth::id();
+
+        // Validation: Only allow one export per user per month
+        $alreadyExported = BillingExport::where('billing_period', $billingPeriod)
+            ->where('generated_by', $userId)
+            ->exists();
+        if ($alreadyExported) {
+            return back()->with('error', 'You have already generated billing for this month.');
+        }
 
         // Generate the Excel file
         $export = new BillingExcelExport($billingPeriod);
         $filename = 'billing_export_' . \Carbon\Carbon::parse($billingPeriod)->format('Y-m') . '.xlsx';
 
         // Store the file
-        Excel::store($export, 'exports/' . $filename, 'public');
+        \Maatwebsite\Excel\Facades\Excel::store($export, 'exports/' . $filename, 'public');
 
         // Save export record
         $billingExport = BillingExport::create([
             'billing_period' => $billingPeriod,
             'filename' => $filename,
             'filepath' => 'exports/' . $filename,
-            'generated_by' => Auth::id()
+            'generated_by' => $userId
         ]);
 
         // Add notification
-        NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
+        NotificationController::createNotification('billing_report', $userId, $billingExport->id);
 
         // Download the file
-        return Excel::download($export, $filename);
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
     }
 
     public function viewExports(Request $request)
@@ -371,29 +388,40 @@ class BillingController extends Controller
 
     public function export_branch(Request $request)
     {
+        set_time_limit(600); // Allow up to 10 minutes for export
+
         $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
         $branchId = Auth::user()->branch_id;
+        $userId = Auth::id();
+
+        // Validation: Only allow one export per user per month
+        $alreadyExported = BillingExport::where('billing_period', $billingPeriod)
+            ->where('generated_by', $userId)
+            ->exists();
+        if ($alreadyExported) {
+            return back()->with('error', 'You have already generated billing for this month.');
+        }
 
         // Generate the Excel file
         $export = new \App\Exports\BranchBillingExport($billingPeriod, $branchId);
         $filename = 'branch_billing_export_' . \Carbon\Carbon::parse($billingPeriod)->format('Y-m') . '.xlsx';
 
         // Store the file
-        Excel::store($export, 'exports/' . $filename, 'public');
+        \Maatwebsite\Excel\Facades\Excel::store($export, 'exports/' . $filename, 'public');
 
         // Save export record
         $billingExport = BillingExport::create([
             'billing_period' => $billingPeriod,
             'filename' => $filename,
             'filepath' => 'exports/' . $filename,
-            'generated_by' => Auth::id()
+            'generated_by' => $userId
         ]);
 
         // Add notification
-        NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
+        NotificationController::createNotification('billing_report', $userId, $billingExport->id);
 
         // Download the file
-        return Excel::download($export, $filename);
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
     }
 
     public function exportLoanReport(Request $request)
@@ -529,5 +557,37 @@ class BillingController extends Controller
             ],
             'loan_forecasts' => $loanForecasts
         ]);
+    }
+
+    public function closeBillingPeriod(Request $request)
+    {
+        // Only allow admin
+        if (!Auth::user() || Auth::user()->role !== 'admin') {
+            abort(403);
+        }
+
+        // Get the current max billing period among users
+        $currentPeriod = \App\Models\User::max('billing_period');
+        $current = \Carbon\Carbon::parse($currentPeriod);
+        $next = $current->copy()->addMonth()->format('Y-m-01');
+
+        // Update all users' billing_period
+        \App\Models\User::query()->update(['billing_period' => $next]);
+        // Set all branch users' status to pending
+        \App\Models\User::where('role', 'branch')->update(['status' => 'pending']);
+
+        // Notify all users
+        $userIds = \App\Models\User::pluck('id');
+        foreach ($userIds as $id) {
+            \App\Models\Notification::create([
+                'type' => 'billing_period_closed',
+                'user_id' => $id,
+                'related_id' => $id,
+                'message' => 'Billing period has been closed. New billing period: ' . \Carbon\Carbon::parse($next)->format('F Y'),
+                'billing_period' => $next
+            ]);
+        }
+
+        return back()->with('success', 'Billing period closed. All users moved to next period: ' . \Carbon\Carbon::parse($next)->format('F Y'));
     }
 }

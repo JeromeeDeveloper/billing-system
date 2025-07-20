@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Imports\ShareRemittanceImport;
-use Illuminate\Support\Facades\Log;
 use App\Models\RemittanceReport;
 
 class RemittanceController extends Controller
@@ -237,6 +236,8 @@ class RemittanceController extends Controller
 
     public function generateExport(Request $request)
     {
+        set_time_limit(600); // Allow up to 5 minutes for export
+
         try {
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;
@@ -254,16 +255,22 @@ class RemittanceController extends Controller
 
             if ($type === 'shares') {
                 $export = new \App\Exports\SharesExport($remittanceData);
-                $filename = 'shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
+                $filename = 'shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
+            } else if ($type === 'shares_with_product') {
+                $export = new \App\Exports\SharesWithProductExport($remittanceData);
+                $filename = 'shares_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
+            } else if ($type === 'loans_savings_with_product') {
+                $export = new \App\Exports\LoansAndSavingsWithProductExport($remittanceData);
+                $filename = 'loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
             } else {
                 $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
-                $filename = 'loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
+                $filename = 'loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
             }
 
-            return Excel::download($export, $filename);
+            return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
 
         } catch (\Exception $e) {
-            Log::error('Error generating export: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
+            \Log::error('Error generating export: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
     }
@@ -317,10 +324,10 @@ class RemittanceController extends Controller
                     'member_name' => trim(($forecast->member->fname ?? '') . ' ' . ($forecast->member->lname ?? '')),
                     'amortization' => 0,
                     'total_billed' => 0,
+                    'remaining_loan_balance' => 0,
                     'remitted_loans' => 0,
                     'remitted_savings' => 0,
                     'remitted_shares' => 0,
-                    'remaining_loan_balance' => 0,
                 ];
             }
             $memberTotals[$cid]['amortization'] += $forecast->original_total_due ?? $forecast->total_due;
