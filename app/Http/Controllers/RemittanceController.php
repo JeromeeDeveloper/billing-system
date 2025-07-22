@@ -110,13 +110,13 @@ class RemittanceController extends Controller
         try {
             DB::beginTransaction();
 
-            $import = new RemittanceImport();
+            // Get current billing period
+            $currentBillingPeriod = Auth::user()->billing_period;
+
+            $import = new RemittanceImport($currentBillingPeriod);
             Excel::import($import, $request->file('file'));
 
             $results = $import->getResults();
-
-            // Get current billing period
-            $currentBillingPeriod = Auth::user()->billing_period;
 
             // Clear previous preview data for this user, billing period, and remittance type
             RemittancePreview::where('user_id', Auth::id())

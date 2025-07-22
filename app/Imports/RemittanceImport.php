@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\RemittanceBatch;
 
 class RemittanceImport implements ToCollection, WithHeadingRow
 {
@@ -23,15 +24,31 @@ class RemittanceImport implements ToCollection, WithHeadingRow
     ];
 
     protected $savingProducts;
+    protected $batch_id;
+    protected $imported_at;
+    protected $billingPeriod;
+    protected $remittance_tag;
 
-    public function __construct()
+    public function __construct($billingPeriod = null)
     {
         // Load all saving products
         $this->savingProducts = SavingProduct::all();
+        $this->billingPeriod = $billingPeriod;
     }
 
     public function collection(Collection $rows)
     {
+        $this->batch_id = (string) Str::uuid();
+        $this->imported_at = now();
+        // Use RemittanceBatch to determine next remittance_tag for this billing period
+        $maxTag = RemittanceBatch::where('billing_period', $this->billingPeriod)->max('remittance_tag');
+        $this->remittance_tag = $maxTag ? $maxTag + 1 : 1;
+        // Insert new batch row
+        RemittanceBatch::create([
+            'billing_period' => $this->billingPeriod,
+            'remittance_tag' => $this->remittance_tag,
+            'imported_at' => $this->imported_at,
+        ]);
         foreach ($rows as $row) {
             $result = $this->processRow($row);
             $this->results[] = $result;
@@ -213,38 +230,50 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         if ($remainingPayment <= 0) break;
 
                         $forecast = $forecastData['forecast'];
-                        $totalDue = $forecastData['total_due'];
-                        $productCode = $forecastData['product_code'];
+                        $interestDue = $forecast->interest_due ?? 0;
+                        $principalDue = $forecast->principal_due ?? 0;
+                        $deductedInterest = 0;
+                        $deductedPrincipal = 0;
 
-                        // Calculate how much to pay for this loan
-                        $deductionAmount = min($remainingPayment, $totalDue);
-
-                        if ($productCode && $deductionAmount > 0) {
-                            Log::info("Processing payment for member {$member->id}:");
-                            Log::info("- Loan Account: {$forecast->loan_acct_no}");
-                            Log::info("- Total Due: {$totalDue}");
-                            Log::info("- Payment Amount: {$deductionAmount}");
-                            Log::info("- Remaining Payment Before: {$remainingPayment}");
-
-                            // Update the total_due in LoanForecast
-                            $newTotalDue = $totalDue - $deductionAmount;
-                            $forecast->update([
-                                'total_due' => max(0, $newTotalDue), // Ensure total_due doesn't go below 0
-                                'total_due_after_remittance' => $deductionAmount // Store the actual amount remitted
-                            ]);
-                            Log::info("- Updated Total Due: {$newTotalDue}");
-                            Log::info("- Stored Remittance Amount: {$deductionAmount}");
-
-                            // Subtract the deduction amount from remaining payment
-                            $remainingPayment -= $deductionAmount;
-                            Log::info("- Remaining Payment After: {$remainingPayment}");
-
-                            // If this loan is fully paid, continue to next loan
-                            if ($newTotalDue <= 0) {
-                                Log::info("- Loan fully paid, moving to next loan");
-                                continue;
-                            }
+                        // Deduct from interest_due first
+                        if ($interestDue > 0) {
+                            $deduct = min($remainingPayment, $interestDue);
+                            $deductedInterest = $deduct;
+                            $interestDue -= $deduct;
+                            $remainingPayment -= $deduct;
                         }
+                        // Then deduct from principal_due
+                        if ($remainingPayment > 0 && $principalDue > 0) {
+                            $deduct = min($remainingPayment, $principalDue);
+                            $deductedPrincipal = $deduct;
+                            $principalDue -= $deduct;
+                            $remainingPayment -= $deduct;
+                        }
+
+                        // Update the forecast in the database
+                        $forecast->update([
+                            'interest_due' => $interestDue,
+                            'principal_due' => $principalDue,
+                            'total_due' => max(0, $principalDue + $interestDue),
+                            'total_due_after_remittance' => $deductedPrincipal + $deductedInterest
+                        ]);
+
+                        // Create a LoanRemittance record for this deduction
+                        \App\Models\LoanRemittance::create([
+                            'loan_forecast_id' => $forecast->id,
+                            'member_id' => $member->id,
+                            'remitted_amount' => $deductedPrincipal + $deductedInterest,
+                            'applied_to_interest' => $deductedInterest,
+                            'applied_to_principal' => $deductedPrincipal,
+                            'remaining_interest_due' => $interestDue,
+                            'remaining_principal_due' => $principalDue,
+                            'remaining_total_due' => max(0, $principalDue + $interestDue),
+                            'remittance_date' => now()->toDateString(),
+                            'batch_id' => $this->batch_id,
+                            'imported_at' => $this->imported_at,
+                            'remittance_tag' => $this->remittance_tag,
+                            'billing_period' => $this->billingPeriod,
+                        ]);
                     }
 
                     // Recalculate and update member's total loan balance
