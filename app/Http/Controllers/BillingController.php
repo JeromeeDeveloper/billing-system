@@ -73,7 +73,9 @@ class BillingController extends Controller
             'perPage' => $perPage,
         ]);
 
-        return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved'));
+        $hasAnyMemberNoBranch = Member::whereNull('branch_id')->exists();
+
+        return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'hasAnyMemberNoBranch'));
     }
 
     public function index_branch(Request $request)

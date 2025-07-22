@@ -60,6 +60,25 @@ class BranchController extends Controller
         }
     }
 
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:10|unique:branches,code',
+        ]);
+
+        try {
+            $branch = new Branch();
+            $branch->name = $request->input('name');
+            $branch->code = $request->input('code');
+            $branch->save();
+
+            return redirect()->route('branch')->with('success', 'Branch added successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to add branch: ' . $e->getMessage());
+        }
+    }
+
     public function destroy($id)
     {
         try {
@@ -70,6 +89,24 @@ class BranchController extends Controller
             return redirect()->route('branch')->with('success', 'Branch deleted successfully!');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to delete branch: ' . $e->getMessage());
+        }
+    }
+
+    public function assignMember(Request $request)
+    {
+        $request->validate([
+            'branch_id' => 'required|exists:branches,id',
+            'member_id' => 'required|exists:members,id',
+        ]);
+
+        try {
+            $member = \App\Models\Member::findOrFail($request->input('member_id'));
+            $member->branch_id = $request->input('branch_id');
+            $member->save();
+
+            return redirect()->route('branch')->with('success', 'Member assigned to branch successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to assign member: ' . $e->getMessage());
         }
     }
 }

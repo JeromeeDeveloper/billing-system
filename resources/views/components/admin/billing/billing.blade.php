@@ -87,17 +87,13 @@
 
                                 <div class="d-flex flex-column align-items-end pe-3">
                                     <div class="d-flex mb-3 gap-btn">
-                                        @php
-                                            $hasMembersNoBranch = isset($billing) && collect($billing)->contains(function($member) { return empty($member->branch_id); });
-                                        @endphp
-
                                         {{-- main function --}}
 
-                                        <a href="{{ $allBranchApproved && !$hasMembersNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
-                                            class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved || $hasMembersNoBranch ? 'disabled' : '' }}"
+                                        <a href="{{ $allBranchApproved && !$hasAnyMemberNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
+                                            class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved || $hasAnyMemberNoBranch ? 'disabled' : '' }}"
                                             @if (!$allBranchApproved)
                                                 onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;"
-                                            @elseif ($hasMembersNoBranch)
+                                            @elseif ($hasAnyMemberNoBranch)
                                                 onclick="Swal.fire('Action Blocked', 'Some members have no branch assigned. Please assign branches before generating billing.', 'warning'); return false;"
                                             @endif>
                                             <span class="btn-icon-left text-primary">
@@ -107,13 +103,13 @@
                                         </a>
 
                                         {{-- for testing --}}
-                                        <a href="{{ route('billing.export', ['billing_period' => now()->format('Y-m')]) }}"
+                                        {{-- <a href="{{ route('billing.export', ['billing_period' => now()->format('Y-m')]) }}"
                                             class="btn btn-rounded btn-primary text-white me-4">
                                             <span class="btn-icon-left text-primary">
                                                 <i class="fa fa-file"></i>
                                             </span>
                                             Generate Billing
-                                        </a>
+                                        </a> --}}
 
 
 
@@ -145,7 +141,7 @@
                                             * Not all branch users has approved yet.
                                         </div>
                                     @endif
-                                    @if ($hasMembersNoBranch)
+                                    @if ($hasAnyMemberNoBranch)
                                         <div class="text-danger small">
                                             * Some members have no branch assigned. Please assign branches before generating billing.
                                         </div>
