@@ -36,7 +36,22 @@ class LoansController extends Controller
 
         $loan->update($request->only(['product', 'prioritization', 'product_code', 'billing_type']));
 
-        return redirect()->route('loans')->with('success', 'Loan updated successfully.');
+        // Recalculate loan_balance for all members with this product
+        $members = $loan->members;
+        foreach ($members as $member) {
+            $loanForecasts = $member->loanForecasts;
+            $productMap = [
+                $loan->product_code => $loan->billing_type
+            ];
+            $loan_balance = $loanForecasts->filter(function($forecast) use ($productMap) {
+                $segments = explode('-', $forecast->loan_acct_no);
+                $productCode = $segments[2] ?? null;
+                return isset($productMap[$productCode]) && $productMap[$productCode] === 'regular';
+            })->sum('total_due');
+            $member->update(['loan_balance' => $loan_balance]);
+        }
+
+        return redirect()->route('loans')->with('success', 'Loan updated successfully. Loan balances recalculated.');
     }
 
     public function destroy(LoanProduct $loan)
