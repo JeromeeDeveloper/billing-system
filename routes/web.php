@@ -114,6 +114,8 @@ Route::get('/atm', [AtmController::class, 'index'])->name('atm');
 
 //Branch
 Route::get('/Branch', [BranchController::class, 'index'])->name('branch');
+Route::post('/branches', [BranchController::class, 'store'])->name('branches.store');
+Route::post('/branches/assign-member', [BranchController::class, 'assignMember'])->name('branches.assignMember');
 Route::get('/branches/{id}', [BranchController::class, 'view'])->name('branch.view');
 Route::get('/branches/{id}/edit', [BranchController::class, 'edit'])->name('branch.edit');
 Route::put('/branches/{id}', [BranchController::class, 'update'])->name('branch.update');

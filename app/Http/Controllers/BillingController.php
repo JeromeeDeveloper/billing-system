@@ -37,11 +37,20 @@ class BillingController extends Controller
 
         // Query with eager loading branch to avoid N+1 query problem
         $query = Member::with('branch')
-            ->where('billing_period', $billingPeriod)
+            ->where(function ($query) {
+                $query->where('account_status', 'deduction')
+                    ->orWhere(function ($query) {
+                        $query->where('account_status', 'non-deduction')
+                            ->where(function ($q) {
+                                $q->whereRaw("STR_TO_DATE(start_hold, '%Y-%m') > ?", [now()->format('Y-m-01')])
+                                    ->orWhereRaw("STR_TO_DATE(expiry_date, '%Y-%m') <= ?", [now()->format('Y-m-01')]);
+                            });
+                    });
+            })
             ->whereHas('loanForecasts', function ($query) use ($billingPeriod) {
                 $query->where(function($q) use ($billingPeriod) {
                     $q->whereNull('amortization_due_date')
-                      ->orWhereRaw("DATE_FORMAT(amortization_due_date, '%Y-%m') = ?", [\Carbon\Carbon::parse($billingPeriod)->format('Y-m')]);
+                      ->orWhereRaw("amortization_due_date <= ?", [\Carbon\Carbon::parse($billingPeriod . '-01')->endOfMonth()->toDateString()]);
                 });
             })
             ->whereHas('loanProductMembers')
@@ -64,7 +73,9 @@ class BillingController extends Controller
             'perPage' => $perPage,
         ]);
 
-        return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved'));
+        $hasAnyMemberNoBranch = Member::whereNull('branch_id')->exists();
+
+        return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'hasAnyMemberNoBranch'));
     }
 
     public function index_branch(Request $request)

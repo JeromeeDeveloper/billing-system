@@ -177,7 +177,17 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
             ->whereHas('loanProductMembers') // Include members who have at least one registered loan product
             ->where('loan_balance', '>', 0) // Only include members with loan balance greater than 0
             ->with(['loanForecasts', 'loanProductMembers.loanProduct'])
-            ->get();
+            ->get()
+            ->filter(function ($member) {
+                // Only include members with >0 amortization for regular products
+                $productMap = json_decode(file_get_contents(public_path('loan_product_map.json')), true);
+                $amortization = $member->loanForecasts->filter(function($loan) use ($productMap) {
+                    $segments = explode('-', $loan->loan_acct_no);
+                    $productCode = $segments[2] ?? null;
+                    return isset($productMap[$productCode]) && $productMap[$productCode] === 'regular';
+                })->sum('total_due');
+                return $amortization > 0;
+            });
 
         \Illuminate\Support\Facades\Log::info('BillingExport - Found ' . $members->count() . ' members after all filters');
 

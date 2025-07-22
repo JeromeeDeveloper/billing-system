@@ -24,6 +24,8 @@ return new class extends Migration
             $table->enum('status', ['deduction', 'non-deduction'])->nullable();
             $table->string('billing_period')->nullable();
 
+            $table->unique(['member_id', 'billing_period']);
+
             $table->timestamps();
         });
     }

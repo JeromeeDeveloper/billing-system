@@ -40,11 +40,45 @@
                     </div>
                 </div>
 
+                <!-- Add Branch Modal -->
+                <div class="modal fade" id="addBranchModal" tabindex="-1" aria-labelledby="addBranchModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form action="{{ route('branches.store') }}" method="POST">
+                            @csrf
+                            <div class="modal-content">
+                                <div class="modal-header text-dark">
+                                    <h5 class="modal-title" id="addBranchModalLabel">Add Branch</h5>
+                                    <button type="button" class="close" data-dismiss="modal">
+                                        <span>&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group">
+                                        <label class="form-label">Branch Name</label>
+                                        <input type="text" name="name" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Branch Code</label>
+                                        <input type="text" name="code" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary">Add Branch</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h4 class="card-title mb-0">Branch Datatable</h4>
+                                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addBranchModal">
+                                    <i class="fa fa-plus"></i> Add Branch
+                                </button>
                             </div>
 
                             <style>
@@ -172,9 +206,25 @@
                             <input type="text" class="form-control" id="editBranchCode" name="code">
                         </div>
                         <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <label class="form-label">Assign Member to Branch</label>
+                            <form action="{{ route('branches.assignMember') }}" method="POST" class="d-flex align-items-center flex-column">
+                                @csrf
+                                <input type="hidden" name="branch_id" id="assignBranchId" value="">
+                                <input type="text" class="form-control mb-2" id="assignMemberSearch" placeholder="Search member by name or CID...">
+                                <select name="member_id" class="form-control me-2" required id="assignMemberSelect">
+                                    <option value="">Select Member</option>
+                                    @foreach (App\Models\Member::whereNull('branch_id')->get() as $member)
+                                        <option value="{{ $member->id }}">{{ $member->fname }} {{ $member->lname }} ({{ $member->cid }})</option>
+                                    @endforeach
+                                </select>
+                                <button type="submit" class="btn btn-primary ms-2 mt-2">Assign</button>
+                            </form>
                         </div>
                     </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" form="editForm">Save changes</button>
                 </div>
             </div>
         </div>
@@ -219,11 +269,26 @@
             var id = button.data('id');
             var name = button.data('name');
             var code = button.data('code');
-
             var modal = $(this);
             modal.find('#editBranchName').val(name);
             modal.find('#editBranchCode').val(code);
             modal.find('#editForm').attr('action', '/branches/' + id);
+            modal.find('#assignBranchId').val(id); // Set branch ID for the assign form
+            modal.find('#assignMemberSearch').val('');
+            modal.find('#assignMemberSelect option').show();
+        });
+
+        // Assign Member Search Filtering
+        $(document).on('input', '#assignMemberSearch', function() {
+            var search = $(this).val().toLowerCase();
+            $('#assignMemberSelect option').each(function() {
+                var text = $(this).text().toLowerCase();
+                if (search === '' || text.includes(search)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
         });
 
         // View Modal

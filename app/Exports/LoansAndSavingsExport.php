@@ -9,14 +9,17 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Facades\Log;
 use App\Models\Savings;
+use App\Models\RemittanceBatch;
 
 class LoansAndSavingsExport implements FromCollection, WithHeadings
 {
     protected $remittanceData;
+    protected $billingPeriod;
 
-    public function __construct($remittanceData)
+    public function __construct($remittanceData, $billingPeriod = null)
     {
         $this->remittanceData = $remittanceData;
+        $this->billingPeriod = $billingPeriod;
     }
 
     public function headings(): array
@@ -28,7 +31,9 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
             'amt',
             'product_code/cr',
             'gl/sl acct no',
-            'amount'
+            'amount',
+            'interest',
+            'principal'
         ];
     }
 
@@ -39,6 +44,15 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
 
         // Group remittance data by member_id
         $remittanceByMember = collect($this->remittanceData)->groupBy('member_id');
+
+        // Find the latest batch_id from LoanRemittance
+        $latestBatch = \App\Models\LoanRemittance::orderByDesc('imported_at')->value('batch_id');
+
+        // Find the latest remittance_tag for the current billing period using RemittanceBatch
+        $latestTag = null;
+        if ($this->billingPeriod) {
+            $latestTag = RemittanceBatch::where('billing_period', $this->billingPeriod)->max('remittance_tag');
+        }
 
         foreach ($remittanceByMember as $memberId => $records) {
             if (empty($memberId)) {
@@ -61,27 +75,38 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                 ];
             }
 
-            // Handle loan payments (per record, as before)
-            foreach ($records as $record) {
-                if ($record->loans > 0) {
-                    foreach ($member->loanForecasts as $forecast) {
-                        if ($forecast->total_due_after_remittance > 0) {
-                            $originalAccountNumber = $forecast->loan_acct_no;
-                            $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+            // Handle loan payments (deduction logic)
+            foreach ($member->loanForecasts as $forecast) {
+                // Find the highest remittance_tag for this loan and billing period
+                $latestTag = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
+                   
+                    ->max('remittance_tag');
+                if (!$latestTag) {
+                    continue;
+                }
+                $remittances = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
+                    ->where('member_id', $member->id)
 
-                            // Add to branch totals
-                            $branchTotals[$branchCode]['loans_total'] += $forecast->total_due_after_remittance;
+                    ->where('remittance_tag', $latestTag)
 
-                            $exportRows->push([
-                                'branch_code' => $branchCode,
-                                'product_code/dr' => '',
-                                'gl/sl cct no' => '',
-                                'amt' => '',
-                                'product_code/cr' => '4',
-                                'gl/sl acct no' => $formattedAccountNumber,
-                                'amount' => number_format($forecast->total_due_after_remittance, 2, '.', '')
-                            ]);
-                        }
+
+                    ->get();
+                foreach ($remittances as $remit) {
+                    if ($remit->remitted_amount > 0) {
+                        $branchTotals[$branchCode]['loans_total'] += $remit->remitted_amount;
+                        $originalAccountNumber = $forecast->loan_acct_no;
+                        $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+                        $exportRows->push([
+                            'branch_code' => $branchCode,
+                            'product_code/dr' => '',
+                            'gl/sl cct no' => '',
+                            'amt' => '',
+                            'product_code/cr' => '4',
+                            'gl/sl acct no' => $formattedAccountNumber,
+                            'amount' => number_format($remit->remitted_amount, 2, '.', ''),
+                            'interest' => number_format($remit->applied_to_interest, 2, '.', ''),
+                            'principal' => number_format($remit->applied_to_principal, 2, '.', '')
+                        ]);
                     }
                 }
             }
@@ -168,7 +193,9 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                         'amt' => '',
                         'product_code/cr' => '1',
                         'gl/sl acct no' => $formattedAccountNumber,
-                        'amount' => number_format($totalRegularRemaining, 2, '.', '')
+                        'amount' => number_format($totalRegularRemaining, 2, '.', ''),
+                        'principal_due' => '',
+                        'interest' => ''
                     ]);
                     // Before outputting the regular savings row:
                     Log::info('Regular savings found for member ' . $member->id . ': ' . json_encode($regularSavings));
@@ -187,12 +214,14 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
             if ($totals['savings_total'] > 0) {
                 $exportRows->push([
                     'branch_code' => $branchCode,
-                    'product_code/dr' => '1',
+                    'product_code/dr' => '5',
                     'gl/sl cct no' => $savingsContraAcc ? $savingsContraAcc->account_number : '',
                     'amt' => number_format($totals['savings_total'], 2, '.', ''),
                     'product_code/cr' => '',
                     'gl/sl acct no' => '',
-                    'amount' => ''
+                    'amount' => '',
+                    'principal_due' => '',
+                    'interest_due' => ''
                 ]);
             }
 
@@ -200,12 +229,14 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
             if ($totals['loans_total'] > 0) {
                 $exportRows->push([
                     'branch_code' => $branchCode,
-                    'product_code/dr' => '4',
+                    'product_code/dr' => '5',
                     'gl/sl cct no' => $loansContraAcc ? $loansContraAcc->account_number : '',
                     'amt' => number_format($totals['loans_total'], 2, '.', ''),
                     'product_code/cr' => '',
                     'gl/sl acct no' => '',
-                    'amount' => ''
+                    'amount' => '',
+                    'principal_due' => '',
+                    'interest_due' => ''
                 ]);
             }
         }
@@ -217,10 +248,12 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
 class LoansAndSavingsWithProductExport implements FromCollection, WithHeadings
 {
     protected $remittanceData;
+    protected $billingPeriod;
 
-    public function __construct($remittanceData)
+    public function __construct($remittanceData, $billingPeriod = null)
     {
         $this->remittanceData = $remittanceData;
+        $this->billingPeriod = $billingPeriod;
     }
 
     public function headings(): array
@@ -241,6 +274,11 @@ class LoansAndSavingsWithProductExport implements FromCollection, WithHeadings
     {
         $exportRows = new Collection();
         $remittanceByMember = collect($this->remittanceData)->groupBy('member_id');
+        // Find the latest remittance_tag for the current billing period using RemittanceBatch
+        $latestTag = null;
+        if ($this->billingPeriod) {
+            $latestTag = RemittanceBatch::where('billing_period', $this->billingPeriod)->max('remittance_tag');
+        }
         foreach ($remittanceByMember as $memberId => $records) {
             if (empty($memberId)) {
                 continue;
@@ -250,23 +288,28 @@ class LoansAndSavingsWithProductExport implements FromCollection, WithHeadings
                 continue;
             }
             // Loans
-            foreach ($records as $record) {
-                if ($record->loans > 0) {
-                    foreach ($member->loanForecasts as $forecast) {
-                        if ($forecast->total_due_after_remittance > 0) {
-                            $originalAccountNumber = $forecast->loan_acct_no;
-                            $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
-                            $exportRows->push([
-                                'branch_code' => $member->branch->code ?? '',
-                                'product_code/dr' => '',
-                                'gl/sl cct no' => '',
-                                'amt' => '',
-                                'product_code/cr' => '4',
-                                'gl/sl acct no' => $formattedAccountNumber,
-                                'amount' => number_format($forecast->total_due_after_remittance, 2, '.', ''),
-                                'product_name' => $forecast->product_name ?? '',
-                            ]);
-                        }
+            foreach ($member->loanForecasts as $forecast) {
+                $remittances = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
+                    ->where('member_id', $member->id)
+                    ->where('billing_period', $this->billingPeriod)
+                    ->where('remittance_tag', $latestTag)
+                    ->where('remitted_amount', '>', 0)
+                    ->orderBy('remittance_date')
+                    ->get();
+                foreach ($remittances as $remit) {
+                    if ($remit->remitted_amount > 0) {
+                        $originalAccountNumber = $forecast->loan_acct_no;
+                        $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+                        $exportRows->push([
+                            'branch_code' => $member->branch->code ?? '',
+                            'product_code/dr' => '',
+                            'gl/sl cct no' => '',
+                            'amt' => '',
+                            'product_code/cr' => '4',
+                            'gl/sl acct no' => $formattedAccountNumber,
+                            'amount' => number_format($remit->remitted_amount, 2, '.', ''),
+                            'product_name' => $forecast->product_name ?? '',
+                        ]);
                     }
                 }
             }
