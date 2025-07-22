@@ -96,28 +96,32 @@ class SpecialBillingController extends Controller
                 try {
                     $amortizationDueDate = Carbon::createFromFormat('m/d/Y', $amortizationDueRaw);
                 } catch (\Exception $e) {
+                    Log::warning("Row $i: Invalid amortization due date format for CID: " . ($row[2] ?? 'N/A') . ", Value: $amortizationDueRaw");
                     continue;
                 }
                 $billingPeriodEnd = Auth::user()->billing_period ? Carbon::parse(Auth::user()->billing_period)->endOfMonth() : null;
                 if ($billingPeriodEnd && $amortizationDueDate->gt($billingPeriodEnd)) {
+                    Log::info("Row $i: Skipped due to due date after billing period. CID: " . ($row[2] ?? 'N/A') . ", Due: $amortizationDueRaw, Billing End: " . $billingPeriodEnd->format('Y-m-d'));
                     continue;
                 }
 
                 $cidRaw = trim($row[2] ?? '');
                 $loanNumber = trim($row[4] ?? ''); // Column B (Account No.)
-                $totalDueRaw = trim($row[8] ?? ''); // Column I (Total Due)
+                $totalDueRaw = trim($row[10] ?? $row[11] ?? ''); // Try Total Amort then Total Due
 
                 if (empty($cidRaw) || empty($loanNumber) || empty($totalDueRaw)) {
+                    Log::info("Row $i: Skipped due to missing CID, loan number, or total due. CID: $cidRaw, Loan: $loanNumber, TotalDue: $totalDueRaw");
                     continue;
                 }
 
-                $cid = ltrim($cidRaw, "'");
+                $cid = str_pad(ltrim($cidRaw, "'"), 9, '0', STR_PAD_LEFT); // Pad to 9 digits
                 $totalDue = floatval(str_replace(',', '', $totalDueRaw));
                 $segments = explode('-', $loanNumber);
                 $productCode = $segments[2] ?? null; // 3rd segment
 
                 // Only process loans that are marked as 'special' billing type
                 if (!$productCode || !in_array($productCode, $specialLoanProducts)) {
+                    Log::info("Row $i: Skipped due to product code not special. CID: $cid, ProductCode: $productCode");
                     continue;
                 }
 
@@ -125,11 +129,11 @@ class SpecialBillingController extends Controller
                     ->whereIn('member_tagging', ['PGB', 'New'])
                     ->first();
                 if (!$member) {
-                    Log::warning("Member not found or not tagged as PGB/New for CID: {$cid}");
+                    Log::warning("Row $i: Member not found or not tagged as PGB/New for CID: $cid");
                     continue;
                 }
 
-                Log::info("Processing special loan: CID={$cid}, Loan={$loanNumber}, ProductCode={$productCode}, TotalDue={$totalDue}");
+                Log::info("Row $i: Processing special loan: CID=$cid, Loan=$loanNumber, ProductCode=$productCode, TotalDue=$totalDue, DueDate=$amortizationDueRaw");
 
                 // Group by member CID and sum total_due for special loans only
                 if (!isset($memberSpecialLoans[$cid])) {
@@ -185,7 +189,8 @@ class SpecialBillingController extends Controller
             // Group detail rows by CID and process with prioritization logic
             $detailByCid = [];
             foreach ($filteredDetailRows as $row) {
-                $cid = strval(trim($row['cid'] ?? ''));
+                $cidRaw = strval(trim($row['cid'] ?? ''));
+                $cid = str_pad(ltrim($cidRaw, "'"), 9, '0', STR_PAD_LEFT); // Pad to 9 digits
                 $accountNo = strval(trim($row['account no'] ?? ''));
 
                 // Clean principal release value (remove commas and format properly)

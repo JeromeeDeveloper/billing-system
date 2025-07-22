@@ -109,7 +109,7 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'principal' => $this->cleanNumber($row['principal'] ?? $row['i5'] ?? null),
                     'interest' => $this->cleanNumber($row['interest'] ?? $row['j5'] ?? null),
                     // 'total_amort' => $this->cleanNumber($row['total_amort'] ?? $row['k5'] ?? null),
-                    'total_due' => $this->cleanNumber($row['total_due'] ?? $row['k5'] ?? null),
+                    'total_due' => $this->cleanNumber($row['total_amort'] ?? $row['k5'] ?? null),
                     // 'principal_due' => $this->cleanNumber($row['principal_due'] ?? $row['m5'] ?? null),
                     // 'interest_due' => $this->cleanNumber($row['interest_due'] ?? $row['n5'] ?? null),
                     // 'penalty_due' => $this->cleanNumber($row['penalty_due'] ?? $row['o5'] ?? null),
@@ -145,13 +145,13 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
             MasterList::updateOrCreate(
                 [
                     'member_id' => $member->id,
-                    'loan_forecast_id' => $loanForecast->id,
+                    'billing_period' => $this->billingPeriod,
                 ],
                 [
                     'branches_id' => $branch->id,
+                    'loan_forecast_id' => $loanForecast->id,
                     'updated_at' => $now,
                     'created_at' => $now,
-                    'billing_period' => $this->billingPeriod,
                 ]
             );
 

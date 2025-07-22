@@ -34,7 +34,8 @@ class SpecialBillingImport implements ToCollection
             $cidRaw = trim($row[0] ?? '');
             $loanNumber = trim($row[1] ?? ''); // Column B (Account No.)
             $principalRaw = trim($row[11] ?? '');
-            $totalDueRaw = trim($row[8] ?? ''); // Column I (Total Due)
+            // Use total_amort (or k5) for total_due, matching LoanForecastImport
+            $totalDueRaw = trim($row['total_amort'] ?? $row['k5'] ?? $row[8] ?? '');
             $startDateRaw = trim($row[7] ?? '');
             $endDateRaw = trim($row[8] ?? '');
 
