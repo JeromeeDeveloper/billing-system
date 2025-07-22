@@ -106,8 +106,8 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'open_date' => $this->parseDate($row['open_date']),
                     'maturity_date' => $this->parseDate($row['maturity_date']),
                     'amortization_due_date' => $this->parseDate($row['amortization_due_date']),
-                    'principal' => $this->cleanNumber($row['principal'] ?? $row['i5'] ?? null),
-                    'interest' => $this->cleanNumber($row['interest'] ?? $row['j5'] ?? null),
+                    'principal_due' => $this->cleanNumber($row['principal'] ?? $row['i5'] ?? null),
+                    'interest_due' => $this->cleanNumber($row['interest'] ?? $row['j5'] ?? null),
                     // 'total_amort' => $this->cleanNumber($row['total_amort'] ?? $row['k5'] ?? null),
                     'total_due' => $this->cleanNumber($row['total_amort'] ?? $row['k5'] ?? null),
                     // 'principal_due' => $this->cleanNumber($row['principal_due'] ?? $row['m5'] ?? null),
@@ -160,9 +160,21 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
 
         // Update loan balance for each processed member
         foreach ($this->memberCache as $member) {
-            $loanBalance = LoanForecast::where('member_id', $member->id)
+            $loanForecasts = LoanForecast::where('member_id', $member->id)
                 ->where('billing_period', $this->billingPeriod)
-                ->sum('total_due');
+                ->get();
+
+            // Load product map (product_code => billing_type)
+            $productMap = [];
+            foreach (LoanProduct::all() as $product) {
+                $productMap[$product->product_code] = $product->billing_type;
+            }
+
+            $loanBalance = $loanForecasts->filter(function($forecast) use ($productMap) {
+                $segments = explode('-', $forecast->loan_acct_no);
+                $productCode = $segments[2] ?? null;
+                return isset($productMap[$productCode]) && $productMap[$productCode] === 'regular';
+            })->sum('total_due');
 
             $member->update(['loan_balance' => $loanBalance]);
         }
