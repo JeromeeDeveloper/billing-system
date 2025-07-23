@@ -35,6 +35,7 @@ class BranchLoansAndSavingsExport implements FromCollection, WithHeadings
             'gl/sl acct no',
             'amount',
             'interest',
+            'penalty',
             'principal'
         ];
     }
@@ -104,6 +105,7 @@ class BranchLoansAndSavingsExport implements FromCollection, WithHeadings
                             'gl/sl acct no' => $formattedAccountNumber,
                             'amount' => number_format($remit->remitted_amount, 2, '.', ''),
                             'interest' => number_format($remit->applied_to_interest, 2, '.', ''),
+                            'penalty' => '',
                             'principal' => number_format($remit->applied_to_principal, 2, '.', '')
                         ]);
                         $branchTotals[$branchCode]['loans_total'] += $remit->remitted_amount;
