@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -113,6 +115,76 @@ class NotificationController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    public function export(Request $request)
+    {
+        $query = Notification::with('user')->orderBy('created_at', 'desc');
+
+        // Apply the same filters as index
+        $timeFilter = $request->input('time_filter', 'all');
+        switch ($timeFilter) {
+            case 'today':
+                $query->whereDate('created_at', today());
+                break;
+            case 'yesterday':
+                $query->whereDate('created_at', today()->subDay());
+                break;
+            case 'week':
+                $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                break;
+            case 'month':
+                $query->whereMonth('created_at', now()->month)
+                      ->whereYear('created_at', now()->year);
+                break;
+            case 'last_month':
+                $query->whereMonth('created_at', now()->subMonth()->month)
+                      ->whereYear('created_at', now()->subMonth()->year);
+                break;
+            case 'custom':
+                $startDate = $request->input('start_date');
+                $endDate = $request->input('end_date');
+                if ($startDate && $endDate) {
+                    $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+                }
+                break;
+        }
+        $typeFilter = $request->input('type_filter');
+        if ($typeFilter && $typeFilter !== 'all') {
+            $query->where('type', $typeFilter);
+        }
+        $statusFilter = $request->input('status_filter');
+        if ($statusFilter && $statusFilter !== 'all') {
+            $query->where('is_read', $statusFilter === 'read');
+        }
+
+        $notifications = $query->get();
+
+        $exportData = $notifications->map(function ($notification) {
+            return [
+                'Type' => ucfirst(str_replace('_', ' ', $notification->type)),
+                'Message' => $notification->message,
+                'User' => $notification->user ? $notification->user->name : 'N/A',
+                'Billing Period' => $notification->billing_period ? \Carbon\Carbon::parse($notification->billing_period)->format('F Y') : 'N/A',
+                'Time' => $notification->created_at->format('Y-m-d H:i:s'),
+                'Status' => $notification->is_read ? 'Read' : 'Unread',
+            ];
+        });
+
+        // Create a simple export class inline
+        $export = new class($exportData) implements \Maatwebsite\Excel\Concerns\FromCollection, \Maatwebsite\Excel\Concerns\WithHeadings {
+            private $data;
+            public function __construct($data) { $this->data = $data; }
+            public function collection() { return collect($this->data); }
+            /**
+             * @return array
+             */
+            public function headings(): array {
+                return ['Type', 'Message', 'User', 'Billing Period', 'Time', 'Status'];
+            }
+        };
+
+        return Excel::download($export, 'notifications_export_' . now()->format('Y-m-d_H-i-s') . '.xlsx');
     }
 
     public static function createNotification($type, $userId, $relatedId)

@@ -197,8 +197,7 @@
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                 </div>
                             @endif
-
-                                                        @if(!$isApproved)
+                                @if(!$isApproved)
                                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                                     <i class="fa fa-exclamation-triangle me-2"></i>
                                     <strong>Upload Disabled:</strong> Your account is approved. File upload is disabled for approved accounts.
@@ -215,7 +214,7 @@
                                     To view all files and manage file retention, use the <strong>File Retention</strong> button above.
                                 </div>
                                 <div class="table-responsive">
-                                    <table id="example" class="display" style="min-width: 845px">
+                                    <table class="table table-bordered table-striped">
                                         <thead>
                                             <tr>
                                                 <th>Filename</th>
@@ -225,49 +224,33 @@
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
-
                                         <tbody>
                                             @foreach ($documents as $document)
                                                 <tr>
                                                     <td>{{ $document->filename }}</td>
                                                     <td>{{ $document->document_type }}</td>
                                                     <td>{{ $document->filepath }}</td>
-                                                    @php
-                                                        $billingPeriod = $document->billing_period
-                                                            ? \Carbon\Carbon::parse($document->billing_period)
-                                                            : null;
-                                                    @endphp
-
                                                     <td>
+                                                        @php
+                                                            $billingPeriod = $document->billing_period
+                                                                ? \Carbon\Carbon::parse($document->billing_period)
+                                                                : null;
+                                                        @endphp
                                                         {{ $billingPeriod ? $billingPeriod->format('Y-m') : 'N/A' }}
                                                     </td>
-
                                                     <td>
-                                                        <a class="btn btn-rounded btn-primary"
-                                                            href="{{ asset('storage/' . $document->filepath) }}"
-                                                            target="_blank">
+                                                        <a class="btn btn-primary btn-sm" href="{{ asset('storage/' . $document->filepath) }}" target="_blank">
                                                             <i class="fas fa-download me-1"></i> Download
                                                         </a>
                                                     </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
-
-                                        <tfoot>
-                                            <tr>
-                                                <th>Filename</th>
-                                                <th>Document Type</th>
-                                                <th>File Path</th>
-                                                <th>Billing Period</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>

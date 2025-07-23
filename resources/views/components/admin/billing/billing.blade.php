@@ -207,6 +207,7 @@
                                     <table class="table table-striped table-bordered display">
                                         <thead>
                                             <tr>
+                                                <th>CID</th>
                                                 <th>Employee #</th>
                                                 <th>Amortization</th>
                                                 <th>Name</th>
@@ -232,6 +233,7 @@
                                                 @endphp
                                                 @if ($amortization > 0)
                                                     <tr>
+                                                        <td>{{ $member->cid }}</td>
                                                         <td>{{ $member->emp_id }}</td>
                                                         <td>{{ number_format($member->loan_balance, 2) }}</td>
                                                         <td>{{ $member->fname }} {{ $member->lname }}</td>
@@ -273,6 +275,7 @@
 
                                         <tfoot>
                                             <tr>
+                                                <th>CID</th>
                                                 <th>Employee #</th>
                                                 <th>Amortization</th>
                                                 <th>Name</th>

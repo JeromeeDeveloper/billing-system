@@ -269,9 +269,9 @@
                                         <thead>
                                             <tr>
                                                 <th>CID</th>
+                                                <th>EMPID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-
 
                                                 <th>Actions</th>
                                             </tr>
@@ -280,6 +280,7 @@
                                             @foreach ($masterlists->unique('member.id') as $item)
                                                 <tr>
                                                     <td>{{ $item->member->cid ?? '' }}</td>
+                                                    <td>{{ $item->member->emp_id ?? 'N/A' }}</td>
                                                     <td>{{ $item->member->lname ?? '' }},
                                                         {{ $item->member->fname ?? '' }}</td>
                                                     <td>{{ $item->member->branch ? $item->member->branch->name : 'N/A' }}</td>
@@ -360,9 +361,9 @@
                                         <tfoot>
                                             <tr>
                                                 <th>CID</th>
+                                                <th>EMPID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-
 
                                                 <th>Actions</th>
                                             </tr>

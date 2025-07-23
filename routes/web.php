@@ -259,6 +259,8 @@ Route::get('/master/export-members-no-regular-savings-branch', [MasterController
 
 // Contra routes
 
+Route::get('notifications/export', [App\Http\Controllers\NotificationController::class, 'export'])->name('notifications.export');
+
 
 
 
