@@ -385,7 +385,7 @@
                                         <th>Member Name</th>
                                         <th>Total Billed</th>
                                         <th>Remitted Loans</th>
-                                        <th>Remaining Loan Balance</th>
+                                        <th>Remaining Loans</th>
                                         <th>Remitted Savings</th>
                                         <th>Remitted Shares</th>
                                     </tr>
