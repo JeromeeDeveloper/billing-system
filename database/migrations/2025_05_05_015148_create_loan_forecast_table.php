@@ -21,6 +21,8 @@ return new class extends Migration
             $table->decimal('total_due', 12, 2)->default(0);
             $table->decimal('principal_due', 12, 2)->default(0);
             $table->decimal('interest_due', 12, 2)->default(0);
+            $table->decimal('original_principal_due', 12, 2)->default(0);
+            $table->decimal('original_interest_due', 12, 2)->default(0);
             $table->decimal('principal', 12, 2)->nullable();
             $table->decimal('interest', 12, 2)->nullable();
             $table->decimal('total_amort', 12, 2)->nullable();

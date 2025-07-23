@@ -30,7 +30,9 @@ class BranchLoansAndSavingsWithProductExport implements FromCollection, WithHead
             'product_code/cr',
             'gl/sl acct no',
             'amount',
-            'product_name'
+            'product_name',
+            'interest',
+            'principal'
         ];
     }
 
@@ -50,17 +52,28 @@ class BranchLoansAndSavingsWithProductExport implements FromCollection, WithHead
                 continue;
             }
 
-            // Loans
+            // Loans (deduction logic)
             foreach ($records as $record) {
-                if ($record->loans > 0) {
-                    foreach ($member->loanForecasts as $forecast) {
-                        if ($forecast->total_due_after_remittance > 0) {
+                $remainingRemittance = $record->loans;
+                $loanForecasts = $member->loanForecasts->sortBy(function($forecast) {
+                    $segments = explode('-', $forecast->loan_acct_no);
+                    $productCode = $segments[2] ?? null;
+                    $loanProduct = \App\Models\LoanProduct::where('product_code', $productCode)->first();
+                    return $loanProduct ? $loanProduct->prioritization : 999;
+                });
+                foreach ($loanForecasts as $forecast) {
+                    $remittances = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
+                        ->where('member_id', $member->id)
+                        ->orderBy('remittance_date')
+                        ->get();
+                    foreach ($remittances as $remit) {
+                        if ($remit->remitted_amount > 0) {
                             $originalAccountNumber = $forecast->loan_acct_no;
                             $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
                             $productCode = explode('-', $forecast->loan_acct_no)[2] ?? null;
                             $productName = '';
                             if ($productCode) {
-                                $loanProduct = LoanProduct::where('product_code', $productCode)->first();
+                                $loanProduct = \App\Models\LoanProduct::where('product_code', $productCode)->first();
                                 $productName = $loanProduct ? $loanProduct->product : '';
                             }
                             $exportRows->push([
@@ -70,10 +83,34 @@ class BranchLoansAndSavingsWithProductExport implements FromCollection, WithHead
                                 'amt' => '',
                                 'product_code/cr' => '4',
                                 'gl/sl acct no' => $formattedAccountNumber,
-                                'amount' => number_format($forecast->total_due_after_remittance, 2, '.', ''),
+                                'amount' => number_format($remit->remitted_amount, 2, '.', ''),
                                 'product_name' => $productName,
+                                'interest' => number_format($remit->applied_to_interest, 2, '.', ''),
+                                'principal' => number_format($remit->applied_to_principal, 2, '.', '')
                             ]);
                         }
+                    }
+                }
+                // If excess, go to regular savings
+                if ($remainingRemittance > 0) {
+                    $regularSavings = $member->savings->first(function ($s) {
+                        return $s->savingProduct && $s->savingProduct->product_type === 'regular';
+                    });
+                    if ($regularSavings) {
+                        $originalAccountNumber = $regularSavings->account_number;
+                        $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+                        $exportRows->push([
+                            'branch_code' => $member->branch->code ?? '',
+                            'product_code/dr' => '',
+                            'gl/sl cct no' => '',
+                            'amt' => '',
+                            'product_code/cr' => '1',
+                            'gl/sl acct no' => $formattedAccountNumber,
+                            'amount' => number_format($remainingRemittance, 2, '.', ''),
+                            'product_name' => $regularSavings->savingProduct->name ?? '',
+                            'interest' => '',
+                            'principal' => ''
+                        ]);
                     }
                 }
             }
@@ -85,32 +122,44 @@ class BranchLoansAndSavingsWithProductExport implements FromCollection, WithHead
                     if (is_array($record->savings) && isset($record->savings['distribution'])) {
                         $savingsDistribution = $record->savings['distribution'];
                     }
+
                     foreach ($savingsDistribution as $distribution) {
                         $productName = $distribution['product'] ?? '';
                         $amount = floatval($distribution['amount']);
                         $deductionAmount = floatval($distribution['deduction_amount'] ?? 0);
                         $productType = $distribution['product_type'] ?? null;
+
+                        // Find saving account by product type first
                         $savingAccount = $member->savings->first(function ($s) use ($productType) {
                             return $s->savingProduct && $s->savingProduct->product_type === $productType;
                         });
+
+                        // If not found by product type, try to find by product name
                         if (!$savingAccount && $productName) {
                             $savingAccount = $member->savings->first(function ($s) use ($productName) {
                                 return $s->savingProduct && $s->savingProduct->name === $productName;
                             });
                         }
+
+                        // If still not found, try to find by product code from account number
                         if (!$savingAccount && $productName) {
                             $savingAccount = $member->savings->first(function ($s) use ($productName) {
                                 return $s->product_name === $productName;
                             });
                         }
+
                         if ($savingAccount && $savingAccount->savingProduct && $savingAccount->savingProduct->product_type === 'mortuary') {
                             continue;
                         }
+
                         if ($savingAccount && $savingAccount->savingProduct && $savingAccount->savingProduct->product_type !== 'regular') {
                             if ($savingAccount && $deductionAmount > 0) {
                                 $originalAccountNumber = $savingAccount->account_number;
                                 $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
+                                // Get product name with multiple fallback strategies
                                 $savingProductName = $this->getSavingProductName($savingAccount, $productName);
+
                                 $exportRows->push([
                                     'branch_code' => $member->branch->code ?? '',
                                     'product_code/dr' => '',
@@ -120,6 +169,8 @@ class BranchLoansAndSavingsWithProductExport implements FromCollection, WithHead
                                     'gl/sl acct no' => $formattedAccountNumber,
                                     'amount' => number_format($deductionAmount, 2, '.', ''),
                                     'product_name' => $savingProductName,
+                                    'interest' => '',
+                                    'principal' => ''
                                 ]);
                             }
                         }
@@ -155,7 +206,10 @@ class BranchLoansAndSavingsWithProductExport implements FromCollection, WithHead
                 if ($regularSavings) {
                     $originalAccountNumber = $regularSavings->account_number;
                     $formattedAccountNumber = "'" . preg_replace('/-/', '', $originalAccountNumber);
+
+                    // Get product name with multiple fallback strategies
                     $savingProductName = $this->getSavingProductName($regularSavings, '');
+
                     $exportRows->push([
                         'branch_code' => $member->branch->code ?? '',
                         'product_code/dr' => '',
@@ -165,6 +219,8 @@ class BranchLoansAndSavingsWithProductExport implements FromCollection, WithHead
                         'gl/sl acct no' => $formattedAccountNumber,
                         'amount' => number_format($totalRegularRemaining, 2, '.', ''),
                         'product_name' => $savingProductName,
+                        'interest' => '',
+                        'principal' => ''
                     ]);
                 }
             }

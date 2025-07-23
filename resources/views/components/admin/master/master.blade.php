@@ -1405,43 +1405,52 @@
         <input type="hidden" name="loan_forecasts[${index}][id]" value="${loan.id || ''}">
         <input type="hidden" name="loan_forecasts[${index}][loan_acct_no]" value="${loan.loan_acct_no || ''}">
         <input type="hidden" name="loan_forecasts[${index}][billing_period]" value="${loan.billing_period || ''}">
-
         <div class="form-row">
             <div class="form-group col-md-6">
-                <label>Loan Account Number</label>
-                <input type="text" class="form-control" value="${loan.loan_acct_no || ''}" readonly>
+                <label>Loan Account No.</label>
+                <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}" required>
             </div>
-
             <div class="form-group col-md-6">
                 <label>Product Name</label>
                 <input type="text" class="form-control" value="${productInfo.product_name}" readonly>
             </div>
-
             <div class="form-group col-md-6">
                 <label>Billing Type</label>
                 <input type="text" class="form-control" value="${productInfo.billing_type}" readonly>
             </div>
 
             <div class="form-group col-md-6">
-                <label>Total Amort Due</label>
-                <input type="number" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || 0}" step="0.01">
-            </div>
-
-            <div class="form-group col-md-6">
                 <label>Total Billed</label>
-                <input type="number" class="form-control" value="${loan.original_total_due !== undefined && loan.original_total_due !== null ? loan.original_total_due : ''}" readonly>
+                <input type="number" step="0.01" class="form-control" value="${loan.original_total_due || 0}" readonly tabindex="-1">
             </div>
-
+            <div class="form-group col-md-6">
+                <label>Original Principal Due</label>
+                <input type="number" step="0.01" class="form-control" value="${loan.original_principal_due || 0}" readonly tabindex="-1">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Original Interest</label>
+                <input type="number" step="0.01" class="form-control" value="${loan.original_interest_due || 0}" readonly tabindex="-1">
+            </div>
+             <div class="form-group col-md-6">
+                <label>Total Amort</label>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || 0}" required>
+            </div>
+            <div class="form-group col-md-6">
+                <label>Principal</label>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control" value="${loan.principal_due || 0}">
+            </div>
+            <div class="form-group col-md-6">
+                <label>Interest</label>
+                <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control" value="${loan.interest_due || 0}">
+            </div>
             <div class="form-group col-md-6">
                 <label>Start Hold</label>
                 <input type="month" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
             </div>
-
             <div class="form-group col-md-6">
                 <label>Expiry Date</label>
                 <input type="month" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${loan.expiry_date || ''}">
             </div>
-
             <div class="form-group col-md-6">
                 <label>Account Status</label>
                 <select name="loan_forecasts[${index}][account_status]" class="form-control">
@@ -1449,12 +1458,10 @@
                     <option value="non-deduction" ${loan.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                 </select>
             </div>
-
             <div class="form-group col-md-6">
                 <label>Approval Number</label>
                 <input type="text" name="loan_forecasts[${index}][approval_no]" class="form-control" value="${loan.approval_no || ''}">
             </div>
-
             <div class="form-group col-md-12">
                 <label>Remarks</label>
                 <textarea name="loan_forecasts[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${loan.remarks || ''}</textarea>

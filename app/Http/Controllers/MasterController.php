@@ -363,6 +363,8 @@ class MasterController extends Controller
                             if ($loan) {
                                 $updateData = [
                                     'total_due' => $loanData['total_due'],
+                                    'principal_due' => $loanData['principal_due'],
+                                    'interest_due' => $loanData['interest_due'],
                                     'billing_period' => $loanData['billing_period'] ?? Auth::user()->billing_period,
                                     'start_hold' => isset($loanData['start_hold']) ? substr($loanData['start_hold'], 0, 7) : null,
                                     'expiry_date' => isset($loanData['expiry_date']) ? substr($loanData['expiry_date'], 0, 7) : null,

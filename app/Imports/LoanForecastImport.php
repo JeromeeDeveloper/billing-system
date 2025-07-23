@@ -143,6 +143,9 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
             // Set original_total_due if null or if billing_period is different
             if (is_null($loanForecast->original_total_due) || $loanForecast->billing_period !== $this->billingPeriod) {
                 $loanForecast->original_total_due = $loanForecast->total_due;
+                // Set original_principal_due and original_interest_due as well
+                $loanForecast->original_principal_due = $loanForecast->principal_due;
+                $loanForecast->original_interest_due = $loanForecast->interest_due;
                 $loanForecast->save();
             }
 
