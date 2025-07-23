@@ -233,14 +233,14 @@
                                                 @if ($amortization > 0)
                                                     <tr>
                                                         <td>{{ $member->emp_id }}</td>
-                                                        <td>{{ number_format($amortization, 2) }}</td>
+                                                        <td>{{ number_format($member->loan_balance, 2) }}</td>
                                                         <td>{{ $member->fname }} {{ $member->lname }}</td>
                                                         <td>{{ optional($member->start_date)->format('Y-m-d') }}</td>
                                                         <td>{{ optional($member->end_date)->format('Y-m-d') }}</td>
                                                         <td>{{ number_format($member->regular_principal, 2) }}</td>
                                                         <td>{{ $member->area ?? '' }}</td>
                                                         <td>
-                                                            <button class="btn btn-rounded btn-primary edit-btn"
+                                                            {{-- <button class="btn btn-rounded btn-primary edit-btn"
                                                                 data-toggle="modal" data-target="#editModal"
                                                                 data-id="{{ $member->id }}"
                                                                 data-emp_id="{{ $member->emp_id }}"
@@ -250,7 +250,7 @@
                                                                 data-principal="{{ $member->regular_principal }}"
                                                                 data-area="{{ $member->area }}"
                                                                 data-start_date="{{ optional($member->start_date)->format('Y-m-d') }}"
-                                                                data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}">Edit</button>
+                                                                data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}">Edit</button> --}}
 
                                                             <button class="btn btn-rounded btn-info view-btn"
                                                                 data-toggle="modal" data-target="#viewModal"
@@ -262,9 +262,9 @@
                                                                 data-principal="{{ $member->regular_principal }}"
                                                                 data-office="{{ $member->area }}">View</button>
 
-                                                            <button class="btn btn-rounded btn-danger delete-btn"
+                                                            {{-- <button class="btn btn-rounded btn-danger delete-btn"
                                                                 data-toggle="modal" data-target="#deleteModal"
-                                                                data-id="{{ $member->id }}">Delete</button>
+                                                                data-id="{{ $member->id }}">Delete</button> --}}
                                                         </td>
                                                     </tr>
                                                 @endif

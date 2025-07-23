@@ -96,15 +96,18 @@ class BillingController extends Controller
 
         // Query with eager loading branch to avoid N+1 query problem
         $query = Member::with('branch')
-            ->where('billing_period', $billingPeriod)
             ->where('branch_id', $userBranchId)
             ->whereHas('loanForecasts', function ($query) use ($billingPeriod) {
                 $query->where(function($q) use ($billingPeriod) {
                     $q->whereNull('amortization_due_date')
-                      ->orWhereRaw("DATE_FORMAT(amortization_due_date, '%Y-%m') = ?", [\Carbon\Carbon::parse($billingPeriod)->format('Y-m')]);
+                      ->orWhereRaw("amortization_due_date <= ?", [\Carbon\Carbon::parse($billingPeriod . '-01')->endOfMonth()->toDateString()]);
                 });
             })
-            ->whereHas('loanProductMembers')
+            ->whereHas('loanProductMembers', function ($query) {
+                $query->whereHas('loanProduct', function ($q) {
+                    $q->whereNotIn('billing_type', ['special', 'not_billed']);
+                });
+            })
             ->where('loan_balance', '>', 0);
 
         if ($search) {

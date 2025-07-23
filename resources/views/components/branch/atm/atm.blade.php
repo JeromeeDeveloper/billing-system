@@ -107,20 +107,7 @@
                     </div>
                 </div>
 
-                <!-- Export Posted Payments Filter Form -->
-                <form method="GET" action="{{ route('branch.atm.export-posted-payments') }}" class="form-inline mb-2" id="exportPostedPaymentsForm">
-                    <div class="form-group mr-2">
-                        <label for="export_date" class="mr-2">Export Date:</label>
-                        <input type="date" id="export_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates')) disabled @endif>
-                    </div>
-                    <div class="form-group mr-2">
-                        <input type="checkbox" id="all_dates" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
-                        <label for="all_dates" class="ml-1">All Dates</label>
-                    </div>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fa fa-file-excel"></i> Export Posted Payments
-                    </button>
-                </form>
+
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         var allDatesCheckbox = document.getElementById('all_dates');
@@ -136,7 +123,21 @@
                 <!-- Account Balances Table -->
                 <div class="row">
                     <div class="col-12">
-                        <div class="card">
+                        <div class="card p-2">
+                             <!-- Export Posted Payments Filter Form -->
+                <form method="GET" action="{{ route('branch.atm.export-posted-payments') }}" class="form-inline mb-2" id="exportPostedPaymentsForm">
+                    <div class="form-group mr-2">
+                        <label for="export_date" class="mr-2">Export Date:</label>
+                        <input type="date" id="export_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates')) disabled @endif>
+                    </div>
+                    <div class="form-group mr-2">
+                        <input type="checkbox" id="all_dates" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
+                        <label for="all_dates" class="ml-1">All Dates</label>
+                    </div>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa fa-file-excel"></i> Export Posted Payments
+                    </button>
+                </form>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered">

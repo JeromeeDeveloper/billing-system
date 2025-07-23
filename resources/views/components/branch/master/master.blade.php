@@ -1368,6 +1368,12 @@
     <div class="loan-item border p-3 mb-3 rounded position-relative">
         <input type="hidden" name="loan_forecasts[${index}][id]" value="${loan.id || ''}">
         <input type="hidden" name="loan_forecasts[${index}][billing_period]" value="${loan.billing_period || ''}">
+        <input type="hidden" name="loan_forecasts[${index}][amount_due]" value="${loan.amount_due || 0}">
+        <input type="hidden" name="loan_forecasts[${index}][open_date]" value="${loan.open_date || ''}">
+        <input type="hidden" name="loan_forecasts[${index}][maturity_date]" value="${loan.maturity_date || ''}">
+        <input type="hidden" name="loan_forecasts[${index}][amortization_due_date]" value="${loan.amortization_due_date || ''}">
+        <input type="hidden" name="loan_forecasts[${index}][penalty_due]" value="${loan.penalty_due || 0}">
+        <input type="hidden" name="loan_forecasts[${index}][deduction_amount]" value="${loan.deduction_amount || 0}">
         <div class="form-row">
             <div class="form-group col-md-6">
                 <label>Loan Account No.</label>

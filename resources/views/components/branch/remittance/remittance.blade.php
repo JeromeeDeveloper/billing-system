@@ -339,7 +339,49 @@
             // Auto-hide alerts after 5 seconds
             setTimeout(function() {
                 $('.alert').fadeOut('slow');
-            }, 5000);
+            }, 25000);
+
+            // Show floating toast on page load ONLY if both preview tables have no records
+            var hasLoansSavingsRecords = false;
+            var hasSharesRecords = false;
+            $(".card-body").each(function() {
+                var header = $(this).find('h5.text-center').text().trim();
+                if (header === 'Loans & Savings Remittance Preview') {
+                    var rows = $(this).find('table tbody tr');
+                    hasLoansSavingsRecords = rows.filter(function() {
+                        return !$(this).text().includes('No records found.');
+                    }).length > 0;
+                }
+                if (header === 'Shares Remittance Preview') {
+                    var rows = $(this).find('table tbody tr');
+                    hasSharesRecords = rows.filter(function() {
+                        return !$(this).text().includes('No records found.');
+                    }).length > 0;
+                }
+            });
+            if (!hasLoansSavingsRecords && !hasSharesRecords) {
+                Swal.fire({
+                    toast: true,
+                    position: 'bottom-end',
+                    icon: 'info',
+                    title: 'No records yet for collection.',
+                    text: 'Please wait for the admin to upload remittance files.',
+                    showConfirmButton: false,
+                    timer: 8000,
+                    timerProgressBar: true
+                });
+            } else {
+                Swal.fire({
+                    toast: true,
+                    position: 'bottom-end',
+                    icon: 'success',
+                    title: "It's good to generate collection files now!",
+                    text: 'You may proceed to export your branch\'s collection files.',
+                    showConfirmButton: false,
+                    timer: 8000,
+                    timerProgressBar: true
+                });
+            }
         });
 
         function showExportLoading(type) {

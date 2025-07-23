@@ -387,23 +387,43 @@ class MasterController extends Controller
                     }
 
                     // Recalculate loan balance
-                    $now = now();
-                    $totalLoanBalance = $member->loanForecasts()
-                        ->where(function ($query) use ($now) {
-                            $query->where('account_status', 'deduction')
-                                ->orWhere(function ($q) use ($now) {
-                                    $q->where('account_status', 'non-deduction')
-                                        ->where(function ($sq) use ($now) {
-                                            $sq->whereNull('start_hold')
-                                                ->orWhere('start_hold', '>', $now)
-                                                ->orWhere('expiry_date', '<', $now);
-                                        });
-                                });
-                        })
-                        ->sum('total_due');
-
-                    Log::info('Recalculated loan balance for member ' . $member->id . ': ' . $totalLoanBalance);
-                    $member->update(['loan_balance' => $totalLoanBalance]);
+                    $productMap = [];
+                    foreach (\App\Models\LoanProduct::all() as $product) {
+                        $productMap[$product->product_code] = $product->billing_type;
+                    }
+                    $billingPeriod = $member->billing_period ?? (Auth::user()->billing_period ?? now()->format('Y-m'));
+                    $billingEnd = \Carbon\Carbon::parse($billingPeriod . '-01')->endOfMonth();
+                    $today = now();
+                    $loan_balance = 0;
+                    foreach ($member->loanForecasts as $forecast) {
+                        $segments = explode('-', $forecast->loan_acct_no);
+                        $productCode = $segments[2] ?? null;
+                        $billingType = $productMap[$productCode] ?? null;
+                        // Registered, not special/not_billed
+                        $hasSpecialProduct = $member->loanProductMembers()->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'special');
+                        })->exists();
+                        $hasNotBilledProduct = $member->loanProductMembers()->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'not_billed');
+                        })->exists();
+                        $hasRegisteredProduct = $member->loanProductMembers()->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode);
+                        })->exists();
+                        // Account status logic
+                        $isDeduction = $forecast->account_status === 'deduction';
+                        $isNonDeductionOutsideHold = $forecast->account_status === 'non-deduction' && (
+                            (empty($forecast->start_hold) || $forecast->start_hold > $today) ||
+                            (!empty($forecast->expiry_date) && $forecast->expiry_date < $today)
+                        );
+                        // Amortization due date logic
+                        $isDue = is_null($forecast->amortization_due_date) || $forecast->amortization_due_date <= $billingEnd;
+                        if ($hasRegisteredProduct && !$hasSpecialProduct && !$hasNotBilledProduct && $billingType === 'regular' && ($isDeduction || $isNonDeductionOutsideHold) && $isDue) {
+                            $loan_balance += $forecast->total_due;
+                        }
+                    }
+                    $member->update(['loan_balance' => $loan_balance]);
                 }
 
                 DB::commit();
@@ -803,23 +823,43 @@ class MasterController extends Controller
                     }
 
                     // Recalculate loan balance
-                    $now = now();
-                    $totalLoanBalance = $member->loanForecasts()
-                        ->where(function ($query) use ($now) {
-                            $query->where('account_status', 'deduction')
-                                ->orWhere(function ($q) use ($now) {
-                                    $q->where('account_status', 'non-deduction')
-                                        ->where(function ($sq) use ($now) {
-                                            $sq->whereNull('start_hold')
-                                                ->orWhere('start_hold', '>', $now)
-                                                ->orWhere('expiry_date', '<', $now);
-                                        });
-                                });
-                        })
-                        ->sum('total_due');
-
-                    Log::info('Recalculated loan balance for member ' . $member->id . ': ' . $totalLoanBalance);
-                    $member->update(['loan_balance' => $totalLoanBalance]);
+                    $productMap = [];
+                    foreach (\App\Models\LoanProduct::all() as $product) {
+                        $productMap[$product->product_code] = $product->billing_type;
+                    }
+                    $billingPeriod = $member->billing_period ?? (Auth::user()->billing_period ?? now()->format('Y-m'));
+                    $billingEnd = \Carbon\Carbon::parse($billingPeriod . '-01')->endOfMonth();
+                    $today = now();
+                    $loan_balance = 0;
+                    foreach ($member->loanForecasts as $forecast) {
+                        $segments = explode('-', $forecast->loan_acct_no);
+                        $productCode = $segments[2] ?? null;
+                        $billingType = $productMap[$productCode] ?? null;
+                        // Registered, not special/not_billed
+                        $hasSpecialProduct = $member->loanProductMembers()->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'special');
+                        })->exists();
+                        $hasNotBilledProduct = $member->loanProductMembers()->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode)
+                                  ->where('billing_type', 'not_billed');
+                        })->exists();
+                        $hasRegisteredProduct = $member->loanProductMembers()->whereHas('loanProduct', function($query) use ($productCode) {
+                            $query->where('product_code', $productCode);
+                        })->exists();
+                        // Account status logic
+                        $isDeduction = $forecast->account_status === 'deduction';
+                        $isNonDeductionOutsideHold = $forecast->account_status === 'non-deduction' && (
+                            (empty($forecast->start_hold) || $forecast->start_hold > $today) ||
+                            (!empty($forecast->expiry_date) && $forecast->expiry_date < $today)
+                        );
+                        // Amortization due date logic
+                        $isDue = is_null($forecast->amortization_due_date) || $forecast->amortization_due_date <= $billingEnd;
+                        if ($hasRegisteredProduct && !$hasSpecialProduct && !$hasNotBilledProduct && $billingType === 'regular' && ($isDeduction || $isNonDeductionOutsideHold) && $isDue) {
+                            $loan_balance += $forecast->total_due;
+                        }
+                    }
+                    $member->update(['loan_balance' => $loan_balance]);
                 }
 
                 DB::commit();
