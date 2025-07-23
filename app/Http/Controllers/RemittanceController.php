@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\Imports\ShareRemittanceImport;
 use App\Models\RemittanceReport;
+use Illuminate\Support\Facades\Log;
 
 class RemittanceController extends Controller
 {
@@ -126,6 +127,7 @@ class RemittanceController extends Controller
                 ->delete();
 
             // Store new preview data and accumulate remitted values
+            $hasUnmatched = false;
             foreach ($results as $result) {
                 RemittancePreview::create([
                     'user_id' => Auth::id(),
@@ -144,7 +146,9 @@ class RemittanceController extends Controller
                     'billing_period' => $currentBillingPeriod,
                     'remittance_type' => $remittanceType2
                 ]);
-
+                if ($result['status'] !== 'success') {
+                    $hasUnmatched = true;
+                }
                 // Accumulate remitted values in remittance_reports
                 $report = RemittanceReport::firstOrNew([
                     'cid' => $result['cid'],
@@ -154,6 +158,10 @@ class RemittanceController extends Controller
                 $report->remitted_loans += $result['loans'];
                 $report->remitted_savings += $result['savings_total'] ?? 0;
                 $report->save();
+            }
+            if ($hasUnmatched) {
+                DB::rollBack();
+                return redirect()->route('remittance.index')->with('error', 'Import failed: There are unmatched CIDs in your file. Please review the preview and correct unmatched entries before importing.');
             }
 
             DB::commit();
