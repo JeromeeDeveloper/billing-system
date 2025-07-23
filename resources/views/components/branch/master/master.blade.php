@@ -1380,7 +1380,7 @@
         <input type="hidden" name="loan_forecasts[${index}][penalty_due]" value="${loan.penalty_due || 0}">
         <input type="hidden" name="loan_forecasts[${index}][deduction_amount]" value="${loan.deduction_amount || 0}">
         <div class="form-row">
-             <div class="col-md-6">
+            <div class="col-md-6">
                 <label>Loan Account No.</label>
                 <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}" required>
             </div>
@@ -1393,11 +1393,11 @@
                     <label class="font-weight-bold">Original Billing</label>
                     <div class="form-group mb-2">
                         <label>Principal</label>
-                        <input type="number" step="0.01" class="form-control" value="${loan.original_principal_due || 0}" readonly tabindex="-1">
+                        <input type="number" step="0.01" class="form-control" id="original_principal_due_${index}" value="${loan.original_principal_due || 0}" readonly tabindex="-1">
                     </div>
                     <div class="form-group mb-2">
                         <label>Interest</label>
-                        <input type="number" step="0.01" class="form-control" value="${loan.original_interest_due || 0}" readonly tabindex="-1">
+                        <input type="number" step="0.01" class="form-control" id="original_interest_due_${index}" value="${loan.original_interest_due || 0}" readonly tabindex="-1">
                     </div>
                     <div class="form-group mb-0">
                         <label>Total Amort</label>
@@ -1410,24 +1410,23 @@
                     <label class="font-weight-bold">Amort Due</label>
                     <div class="form-group mb-2">
                         <label>Principal</label>
-                        <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control" value="${loan.principal_due || 0}">
+                        <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control principal-due" id="principal_due_${index}" value="${loan.principal_due || 0}">
                     </div>
                     <div class="form-group mb-2">
                         <label>Interest</label>
-                        <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control" value="${loan.interest_due || 0}">
+                        <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control interest-due" id="interest_due_${index}" value="${loan.interest_due || 0}">
                     </div>
                     <div class="form-group mb-0">
                         <label>Total Amort</label>
-                        <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || 0}" required>
+                        <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" id="total_due_${index}" value="${loan.total_due || 0}" readonly tabindex="-1">
                     </div>
                 </div>
             </div>
-
             <div class="col-md-6">
                 <label>Billing Type</label>
                 <input type="text" class="form-control" value="${productInfo.billing_type}" readonly>
             </div>
-             <div class="col-md-6">
+            <div class="col-md-6">
                 <label>Account Status</label>
                 <select name="loan_forecasts[${index}][account_status]" class="form-control">
                     <option value="deduction" ${loan.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
@@ -1442,7 +1441,6 @@
                 <label>Expiry Date</label>
                 <input type="month" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${loan.expiry_date || ''}">
             </div>
-
             <div class="col-md-6">
                 <label>Approval Number</label>
                 <input type="text" name="loan_forecasts[${index}][approval_no]" class="form-control" value="${loan.approval_no || ''}">
@@ -1461,6 +1459,36 @@
             } else {
                 $('#loan-counter').text(`Loan ${index + 1} of ${loans.length}`);
             }
+
+            // Add validation and automation for principal_due and interest_due
+            const $principal = $(`#principal_due_${index}`);
+            const $interest = $(`#interest_due_${index}`);
+            const $total = $(`#total_due_${index}`);
+            const originalPrincipal = parseFloat($(`#original_principal_due_${index}`).val()) || 0;
+            const originalInterest = parseFloat($(`#original_interest_due_${index}`).val()) || 0;
+
+            function updateTotalDue() {
+                let p = parseFloat($principal.val()) || 0;
+                let i = parseFloat($interest.val()) || 0;
+                $total.val((p + i).toFixed(2));
+            }
+
+            $principal.on('input', function() {
+                let val = parseFloat($principal.val()) || 0;
+                if (val > originalPrincipal) {
+                    $principal.val(originalPrincipal.toFixed(2));
+                }
+                updateTotalDue();
+            });
+            $interest.on('input', function() {
+                let val = parseFloat($interest.val()) || 0;
+                if (val > originalInterest) {
+                    $interest.val(originalInterest.toFixed(2));
+                }
+                updateTotalDue();
+            });
+            // Initial calculation
+            updateTotalDue();
         }
 
         $('#viewModal').on('show.bs.modal', function(event) {
