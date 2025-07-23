@@ -1426,15 +1426,15 @@
                 <div class="border rounded p-2 mt-2 mb-2 bg-light">
                     <label class="font-weight-bold">Original Billing</label>
                     <div class="form-group mb-2">
-                        <label>Original Principal Due</label>
+                        <label>Principal</label>
                         <input type="number" step="0.01" class="form-control" value="${loan.original_principal_due || 0}" readonly tabindex="-1">
                     </div>
                     <div class="form-group mb-2">
-                        <label>Original Interest Due</label>
+                        <label>Interest</label>
                         <input type="number" step="0.01" class="form-control" value="${loan.original_interest_due || 0}" readonly tabindex="-1">
                     </div>
                     <div class="form-group mb-0">
-                        <label>Original Total Due</label>
+                        <label>Total Amort</label>
                         <input type="number" step="0.01" class="form-control" value="${loan.original_total_due || 0}" readonly tabindex="-1">
                     </div>
                 </div>
@@ -1443,15 +1443,15 @@
                 <div class="border rounded p-2 mt-2 mb-2 bg-light">
                     <label class="font-weight-bold">Amort Due</label>
                     <div class="form-group mb-2">
-                        <label>Principal Due</label>
+                        <label>Principal</label>
                         <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control" value="${loan.principal_due || 0}">
                     </div>
                     <div class="form-group mb-2">
-                        <label>Interest Due</label>
+                        <label>Interest</label>
                         <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control" value="${loan.interest_due || 0}">
                     </div>
                     <div class="form-group mb-0">
-                        <label>Total Due</label>
+                        <label>Total Amort</label>
                         <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || 0}" required>
                     </div>
                 </div>
