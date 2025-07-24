@@ -395,7 +395,7 @@
                                         <tr>
                                             <td>{{ $row['cid'] }}</td>
                                             <td>{{ $row['member_name'] }}</td>
-                                            <td>₱{{ number_format($row['amortization'], 2) }}</td>
+                                            <td>₱{{ $row['loan_balance'] }}</td>
                                             <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
                                             <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
                                             <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>

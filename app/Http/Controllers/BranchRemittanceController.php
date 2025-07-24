@@ -170,6 +170,7 @@ class BranchRemittanceController extends Controller
                 $memberTotals[$cid] = [
                     'cid' => $cid,
                     'member_name' => trim(($forecast->member->fname ?? '') . ' ' . ($forecast->member->lname ?? '')),
+                    'loan_balance' => $forecast->member->loan_balance ?? 0,
                     'amortization' => 0,
                     'total_billed' => 0,
                     'remaining_loan_balance' => 0,
@@ -186,7 +187,7 @@ class BranchRemittanceController extends Controller
             $row['remitted_loans'] = $remit->remitted_loans ?? 0;
             $row['remitted_savings'] = $remit->remitted_savings ?? 0;
             $row['remitted_shares'] = $remit->remitted_shares ?? 0;
-            $row['remaining_loan_balance'] = ($row['total_billed'] ?? 0) - ($row['remitted_loans'] ?? 0);
+            $row['remaining_loan_balance'] = ($row['loan_balance'] ?? 0) - ($row['remitted_loans'] ?? 0);
         }
         unset($row);
         return array_values($memberTotals);

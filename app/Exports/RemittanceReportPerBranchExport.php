@@ -5,7 +5,11 @@ namespace App\Exports;
 use App\Models\Branch;
 use App\Models\LoanProduct;
 use App\Models\SavingProduct;
-use App\Models\RemittancePreview;
+use App\Models\ShareProduct;
+use App\Models\LoanRemittance;
+use App\Models\Savings;
+use App\Models\Remittance;
+use App\Models\RemittanceBatch;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
@@ -31,7 +35,11 @@ class RemittanceReportPerBranchExport implements FromArray, WithStyles, WithColu
         $branches = Branch::all();
         foreach ($branches as $branch) {
             $rows[] = ['', 'Remittance Report for branch (' . $branch->name . ')'];
-            $rows[] = ['', 'Remittance Date', now()->format('F d, Y')];
+            // Get latest remittance import date for this billing period
+            $remitDate = RemittanceBatch::where('billing_period', $this->billingPeriod)
+                ->orderByDesc('imported_at')->value('imported_at');
+            $remitDateStr = $remitDate ? \Carbon\Carbon::parse($remitDate)->format('F d, Y') : '';
+            $rows[] = ['', 'Remittance Date', $remitDateStr];
             $rows[] = ['', 'For Billing Period', $this->billingPeriod];
             $rows[] = [''];
             $rows[] = [''];
@@ -39,54 +47,58 @@ class RemittanceReportPerBranchExport implements FromArray, WithStyles, WithColu
             $rows[] = ['Branch Name:', $branch->name];
             $rows[] = ['PRODUCT', 'AMOUNT', 'COUNT'];
 
-            // Loans
-            $loanTotalDisplayed = false;
-            foreach ($this->loanProducts as $product) {
-                $remitted = RemittancePreview::where('billing_period', $this->billingPeriod)
-                    ->where('status', 'success')
-                    ->whereHas('member', function($q) use ($branch) {
-                        $q->where('branch_id', $branch->id);
-                    })
-                    ->get();
-                if (!$loanTotalDisplayed) {
-                    $totalAmount = $remitted->sum('loans');
-                    $count = $remitted->where('loans', '>', 0)->count();
-                    $rows[] = [$product->product, $totalAmount > 0 ? $totalAmount : '', $count > 0 ? $count : ''];
-                    $loanTotalDisplayed = true;
-                } else {
-                    $rows[] = [$product->product, '', ''];
+            // --- LOAN PRODUCTS ---
+            $loanRemits = LoanRemittance::where('billing_period', $this->billingPeriod)
+                ->whereHas('member', function($q) use ($branch) {
+                    $q->where('branch_id', $branch->id);
+                })
+                ->where('remitted_amount', '>', 0)
+                ->with('loanForecast')
+                ->get();
+            $loanByProduct = $loanRemits->groupBy(function($remit) {
+                $forecast = $remit->loanForecast;
+                if ($forecast && $forecast->loan_acct_no) {
+                    $segments = explode('-', $forecast->loan_acct_no);
+                    return $segments[2] ?? null;
                 }
+                return null;
+            });
+            foreach ($loanByProduct as $productCode => $remits) {
+                if (!$productCode) continue;
+                $product = LoanProduct::where('product_code', $productCode)->first();
+                if (!$product) continue;
+                $totalAmount = $remits->sum('remitted_amount');
+                $memberCount = $remits->unique('member_id')->count();
+                $rows[] = [$product->product, $totalAmount > 0 ? $totalAmount : '', $memberCount > 0 ? $memberCount : ''];
             }
-            // Savings
-            foreach ($this->savingProducts as $product) {
-                $remitted = RemittancePreview::where('billing_period', $this->billingPeriod)
-                    ->where('status', 'success')
-                    ->whereHas('member', function($q) use ($branch) {
-                        $q->where('branch_id', $branch->id);
-                    })
-                    ->get();
-                $totalAmount = $remitted->sum(function($item) use ($product) {
-                    if (is_array($item->savings) && isset($item->savings['distribution'])) {
-                        foreach ($item->savings['distribution'] as $dist) {
-                            if (($dist['product_code'] ?? null) == $product->product_code) {
-                                return $dist['amount'] ?? 0;
-                            }
-                        }
-                    }
-                    return 0;
-                });
-                $count = $remitted->filter(function($item) use ($product) {
-                    if (is_array($item->savings) && isset($item->savings['distribution'])) {
-                        foreach ($item->savings['distribution'] as $dist) {
-                            if (($dist['product_code'] ?? null) == $product->product_code && ($dist['amount'] ?? 0) > 0) {
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
-                })->count();
-                $rows[] = [$product->product_name, $totalAmount, $count];
+
+            // --- SAVINGS PRODUCTS ---
+            $savingsRemits = Savings::whereHas('member', function($q) use ($branch) {
+                    $q->where('branch_id', $branch->id);
+                })
+                ->where('remittance_amount', '>', 0)
+                ->get();
+            $savingsByProduct = $savingsRemits->groupBy('product_code');
+            foreach ($savingsByProduct as $productCode => $remits) {
+                $product = SavingProduct::where('product_code', $productCode)->first();
+                if (!$product) continue;
+                $totalAmount = $remits->sum('remittance_amount');
+                $memberCount = $remits->unique('member_id')->count();
+                $rows[] = [$product->product_name, $totalAmount > 0 ? $totalAmount : '', $memberCount > 0 ? $memberCount : ''];
             }
+
+            // --- SHARE PRODUCTS ---
+            // Remittance table: share_dep is total for the member, not per product. We'll sum per member, then per branch.
+            $shareRemits = Remittance::where('branch_id', $branch->id)
+                ->where('share_dep', '>', 0)
+                ->get();
+            // If you want to group by share product, you need to join with Shares table. Otherwise, just sum all shares.
+            $totalShare = $shareRemits->sum('share_dep');
+            $shareCount = $shareRemits->unique('member_id')->count();
+            if ($totalShare > 0) {
+                $rows[] = ['Shares', $totalShare, $shareCount];
+            }
+
             $rows[] = [''];
         }
         return $rows;
