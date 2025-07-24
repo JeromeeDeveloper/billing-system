@@ -200,6 +200,11 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             ->where('product_code', $productCode)
                             ->first();
 
+                        // Skip if billing_type is 'not_billed'
+                        if ($loanProduct && $loanProduct->billing_type === 'not_billed') {
+                            return null;
+                        }
+
                         return [
                             'forecast' => $forecast,
                             'prioritization' => $loanProduct ? $loanProduct->prioritization : 999,
@@ -208,7 +213,9 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'principal' => $forecast->principal ?? 0,
                             'created_at' => $forecast->created_at,
                         ];
-                    })->sort(function($a, $b) {
+                    })
+                    ->filter() // Remove nulls (skipped not_billed)
+                    ->sort(function($a, $b) {
                         // Sort by prioritization (asc)
                         if ($a['prioritization'] !== $b['prioritization']) {
                             return $a['prioritization'] <=> $b['prioritization'];

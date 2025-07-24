@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\LoanProduct;
 use App\Models\SavingProduct;
 use App\Models\ShareProduct;
+use App\Models\RemittanceBatch;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -39,8 +40,10 @@ class BranchRemittanceReportConsolidatedExport implements FromArray, WithHeading
         }])->find($this->branchId);
         if (!$branch) return [['No data for this branch']];
         // Static headers
+        $remitDate = RemittanceBatch::orderByDesc('imported_at')->value('imported_at');
+        $remitDateStr = $remitDate ? \Carbon\Carbon::parse($remitDate)->format('F d, Y') : '';
         $rows[] = ['Remittance Report Consolidated'];
-        $rows[] = ['Remittance Date', now()->format('F d, Y')];
+        $rows[] = ['Remittance Date', $remitDateStr];
         $rows[] = ['For Billing Period', $this->billingPeriod];
         $rows[] = [''];
         // Dynamic headers
