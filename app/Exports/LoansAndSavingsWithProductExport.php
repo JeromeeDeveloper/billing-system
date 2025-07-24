@@ -30,6 +30,7 @@ class LoansAndSavingsWithProductExport implements FromCollection, WithHeadings
             'amount',
             'product_name',
             'interest',
+            'penalty',
             'principal'
         ];
     }
@@ -82,6 +83,7 @@ class LoansAndSavingsWithProductExport implements FromCollection, WithHeadings
                                 'amount' => number_format($remit->remitted_amount, 2, '.', ''),
                                 'product_name' => $productName,
                                 'interest' => number_format($remit->applied_to_interest, 2, '.', ''),
+                                'penalty' => '',
                                 'principal' => number_format($remit->applied_to_principal, 2, '.', '')
                             ]);
                         }

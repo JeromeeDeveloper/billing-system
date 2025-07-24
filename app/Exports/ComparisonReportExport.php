@@ -30,7 +30,6 @@ class ComparisonReportExport implements FromArray, WithHeadings
             'Loan Remaining',
             'Remitted Savings',
             'Remitted Shares',
-
         ];
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\RemittanceBatch;
+use Illuminate\Support\Facades\Auth;
 
 class RemittanceImport implements ToCollection, WithHeadingRow
 {
@@ -199,6 +200,11 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             ->where('product_code', $productCode)
                             ->first();
 
+                        // Skip if billing_type is 'not_billed'
+                        if ($loanProduct && $loanProduct->billing_type === 'not_billed') {
+                            return null;
+                        }
+
                         return [
                             'forecast' => $forecast,
                             'prioritization' => $loanProduct ? $loanProduct->prioritization : 999,
@@ -207,7 +213,9 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'principal' => $forecast->principal ?? 0,
                             'created_at' => $forecast->created_at,
                         ];
-                    })->sort(function($a, $b) {
+                    })
+                    ->filter() // Remove nulls (skipped not_billed)
+                    ->sort(function($a, $b) {
                         // Sort by prioritization (asc)
                         if ($a['prioritization'] !== $b['prioritization']) {
                             return $a['prioritization'] <=> $b['prioritization'];
@@ -275,11 +283,6 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'billing_period' => $this->billingPeriod,
                         ]);
                     }
-
-                    // Recalculate and update member's total loan balance
-                    $totalLoanBalance = $member->loanForecasts()->sum('total_due');
-                    $member->update(['loan_balance' => $totalLoanBalance]);
-                    Log::info("Updated member {$member->id} total loan balance to: {$totalLoanBalance}");
 
                     // If there's still remaining payment, deposit it to regular savings
                     if ($remainingPayment > 0) {

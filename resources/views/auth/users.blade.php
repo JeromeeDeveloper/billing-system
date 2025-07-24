@@ -346,6 +346,7 @@
     <script src="./js/custom.min.js"></script>
     <script src="./vendor/datatables/js/jquery.dataTables.min.js"></script>
     <script src="./js/plugins-init/datatables.init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         $('#editModal').on('show.bs.modal', function(event) {
@@ -383,6 +384,16 @@
             var button = $(event.relatedTarget)
             $('#delete-id').val(button.data('id'));
         });
+
+        // SweetAlert2 error for validation errors (e.g., password mismatch)
+        @if ($errors->any())
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: `{!! implode('<br>', $errors->all()) !!}`,
+                confirmButtonColor: '#d33',
+            });
+        @endif
     </script>
 
 

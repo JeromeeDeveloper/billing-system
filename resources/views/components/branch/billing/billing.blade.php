@@ -67,7 +67,7 @@
                     </div>
                 </div>
                 <!-- Search/Filter Form -->
-                <div class="row mb-3">
+                {{-- <div class="row mb-3">
                     <div class="col-12">
                         <form method="GET" action="{{ url()->current() }}" class="d-flex flex-wrap align-items-center gap-2 bg-light p-3 rounded shadow-sm">
                             <div class="me-3">
@@ -86,7 +86,7 @@
                             </div>
                         </form>
                     </div>
-                </div>
+                </div> --}}
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
@@ -168,6 +168,7 @@
                                     <table class="table table-striped table-bordered display">
                                         <thead>
                                             <tr>
+                                                <th>CID</th>
                                                 <th>Employee #</th>
                                                 <th>Amortization</th>
                                                 <th>Name</th>
@@ -192,24 +193,25 @@
                                                 @endphp
                                                 @if ($amortization > 0)
                                                     <tr>
+                                                        <td>{{ $member->cid }}</td>
                                                         <td>{{ $member->emp_id }}</td>
-                                                        <td>{{ number_format($amortization, 2) }}</td>
+                                                        <td>{{ number_format($member->loan_balance, 2) }}</td>
                                                         <td>{{ $member->fname }} {{ $member->lname }}</td>
                                                         <td>{{ optional($member->start_date)->format('Y-m-d') }}</td>
                                                         <td>{{ optional($member->end_date)->format('Y-m-d') }}</td>
                                                         <td>{{ number_format($member->principal, 2) }}</td>
                                                         <td>{{ $member->area ?? '' }}</td>
                                                         <td>
-                                                            <button class="btn btn-rounded btn-primary edit-btn" data-toggle="modal" data-target="#editModal"
+                                                            {{-- <button class="btn btn-rounded btn-primary edit-btn" data-toggle="modal" data-target="#editModal"
                                                                 data-id="{{ $member->id }}"
-                                                                data-emp_id="{{ $member->emp_id }}"
-                                                                data-fname="{{ $member->fname }}"
+                                                                    data-emp_id="{{ $member->emp_id }}"
+                                                                    data-fname="{{ $member->fname }}"
                                                                 data-lname="{{ $member->lname }}"
                                                                 data-loan_balance="{{ $member->loan_balance }}"
                                                                 data-principal="{{ $member->principal }}"
                                                                 data-area="{{ $member->area }}"
                                                                 data-start_date="{{ optional($member->start_date)->format('Y-m-d') }}"
-                                                                data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}">Edit</button>
+                                                                data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}">Edit</button> --}}
                                                             <button class="btn btn-rounded btn-info view-btn" data-toggle="modal" data-target="#viewModal"
                                                                 data-emp_id="{{ $member->emp_id }}"
                                                                 data-name="{{ $member->fname }} {{ $member->lname }}"
@@ -218,7 +220,7 @@
                                                                 data-end_date="{{ optional($member->end_date)->format('Y-m-d') }}"
                                                                 data-principal="{{ $member->principal }}"
                                                                 data-office="{{ $member->area }}">View</button>
-                                                            <button class="btn btn-rounded btn-danger delete-btn" data-toggle="modal" data-target="#deleteModal" data-id="{{ $member->id }}">Delete</button>
+                                                            {{-- <button class="btn btn-rounded btn-danger delete-btn" data-toggle="modal" data-target="#deleteModal" data-id="{{ $member->id }}">Delete</button> --}}
                                                         </td>
                                                     </tr>
                                                 @endif
@@ -226,6 +228,7 @@
                                         </tbody>
                                         <tfoot>
                                             <tr>
+                                                <th>CID</th>
                                                 <th>Employee #</th>
                                                 <th>Amortization</th>
                                                 <th>Name</th>

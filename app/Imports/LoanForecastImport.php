@@ -143,6 +143,9 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
             // Set original_total_due if null or if billing_period is different
             if (is_null($loanForecast->original_total_due) || $loanForecast->billing_period !== $this->billingPeriod) {
                 $loanForecast->original_total_due = $loanForecast->total_due;
+                // Set original_principal_due and original_interest_due as well
+                $loanForecast->original_principal_due = $loanForecast->principal_due;
+                $loanForecast->original_interest_due = $loanForecast->interest_due;
                 $loanForecast->save();
             }
 
@@ -184,19 +187,60 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 ->where('billing_period', $this->billingPeriod)
                 ->get();
 
-            // Load product map (product_code => billing_type)
             $productMap = [];
             foreach (LoanProduct::all() as $product) {
                 $productMap[$product->product_code] = $product->billing_type;
             }
 
-            $loanBalance = $loanForecasts->filter(function($forecast) use ($productMap) {
+            $billingEnd = \Carbon\Carbon::parse($this->billingPeriod . '-01')->endOfMonth();
+            $today = now();
+            $loan_balance = 0;
+            foreach ($loanForecasts as $forecast) {
                 $segments = explode('-', $forecast->loan_acct_no);
                 $productCode = $segments[2] ?? null;
-                return isset($productMap[$productCode]) && $productMap[$productCode] === 'regular';
-            })->sum('total_due');
-
-            $member->update(['loan_balance' => $loanBalance]);
+                $billingType = $productMap[$productCode] ?? null;
+                // Registered, not special/not_billed
+                $hasSpecialProduct = $member->loanProductMembers()->whereHas('loanProduct', function($query) use ($productCode) {
+                    $query->where('product_code', $productCode)
+                          ->where('billing_type', 'special');
+                })->exists();
+                $hasNotBilledProduct = $member->loanProductMembers()->whereHas('loanProduct', function($query) use ($productCode) {
+                    $query->where('product_code', $productCode)
+                          ->where('billing_type', 'not_billed');
+                })->exists();
+                $hasRegisteredProduct = $member->loanProductMembers()->whereHas('loanProduct', function($query) use ($productCode) {
+                    $query->where('product_code', $productCode);
+                })->exists();
+                // Account status logic
+                $isDeduction = $forecast->account_status === 'deduction';
+                $isNonDeductionOutsideHold = $forecast->account_status === 'non-deduction' && (
+                    (empty($forecast->start_hold) || $forecast->start_hold > $today) ||
+                    (!empty($forecast->expiry_date) && $forecast->expiry_date < $today)
+                );
+                // Amortization due date logic (robust for Carbon or string)
+                $isDue = true;
+                if ($forecast->amortization_due_date) {
+                    $dueDate = $forecast->amortization_due_date;
+                    if (!($dueDate instanceof \Carbon\Carbon)) {
+                        try {
+                            $dueDate = \Carbon\Carbon::parse($dueDate);
+                        } catch (\Exception $e) {
+                            try {
+                                $dueDate = \Carbon\Carbon::createFromFormat('n/j/Y', $dueDate);
+                            } catch (\Exception $e2) {
+                                $isDue = false;
+                            }
+                        }
+                    }
+                    if ($isDue) {
+                        $isDue = $dueDate->lte($billingEnd);
+                    }
+                }
+                if ($hasRegisteredProduct && !$hasSpecialProduct && !$hasNotBilledProduct && $billingType === 'regular' && ($isDeduction || $isNonDeductionOutsideHold) && $isDue) {
+                    $loan_balance += $forecast->original_total_due ?? $forecast->total_due;
+                }
+            }
+            $member->update(['loan_balance' => $loan_balance]);
         }
 
         // Log import statistics

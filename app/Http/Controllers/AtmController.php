@@ -323,10 +323,6 @@ class AtmController extends Controller
                 Log::info("Created SavingsPayment for remaining allocation: {$savingsAllocation} to Regular Savings");
             }
 
-            // Recalculate and update member's total loan balance
-            $totalLoanBalance = $member->loanForecasts ? $member->loanForecasts->sum('total_due') : 0;
-            $member->update(['loan_balance' => $totalLoanBalance]);
-
             $totalSavingsDeposit = $totalSavingsPayment + $savingsAllocation;
 
             Log::info("Processed withdrawal: {$withdrawalAmount}, Loan payments: {$totalLoanPayment}, Total savings deposit: {$totalSavingsDeposit}");

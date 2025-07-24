@@ -33,6 +33,7 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
             'gl/sl acct no',
             'amount',
             'interest',
+            'penalty',
             'principal'
         ];
     }
@@ -79,7 +80,7 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
             foreach ($member->loanForecasts as $forecast) {
                 // Find the highest remittance_tag for this loan and billing period
                 $latestTag = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
-                   
+
                     ->max('remittance_tag');
                 if (!$latestTag) {
                     continue;
@@ -105,6 +106,7 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
                             'gl/sl acct no' => $formattedAccountNumber,
                             'amount' => number_format($remit->remitted_amount, 2, '.', ''),
                             'interest' => number_format($remit->applied_to_interest, 2, '.', ''),
+                            'penalty' => '',
                             'principal' => number_format($remit->applied_to_principal, 2, '.', '')
                         ]);
                     }

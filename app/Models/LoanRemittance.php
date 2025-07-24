@@ -22,4 +22,14 @@ class LoanRemittance extends Model
         'remittance_tag',
         'billing_period',
     ];
+
+    public function member()
+    {
+        return $this->belongsTo(\App\Models\Member::class);
+    }
+
+    public function loanForecast()
+    {
+        return $this->belongsTo(\App\Models\LoanForecast::class, 'loan_forecast_id');
+    }
 }

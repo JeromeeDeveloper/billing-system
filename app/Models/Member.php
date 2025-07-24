@@ -130,6 +130,8 @@ class Member extends Model
                     'original_total_due' => $loan->original_total_due,
                     'principal_due' => $loan->principal_due,
                     'interest_due' => $loan->interest_due,
+                    'original_principal_due' => $loan->original_principal_due,
+                    'original_interest_due' => $loan->original_interest_due,
                     'penalty_due' => $loan->penalty_due,
                     'billing_period' => $loan->billing_period,
                     'start_hold' => $loan->start_hold,

@@ -314,7 +314,7 @@ class LoanDeductionsSheet implements FromCollection, WithHeadings, WithTitle
             return [
                 'cid'        => $member->cid ?? 'N/A',
                 'emp_id'        => $member->emp_id ?? 'N/A',
-                'amortization'  => $amortization,
+                'amortization'  => $member->loan_balance ?? 0,
                 'name'          => "{$member->fname} {$member->lname}",
                 'start_date'    => $member->start_date ? $member->start_date->format('Y-m-d') : 'N/A',
                 'end_date'      => $member->end_date ? $member->end_date->format('Y-m-d') : 'N/A',

@@ -269,9 +269,9 @@
                                         <thead>
                                             <tr>
                                                 <th>CID</th>
+                                                <th>EMPID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-
 
                                                 <th>Actions</th>
                                             </tr>
@@ -280,6 +280,7 @@
                                             @foreach ($masterlists->unique('member.id') as $item)
                                                 <tr>
                                                     <td>{{ $item->member->cid ?? '' }}</td>
+                                                    <td>{{ $item->member->emp_id ?? 'N/A' }}</td>
                                                     <td>{{ $item->member->lname ?? '' }},
                                                         {{ $item->member->fname ?? '' }}</td>
                                                     <td>{{ $item->member->branch ? $item->member->branch->name : 'N/A' }}</td>
@@ -360,9 +361,9 @@
                                         <tfoot>
                                             <tr>
                                                 <th>CID</th>
+                                                <th>EMPID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-
 
                                                 <th>Actions</th>
                                             </tr>
@@ -1266,10 +1267,7 @@
                         <label>Open Date</label>
                         <input type="date" name="savings[${index}][open_date]" class="form-control" value="${saving.open_date || ''}" readonly>
                     </div>
-                    <div class="form-group col-md-6">
-                        <label>Approval Number</label>
-                        <input type="text" name="savings[${index}][approval_no]" class="form-control" value="${saving.approval_no || ''}">
-                    </div>
+
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
                         <input type="month" name="savings[${index}][start_hold]" class="form-control" value="${saving.start_hold || ''}">
@@ -1304,6 +1302,10 @@
                         <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount !== undefined && saving.deduction_amount !== null ? saving.deduction_amount : ''}">
                     </div>
                     `}
+                     <div class="form-group col-md-6">
+                        <label>Approval Number</label>
+                        <input type="text" name="savings[${index}][approval_no]" class="form-control" value="${saving.approval_no || ''}">
+                    </div>
                     <div class="form-group col-md-12">
                         <label>Remarks</label>
                         <textarea name="savings[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${saving.remarks || ''}</textarea>
@@ -1350,10 +1352,7 @@
                         <label>Open Date</label>
                         <input type="date" name="shares[${index}][open_date]" class="form-control" value="${share.open_date || ''}" readonly>
                     </div>
-                    <div class="form-group col-md-6">
-                        <label>Approval Number</label>
-                        <input type="text" name="shares[${index}][approval_no]" class="form-control" value="${share.approval_no || ''}">
-                    </div>
+
                     <div class="form-group col-md-6">
                         <label>Start Hold</label>
                         <input type="month" name="shares[${index}][start_hold]" class="form-control" value="${share.start_hold || ''}">
@@ -1372,6 +1371,10 @@
                     <div class="form-group col-md-6">
                         <label>Deduction Amount</label>
                         <input type="number" step="0.01" name="shares[${index}][deduction_amount]" class="form-control" value="${share.deduction_amount || '0.00'}">
+                    </div>
+                       <div class="form-group col-md-6">
+                        <label>Approval Number</label>
+                        <input type="text" name="shares[${index}][approval_no]" class="form-control" value="${share.approval_no || ''}">
                     </div>
                     <div class="form-group col-md-12">
                         <label>Remarks</label>
@@ -1401,61 +1404,82 @@
             let productInfo = getLoanProductInfo(loan.loan_acct_no);
 
             let html = `
-    <div class="loan-item border p-3 mb-3 rounded">
+    <div class="loan-item border p-3 mb-3 rounded position-relative">
         <input type="hidden" name="loan_forecasts[${index}][id]" value="${loan.id || ''}">
-        <input type="hidden" name="loan_forecasts[${index}][loan_acct_no]" value="${loan.loan_acct_no || ''}">
         <input type="hidden" name="loan_forecasts[${index}][billing_period]" value="${loan.billing_period || ''}">
-
+        <input type="hidden" name="loan_forecasts[${index}][amount_due]" value="${loan.amount_due || 0}">
+        <input type="hidden" name="loan_forecasts[${index}][open_date]" value="${loan.open_date || ''}">
+        <input type="hidden" name="loan_forecasts[${index}][maturity_date]" value="${loan.maturity_date || ''}">
+        <input type="hidden" name="loan_forecasts[${index}][amortization_due_date]" value="${loan.amortization_due_date || ''}">
+        <input type="hidden" name="loan_forecasts[${index}][penalty_due]" value="${loan.penalty_due || 0}">
+        <input type="hidden" name="loan_forecasts[${index}][deduction_amount]" value="${loan.deduction_amount || 0}">
         <div class="form-row">
-            <div class="form-group col-md-6">
-                <label>Loan Account Number</label>
-                <input type="text" class="form-control" value="${loan.loan_acct_no || ''}" readonly>
+            <div class="col-md-6">
+                <label>Loan Account No.</label>
+                <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}" required>
             </div>
-
-            <div class="form-group col-md-6">
+            <div class="col-md-6">
                 <label>Product Name</label>
                 <input type="text" class="form-control" value="${productInfo.product_name}" readonly>
             </div>
-
-            <div class="form-group col-md-6">
+            <div class="col-md-6">
+                <div class="border rounded p-2 mt-2 mb-2 bg-light">
+                    <label class="font-weight-bold">Original Billing</label>
+                    <div class="form-group mb-2">
+                        <label>Principal</label>
+                        <input type="number" step="0.01" class="form-control" id="original_principal_due_${index}" value="${loan.original_principal_due || 0}" readonly tabindex="-1">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>Interest</label>
+                        <input type="number" step="0.01" class="form-control" id="original_interest_due_${index}" value="${loan.original_interest_due || 0}" readonly tabindex="-1">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>Total Amort</label>
+                        <input type="number" step="0.01" class="form-control" value="${loan.original_total_due || 0}" readonly tabindex="-1">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-2 mt-2 mb-2 bg-light">
+                    <label class="font-weight-bold">Amort Due</label>
+                    <div class="form-group mb-2">
+                        <label>Principal</label>
+                        <input type="number" step="0.01" name="loan_forecasts[${index}][principal_due]" class="form-control principal-due" id="principal_due_${index}" value="${loan.principal_due || 0}">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>Interest</label>
+                        <input type="number" step="0.01" name="loan_forecasts[${index}][interest_due]" class="form-control interest-due" id="interest_due_${index}" value="${loan.interest_due || 0}">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>Total Amort</label>
+                        <input type="number" step="0.01" name="loan_forecasts[${index}][total_due]" class="form-control" id="total_due_${index}" value="${loan.total_due || 0}" readonly tabindex="-1">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
                 <label>Billing Type</label>
                 <input type="text" class="form-control" value="${productInfo.billing_type}" readonly>
             </div>
-
-            <div class="form-group col-md-6">
-                <label>Total Amort Due</label>
-                <input type="number" name="loan_forecasts[${index}][total_due]" class="form-control" value="${loan.total_due || 0}" step="0.01">
-            </div>
-
-            <div class="form-group col-md-6">
-                <label>Total Billed</label>
-                <input type="number" class="form-control" value="${loan.original_total_due !== undefined && loan.original_total_due !== null ? loan.original_total_due : ''}" readonly>
-            </div>
-
-            <div class="form-group col-md-6">
-                <label>Start Hold</label>
-                <input type="month" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
-            </div>
-
-            <div class="form-group col-md-6">
-                <label>Expiry Date</label>
-                <input type="month" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${loan.expiry_date || ''}">
-            </div>
-
-            <div class="form-group col-md-6">
+            <div class="col-md-6">
                 <label>Account Status</label>
                 <select name="loan_forecasts[${index}][account_status]" class="form-control">
                     <option value="deduction" ${loan.account_status === 'deduction' ? 'selected' : ''}>Deduction</option>
                     <option value="non-deduction" ${loan.account_status === 'non-deduction' ? 'selected' : ''}>Non-Deduction</option>
                 </select>
             </div>
-
-            <div class="form-group col-md-6">
+            <div class="col-md-6">
+                <label>Start Hold</label>
+                <input type="month" name="loan_forecasts[${index}][start_hold]" class="form-control" value="${loan.start_hold || ''}">
+            </div>
+            <div class="col-md-6">
+                <label>Expiry Date</label>
+                <input type="month" name="loan_forecasts[${index}][expiry_date]" class="form-control" value="${loan.expiry_date || ''}">
+            </div>
+            <div class="col-md-6">
                 <label>Approval Number</label>
                 <input type="text" name="loan_forecasts[${index}][approval_no]" class="form-control" value="${loan.approval_no || ''}">
             </div>
-
-            <div class="form-group col-md-12">
+            <div class="col-md-12">
                 <label>Remarks</label>
                 <textarea name="loan_forecasts[${index}][remarks]" class="form-control" rows="2" placeholder="Remarks">${loan.remarks || ''}</textarea>
             </div>
@@ -1464,6 +1488,36 @@
 
             $('#edit-loan-forecast-container').html(html);
             $('#loan-counter').text(`Loan ${index + 1} of ${loans.length}`);
+
+            // Add validation and automation for principal_due and interest_due
+            const $principal = $(`#principal_due_${index}`);
+            const $interest = $(`#interest_due_${index}`);
+            const $total = $(`#total_due_${index}`);
+            const originalPrincipal = parseFloat($(`#original_principal_due_${index}`).val()) || 0;
+            const originalInterest = parseFloat($(`#original_interest_due_${index}`).val()) || 0;
+
+            function updateTotalDue() {
+                let p = parseFloat($principal.val()) || 0;
+                let i = parseFloat($interest.val()) || 0;
+                $total.val((p + i).toFixed(2));
+            }
+
+            $principal.on('input', function() {
+                let val = parseFloat($principal.val()) || 0;
+                if (val > originalPrincipal) {
+                    $principal.val(originalPrincipal.toFixed(2));
+                }
+                updateTotalDue();
+            });
+            $interest.on('input', function() {
+                let val = parseFloat($interest.val()) || 0;
+                if (val > originalInterest) {
+                    $interest.val(originalInterest.toFixed(2));
+                }
+                updateTotalDue();
+            });
+            // Initial calculation
+            updateTotalDue();
         }
 
         $('#viewModal').on('show.bs.modal', function(event) {

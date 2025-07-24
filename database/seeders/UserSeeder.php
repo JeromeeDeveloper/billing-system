@@ -28,6 +28,26 @@ class UserSeeder extends Seeder
             'billing_period' => $currentBillingPeriod,
         ]);
 
+        User::create([
+            'name' => 'Jen Cortes',
+            'email' => 'jm.cortes@mass-specc.coop	',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+            'status' => 'approved',
+            'branch_id' => null, // Admins may not need branch_id
+            'billing_period' => $currentBillingPeriod,
+        ]);
+
+        User::create([
+            'name' => 'Almira M. Semitara',
+            'email' => 'at.matalines@mass-specc.coop',
+            'password' => Hash::make('password'),
+            'role' => 'admin',
+            'status' => 'approved',
+            'branch_id' => null, // Admins may not need branch_id
+            'billing_period' => $currentBillingPeriod,
+        ]);
+
         // Branch User
         User::create([
             'name' => 'Test Branch',

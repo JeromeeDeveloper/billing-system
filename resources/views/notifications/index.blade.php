@@ -105,8 +105,15 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title">All Notifications</h4>
-                                <button class="btn btn-primary" id="mark-all-read">Mark All as Read</button>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h4 class="card-title">All Notifications</h4>
+                                    <div>
+                                        <a href="{{ route('notifications.export') }}" class="btn btn-success mr-2">
+                                            <i class="bi bi-file-earmark-excel"></i> Export to Excel
+                                        </a>
+                                        <button class="btn btn-primary" id="mark-all-read">Mark All as Read</button>
+                                    </div>
+                                </div>
                             </div>
                             <div class="card-body">
                                 <!-- Filter Controls -->

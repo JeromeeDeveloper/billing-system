@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\LoanProduct;
 use App\Models\SavingProduct;
 use App\Models\ShareProduct;
+use App\Models\RemittanceBatch;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -56,9 +57,11 @@ class RemittanceReportConsolidatedExport implements FromCollection, WithHeadings
 
     public function headings(): array
     {
+        $remitDate = RemittanceBatch::orderByDesc('imported_at')->value('imported_at');
+        $remitDateStr = $remitDate ? \Carbon\Carbon::parse($remitDate)->format('F d, Y') : '';
         $headers = [
             ['Remittance Report Consolidated'],
-            ['Remittance Date', now()->format('F d, Y')],
+            ['Remittance Date', $remitDateStr],
             ['For Billing Period', now()->format('F Y')],
             [''],
             $this->dynamicHeaders
