@@ -59,5 +59,16 @@ class LoanForecast extends Model
     {
         return $this->belongsTo(Member::class);
     }
+
+    public function loanProduct()
+    {
+        // Extract product_code from loan_acct_no (3rd segment)
+        $productCode = null;
+        if ($this->loan_acct_no) {
+            $segments = explode('-', $this->loan_acct_no);
+            $productCode = $segments[2] ?? null;
+        }
+        return $this->hasOne(LoanProduct::class, 'product_code', 'product_code')->where('product_code', $productCode);
+    }
 }
 

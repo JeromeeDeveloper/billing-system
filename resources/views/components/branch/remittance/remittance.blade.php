@@ -251,55 +251,30 @@
                                             </div>
                                         </div>
 
-                                        {{-- Billed vs Remitted Comparison Report --}}
-                                        @if (isset($comparisonReportPaginated) && $comparisonReportPaginated->count() > 0)
-                                            <div class="card mb-4">
-                                                <div class="card-header">
-                                                    <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
-                                                </div>
-                                                <div class="card-body">
-                                                    <div class="table-responsive">
-                                                        <table class="table table-bordered text-center">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>CID</th>
-                                                                    <th>Member Name</th>
-                                                                    <th>Total Billed</th>
-                                                                    <th>Remitted Loans</th>
-                                                                    <th>Remaining Amort Due</th>
-                                                                    <th>Remitted Savings</th>
-                                                                    <th>Remitted Shares</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                @forelse ($comparisonReportPaginated as $row)
-                                                                    <tr>
-                                                                        <td>{{ $row['cid'] }}</td>
-                                                                        <td>{{ $row['member_name'] }}</td>
-                                                                        <td>₱{{ number_format($row['amortization'], 2) }}</td>
-                                                                        <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
-                                                                        <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
-                                                                        <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
-                                                                        <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
-                                                                    </tr>
-                                                                @empty
-                                                                    <tr>
-                                                                        <td colspan="7" class="text-center text-muted">No records found.</td>
-                                                                    </tr>
-                                                                @endforelse
-                                                            </tbody>
-                                                        </table>
-                                                        <div class="d-flex justify-content-center mt-2 text-center">
-                                                            {{ $comparisonReportPaginated->links() }}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        {{-- Export Button for Regular & Special Billing Remittance --}}
+                                        <div class="mb-3 text-right">
+                                            <a href="{{ route('branchRemittance.exportRegularSpecial') }}" class="btn btn-success">
+                                                <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
+                                            </a>
+                                        </div>
+                                        @if (isset($regularRemittances) && $regularRemittances->count() > 0)
+                                            @include('components.admin.remittance.billing_table', [
+                                                'remittances' => $regularRemittances,
+                                                'billed' => $regularBilled,
+                                                'type' => 'Regular'
+                                            ])
+                                        @endif
+                                        @if (isset($specialRemittances) && $specialRemittances->count() > 0)
+                                            @include('components.admin.remittance.billing_table', [
+                                                'remittances' => $specialRemittances,
+                                                'billed' => $specialBilled,
+                                                'type' => 'Special'
+                                            ])
                                         @endif
                                         {{-- If variables are missing, add a comment for the developer --}}
-                                        @if (!isset($loansSavingsPreviewPaginated) || !isset($sharesPreviewPaginated) || !isset($comparisonReportPaginated))
+                                        @if (!isset($loansSavingsPreviewPaginated) || !isset($sharesPreviewPaginated) || !isset($regularRemittances) || !isset($specialRemittances) || !isset($regularBilled) || !isset($specialBilled))
                                             <div class="alert alert-warning mt-4">
-                                                <strong>Note:</strong> Please ensure the controller passes <code>$loansSavingsPreviewPaginated</code>, <code>$sharesPreviewPaginated</code>, and <code>$comparisonReportPaginated</code> to this view, as in the admin remittance controller.
+                                                <strong>Note:</strong> Please ensure the controller passes <code>$loansSavingsPreviewPaginated</code>, <code>$sharesPreviewPaginated</code>, <code>$regularRemittances</code>, <code>$specialRemittances</code>, <code>$regularBilled</code>, and <code>$specialBilled</code> to this view, as in the admin remittance controller.
                                             </div>
                                         @endif
                                     </div>

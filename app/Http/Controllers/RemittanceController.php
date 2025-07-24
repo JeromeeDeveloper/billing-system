@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use App\Imports\ShareRemittanceImport;
 use App\Models\RemittanceReport;
 use Illuminate\Support\Facades\Log;
+use App\Exports\RegularSpecialRemittanceExport;
 
 class RemittanceController extends Controller
 {
@@ -91,10 +92,50 @@ class RemittanceController extends Controller
             ['pageName' => 'comparison_page', 'path' => $request->url(), 'query' => $request->query()]
         );
 
+        // --- Add logic for regular/special billing tables ---
+        $billingPeriod = Auth::user()->billing_period;
+        $loanRemittances = \App\Models\LoanRemittance::with('loanForecast', 'member')
+            ->where('billing_period', $billingPeriod)
+            ->get();
+        $loanRemittances = $loanRemittances->map(function ($remit) {
+            $forecast = $remit->loanForecast;
+            $productCode = null;
+            if ($forecast && $forecast->loan_acct_no) {
+                $segments = explode('-', $forecast->loan_acct_no);
+                $productCode = $segments[2] ?? null;
+            }
+            $product = $productCode ? \App\Models\LoanProduct::where('product_code', $productCode)->first() : null;
+            $remit->billing_type = $product ? $product->billing_type : 'regular';
+            $remit->remitted_savings = 0; // Placeholder, add logic if needed
+            $remit->remitted_shares = 0;  // Placeholder, add logic if needed
+            return $remit;
+        });
+        $regularRemittances = $loanRemittances->where('billing_type', 'regular');
+        $specialRemittances = $loanRemittances->where('billing_type', 'special');
+        $billings = \App\Models\Billing::with('loanForecast')->where('start', 'like', $billingPeriod . '%')->get();
+        $billings = $billings->map(function ($bill) {
+            $forecast = $bill->loanForecast;
+            $productCode = null;
+            if ($forecast && $forecast->loan_acct_no) {
+                $segments = explode('-', $forecast->loan_acct_no);
+                $productCode = $segments[2] ?? null;
+            }
+            $product = $productCode ? \App\Models\LoanProduct::where('product_code', $productCode)->first() : null;
+            $bill->billing_type = $product ? $product->billing_type : 'regular';
+            return $bill;
+        });
+        $regularBilled = $billings->where('billing_type', 'regular');
+        $specialBilled = $billings->where('billing_type', 'special');
+        // --- End of new logic ---
+
         return view('components.admin.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
             'sharesPreviewPaginated',
-            'comparisonReportPaginated'
+            'comparisonReportPaginated',
+            'regularRemittances',
+            'specialRemittances',
+            'regularBilled',
+            'specialBilled'
         ));
     }
 
@@ -368,5 +409,32 @@ class RemittanceController extends Controller
         $currentBillingPeriod = Auth::user()->billing_period;
         $report = $this->getRemittanceComparisonReport($currentBillingPeriod);
         return Excel::download(new \App\Exports\ComparisonReportExport($report), 'billed_vs_remitted_comparison_' . $currentBillingPeriod . '.xlsx');
+    }
+
+    public function exportRegularSpecial()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+        $loanRemittances = \App\Models\LoanRemittance::with('loanForecast', 'member')
+            ->where('billing_period', $billingPeriod)
+            ->get();
+        $loanRemittances = $loanRemittances->map(function ($remit) {
+            $forecast = $remit->loanForecast;
+            $productCode = null;
+            if ($forecast && $forecast->loan_acct_no) {
+                $segments = explode('-', $forecast->loan_acct_no);
+                $productCode = $segments[2] ?? null;
+            }
+            $product = $productCode ? \App\Models\LoanProduct::where('product_code', $productCode)->first() : null;
+            $remit->billing_type = $product ? $product->billing_type : 'regular';
+            $remit->remitted_savings = 0; // Placeholder, add logic if needed
+            $remit->remitted_shares = 0;  // Placeholder, add logic if needed
+            return $remit;
+        });
+        $regularRemittances = $loanRemittances->where('billing_type', 'regular');
+        $specialRemittances = $loanRemittances->where('billing_type', 'special');
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new RegularSpecialRemittanceExport($regularRemittances, $specialRemittances, $billingPeriod),
+            'Regular_Special_Billing_Remittance_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 }

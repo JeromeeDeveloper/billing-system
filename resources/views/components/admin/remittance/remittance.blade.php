@@ -365,60 +365,29 @@
                     </div>
                 </div>
 
-
-            @if (isset($comparisonReportPaginated) && $comparisonReportPaginated->count() > 0)
-
-            <div class="container-fluid">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Billed vs Remitted Comparison Report</h5>
-                        <a href="{{ route('remittance.exportComparison') }}" class="btn btn-success">
-                            <i class="fa fa-file-excel-o"></i> Export Billed vs Remitted Comparison to Excel
-                        </a>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered text-center">
-                                <thead>
-                                    <tr>
-                                        <th>CID</th>
-                                        <th>Member Name</th>
-                                        <th>Total Billed</th>
-                                        <th>Remitted Loans</th>
-                                        <th>Remaining Loans</th>
-                                        <th>Remitted Savings</th>
-                                        <th>Remitted Shares</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($comparisonReportPaginated as $row)
-                                        <tr>
-                                            <td>{{ $row['cid'] }}</td>
-                                            <td>{{ $row['member_name'] }}</td>
-                                            <td>₱{{ $row['loan_balance'] }}</td>
-                                            <td>₱{{ number_format($row['remitted_loans'], 2) }}</td>
-                                            <td>₱{{ number_format($row['remaining_loan_balance'], 2) }}</td>
-                                            <td>₱{{ number_format($row['remitted_savings'], 2) }}</td>
-                                            <td>₱{{ number_format($row['remitted_shares'], 2) }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center text-muted">No records found.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                            <div class="d-flex justify-content-center mt-2 text-center">
-                                {{ $comparisonReportPaginated->links() }}
-                            </div>
-                        </div>
-                    </div>
+                {{-- Export Button for Regular & Special Billing Remittance --}}
+                <div class="mb-3 text-right">
+                    <a href="{{ route('remittance.exportRegularSpecial') }}" class="btn btn-success">
+                        <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
+                    </a>
                 </div>
-            </div>
 
+            @if (isset($regularRemittances) && $regularRemittances->count() > 0)
+                @include('components.admin.remittance.billing_table', [
+                    'remittances' => $regularRemittances,
+                    'billed' => $regularBilled,
+                    'type' => 'Regular'
+                ])
+            @endif
+            @if (isset($specialRemittances) && $specialRemittances->count() > 0)
+                @include('components.admin.remittance.billing_table', [
+                    'remittances' => $specialRemittances,
+                    'billed' => $specialBilled,
+                    'type' => 'Special'
+                ])
+            @endif
 
-    @endif
-</div>
+    </div>
         </div>
     </div>
 
