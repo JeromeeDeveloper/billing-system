@@ -29,12 +29,14 @@ class RemittanceImport implements ToCollection, WithHeadingRow
     protected $imported_at;
     protected $billingPeriod;
     protected $remittance_tag;
+    protected $billingType;
 
-    public function __construct($billingPeriod = null)
+    public function __construct($billingPeriod = null, $billingType = 'regular')
     {
         // Load all saving products
         $this->savingProducts = SavingProduct::all();
         $this->billingPeriod = $billingPeriod;
+        $this->billingType = $billingType;
     }
 
     public function collection(Collection $rows)
@@ -204,6 +206,10 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         if ($loanProduct && $loanProduct->billing_type === 'not_billed') {
                             return null;
                         }
+                        // Skip if billing_type does not match selected type
+                        if ($loanProduct && $this->billingType && $loanProduct->billing_type !== $this->billingType) {
+                            return null;
+                        }
 
                         return [
                             'forecast' => $forecast,
@@ -214,7 +220,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'created_at' => $forecast->created_at,
                         ];
                     })
-                    ->filter() // Remove nulls (skipped not_billed)
+                    ->filter() // Remove nulls (skipped not_billed or not matching type)
                     ->sort(function($a, $b) {
                         // Sort by prioritization (asc)
                         if ($a['prioritization'] !== $b['prioritization']) {

@@ -148,6 +148,7 @@ class RemittanceController extends Controller
         ]);
 
         $remittanceType2 = 'loans_savings';
+        $billingType = $request->input('billing_type', 'regular');
 
         try {
             DB::beginTransaction();
@@ -155,7 +156,7 @@ class RemittanceController extends Controller
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;
 
-            $import = new RemittanceImport($currentBillingPeriod);
+            $import = new RemittanceImport($currentBillingPeriod, $billingType);
             Excel::import($import, $request->file('file'));
 
             $results = $import->getResults();

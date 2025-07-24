@@ -174,18 +174,16 @@
                                                         <label class="form-label">Select File</label>
                                                         <input type="file" class="form-control" name="file" id="file" accept=".xlsx,.xls,.csv" required>
                                                     </div>
+                                                    <input type="hidden" name="billing_type" id="billingTypeInput" value="regular">
                                                     <div class="mb-3">
                                                         <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name, Loans, Savings Product Names.</small>
                                                     </div>
-
-                                                    <button type="submit" class="btn btn-success btn-block mt-2">
-                                                            <i class="fa fa-upload me-1"></i> Upload and Process Loans & Savings Remittance
-                                                        </button>
-
-                                                    <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#loansSavingsFormatModal">
-                                                            <i class="fa fa-eye me-1"></i> View Expected Format
+                                                    <button type="button" class="btn btn-success btn-block mt-2" id="showBillingTypeModalBtn">
+                                                        <i class="fa fa-upload me-1"></i> Upload and Process Loans & Savings Remittance
                                                     </button>
-
+                                                    <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#loansSavingsFormatModal">
+                                                        <i class="fa fa-eye me-1"></i> View Expected Format
+                                                    </button>
                                                     <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('loans_savings')">
                                                         Collection file for Loans & Savings
                                                     </a>
@@ -631,6 +629,37 @@
         </div>
     </div>
 
+    <!-- Billing Type Modal -->
+    <div class="modal fade" id="billingTypeModal" tabindex="-1" role="dialog" aria-labelledby="billingTypeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="billingTypeModalLabel">Select Billing Type</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label><strong>Choose which billing type to process for this upload:</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="billing_type_modal" id="billingTypeRegular" value="regular" checked>
+                            <label class="form-check-label" for="billingTypeRegular">Regular</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="billing_type_modal" id="billingTypeSpecial" value="special">
+                            <label class="form-check-label" for="billingTypeSpecial">Special</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmBillingTypeBtn">Proceed with Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Forecast Upload Guide Pop-up -->
     <div id="forecastGuidePopup" class="position-fixed" style="bottom: 24px; right: 24px; z-index: 1055; min-width: 320px; max-width: 90vw;">
         <div class="alert alert-info alert-dismissible fade show shadow" role="alert">
@@ -763,6 +792,18 @@
                         showConfirmButton: false
                     });
                 }
+            });
+
+            // Show modal on upload button click
+            document.getElementById('showBillingTypeModalBtn').addEventListener('click', function(e) {
+                $('#billingTypeModal').modal('show');
+            });
+            // On confirm, set hidden input and submit form
+            document.getElementById('confirmBillingTypeBtn').addEventListener('click', function(e) {
+                var selectedType = document.querySelector('input[name="billing_type_modal"]:checked').value;
+                document.getElementById('billingTypeInput').value = selectedType;
+                $('#billingTypeModal').modal('hide');
+                document.getElementById('loansSavingsForm').submit();
             });
         });
     </script>
