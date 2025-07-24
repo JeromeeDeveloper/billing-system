@@ -35,7 +35,11 @@ class LoanForecast extends Model
         'remarks',
         'principal',
         'interest',
-        'total_amort'
+        'total_amort',
+        'status',
+        'interest_due_status',
+        'principal_due_status',
+        'total_due_status',
     ];
 
     protected $casts = [
@@ -69,6 +73,23 @@ class LoanForecast extends Model
             $productCode = $segments[2] ?? null;
         }
         return $this->hasOne(LoanProduct::class, 'product_code', 'product_code')->where('product_code', $productCode);
+    }
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::updating(function ($model) {
+            if ($model->isDirty('principal_due') && $model->getOriginal('principal_due_status') === 'paid') {
+                $model->principal_due = $model->getOriginal('principal_due');
+            }
+            if ($model->isDirty('interest_due') && $model->getOriginal('interest_due_status') === 'paid') {
+                $model->interest_due = $model->getOriginal('interest_due');
+            }
+            if ($model->isDirty('total_due') && $model->getOriginal('total_due_status') === 'paid') {
+                $model->total_due = $model->getOriginal('total_due');
+            }
+        });
     }
 }
 

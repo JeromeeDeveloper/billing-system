@@ -271,6 +271,12 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'total_due' => max(0, $principalDue + $interestDue),
                             'total_due_after_remittance' => $deductedPrincipal + $deductedInterest
                         ]);
+                        // Set per-field status
+                        $forecast->refresh();
+                        $forecast->interest_due_status = floatval($forecast->interest_due) === 0.0 ? 'paid' : 'unpaid';
+                        $forecast->principal_due_status = floatval($forecast->principal_due) === 0.0 ? 'paid' : 'unpaid';
+                        $forecast->total_due_status = floatval($forecast->total_due) === 0.0 ? 'paid' : 'unpaid';
+                        $forecast->save();
 
                         // Create a LoanRemittance record for this deduction
                         \App\Models\LoanRemittance::create([

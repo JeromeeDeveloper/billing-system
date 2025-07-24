@@ -580,6 +580,14 @@ class BillingController extends Controller
             abort(403);
         }
 
+        $billingPeriod = Auth::user()->billing_period;
+        \App\Models\LoanForecast::where('billing_period', $billingPeriod)
+            ->update([
+                'interest_due_status' => 'unpaid',
+                'principal_due_status' => 'unpaid',
+                'total_due_status' => 'unpaid',
+            ]);
+
         // Get the current max billing period among users
         $currentPeriod = \App\Models\User::max('billing_period');
         $current = \Carbon\Carbon::parse($currentPeriod);
