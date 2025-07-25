@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Profile - Billing and Collection</title>
+    <title>Billing and Collection</title>
 
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">

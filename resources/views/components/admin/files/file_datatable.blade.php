@@ -395,9 +395,9 @@
                                         <li>maturity_date</li>
                                         <li>amortization_due_date</li>
                                         <li>total_due</li>
-                                        <li>principal_due</li>
-                                        <li>interest_due</li>
-                                        <li>penalty_due</li>
+                                        <li>principal</li>
+                                        <li>interest</li>
+                                        <li>penalty</li>
                                     </ul>
                                     <small class="text-muted">File type: .csv or .xlsx</small>
                                 </div>
