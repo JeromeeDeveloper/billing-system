@@ -581,12 +581,62 @@ class BillingController extends Controller
         }
 
         $billingPeriod = Auth::user()->billing_period;
+
+        // LoanForecast reset
         \App\Models\LoanForecast::where('billing_period', $billingPeriod)
             ->update([
-                'interest_due_status' => 'unpaid',
+                'amount_due' => null,
+                'open_date' => null,
+                'maturity_date' => null,
+                'amortization_due_date' => null,
+                'total_due' => null,
+                'original_total_due' => null,
+                'principal_due' => null,
+                'interest_due' => null,
+                'original_principal_due' => null,
+                'original_interest_due' => null,
+                'principal' => null,
+                'interest' => null,
                 'principal_due_status' => 'unpaid',
+                'interest_due_status' => 'unpaid',
                 'total_due_status' => 'unpaid',
+                'total_due_after_remittance' => null,
+                'total_billed' => null,
             ]);
+
+        // Savings reset (keep only specified fields)
+        \App\Models\Saving::query()->update([
+            'open_date' => null,
+            'current_balance' => null,
+            'available_balance' => null,
+            'interest' => null,
+            'remittance_amount' => null,
+        ]);
+
+        // Shares reset (keep only specified fields)
+        \App\Models\Shares::query()->update([
+            'open_date' => null,
+            'current_balance' => null,
+            'available_balance' => null,
+            'interest' => null,
+        ]);
+
+        // Members reset (keep only cid and member_tagging)
+        \App\Models\Member::query()->update([
+            'savings_balance' => null,
+            'share_balance' => null,
+            'loan_balance' => null,
+            'principal' => null,
+            'regular_principal' => null,
+            'special_principal' => null,
+            'start_date' => null,
+            'end_date' => null,
+            'status' => null,
+            'approval_no' => null,
+            'start_hold' => null,
+            'expiry_date' => null,
+            'account_status' => null,
+        ]);
 
         // Get the current max billing period among users
         $currentPeriod = \App\Models\User::max('billing_period');
@@ -605,11 +655,11 @@ class BillingController extends Controller
                 'type' => 'billing_period_closed',
                 'user_id' => $id,
                 'related_id' => $id,
-                'message' => 'Billing period has been closed. New billing period: ' . \Carbon\Carbon::parse($next)->format('F Y'),
+                'message' => 'The billing period has been closed. Please check your records for the new period.',
                 'billing_period' => $next
             ]);
         }
 
-        return back()->with('success', 'Billing period closed. All users moved to next period: ' . \Carbon\Carbon::parse($next)->format('F Y'));
+        return response()->json(['success' => true, 'message' => 'Billing period closed and records reset for new period.']);
     }
 }

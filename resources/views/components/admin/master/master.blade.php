@@ -736,9 +736,7 @@
                                                                 id="view-occupation"></span></p>
                                                         <p><strong>Industry:</strong> <span id="view-industry"></span>
                                                         </p>
-                                                        <p><strong>Status:</strong> <span id="view-status"></span></p>
-                                                        <p><strong>Account Status:</strong> <span
-                                                                id="view-account_status"></span></p>
+
 
                                                     </div>
                                                 </div>
@@ -1574,8 +1572,8 @@
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
                         <p><strong>Total Amort Due:</strong> ${loan.total_due || '0.00'}</p>
                         <p><strong>Total Billed:</strong> ${loan.original_total_due || '0.00'}</p>
-                        <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
-                        <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
+                        <p><strong>Principal:</strong> ${loan.principal_due || '0.00'}</p>
+                        <p><strong>Interest:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>
                         <p><strong>Deduction Amount:</strong> ${loan.deduction_amount || '0.00'}</p>
                         <p><strong>Approval Number:</strong> ${loan.approval_no || 'N/A'}</p>

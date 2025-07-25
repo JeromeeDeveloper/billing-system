@@ -138,7 +138,7 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="file"
-                                                            name="file">
+                                                            name="file" required>
                                                         <label class="custom-file-label" for="file">Choose
                                                             file...</label>
                                                     </div>
@@ -149,7 +149,7 @@
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
-                                                            id="savings_file" name="savings_file">
+                                                            id="savings_file" name="savings_file" required>
                                                         <label class="custom-file-label" for="savings_file">Choose
                                                             file...</label>
                                                     </div>
@@ -160,7 +160,7 @@
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="shares_file"
-                                                            name="shares_file">
+                                                            name="shares_file" required>
                                                         <label class="custom-file-label" for="shares_file">Choose
                                                             file...</label>
                                                     </div>
@@ -171,7 +171,7 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="cif_file"
-                                                            name="cif_file">
+                                                            name="cif_file" required>
                                                         <label class="custom-file-label" for="cif_file">Choose
                                                             file...</label>
                                                     </div>
@@ -183,7 +183,7 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
-                                                            id="loan_file" name="loan_file">
+                                                            id="loan_file" name="loan_file" required>
                                                         <label class="custom-file-label" for="loan_file">Choose
                                                             file...</label>
                                                     </div>
