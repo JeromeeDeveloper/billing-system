@@ -13,5 +13,6 @@ class RemittanceBatch extends Model
         'billing_period',
         'remittance_tag',
         'imported_at',
+        'billing_type',
     ];
 }

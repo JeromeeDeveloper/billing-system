@@ -18,6 +18,7 @@ use App\Imports\ShareRemittanceImport;
 use App\Models\RemittanceReport;
 use Illuminate\Support\Facades\Log;
 use App\Exports\RegularSpecialRemittanceExport;
+use App\Models\RemittanceBatch;
 
 class RemittanceController extends Controller
 {
@@ -128,6 +129,18 @@ class RemittanceController extends Controller
         $specialBilled = $billings->where('billing_type', 'special');
         // --- End of new logic ---
 
+        // Count regular and special remittance imports
+        $remittanceImportRegularCount = RemittanceBatch::where('billing_period', $billingPeriod)
+            ->where('billing_type', 'regular')
+            ->count();
+        $remittanceImportSpecialCount = RemittanceBatch::where('billing_period', $billingPeriod)
+            ->where('billing_type', 'special')
+            ->count();
+        // Count shares remittance imports
+        $sharesRemittanceImportCount = RemittanceBatch::where('billing_period', $billingPeriod)
+            ->where('remittance_tag', 'shares')
+            ->count();
+
         return view('components.admin.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
             'sharesPreviewPaginated',
@@ -135,7 +148,10 @@ class RemittanceController extends Controller
             'regularRemittances',
             'specialRemittances',
             'regularBilled',
-            'specialBilled'
+            'specialBilled',
+            'remittanceImportRegularCount',
+            'remittanceImportSpecialCount',
+            'sharesRemittanceImportCount'
         ));
     }
 
@@ -274,6 +290,13 @@ class RemittanceController extends Controller
             }
 
             DB::commit();
+
+            // Track share remittance import in RemittanceBatch
+            RemittanceBatch::create([
+                'billing_period' => $currentBillingPeriod,
+                'remittance_tag' => 'shares',
+                'imported_at' => now(),
+            ]);
 
             return redirect()->route('remittance.index')
                 ->with('success', 'Share remittance file processed successfully. Check the preview below.');

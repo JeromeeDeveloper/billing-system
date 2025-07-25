@@ -70,6 +70,7 @@
                     </div>
                 </div>
 
+
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
@@ -83,28 +84,40 @@
                             </div>
                             <div class="card-body">
                                 <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Remittance Flow & User Guide (Admin)</h5>
-                                    <ol class="mb-2">
-                                        <li><strong>Upload:</strong> Admin uploads remittance files for loans/savings
-                                            and shares.</li>
-                                        <li><strong>Processing:</strong> System matches and processes payments based on
-                                            prioritization and member data.</li>
-                                        <li><strong>Preview & Export:</strong> Admin can preview, process, and export
-                                            remittance data for all branches.</li>
-                                        <li><strong>Branch Filtering:</strong> Remittance data is automatically filtered
-                                            for each branch user.</li>
-                                    </ol>
-                                    <ul class="mb-2">
-                                        <li><strong>File Requirements:</strong> Ensure files meet the required format
-                                            and headers before uploading.</li>
-                                        <li><strong>History:</strong> View and download previous remittance uploads and
-                                            exports.</li>
-                                    </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> Only admin can upload remittance
-                                            data. Branch users can only export and view data filtered to their
-                                            branch.</small></p>
+                                <div class="row mb-4">
+                                    <div class="col-md-4">
+                                        <div class="card stats-card bg-light border-primary">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-primary mb-2">
+                                                    <i class="fa fa-upload"></i> Remittance (Regular)
+                                                </h5>
+                                                <h2 class="mb-0">{{ $remittanceImportRegularCount }}</h2>
+                                                <small class="text-muted">This billing period</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card stats-card bg-light border-warning">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-warning mb-2">
+                                                    <i class="fa fa-upload"></i> Remittance (Special)
+                                                </h5>
+                                                <h2 class="mb-0">{{ $remittanceImportSpecialCount }}</h2>
+                                                <small class="text-muted">This billing period</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card stats-card bg-light border-info">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-info mb-2">
+                                                    <i class="fa fa-upload"></i> Remittance (Shares)
+                                                </h5>
+                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount }}</h2>
+                                                <small class="text-muted">This billing period</small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Alerts Section (Success, Error, Billing Period) -->
@@ -123,22 +136,7 @@
                                             </div>
                                         @endif
                                     </div>
-                                    <div class="col-12 col-md-12">
-                                        <div class="alert alert-warning alert-dismissible fade show mb-0">
-                                            <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                            <h6 class="mb-1"><i class="fa fa-calendar"></i> Current Billing Period</h6>
-                                            <p class="mb-0">
-                                                <strong>Period:</strong>
-                                                @php
-                                                    $billingPeriod = auth()->user()->billing_period ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format('F Y') : 'Not Set';
-                                                @endphp
-                                                {{ $billingPeriod }}
-                                            </p>
-                                            <p class="mb-0 small text-muted">
-                                                <i class="fa fa-info-circle"></i> Remittance data will be filtered and exported only for this billing period.
-                                            </p>
-                                        </div>
-                                    </div>
+
                                 </div>
 
                                 <!-- Modernized Remittance Upload Section (Installment Forecast on top, others below) -->

@@ -51,6 +51,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             'billing_period' => $this->billingPeriod,
             'remittance_tag' => $this->remittance_tag,
             'imported_at' => $this->imported_at,
+            'billing_type' => $this->billingType, // Add this line
         ]);
         foreach ($rows as $row) {
             $result = $this->processRow($row);
