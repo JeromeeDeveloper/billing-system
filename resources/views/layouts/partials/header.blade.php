@@ -55,9 +55,7 @@
                                 <div class="pulse-css" id="notification-pulse"></div>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
-                                <ul class="list-unstyled" id="notification-list">
-                                    <!-- Notifications will be dynamically inserted here -->
-                                </ul>
+
                                 <a class="all-notification" href="{{ route('notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
                             </div>
                         </li>

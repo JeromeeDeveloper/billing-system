@@ -25,8 +25,14 @@ class BranchAtmController extends Controller
             ->where('branch_id', Auth::user()->branch_id)
             ->when($billingPeriod, function ($query, $billingPeriod) {
                 $query->where('billing_period', 'like', $billingPeriod . '%');
-            })
-            ->whereHas('atmPayments');
+            });
+
+        $isSearching = $request->filled('name') || $request->filled('emp_id') || $request->filled('cid');
+
+        // Only require ATM payments if not searching
+        if (!$isSearching) {
+            $query->whereHas('atmPayments');
+        }
 
         if ($request->filled('name')) {
             $query->where(function ($q) use ($request) {

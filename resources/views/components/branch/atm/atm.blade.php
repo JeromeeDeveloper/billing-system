@@ -153,7 +153,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach ($members as $member)
+                                            @forelse ($members as $member)
                                                 <tr>
                                                     <td>{{ $member->cid }}</td>
                                                     <td>{{ $member->lname }}, {{ $member->fname }}</td>
@@ -791,7 +791,11 @@
                                                         </div>
                                                     </div>
                                                 </div>
-                                            @endforeach
+                                            @empty
+                                                <tr>
+                                                    <td colspan="7" class="text-center text-muted">No members found for your search.</td>
+                                                </tr>
+                                            @endforelse
                                         </tbody>
                                     </table>
                                 </div>
@@ -819,6 +823,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <style>
         .flex.justify-between.flex-1.sm\:hidden {

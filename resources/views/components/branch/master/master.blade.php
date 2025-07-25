@@ -2,18 +2,29 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>Billing and Collection</title>
-
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
-
-    <link href="{{ asset('vendor/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    @include('layouts.partials.head')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        .card-header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .status-badge {
+            min-width: 160px;
+        }
+        .info-note-toggle {
+            cursor: pointer;
+        }
+        .table-responsive {
+            margin-top: 1rem;
+        }
+        .pagination-container {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 
 <body>
