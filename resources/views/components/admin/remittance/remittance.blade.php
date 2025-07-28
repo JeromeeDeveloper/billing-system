@@ -89,7 +89,7 @@
                                         <div class="alert alert-info">
                                             <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Remittance Upload Information</h6>
                                             <p class="mb-2"><strong>Current Billing Period:</strong> {{ \Carbon\Carbon::parse(Auth::user()->billing_period)->format('Y F') }}</p>
-                                          
+
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -184,7 +184,7 @@
                                                         <label for="remit_installment_file" class="form-label">Select File</label>
                                                         <input type="file" class="form-control" id="remit_installment_file" name="file">
                                                     </div>
-                                                    <button type="submit" class="btn btn-primary w-100">
+                                                    <button type="submit" class="btn btn-primary w-100" id="installmentSubmitBtn">
                                                         <i class="fa fa-upload me-1"></i> Upload Installment File
                                                     </button>
                                                 </form>
@@ -239,7 +239,7 @@
                                                         <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name (LASTNAME, FIRSTNAME), Share (amount).</small>
                                                     </div>
 
-                                                        <button type="submit" class="btn btn-success btn-block mt-2">
+                                                        <button type="submit" class="btn btn-success btn-block mt-2" id="shareSubmitBtn">
                                                             <i class="fa fa-upload me-1"></i> Upload and Process Share Remittance
                                                         </button>
                                                         <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#sharesFormatModal">
@@ -831,7 +831,29 @@
             document.getElementById('confirmBillingTypeBtn').addEventListener('click', function(e) {
                 var selectedType = document.querySelector('input[name="billing_type_modal"]:checked').value;
                 document.getElementById('billingTypeInput').value = selectedType;
+
+                // Show loading state
+                const confirmBtn = document.getElementById('confirmBillingTypeBtn');
+                const originalText = confirmBtn.innerHTML;
+
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+                // Close modal
                 $('#billingTypeModal').modal('hide');
+
+                // Show SweetAlert loading
+                Swal.fire({
+                    title: 'Processing Remittance Upload...',
+                    html: 'Please wait while we match and process your remittance data. This may take a few moments.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Submit the form
                 document.getElementById('loansSavingsForm').submit();
             });
         });

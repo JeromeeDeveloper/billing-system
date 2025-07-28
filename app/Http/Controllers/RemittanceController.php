@@ -292,9 +292,18 @@ class RemittanceController extends Controller
             DB::commit();
 
             // Track share remittance import in RemittanceBatch
+            $maxSharesTag = RemittanceBatch::where('billing_period', $currentBillingPeriod)
+                ->where('remittance_tag', '>=', 1000) // Use 1000+ range for shares
+                ->max('remittance_tag');
+
+            $nextSharesTag = 1000; // Start shares at 1000
+            if ($maxSharesTag) {
+                $nextSharesTag = $maxSharesTag + 1;
+            }
+
             RemittanceBatch::create([
                 'billing_period' => $currentBillingPeriod,
-                'remittance_tag' => 'shares',
+                'remittance_tag' => $nextSharesTag,
                 'imported_at' => now(),
             ]);
 
