@@ -120,10 +120,10 @@ class AtmController extends Controller
             DB::raw('SUM(share_balance) as total_shares'),
             DB::raw('SUM(loan_balance) as total_loans')
         )
-        ->when($billingPeriod, function ($query, $billingPeriod) {
-            $query->where('billing_period', 'like', $billingPeriod . '%');
-        })
-        ->first();
+            ->when($billingPeriod, function ($query, $billingPeriod) {
+                $query->where('billing_period', 'like', $billingPeriod . '%');
+            })
+            ->first();
 
         $branchSummary = Member::select(
             'branches.name as branch_name',
@@ -131,12 +131,12 @@ class AtmController extends Controller
             DB::raw('SUM(members.share_balance) as total_shares'),
             DB::raw('SUM(members.loan_balance) as total_loans')
         )
-        ->join('branches', 'members.branch_id', '=', 'branches.id')
-        ->when($billingPeriod, function ($query, $billingPeriod) {
-            $query->where('members.billing_period', 'like', $billingPeriod . '%');
-        })
-        ->groupBy('branches.id', 'branches.name')
-        ->get();
+            ->join('branches', 'members.branch_id', '=', 'branches.id')
+            ->when($billingPeriod, function ($query, $billingPeriod) {
+                $query->where('members.billing_period', 'like', $billingPeriod . '%');
+            })
+            ->groupBy('branches.id', 'branches.name')
+            ->get();
 
         return view('components.admin.atm.summary-report', compact('summary', 'branchSummary'));
     }
@@ -266,9 +266,19 @@ class AtmController extends Controller
             }
 
             // Find regular savings account
-            $regularSavings = $member->savings()->whereHas('savingProduct', function($q) {
-                $q->where('product_type', 'regular');
-            })->first();
+            $regularSavings = $member->savings()
+                ->whereHas('savingProduct', function ($q) {
+                    $q->where('product_type', 'atm');
+                })
+                ->first();
+
+            if (!$regularSavings) {
+                $regularSavings = $member->savings()
+                    ->whereHas('savingProduct', function ($q) {
+                        $q->where('product_type', 'regular');
+                    })
+                    ->first();
+            }
 
             // Determine savings allocation details for the main ATM payment record
             $savingsAllocation = 0;
@@ -338,7 +348,6 @@ class AtmController extends Controller
             }
 
             return redirect()->back()->with('success', $message);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error processing payment: ' . $e->getMessage());

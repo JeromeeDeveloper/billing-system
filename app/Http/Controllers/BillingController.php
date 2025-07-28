@@ -7,6 +7,7 @@ use App\Models\Member;
 use App\Models\User;
 use App\Models\BillingExport;
 use App\Models\Notification;
+use App\Models\RemittanceBatch;
 use Illuminate\Http\Request;
 use App\Exports\BillingExport as BillingExcelExport;
 use App\Exports\MembersNoBranchExport;
@@ -620,6 +621,9 @@ class BillingController extends Controller
             'available_balance' => null,
             'interest' => null,
         ]);
+
+        // Clear remittance batches for the new billing period
+        \App\Models\RemittanceBatch::where('billing_period', $billingPeriod)->delete();
 
         // Members reset (keep only cid and member_tagging)
         \App\Models\Member::query()->update([

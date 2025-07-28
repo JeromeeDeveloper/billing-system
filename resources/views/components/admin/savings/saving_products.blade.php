@@ -158,6 +158,7 @@
                                 <option value="">Select Product Type</option>
                                 <option value="regular">Regular</option>
                                 <option value="mortuary">Mortuary</option>
+                                <option value="atm">ATM</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -205,6 +206,7 @@
                                 <option value="">Select Product Type</option>
                                 <option value="regular" {{ $product->product_type === 'regular' ? 'selected' : '' }}>Regular</option>
                                 <option value="mortuary" {{ $product->product_type === 'mortuary' ? 'selected' : '' }}>Mortuary</option>
+                                <option value="atm" {{ $product->product_type === 'atm' ? 'selected' : '' }}>ATM</option>
                             </select>
                         </div>
                         <div class="form-group">

@@ -76,7 +76,7 @@
                         <div class="card">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center title-container">
-                                    <h4 class="card-title mb-0">Upload Remittance Excel File</h4>
+                                    <h4 class="card-title mb-0">Remittance</h4>
                                 </div>
                                 <div class="d-flex align-items-center ms-3">
 
@@ -85,14 +85,29 @@
                             <div class="card-body">
                                 <!-- Information Note -->
                                 <div class="row mb-4">
+                                    <div class="col-12 mb-3">
+                                        <div class="alert alert-info">
+                                            <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Remittance Upload Information</h6>
+                                            <p class="mb-2"><strong>Current Billing Period:</strong> {{ \Carbon\Carbon::parse(Auth::user()->billing_period)->format('Y F') }}</p>
+                                          
+                                        </div>
+                                    </div>
                                     <div class="col-md-4">
                                         <div class="card stats-card bg-light border-primary">
                                             <div class="card-body text-center">
                                                 <h5 class="card-title text-primary mb-2">
                                                     <i class="fa fa-upload"></i> Remittance (Regular)
                                                 </h5>
-                                                <h2 class="mb-0">{{ $remittanceImportRegularCount }}</h2>
-                                                <small class="text-muted">This billing period</small>
+                                                <h2 class="mb-0">{{ $remittanceImportRegularCount / 2 }}</h2>
+                                                @php
+                                                    $regularCount = $remittanceImportRegularCount / 2;
+                                                    $ordinal = '';
+                                                    if ($regularCount == 1) $ordinal = '1st';
+                                                    elseif ($regularCount == 2) $ordinal = '2nd';
+                                                    elseif ($regularCount == 3) $ordinal = '3rd';
+                                                    else $ordinal = $regularCount . 'th';
+                                                @endphp
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
                                             </div>
                                         </div>
                                     </div>
@@ -102,8 +117,16 @@
                                                 <h5 class="card-title text-warning mb-2">
                                                     <i class="fa fa-upload"></i> Remittance (Special)
                                                 </h5>
-                                                <h2 class="mb-0">{{ $remittanceImportSpecialCount }}</h2>
-                                                <small class="text-muted">This billing period</small>
+                                                <h2 class="mb-0">{{ $remittanceImportSpecialCount / 2 }}</h2>
+                                                @php
+                                                    $specialCount = $remittanceImportSpecialCount / 2;
+                                                    $ordinal = '';
+                                                    if ($specialCount == 1) $ordinal = '1st';
+                                                    elseif ($specialCount == 2) $ordinal = '2nd';
+                                                    elseif ($specialCount == 3) $ordinal = '3rd';
+                                                    else $ordinal = $specialCount . 'th';
+                                                @endphp
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
                                             </div>
                                         </div>
                                     </div>
@@ -113,8 +136,16 @@
                                                 <h5 class="card-title text-info mb-2">
                                                     <i class="fa fa-upload"></i> Remittance (Shares)
                                                 </h5>
-                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount }}</h2>
-                                                <small class="text-muted">This billing period</small>
+                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount / 2 }}</h2>
+                                                @php
+                                                    $sharesCount = $sharesRemittanceImportCount / 2;
+                                                    $ordinal = '';
+                                                    if ($sharesCount == 1) $ordinal = '1st';
+                                                    elseif ($sharesCount == 2) $ordinal = '2nd';
+                                                    elseif ($sharesCount == 3) $ordinal = '3rd';
+                                                    else $ordinal = $sharesCount . 'th';
+                                                @endphp
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
                                             </div>
                                         </div>
                                     </div>
