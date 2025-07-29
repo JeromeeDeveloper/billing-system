@@ -136,16 +136,16 @@
                                                 <h5 class="card-title text-info mb-2">
                                                     <i class="fa fa-upload"></i> Remittance (Shares)
                                                 </h5>
-                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount / 2 }}</h2>
-                                                @php
+                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount}}</h2>
+                                                {{-- @php
                                                     $sharesCount = $sharesRemittanceImportCount / 2;
                                                     $ordinal = '';
                                                     if ($sharesCount == 1) $ordinal = '1st';
                                                     elseif ($sharesCount == 2) $ordinal = '2nd';
                                                     elseif ($sharesCount == 3) $ordinal = '3rd';
                                                     else $ordinal = $sharesCount . 'th';
-                                                @endphp
-                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                @endphp --}}
+                                                <small class="text-muted">{{ $sharesRemittanceImportCount }} remittance uploaded this period</small>
                                             </div>
                                         </div>
                                     </div>

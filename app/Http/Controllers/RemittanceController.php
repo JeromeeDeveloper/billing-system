@@ -138,7 +138,7 @@ class RemittanceController extends Controller
             ->count();
         // Count shares remittance imports
         $sharesRemittanceImportCount = RemittanceBatch::where('billing_period', $billingPeriod)
-            ->where('remittance_tag', 'shares')
+            ->where('billing_type', 'shares')
             ->count();
 
         return view('components.admin.remittance.remittance', compact(
@@ -304,6 +304,7 @@ class RemittanceController extends Controller
             RemittanceBatch::create([
                 'billing_period' => $currentBillingPeriod,
                 'remittance_tag' => $nextSharesTag,
+                'billing_type' => 'shares',
                 'imported_at' => now(),
             ]);
 
