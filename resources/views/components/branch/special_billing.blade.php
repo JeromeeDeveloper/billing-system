@@ -37,7 +37,7 @@
                                 <h4 class="card-title mb-0">Special Billing Data (Branch)</h4>
                                 @php
                                     $specialBillingEnabled = $exportStatuses->get('special_billing') ? $exportStatuses->get('special_billing')->is_enabled : true;
-                                    $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && !$notAllApproved;
+                                    $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && !$notAllApproved && $userIsApproved && $allBranchUsersApproved;
                                 @endphp
                                 <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export.branch') : 'javascript:void(0);' }}"
                                    class="btn btn-success {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
@@ -53,6 +53,10 @@
                                         <br><small class="text-muted">(Disabled - Some members have no regular savings)</small>
                                     @elseif($notAllApproved)
                                         <br><small class="text-muted">(Disabled - Some members are not approved)</small>
+                                    @elseif(!$userIsApproved)
+                                        <br><small class="text-muted">(Disabled - Your account is not approved)</small>
+                                    @elseif(!$allBranchUsersApproved)
+                                        <br><small class="text-muted">(Disabled - Not all branch users are approved)</small>
                                     @endif
                                 </a>
                             </div>
@@ -115,6 +119,7 @@
                                     <table class="table table-striped table-bordered">
                                         <thead>
                                             <tr>
+                                                <th>CID</th>
                                                 <th>Employee ID</th>
                                                 <th>Name</th>
                                                 <th>Amortization</th>
@@ -127,6 +132,7 @@
                                         <tbody>
                                             @forelse ($specialBillings as $billing)
                                             <tr>
+                                                <td>{{ $billing->cid }}</td>
                                                 <td>{{ $billing->employee_id }}</td>
                                                 <td>{{ $billing->name }}</td>
                                                 <td>{{ number_format($billing->amortization, 2) }}</td>

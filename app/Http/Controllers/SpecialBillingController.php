@@ -50,8 +50,8 @@ class SpecialBillingController extends Controller
             });
         });
         $hasSpecialBillingData = $specialBillings->count() > 0;
-
-        return view('components.admin.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'hasSpecialBillingData'));
+        $allBranchUsersApproved = \App\Models\User::where('role', 'branch')->where('status', '!=', 'approved')->count() === 0;
+        return view('components.admin.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'hasSpecialBillingData', 'allBranchUsersApproved'));
     }
 
     public function import(Request $request)

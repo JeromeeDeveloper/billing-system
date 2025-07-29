@@ -49,8 +49,9 @@ class BranchSpecialBillingController extends Controller
         });
         $notAllApproved = $members->contains(function($m) { return $m->status !== 'active'; });
         $hasSpecialBillingData = $specialBillings->count() > 0;
-
-        return view('components.branch.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'notAllApproved', 'hasSpecialBillingData'));
+        $userIsApproved = Auth::user()->status === 'approved';
+        $allBranchUsersApproved = \App\Models\User::where('role', 'branch')->where('status', '!=', 'approved')->count() === 0;
+        return view('components.branch.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'notAllApproved', 'hasSpecialBillingData', 'userIsApproved', 'allBranchUsersApproved'));
     }
 
     public function export()
