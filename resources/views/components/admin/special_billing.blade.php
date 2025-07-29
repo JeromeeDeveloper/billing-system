@@ -35,8 +35,23 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h4 class="card-title mb-0">Upload Special Billing Excel File</h4>
-                                <a href="{{ route('special-billing.export') }}" class="btn btn-success">
+                                @php
+                                    $specialBillingEnabled = $exportStatuses->get('special_billing') ? $exportStatuses->get('special_billing')->is_enabled : true;
+                                    $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings;
+                                @endphp
+                                <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export') : 'javascript:void(0);' }}"
+                                   class="btn btn-success {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
+                                   onclick="{{ $canExport && $hasSpecialBillingData ? '' : 'void(0)' }}">
                                     <i class="fa fa-file-excel"></i> Export Special Billing
+                                    @if(!$hasSpecialBillingData)
+                                        <br><small class="text-muted">(Disabled - No special billing data for this period)</small>
+                                    @elseif(!$specialBillingEnabled)
+                                        <br><small class="text-muted">(Disabled - Already exported. Wait for next period to enable)</small>
+                                    @elseif($noBranch)
+                                        <br><small class="text-muted">(Disabled - Some members have no branch)</small>
+                                    @elseif($noRegularSavings)
+                                        <br><small class="text-muted">(Disabled - Some members have no regular savings)</small>
+                                    @endif
                                 </a>
                             </div>
                             <div class="card-body">

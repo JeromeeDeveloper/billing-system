@@ -132,6 +132,21 @@
                                         </button>
                                     </form>
                                 </div>
+                                <div class="col-md-6">
+                                    <form method="GET" action="{{ route('atm.generate-batch-report') }}" class="form-inline" id="generateBatchReportForm">
+                                        <div class="form-group mr-2">
+                                            <label for="batch_report_date" class="mr-2">Report Date:</label>
+                                            <input type="date" id="batch_report_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates_batch')) disabled @endif>
+                                        </div>
+                                        <div class="form-group mr-2">
+                                            <input type="checkbox" id="all_dates_batch" name="all_dates" value="1" {{ request('all_dates_batch') ? 'checked' : '' }}>
+                                            <label for="all_dates_batch" class="ml-1">All Dates</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fa fa-file-pdf"></i> ATM Batch Report
+                                        </button>
+                                    </form>
+                                </div>
                                 {{-- <div class="col-md-6">
                                     <form method="GET" action="{{ route('atm.export-posted-payments-detailed') }}" class="form-inline" id="exportPostedPaymentsDetailedForm">
                                         <div class="form-group mr-2">
@@ -1082,6 +1097,20 @@
             // Handle second export form
             var allDatesDetailedCheckbox = document.getElementById('all_dates_detailed');
             var dateDetailedInput = document.getElementById('export_date_detailed');
+            if (allDatesDetailedCheckbox && dateDetailedInput) {
+                allDatesDetailedCheckbox.addEventListener('change', function() {
+                    dateDetailedInput.disabled = this.checked;
+                });
+            }
+
+            // Handle batch report form
+            var allDatesBatchCheckbox = document.getElementById('all_dates_batch');
+            var dateBatchInput = document.getElementById('batch_report_date');
+            if (allDatesBatchCheckbox && dateBatchInput) {
+                allDatesBatchCheckbox.addEventListener('change', function() {
+                    dateBatchInput.disabled = this.checked;
+                });
+            }
             if (allDatesDetailedCheckbox && dateDetailedInput) {
                 allDatesDetailedCheckbox.addEventListener('change', function() {
                     dateDetailedInput.disabled = this.checked;

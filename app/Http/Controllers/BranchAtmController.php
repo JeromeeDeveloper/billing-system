@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PostedPaymentsExport;
+use App\Models\SavingsPayment;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BranchAtmController extends Controller
 {
@@ -505,5 +507,130 @@ class BranchAtmController extends Controller
             new \App\Exports\BranchListOfProfileExport($branchId),
             'Branch_List_of_Profile_' . now()->format('Y-m-d') . '.xlsx'
         );
+    }
+
+        public function generateAtmBatchReport(Request $request)
+    {
+        $branchId = Auth::user()->branch_id;
+        $date = $request->input('date', date('Y-m-d'));
+        $allDates = $request->input('all_dates', false);
+
+        // Get ATM payments based on date filter and branch
+        $query = AtmPayment::with(['member.branch'])
+            ->whereHas('member', function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            })
+            ->when(!$allDates, function ($query) use ($date) {
+                $query->whereDate('payment_date', $date);
+            });
+
+        $atmPayments = $query->get();
+
+        // Check if any ATM payments found
+        if ($atmPayments->isEmpty()) {
+            return redirect()->back()->with('error', 'No ATM payments found for the selected criteria. Please create some ATM payments first.');
+        }
+
+        // Prepare data for the report
+        $reportData = [];
+        foreach ($atmPayments as $payment) {
+            $member = $payment->member;
+
+            // Get loan payments for this ATM payment
+            $loanPayments = LoanPayment::where('member_id', $member->id)
+                ->where('payment_date', $payment->payment_date)
+                ->where('withdrawal_amount', $payment->withdrawal_amount)
+                ->get();
+
+            // Get savings payments for this ATM payment
+            $savingsPayments = SavingsPayment::where('atm_payment_id', $payment->id)->get();
+
+            // Calculate components based on your criteria
+            $totalAmount = $payment->withdrawal_amount;
+            $posCharge = 0; // Empty as requested
+            $caAmount = 0; // CA (Pinoy Coop) - ATM savings
+            $loansAmount = 0; // LOANS - total loan payments
+            $othersAmount = 0; // Others - regular savings remaining
+            $remarks = '';
+
+            // Calculate LOANS (total_due from loan forecasts)
+            $loansAmount = $member->loanForecasts->sum('total_due');
+
+            // Get remarks from loan payments
+            foreach ($loanPayments as $loanPayment) {
+                $remarks .= $loanPayment->notes ? $loanPayment->notes . '; ' : '';
+            }
+
+            // Calculate remaining amount (same logic as postPayment)
+            $totalSavingsPayment = $savingsPayments->sum('amount');
+            $remainingToSavings = $totalAmount - ($loansAmount + $totalSavingsPayment);
+
+            // Calculate CA (Pinoy Coop) - ATM savings (priority)
+            foreach ($savingsPayments as $savingsPayment) {
+                $saving = $member->savings()->where('account_number', $savingsPayment->account_number)->first();
+                if ($saving && $saving->savingProduct && $saving->savingProduct->product_type === 'atm') {
+                    $caAmount += $savingsPayment->amount;
+                }
+            }
+
+            // Calculate Others (regular savings remaining)
+            foreach ($savingsPayments as $savingsPayment) {
+                $saving = $member->savings()->where('account_number', $savingsPayment->account_number)->first();
+                if ($saving && $saving->savingProduct && $saving->savingProduct->product_type === 'regular') {
+                    $othersAmount += $savingsPayment->amount;
+                }
+            }
+
+            // If no specific savings payments, use the remaining amount logic
+            if ($totalSavingsPayment == 0 && $remainingToSavings > 0) {
+                // Check for ATM savings first, then regular savings (same as postPayment logic)
+                $atmSavings = $member->savings()
+                    ->whereHas('savingProduct', function ($q) {
+                        $q->where('product_type', 'atm');
+                    })
+                    ->first();
+
+                if ($atmSavings) {
+                    $caAmount = $remainingToSavings;
+                } else {
+                    $regularSavings = $member->savings()
+                        ->whereHas('savingProduct', function ($q) {
+                            $q->where('product_type', 'regular');
+                        })
+                        ->first();
+                    if ($regularSavings) {
+                        $othersAmount = $remainingToSavings;
+                    }
+                }
+            }
+
+            // Calculate net amount due
+            $netAmountDue = $totalAmount - $loansAmount;
+
+            $reportData[] = [
+                'member' => $member->fname . ' ' . $member->lname,
+                'amount' => $totalAmount,
+                'pos_charge' => $posCharge,
+                'ca_amount' => $caAmount,
+                'loans' => $loansAmount,
+                'others' => $othersAmount,
+                'net_amount_due' => $netAmountDue,
+                'remarks' => trim($remarks, '; ')
+            ];
+        }
+
+        // Get branch name for header
+        $branchName = Auth::user()->branch->name;
+
+        // Generate PDF
+        $pdf = Pdf::loadView('reports.atm-batch', [
+            'reportData' => $reportData,
+            'branchName' => $branchName,
+            'date' => $date,
+            'allDates' => $allDates
+        ]);
+
+        $filename = 'ATM_Batch_Report_' . $branchName . '_' . $date . '.pdf';
+        return $pdf->download($filename);
     }
 }

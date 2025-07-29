@@ -112,6 +112,7 @@ Route::get('/atm', [AtmController::class, 'index'])->name('atm');
     Route::post('/atm/post-payment', [AtmController::class, 'postPayment'])->name('atm.post-payment');
     Route::get('/atm/export-posted-payments', [AtmController::class, 'exportPostedPayments'])->name('atm.export-posted-payments');
     Route::get('/atm/export-posted-payments-detailed', [AtmController::class, 'exportPostedPaymentsDetailed'])->name('atm.export-posted-payments-detailed');
+Route::get('/atm/generate-batch-report', [AtmController::class, 'generateAtmBatchReport'])->name('atm.generate-batch-report');
 
 //Branch
 Route::get('/Branch', [BranchController::class, 'index'])->name('branch');
@@ -227,6 +228,7 @@ Route::get('/Branch/shares', [SharesController::class, 'index_branch'])->name('s
     Route::post('/branch/atm/post-payment', [BranchAtmController::class, 'postPayment'])->name('branch.atm.post-payment');
     Route::get('/branch/atm/export-posted-payments', [BranchAtmController::class, 'exportPostedPayments'])->name('branch.atm.export-posted-payments');
     Route::get('/branch/atm/export-posted-payments-detailed', [BranchAtmController::class, 'exportPostedPaymentsDetailed'])->name('branch.atm.export-posted-payments-detailed');
+Route::get('/branch/atm/generate-batch-report', [BranchAtmController::class, 'generateAtmBatchReport'])->name('branch.atm.generate-batch-report');
     Route::get('/branch/atm/export-remittance-report-per-branch', [BranchAtmController::class, 'exportBranchRemittanceReportPerBranch'])->name('branch.atm.export.remittance-report-per-branch');
     Route::get('/branch/atm/export-remittance-report-per-branch-member', [BranchAtmController::class, 'exportBranchRemittanceReportPerBranchMember'])->name('branch.atm.export.remittance-report-per-branch-member');
     Route::get('/branch/atm/export-remittance-report-consolidated', [BranchAtmController::class, 'exportBranchRemittanceReportConsolidated'])->name('branch.atm.export.remittance-report-consolidated');

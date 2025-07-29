@@ -40,7 +40,18 @@ class SpecialBillingController extends Controller
         // Pagination
         $specialBillings = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        return view('components.admin.special_billing', compact('specialBillings'));
+        $exportStatuses = \App\Models\ExportStatus::getStatuses($billingPeriod);
+        $specialBillingCids = $query->pluck('cid');
+        $members = \App\Models\Member::whereIn('cid', $specialBillingCids)->get();
+        $noBranch = $members->contains(function($m) { return !$m->branch_id || $m->branch_id == 0; });
+        $noRegularSavings = $members->contains(function($m) {
+            return !$m->savings->contains(function($s) {
+                return $s->savingProduct && $s->savingProduct->product_type === 'regular';
+            });
+        });
+        $hasSpecialBillingData = $specialBillings->count() > 0;
+
+        return view('components.admin.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'hasSpecialBillingData'));
     }
 
     public function import(Request $request)
