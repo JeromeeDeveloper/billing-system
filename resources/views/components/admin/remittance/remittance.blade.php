@@ -37,6 +37,16 @@
         h5.text-center {
             padding: 18px;
         }
+
+        .btn.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn.disabled:hover {
+            opacity: 0.6;
+        }
     </style>
 </head>
 
@@ -98,9 +108,9 @@
                                                 <h5 class="card-title text-primary mb-2">
                                                     <i class="fa fa-upload"></i> Remittance (Regular)
                                                 </h5>
-                                                <h2 class="mb-0">{{ $remittanceImportRegularCount / 2 }}</h2>
+                                                <h2 class="mb-0">{{ $remittanceImportRegularCount }}</h2>
                                                 @php
-                                                    $regularCount = $remittanceImportRegularCount / 2;
+                                                    $regularCount = $remittanceImportRegularCount;
                                                     $ordinal = '';
                                                     if ($regularCount == 1) $ordinal = '1st';
                                                     elseif ($regularCount == 2) $ordinal = '2nd';
@@ -117,9 +127,9 @@
                                                 <h5 class="card-title text-warning mb-2">
                                                     <i class="fa fa-upload"></i> Remittance (Special)
                                                 </h5>
-                                                <h2 class="mb-0">{{ $remittanceImportSpecialCount / 2 }}</h2>
+                                                <h2 class="mb-0">{{ $remittanceImportSpecialCount }}</h2>
                                                 @php
-                                                    $specialCount = $remittanceImportSpecialCount / 2;
+                                                    $specialCount = $remittanceImportSpecialCount;
                                                     $ordinal = '';
                                                     if ($specialCount == 1) $ordinal = '1st';
                                                     elseif ($specialCount == 2) $ordinal = '2nd';
@@ -136,16 +146,16 @@
                                                 <h5 class="card-title text-info mb-2">
                                                     <i class="fa fa-upload"></i> Remittance (Shares)
                                                 </h5>
-                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount}}</h2>
-                                                {{-- @php
-                                                    $sharesCount = $sharesRemittanceImportCount / 2;
+                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount }}</h2>
+                                                @php
+                                                    $sharesCount = $sharesRemittanceImportCount;
                                                     $ordinal = '';
                                                     if ($sharesCount == 1) $ordinal = '1st';
                                                     elseif ($sharesCount == 2) $ordinal = '2nd';
                                                     elseif ($sharesCount == 3) $ordinal = '3rd';
                                                     else $ordinal = $sharesCount . 'th';
-                                                @endphp --}}
-                                                <small class="text-muted">{{ $sharesRemittanceImportCount }} remittance uploaded this period</small>
+                                                @endphp
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
                                             </div>
                                         </div>
                                     </div>
@@ -213,11 +223,21 @@
                                                     <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#loansSavingsFormatModal">
                                                         <i class="fa fa-eye me-1"></i> View Expected Format
                                                     </button>
-                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('loans_savings')">
+                                                    @php
+                                                        $loansSavingsEnabled = $exportStatuses->get('loans_savings') ? $exportStatuses->get('loans_savings')->is_enabled : true;
+                                                        $loansSavingsWithProductEnabled = $exportStatuses->get('loans_savings_with_product') ? $exportStatuses->get('loans_savings_with_product')->is_enabled : true;
+                                                    @endphp
+                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2 {{ !$loansSavingsEnabled ? 'disabled' : '' }}" onclick="{{ $loansSavingsEnabled ? 'generateExport(\'loans_savings\')' : 'void(0)' }}">
                                                         Collection file for Loans & Savings
+                                                        @if(!$loansSavingsEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new remittance to enable)</small>
+                                                        @endif
                                                     </a>
-                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2" onclick="generateExport('loans_savings_with_product')">
+                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2 {{ !$loansSavingsWithProductEnabled ? 'disabled' : '' }}" onclick="{{ $loansSavingsWithProductEnabled ? 'generateExport(\'loans_savings_with_product\')' : 'void(0)' }}">
                                                         Collection file for Loans & Savings (with Product Name)
+                                                        @if(!$loansSavingsWithProductEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new remittance to enable)</small>
+                                                        @endif
                                                     </a>
                                                 </form>
                                             </div>
@@ -246,11 +266,21 @@
                                                             <i class="fa fa-eye me-1"></i> View Expected Format
                                                         </button>
 
-                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('shares')">
+                                                    @php
+                                                        $sharesEnabled = $exportStatuses->get('shares') ? $exportStatuses->get('shares')->is_enabled : true;
+                                                        $sharesWithProductEnabled = $exportStatuses->get('shares_with_product') ? $exportStatuses->get('shares_with_product')->is_enabled : true;
+                                                    @endphp
+                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2 {{ !$sharesEnabled ? 'disabled' : '' }}" onclick="{{ $sharesEnabled ? 'generateExport(\'shares\')' : 'void(0)' }}">
                                                         Collection file for Shares
+                                                        @if(!$sharesEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
+                                                        @endif
                                                     </a>
-                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2" onclick="generateExport('shares_with_product')">
+                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}" onclick="{{ $sharesWithProductEnabled ? 'generateExport(\'shares_with_product\')' : 'void(0)' }}">
                                                         Collection file for Shares (with Product Name)
+                                                        @if(!$sharesWithProductEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
+                                                        @endif
                                                     </a>
                                                 </form>
                                             </div>
@@ -302,11 +332,15 @@
                                                     <tbody>
                                                         @forelse($loansSavingsPreviewPaginated as $row)
                                                             <tr>
-                                                                <td>{{ $row->name }}</td>
-                                                                <td>{{ $row->loans }}</td>
-                                                                <td>{{ is_array($row->savings) ? $row->savings['total'] ?? 0 : $row->savings }}</td>
-                                                                <td>{{ $row->status }}</td>
-                                                                <td>{{ $row->message }}</td>
+                                                                <td>{{ $row['name'] }}</td>
+                                                                <td>{{ number_format($row['loans'], 2) }}</td>
+                                                                <td>{{ number_format($row['savings'], 2) }}</td>
+                                                                <td>
+                                                                    <span class="badge badge-{{ $row['status'] === 'success' ? 'success' : 'danger' }}">
+                                                                        {{ ucfirst($row['status']) }}
+                                                                    </span>
+                                                                </td>
+                                                                <td>{{ $row['message'] }}</td>
                                                             </tr>
                                                         @empty
                                                             <tr>
@@ -363,10 +397,14 @@
                                                     <tbody>
                                                         @forelse($sharesPreviewPaginated as $row)
                                                             <tr>
-                                                                <td>{{ $row->name }}</td>
-                                                                <td>{{ $row->share_amount }}</td>
-                                                                <td>{{ $row->status }}</td>
-                                                                <td>{{ $row->message }}</td>
+                                                                <td>{{ $row['name'] }}</td>
+                                                                <td>{{ number_format($row['share_amount'], 2) }}</td>
+                                                                <td>
+                                                                    <span class="badge badge-{{ $row['status'] === 'success' ? 'success' : 'danger' }}">
+                                                                        {{ ucfirst($row['status']) }}
+                                                                    </span>
+                                                                </td>
+                                                                <td>{{ $row['message'] }}</td>
                                                             </tr>
                                                         @empty
                                                             <tr>

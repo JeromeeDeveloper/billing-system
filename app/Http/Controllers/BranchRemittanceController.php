@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\RemittancePreview;
 use App\Exports\RegularSpecialRemittanceExport;
+use App\Models\ExportStatus;
 
 class BranchRemittanceController extends Controller
 {
@@ -133,6 +134,10 @@ class BranchRemittanceController extends Controller
         $regularBilled = $billings->where('billing_type', 'regular');
         $specialBilled = $billings->where('billing_type', 'special');
         // --- End of new logic ---
+
+        // Get export statuses for this billing period
+        $exportStatuses = ExportStatus::getStatuses($currentBillingPeriod);
+
         return view('components.branch.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
             'sharesPreviewPaginated',
@@ -140,7 +145,8 @@ class BranchRemittanceController extends Controller
             'regularRemittances',
             'specialRemittances',
             'regularBilled',
-            'specialBilled'
+            'specialBilled',
+            'exportStatuses'
         ));
     }
 
@@ -156,11 +162,23 @@ class BranchRemittanceController extends Controller
 
             Log::info('Branch Export Request - Branch ID: ' . $branch_id . ', Type: ' . $type . ', Billing Period: ' . $currentBillingPeriod);
 
-            // Get all remittance data for branch members and current billing period
+            // Get the latest RemittanceBatch for this billing period
+            $latestBatch = \App\Models\RemittanceBatch::where('billing_period', $currentBillingPeriod)
+                ->whereIn('billing_type', ['regular', 'special'])
+                ->orderBy('imported_at', 'desc')
+                ->first();
+
+            if (!$latestBatch) {
+                return redirect()->back()->with('error', 'No remittance batch found for the current billing period. Please upload a file first.');
+            }
+
+            // Get remittance data for the latest batch only (branch members)
             $remittanceData = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id);
             })
             ->where('billing_period', $currentBillingPeriod)
+            ->where('remittance_type', 'loans_savings')
+            ->where('created_at', '>=', $latestBatch->imported_at)
             ->get();
 
             if ($remittanceData->isEmpty()) {
@@ -170,15 +188,93 @@ class BranchRemittanceController extends Controller
             Log::info('Found ' . $remittanceData->count() . ' records for branch ' . $branch_id . ' in billing period ' . $currentBillingPeriod);
 
             if ($type === 'shares') {
+                // Check if export is enabled
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares')) {
+                    return redirect()->back()->with('error', 'Export is disabled. Please upload a new shares remittance file to enable export.');
+                }
+
+                // For shares, get the latest shares batch
+                $latestSharesBatch = \App\Models\RemittanceBatch::where('billing_period', $currentBillingPeriod)
+                    ->where('billing_type', 'shares')
+                    ->orderBy('imported_at', 'desc')
+                    ->first();
+
+                if (!$latestSharesBatch) {
+                    return redirect()->back()->with('error', 'No shares remittance batch found for the current billing period. Please upload a shares file first.');
+                }
+
+                // Get shares remittance data for the latest batch only (branch members)
+                $remittanceData = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                })
+                ->where('billing_period', $currentBillingPeriod)
+                ->where('remittance_type', 'shares')
+                ->where('created_at', '>=', $latestSharesBatch->imported_at)
+                ->get();
+
+                if ($remittanceData->isEmpty()) {
+                    return redirect()->back()->with('error', 'No shares remittance data to export for the latest upload. Please upload a shares file first.');
+                }
+
+                // Mark export as generated
+                ExportStatus::markExported($currentBillingPeriod, 'shares');
+
                 $export = new \App\Exports\BranchSharesExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             } else if ($type === 'shares_with_product') {
+                // Check if export is enabled
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares_with_product')) {
+                    return redirect()->back()->with('error', 'Export is disabled. Please upload a new shares remittance file to enable export.');
+                }
+
+                // For shares with product, get the latest shares batch
+                $latestSharesBatch = \App\Models\RemittanceBatch::where('billing_period', $currentBillingPeriod)
+                    ->where('billing_type', 'shares')
+                    ->orderBy('imported_at', 'desc')
+                    ->first();
+
+                if (!$latestSharesBatch) {
+                    return redirect()->back()->with('error', 'No shares remittance batch found for the current billing period. Please upload a shares file first.');
+                }
+
+                // Get shares remittance data for the latest batch only (branch members)
+                $remittanceData = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                })
+                ->where('billing_period', $currentBillingPeriod)
+                ->where('remittance_type', 'shares')
+                ->where('created_at', '>=', $latestSharesBatch->imported_at)
+                ->get();
+
+                if ($remittanceData->isEmpty()) {
+                    return redirect()->back()->with('error', 'No shares remittance data to export for the latest upload. Please upload a shares file first.');
+                }
+
+                // Mark export as generated
+                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product');
+
                 $export = new \App\Exports\BranchSharesWithProductExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             } else if ($type === 'loans_savings_with_product') {
+                // Check if export is enabled
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings_with_product')) {
+                    return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
+                }
+
+                // Mark export as generated
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product');
+
                 $export = new \App\Exports\BranchLoansAndSavingsWithProductExport($remittanceData, $branch_id);
                 $filename = 'branch_loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             } else {
+                // Check if export is enabled
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings')) {
+                    return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
+                }
+
+                // Mark export as generated
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings');
+
                 $export = new \App\Exports\BranchLoansAndSavingsExport($remittanceData, $branch_id);
                 $filename = 'branch_loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             }

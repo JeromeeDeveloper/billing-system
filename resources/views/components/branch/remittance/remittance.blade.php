@@ -30,6 +30,16 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
         }
+
+        .btn.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn.disabled:hover {
+            opacity: 0.6;
+        }
     </style>
 </head>
 
@@ -142,12 +152,22 @@
                                                 <h6 class="mb-0 text-white"><i class="fa fa-file-excel"></i> Loans & Savings Collection</h6>
                                             </div>
                                             <div class="card-body">
+                                                @php
+                                                    $loansSavingsEnabled = $exportStatuses->get('loans_savings') ? $exportStatuses->get('loans_savings')->is_enabled : true;
+                                                    $loansSavingsWithProductEnabled = $exportStatuses->get('loans_savings_with_product') ? $exportStatuses->get('loans_savings_with_product')->is_enabled : true;
+                                                @endphp
                                                 <p class="text-muted small">Generate collection file for loans and savings remittance data.</p>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block">
+                                                <a href="{{ $loansSavingsEnabled ? route('branch.remittance.generateExport', ['type' => 'loans_savings']) : 'javascript:void(0)' }}" class="btn btn-primary btn-block {{ !$loansSavingsEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Loans & Savings
+                                                    @if(!$loansSavingsEnabled)
+                                                        <br><small class="text-muted">(Disabled - Upload new remittance to enable)</small>
+                                                    @endif
                                                 </a>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings_with_product']) }}" class="btn btn-outline-primary btn-block mt-2">
+                                                <a href="{{ $loansSavingsWithProductEnabled ? route('branch.remittance.generateExport', ['type' => 'loans_savings_with_product']) : 'javascript:void(0)' }}" class="btn btn-outline-primary btn-block mt-2 {{ !$loansSavingsWithProductEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Loans & Savings (with Product Name)
+                                                    @if(!$loansSavingsWithProductEnabled)
+                                                        <br><small class="text-muted">(Disabled - Upload new remittance to enable)</small>
+                                                    @endif
                                                 </a>
                                             </div>
                                         </div>
@@ -158,12 +178,22 @@
                                                 <h6 class="mb-0 text-white"><i class="fa fa-file-excel"></i> Shares Collection</h6>
                                             </div>
                                             <div class="card-body">
+                                                @php
+                                                    $sharesEnabled = $exportStatuses->get('shares') ? $exportStatuses->get('shares')->is_enabled : true;
+                                                    $sharesWithProductEnabled = $exportStatuses->get('shares_with_product') ? $exportStatuses->get('shares_with_product')->is_enabled : true;
+                                                @endphp
                                                 <p class="text-muted small">Generate collection file for shares remittance data.</p>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block  text-white">
+                                                <a href="{{ $sharesEnabled ? route('branch.remittance.generateExport', ['type' => 'shares']) : 'javascript:void(0)' }}" class="btn btn-success btn-block text-white {{ !$sharesEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Shares
+                                                    @if(!$sharesEnabled)
+                                                        <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
+                                                    @endif
                                                 </a>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares_with_product']) }}" class="btn btn-outline-success btn-block mt-2">
+                                                <a href="{{ $sharesWithProductEnabled ? route('branch.remittance.generateExport', ['type' => 'shares_with_product']) : 'javascript:void(0)' }}" class="btn btn-outline-success btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Shares (with Product Name)
+                                                    @if(!$sharesWithProductEnabled)
+                                                        <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
+                                                    @endif
                                                 </a>
                                             </div>
                                         </div>
