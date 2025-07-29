@@ -235,7 +235,7 @@ class BranchAtmController extends Controller
 
             DB::beginTransaction();
 
-            // Process loan payments
+            // Process loan payments with distribution logic (interest first, then principal, then penalty)
             foreach ($selectedLoans as $loanAcctNo) {
                 if (!isset($loanAmounts[$loanAcctNo]) || $loanAmounts[$loanAcctNo] <= 0) {
                     continue;
@@ -257,22 +257,54 @@ class BranchAtmController extends Controller
                     return redirect()->back()->with('error', "Payment amount for loan {$loanAcctNo} cannot exceed total due");
                 }
 
-                // Update the total_due in LoanForecast
-                $newTotalDue = $forecast->total_due - $paymentAmount;
+                // Distribute payment: interest first, then principal (penalty is static/blank)
+                $remainingPayment = $paymentAmount;
+                $appliedToInterest = 0;
+                $appliedToPrincipal = 0;
+                $appliedToPenalty = 0; // Static/blank
+
+                // Get current due amounts
+                $interestDue = $forecast->interest_due ?? 0;
+                $principalDue = $forecast->principal_due ?? 0;
+
+                // Apply to interest first
+                if ($interestDue > 0 && $remainingPayment > 0) {
+                    $deduct = min($remainingPayment, $interestDue);
+                    $appliedToInterest = $deduct;
+                    $interestDue -= $deduct;
+                    $remainingPayment -= $deduct;
+                }
+
+                // Then apply to principal
+                if ($principalDue > 0 && $remainingPayment > 0) {
+                    $deduct = min($remainingPayment, $principalDue);
+                    $appliedToPrincipal = $deduct;
+                    $principalDue -= $deduct;
+                    $remainingPayment -= $deduct;
+                }
+
+                // Update the forecast with new due amounts (penalty remains unchanged)
                 $forecast->update([
-                    'total_due' => max(0, $newTotalDue)
+                    'interest_due' => max(0, $interestDue),
+                    'principal_due' => max(0, $principalDue),
+                    'total_due' => max(0, $interestDue + $principalDue)
                 ]);
 
-                // Create loan payment record
+                // Create loan payment record with distribution details
                 LoanPayment::create([
                     'member_id' => $member->id,
                     'loan_forecast_id' => $forecast->id,
                     'withdrawal_amount' => $withdrawalAmount,
                     'amount' => $paymentAmount,
+                    'applied_to_interest' => $appliedToInterest,
+                    'applied_to_principal' => $appliedToPrincipal,
+                    'penalty' => $appliedToPenalty, // Static/blank
                     'payment_date' => $validated['payment_date'],
                     'reference_number' => $validated['payment_reference'],
                     'notes' => $validated['notes']
                 ]);
+
+                Log::info("Created loan payment with distribution: Interest: {$appliedToInterest}, Principal: {$appliedToPrincipal}, Penalty: {$appliedToPenalty} (static)");
             }
 
             // Find regular savings account
@@ -395,6 +427,44 @@ class BranchAtmController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in exportPostedPayments: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
+        }
+    }
+
+    public function exportPostedPaymentsDetailed(Request $request)
+    {
+        try {
+            $allDates = $request->input('all_dates');
+            $date = $request->input('date', now()->toDateString());
+            $branch_id = Auth::user()->branch_id;
+
+            $atmPaymentsQuery = AtmPayment::with(['member.branch'])
+                ->whereHas('member', function($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                });
+            if (!$allDates) {
+                $atmPaymentsQuery->whereDate('payment_date', $date);
+            }
+            $atmPayments = $atmPaymentsQuery->get();
+
+            $logDate = $allDates ? 'ALL DATES' : $date;
+            Log::info("Found {$atmPayments->count()} ATM payments for detailed export on {$logDate} from branch {$branch_id}");
+
+            if ($atmPayments->isEmpty()) {
+                return redirect()->back()->with('error', 'No posted payments found for the selected date(s).');
+            }
+
+            $filename = 'branch_posted_payments_detailed_' . ($allDates ? 'all' : $date) . '.csv';
+
+            Excel::store(
+                new PostedPaymentsExport($atmPayments),
+                $filename,
+                'public'
+            );
+
+            return response()->download(storage_path('app/public/' . $filename))->deleteFileAfterSend();
+        } catch (\Exception $e) {
+            Log::error('Error in exportPostedPaymentsDetailed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error generating detailed export: ' . $e->getMessage());
         }
     }
 

@@ -116,19 +116,38 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <form method="GET" action="{{ route('atm.export-posted-payments') }}" class="form-inline mb-2 p-2" id="exportPostedPaymentsForm">
-                                <div class="form-group mr-2">
-                                    <label for="export_date" class="mr-2">Export Date:</label>
-                                    <input type="date" id="export_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates')) disabled @endif>
+                            <div class="row mb-2 p-2">
+                                <div class="col-md-6">
+                                    <form method="GET" action="{{ route('atm.export-posted-payments') }}" class="form-inline" id="exportPostedPaymentsForm">
+                                        <div class="form-group mr-2">
+                                            <label for="export_date" class="mr-2">Export Date:</label>
+                                            <input type="date" id="export_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates')) disabled @endif>
+                                        </div>
+                                        <div class="form-group mr-2">
+                                            <input type="checkbox" id="all_dates" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
+                                            <label for="all_dates" class="ml-1">All Dates</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fa fa-file-excel"></i> Export Posted Payments
+                                        </button>
+                                    </form>
                                 </div>
-                                <div class="form-group mr-2">
-                                    <input type="checkbox" id="all_dates" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
-                                    <label for="all_dates" class="ml-1">All Dates</label>
-                                </div>
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fa fa-file-excel"></i> Export Posted Payments
-                                </button>
-                            </form>
+                                {{-- <div class="col-md-6">
+                                    <form method="GET" action="{{ route('atm.export-posted-payments-detailed') }}" class="form-inline" id="exportPostedPaymentsDetailedForm">
+                                        <div class="form-group mr-2">
+                                            <label for="export_date_detailed" class="mr-2">Export Date:</label>
+                                            <input type="date" id="export_date_detailed" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates_detailed')) disabled @endif>
+                                        </div>
+                                        <div class="form-group mr-2">
+                                            <input type="checkbox" id="all_dates_detailed" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
+                                            <label for="all_dates_detailed" class="ml-1">All Dates</label>
+                                        </div>
+                                        <button type="submit" class="btn btn-info">
+                                            <i class="fa fa-file-excel"></i> Export with Principal/Penalty/Interest
+                                        </button>
+                                    </form>
+                                </div> --}}
+                            </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered">
@@ -1051,11 +1070,23 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Handle first export form
             var allDatesCheckbox = document.getElementById('all_dates');
             var dateInput = document.getElementById('export_date');
-            allDatesCheckbox.addEventListener('change', function() {
-                dateInput.disabled = this.checked;
-            });
+            if (allDatesCheckbox && dateInput) {
+                allDatesCheckbox.addEventListener('change', function() {
+                    dateInput.disabled = this.checked;
+                });
+            }
+
+            // Handle second export form
+            var allDatesDetailedCheckbox = document.getElementById('all_dates_detailed');
+            var dateDetailedInput = document.getElementById('export_date_detailed');
+            if (allDatesDetailedCheckbox && dateDetailedInput) {
+                allDatesDetailedCheckbox.addEventListener('change', function() {
+                    dateDetailedInput.disabled = this.checked;
+                });
+            }
         });
     </script>
 

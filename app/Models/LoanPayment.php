@@ -14,6 +14,9 @@ class LoanPayment extends Model
         'loan_forecast_id',
         'withdrawal_amount',
         'amount',
+        'applied_to_interest',
+        'applied_to_principal',
+        'penalty',
         'payment_date',
         'reference_number',
         'notes'
@@ -21,7 +24,10 @@ class LoanPayment extends Model
 
     protected $casts = [
         'payment_date' => 'date',
-        'amount' => 'decimal:2'
+        'amount' => 'decimal:2',
+        'applied_to_interest' => 'decimal:2',
+        'applied_to_principal' => 'decimal:2',
+        'penalty' => 'decimal:2'
     ];
 
     public function member()

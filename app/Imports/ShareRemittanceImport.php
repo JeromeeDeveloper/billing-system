@@ -4,11 +4,13 @@ namespace App\Imports;
 
 use App\Models\Member;
 use App\Models\Remittance;
+use App\Models\RemittanceBatch;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ShareRemittanceImport implements ToCollection, WithHeadingRow
 {
@@ -18,9 +20,31 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
         'unmatched' => 0,
         'total_amount' => 0
     ];
+    protected $billingPeriod;
+
+    public function __construct($billingPeriod = null)
+    {
+        $this->billingPeriod = $billingPeriod ?? \Illuminate\Support\Facades\Auth::user()->billing_period;
+    }
 
     public function collection(Collection $rows)
     {
+        // Create RemittanceBatch record for shares
+        $batch_id = (string) Str::uuid();
+        $imported_at = now();
+
+        // Use RemittanceBatch to determine next remittance_tag for this billing period
+        $maxTag = RemittanceBatch::where('billing_period', $this->billingPeriod)->max('remittance_tag');
+        $remittance_tag = $maxTag ? $maxTag + 1 : 1;
+
+        // Insert new batch row for shares
+        RemittanceBatch::create([
+            'billing_period' => $this->billingPeriod,
+            'remittance_tag' => $remittance_tag,
+            'imported_at' => $imported_at,
+            'billing_type' => 'shares',
+        ]);
+
         foreach ($rows as $row) {
             $result = $this->processRow($row);
             $this->results[] = $result;

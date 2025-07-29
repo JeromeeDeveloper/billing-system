@@ -246,14 +246,14 @@ class RemittanceController extends Controller
         try {
             DB::beginTransaction();
 
-            $import = new ShareRemittanceImport();
+            // Get current billing period
+            $currentBillingPeriod = Auth::user()->billing_period;
+
+            $import = new ShareRemittanceImport($currentBillingPeriod);
             Excel::import($import, $request->file('file'));
 
             $results = $import->getResults();
             $stats = $import->getStats();
-
-            // Get current billing period
-            $currentBillingPeriod = Auth::user()->billing_period;
 
             // Clear previous preview data for this user, billing period, and remittance type
             RemittancePreview::where('user_id', Auth::id())
@@ -290,23 +290,6 @@ class RemittanceController extends Controller
             }
 
             DB::commit();
-
-            // Track share remittance import in RemittanceBatch
-            $maxSharesTag = RemittanceBatch::where('billing_period', $currentBillingPeriod)
-                ->where('remittance_tag', '>=', 1000) // Use 1000+ range for shares
-                ->max('remittance_tag');
-
-            $nextSharesTag = 1000; // Start shares at 1000
-            if ($maxSharesTag) {
-                $nextSharesTag = $maxSharesTag + 1;
-            }
-
-            RemittanceBatch::create([
-                'billing_period' => $currentBillingPeriod,
-                'remittance_tag' => $nextSharesTag,
-                'billing_type' => 'shares',
-                'imported_at' => now(),
-            ]);
 
             return redirect()->route('remittance.index')
                 ->with('success', 'Share remittance file processed successfully. Check the preview below.');
@@ -353,7 +336,7 @@ class RemittanceController extends Controller
             return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
 
         } catch (\Exception $e) {
-            \Log::error('Error generating export: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
+            Log::error('Error generating export: ' . $e->getMessage() . ' Stack: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
     }

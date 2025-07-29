@@ -29,7 +29,10 @@ class PostedPaymentsExport implements FromCollection, WithHeadings
             'amt',
             'product_code/cr',
             'gl/sl acct no',
-            'amount'
+            'amount',
+            'interest',
+            'penalty',
+            'principal'
         ];
     }
 
@@ -55,7 +58,7 @@ class PostedPaymentsExport implements FromCollection, WithHeadings
 
             Log::info("Found {$loanPayments->count()} loan payments for this ATM payment");
 
-            // Add loan payment rows
+            // Add loan payment rows with distribution details
             foreach ($loanPayments as $payment) {
                 $exportRows->push([
                     'branch_code' => $member->branch->code ?? '',
@@ -64,10 +67,13 @@ class PostedPaymentsExport implements FromCollection, WithHeadings
                     'amt' => '',
                     'product_code/cr' => '4',
                     'gl/sl acct no' => str_replace('-', '', $payment->loanForecast->loan_acct_no),
-                    'amount' => number_format($payment->amount, 2, '.', '')
+                    'amount' => number_format($payment->amount, 2, '.', ''),
+                    'interest' => number_format($payment->applied_to_interest, 2, '.', ''),
+                    'penalty' => number_format($payment->penalty, 2, '.', ''),
+                    'principal' => number_format($payment->applied_to_principal, 2, '.', '')
                 ]);
 
-                Log::info("Added loan payment row: {$payment->loanForecast->loan_acct_no} - {$payment->amount}");
+                Log::info("Added loan payment row: {$payment->loanForecast->loan_acct_no} - {$payment->amount} (Interest: {$payment->applied_to_interest}, Principal: {$payment->applied_to_principal}, Penalty: {$payment->penalty})");
             }
 
             // Add savings payment rows for all savings deposits for this ATM payment
@@ -80,7 +86,10 @@ class PostedPaymentsExport implements FromCollection, WithHeadings
                     'amt' => '',
                     'product_code/cr' => '1',
                     'gl/sl acct no' => str_replace('-', '', $savingPayment->account_number),
-                    'amount' => number_format($savingPayment->amount, 2, '.', '')
+                    'amount' => number_format($savingPayment->amount, 2, '.', ''),
+                    'interest' => '',
+                    'penalty' => '',
+                    'principal' => ''
                 ]);
                 Log::info("Added savings payment row: {$savingPayment->account_number} - {$savingPayment->amount}");
             }
