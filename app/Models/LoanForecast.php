@@ -79,7 +79,13 @@ class LoanForecast extends Model
     {
         parent::boot();
 
-        static::updating(function ($model) {
+                static::updating(function ($model) {
+            // Auto-calculate total_due when principal_due or interest_due changes
+            if ($model->isDirty('principal_due') || $model->isDirty('interest_due')) {
+                $model->total_due = $model->principal_due + $model->interest_due;
+            }
+
+            // Protection for paid status
             if ($model->isDirty('principal_due') && $model->getOriginal('principal_due_status') === 'paid') {
                 $model->principal_due = $model->getOriginal('principal_due');
             }
@@ -88,6 +94,13 @@ class LoanForecast extends Model
             }
             if ($model->isDirty('total_due') && $model->getOriginal('total_due_status') === 'paid') {
                 $model->total_due = $model->getOriginal('total_due');
+            }
+        });
+
+        static::saving(function ($model) {
+            // Auto-calculate total_due for new records or when principal_due/interest_due are set
+            if ($model->isDirty('principal_due') || $model->isDirty('interest_due')) {
+                $model->total_due = $model->principal_due + $model->interest_due;
             }
         });
     }

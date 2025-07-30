@@ -116,7 +116,10 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 // Only update if status is not 'paid' (check before assignment!)
                 if ($existingForecast->principal_due_status !== 'paid') {
                     $originalPrincipal = $existingForecast->original_principal_due ?? $existingForecast->principal_due;
-                    if ($newPrincipalDue > $originalPrincipal) {
+                    // If billing period was reset (original values are 0), use new values
+                    if ($originalPrincipal == 0 && $newPrincipalDue > 0) {
+                        $existingForecast->principal_due = $newPrincipalDue;
+                    } else if ($newPrincipalDue > $originalPrincipal) {
                         $existingForecast->principal_due = $originalPrincipal;
                     } else {
                         $existingForecast->principal_due = $newPrincipalDue;
@@ -124,19 +127,19 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 }
                 if ($existingForecast->interest_due_status !== 'paid') {
                     $originalInterest = $existingForecast->original_interest_due ?? $existingForecast->interest_due;
-                    if ($newInterestDue > $originalInterest) {
+                    // If billing period was reset (original values are 0), use new values
+                    if ($originalInterest == 0 && $newInterestDue > 0) {
+                        $existingForecast->interest_due = $newInterestDue;
+                    } else if ($newInterestDue > $originalInterest) {
                         $existingForecast->interest_due = $originalInterest;
                     } else {
                         $existingForecast->interest_due = $newInterestDue;
                     }
                 }
-                if ($existingForecast->total_due_status !== 'paid') {
-                    $existingForecast->total_due = $newTotalDue;
-                }
-                // Update statuses after all updates
-                $existingForecast->interest_due_status = floatval($existingForecast->interest_due) === 0.0 ? 'paid' : 'unpaid';
-                $existingForecast->principal_due_status = floatval($existingForecast->principal_due) === 0.0 ? 'paid' : 'unpaid';
-                $existingForecast->total_due_status = floatval($existingForecast->total_due) === 0.0 ? 'paid' : 'unpaid';
+                // Auto-calculate total_due based on principal_due + interest_due
+                $existingForecast->total_due = $existingForecast->principal_due + $existingForecast->interest_due;
+
+                // Do not update statuses here - they will be updated by RemittanceImport
                 $existingForecast->save();
                 $loanForecast = $existingForecast;
             } else {
@@ -151,9 +154,9 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'member_id' => $member->id,
                     'billing_period' => $this->billingPeriod,
                     'updated_at' => $now,
-                    'interest_due_status' => $newInterestDue == 0 ? 'paid' : 'unpaid',
-                    'principal_due_status' => $newPrincipalDue == 0 ? 'paid' : 'unpaid',
-                    'total_due_status' => $newTotalDue == 0 ? 'paid' : 'unpaid',
+                    'interest_due_status' => 'unpaid', // Default status, will be updated by RemittanceImport
+                    'principal_due_status' => 'unpaid', // Default status, will be updated by RemittanceImport
+                    'total_due_status' => 'unpaid', // Default status, will be updated by RemittanceImport
                     'original_principal_due' => $newPrincipalDue,
                     'original_interest_due' => $newInterestDue,
                 ]);
@@ -164,8 +167,10 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 $loanForecast->update(['total_due' => $newTotalDue]);
             }
 
-            // Set original_total_due if null or if billing_period is different
-            if (is_null($loanForecast->original_total_due) || $loanForecast->billing_period !== $this->billingPeriod) {
+            // Set original_total_due if null or if billing_period is different or if original values are 0 (reset)
+            if (is_null($loanForecast->original_total_due) ||
+                $loanForecast->billing_period !== $this->billingPeriod ||
+                $loanForecast->original_total_due == 0) {
                 $loanForecast->original_total_due = $loanForecast->total_due;
                 // Set original_principal_due and original_interest_due as well
                 $loanForecast->original_principal_due = $loanForecast->principal_due;

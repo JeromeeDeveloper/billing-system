@@ -586,22 +586,22 @@ class BillingController extends Controller
         // LoanForecast reset
         \App\Models\LoanForecast::where('billing_period', $billingPeriod)
             ->update([
-                'amount_due' => null,
+                'amount_due' => 0,
                 'open_date' => null,
                 'maturity_date' => null,
                 'amortization_due_date' => null,
-                'total_due' => null,
-                'original_total_due' => null,
-                'principal_due' => null,
-                'interest_due' => null,
-                'original_principal_due' => null,
-                'original_interest_due' => null,
+                'total_due' => 0,
+                'original_total_due' => 0,
+                'principal_due' => 0,
+                'interest_due' => 0,
+                'original_principal_due' => 0,
+                'original_interest_due' => 0,
                 'principal' => null,
                 'interest' => null,
                 'principal_due_status' => 'unpaid',
                 'interest_due_status' => 'unpaid',
                 'total_due_status' => 'unpaid',
-                'total_due_after_remittance' => null,
+                'total_due_after_remittance' => 0,
                 'total_billed' => null,
             ]);
 
@@ -624,23 +624,34 @@ class BillingController extends Controller
 
         // Clear remittance batches for the new billing period
         \App\Models\RemittanceBatch::where('billing_period', $billingPeriod)->delete();
+        \App\Models\RemittanceReport::where('period', $billingPeriod)->delete();
+        \App\Models\RemittancePreview::where('billing_period', $billingPeriod)->delete();
+        \App\Models\RemittanceUploadCount::where('billing_period', $billingPeriod)->delete();
+        \App\Models\LoanPayment::truncate();
+
+        // Clear special billings for the new billing period
+        \App\Models\SpecialBilling::truncate();
+        \App\Models\LoanRemittance::truncate();
 
         // Members reset (keep only cid and member_tagging)
         \App\Models\Member::query()->update([
-            'savings_balance' => null,
-            'share_balance' => null,
-            'loan_balance' => null,
-            'principal' => null,
-            'regular_principal' => null,
-            'special_principal' => null,
+            'savings_balance' => 0,
+            'share_balance' => 0,
+            'loan_balance' => 0,
+            'principal' => 0,
+            'regular_principal' => 0,
+            'special_principal' => 0,
             'start_date' => null,
             'end_date' => null,
-            'status' => null,
+            'status' => 'active',
             'approval_no' => null,
             'start_hold' => null,
             'expiry_date' => null,
-            'account_status' => null,
+            'account_status' => 'deduction',
         ]);
+
+        // Update member_tagging from "New" to "PGB" for all members
+        \App\Models\Member::where('member_tagging', 'New')->update(['member_tagging' => 'PGB']);
 
         // Get the current max billing period among users
         $currentPeriod = \App\Models\User::max('billing_period');
@@ -664,6 +675,13 @@ class BillingController extends Controller
             ]);
         }
 
-        return response()->json(['success' => true, 'message' => 'Billing period closed and records reset for new period.']);
+        // Logout the current user
+        Auth::logout();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Billing period closed and records reset for new period. You will be logged out.',
+            'logout' => true
+        ]);
     }
 }

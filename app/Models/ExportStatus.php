@@ -12,6 +12,7 @@ class ExportStatus extends Model
     protected $fillable = [
         'billing_period',
         'export_type',
+        'user_id',
         'last_export_at',
         'last_upload_at',
         'is_enabled'
@@ -26,12 +27,13 @@ class ExportStatus extends Model
     /**
      * Mark export as generated
      */
-    public static function markExported($billingPeriod, $exportType)
+    public static function markExported($billingPeriod, $exportType, $userId = null)
     {
         return static::updateOrCreate(
             [
                 'billing_period' => $billingPeriod,
-                'export_type' => $exportType
+                'export_type' => $exportType,
+                'user_id' => $userId
             ],
             [
                 'last_export_at' => now(),
@@ -43,12 +45,13 @@ class ExportStatus extends Model
     /**
      * Mark new upload for this export type
      */
-    public static function markUploaded($billingPeriod, $exportType)
+    public static function markUploaded($billingPeriod, $exportType, $userId = null)
     {
         return static::updateOrCreate(
             [
                 'billing_period' => $billingPeriod,
-                'export_type' => $exportType
+                'export_type' => $exportType,
+                'user_id' => $userId
             ],
             [
                 'last_upload_at' => now(),
@@ -60,10 +63,11 @@ class ExportStatus extends Model
     /**
      * Check if export is enabled for this type
      */
-    public static function isEnabled($billingPeriod, $exportType)
+    public static function isEnabled($billingPeriod, $exportType, $userId = null)
     {
         $status = static::where('billing_period', $billingPeriod)
             ->where('export_type', $exportType)
+            ->where('user_id', $userId)
             ->first();
 
         if (!$status) {
@@ -76,8 +80,11 @@ class ExportStatus extends Model
     /**
      * Get export status for all types in a billing period
      */
-    public static function getStatuses($billingPeriod)
+    public static function getStatuses($billingPeriod, $userId = null)
     {
-        return static::where('billing_period', $billingPeriod)->get()->keyBy('export_type');
+        return static::where('billing_period', $billingPeriod)
+            ->where('user_id', $userId)
+            ->get()
+            ->keyBy('export_type');
     }
 }

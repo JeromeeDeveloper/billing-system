@@ -545,7 +545,7 @@
                                                                                                 <i class="fa fa-credit-card me-2 text-primary"></i>
                                                                                                 <strong>{{ $loan->loan_acct_no }}</strong>
                                                                                                 <span class="badge bg-info ms-2">
-                                                                                                    Balance: ₱ {{ number_format($loan->total_due, 2) }}
+                                                                                                    Amort Due: ₱ {{ number_format($loan->total_due, 2) }}
                                                                                                 </span>
                                                                                             </label>
                                                                                         </div>
@@ -599,7 +599,7 @@
                                                                     </div>
 
                                                                     <!-- Remaining to Regular Savings Section -->
-                                                                    @php
+                                                                    {{-- @php
                                                                         $regularSaving = $member->savings->first(function($s) {
                                                                             return $s->savingProduct && $s->savingProduct->product_type === 'regular';
                                                                         });
@@ -622,7 +622,7 @@
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                    @endif
+                                                                    @endif --}}
 
                                                                     <!-- Payment Summary -->
                                                                     <div class="row mt-4">

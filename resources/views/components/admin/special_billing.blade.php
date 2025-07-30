@@ -37,7 +37,8 @@
                                 <h4 class="card-title mb-0">Upload Special Billing Excel File</h4>
                                 @php
                                     $specialBillingEnabled = $exportStatuses->get('special_billing') ? $exportStatuses->get('special_billing')->is_enabled : true;
-                                    $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && $allBranchUsersApproved;
+                                    $userHasExported = $exportStatuses->get('special_billing') && !$exportStatuses->get('special_billing')->is_enabled;
+                                    $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && $allBranchUsersApproved && !$anyBranchUsersPending && !$userHasExported;
                                 @endphp
                                 <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export') : 'javascript:void(0);' }}"
                                    class="btn btn-success {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
@@ -45,8 +46,12 @@
                                     <i class="fa fa-file-excel"></i> Export Special Billing
                                     @if(!$hasSpecialBillingData)
                                         <br><small class="text-muted">(Disabled - No special billing data for this period)</small>
+                                    @elseif($userHasExported)
+                                        <br><small class="text-muted">(Disabled - You have already exported for this billing period)</small>
                                     @elseif(!$specialBillingEnabled)
                                         <br><small class="text-muted">(Disabled - Already exported. Wait for next period to enable)</small>
+                                    @elseif($anyBranchUsersPending)
+                                        <br><small class="text-muted">(Disabled - Some branch users have pending status)</small>
                                     @elseif($noBranch)
                                         <br><small class="text-muted">(Disabled - Some members have no branch)</small>
                                     @elseif($noRegularSavings)

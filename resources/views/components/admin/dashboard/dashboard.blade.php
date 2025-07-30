@@ -199,7 +199,7 @@
                                         <li><strong>Remittance Report Per Branch:</strong> Branch-specific remittance reports</li>
                                         <li><strong>Remittance Report Per Branch Member:</strong> Export records of all members per branch</li>
                                     </ul>
-                                  
+
                                 </div>
 
                                 <div class="row">
@@ -405,7 +405,56 @@
             var confirmBtn = document.getElementById('confirmClosePeriod');
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', function() {
-                    document.getElementById('closePeriodForm').submit();
+                    // Show loading state
+                    confirmBtn.disabled = true;
+                    confirmBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+                    // Submit form via AJAX
+                    fetch('{{ route('billing.close-period') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Billing Period Closed!',
+                                text: data.message,
+                                confirmButtonColor: '#3085d6',
+                                allowOutsideClick: false
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Redirect to login page
+                                    window.location.href = '{{ route('login.form') }}';
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'An error occurred while closing the billing period.',
+                                confirmButtonColor: '#d33'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred while closing the billing period.',
+                            confirmButtonColor: '#d33'
+                        });
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = 'Yes, Close Billing Period';
+                    });
                 });
             }
         });

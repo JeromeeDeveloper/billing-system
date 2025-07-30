@@ -38,9 +38,11 @@ class BranchSpecialBillingController extends Controller
         }
         $specialBillings = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        $exportStatuses = \App\Models\ExportStatus::getStatuses($billingPeriod);
+        $exportStatuses = \App\Models\ExportStatus::getStatuses($billingPeriod, Auth::id());
         $specialBillingCids = $query->pluck('cid');
         $members = \App\Models\Member::whereIn('cid', $specialBillingCids)->get();
+
+        // Check conditions for disabling export
         $noBranch = $members->contains(function($m) { return !$m->branch_id || $m->branch_id == 0; });
         $noRegularSavings = $members->contains(function($m) {
             return !$m->savings->contains(function($s) {
@@ -48,15 +50,25 @@ class BranchSpecialBillingController extends Controller
             });
         });
         $notAllApproved = $members->contains(function($m) { return $m->status !== 'active'; });
+
+        // Check if any branch users have pending status
+        $anyBranchUsersPending = \App\Models\User::where('role', 'branch')->where('status', 'pending')->count() > 0;
+
         $hasSpecialBillingData = $specialBillings->count() > 0;
         $userIsApproved = Auth::user()->status === 'approved';
         $allBranchUsersApproved = \App\Models\User::where('role', 'branch')->where('status', '!=', 'approved')->count() === 0;
-        return view('components.branch.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'notAllApproved', 'hasSpecialBillingData', 'userIsApproved', 'allBranchUsersApproved'));
+
+        return view('components.branch.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'notAllApproved', 'hasSpecialBillingData', 'userIsApproved', 'allBranchUsersApproved', 'anyBranchUsersPending'));
     }
 
     public function export()
     {
         $branch_id = Auth::user()->branch_id;
+        $billingPeriod = Auth::user()->billing_period;
+
+        // Mark as exported for this user
+        \App\Models\ExportStatus::markExported($billingPeriod, 'special_billing', Auth::id());
+
         return Excel::download(new BranchSpecialBillingExport($branch_id), 'special_billing_branch_export_' . now()->format('Y-m-d') . '.csv');
     }
 }

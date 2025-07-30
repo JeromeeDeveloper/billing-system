@@ -97,8 +97,11 @@
                                 <div class="row mb-4">
                                     <div class="col-12 mb-3">
                                         <div class="alert alert-info">
-                                            <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Remittance Upload Information</h6>
-                                            <p class="mb-2"><strong>Current Billing Period:</strong> {{ \Carbon\Carbon::parse(Auth::user()->billing_period)->format('Y F') }}</p>
+                                            <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Remittance
+                                                Upload Information</h6>
+                                            <p class="mb-2"><strong>Current Billing Period:</strong>
+                                                {{ \Carbon\Carbon::parse(Auth::user()->billing_period)->format('Y F') }}
+                                            </p>
 
                                         </div>
                                     </div>
@@ -112,12 +115,18 @@
                                                 @php
                                                     $regularCount = $remittanceImportRegularCount;
                                                     $ordinal = '';
-                                                    if ($regularCount == 1) $ordinal = '1st';
-                                                    elseif ($regularCount == 2) $ordinal = '2nd';
-                                                    elseif ($regularCount == 3) $ordinal = '3rd';
-                                                    else $ordinal = $regularCount . 'th';
+                                                    if ($regularCount == 1) {
+                                                        $ordinal = '1st';
+                                                    } elseif ($regularCount == 2) {
+                                                        $ordinal = '2nd';
+                                                    } elseif ($regularCount == 3) {
+                                                        $ordinal = '3rd';
+                                                    } else {
+                                                        $ordinal = $regularCount . 'th';
+                                                    }
                                                 @endphp
-                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this
+                                                    period</small>
                                             </div>
                                         </div>
                                     </div>
@@ -131,12 +140,18 @@
                                                 @php
                                                     $specialCount = $remittanceImportSpecialCount;
                                                     $ordinal = '';
-                                                    if ($specialCount == 1) $ordinal = '1st';
-                                                    elseif ($specialCount == 2) $ordinal = '2nd';
-                                                    elseif ($specialCount == 3) $ordinal = '3rd';
-                                                    else $ordinal = $specialCount . 'th';
+                                                    if ($specialCount == 1) {
+                                                        $ordinal = '1st';
+                                                    } elseif ($specialCount == 2) {
+                                                        $ordinal = '2nd';
+                                                    } elseif ($specialCount == 3) {
+                                                        $ordinal = '3rd';
+                                                    } else {
+                                                        $ordinal = $specialCount . 'th';
+                                                    }
                                                 @endphp
-                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this
+                                                    period</small>
                                             </div>
                                         </div>
                                     </div>
@@ -150,12 +165,18 @@
                                                 @php
                                                     $sharesCount = $sharesRemittanceImportCount;
                                                     $ordinal = '';
-                                                    if ($sharesCount == 1) $ordinal = '1st';
-                                                    elseif ($sharesCount == 2) $ordinal = '2nd';
-                                                    elseif ($sharesCount == 3) $ordinal = '3rd';
-                                                    else $ordinal = $sharesCount . 'th';
+                                                    if ($sharesCount == 1) {
+                                                        $ordinal = '1st';
+                                                    } elseif ($sharesCount == 2) {
+                                                        $ordinal = '2nd';
+                                                    } elseif ($sharesCount == 3) {
+                                                        $ordinal = '3rd';
+                                                    } else {
+                                                        $ordinal = $sharesCount . 'th';
+                                                    }
                                                 @endphp
-                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this
+                                                    period</small>
                                             </div>
                                         </div>
                                     </div>
@@ -166,14 +187,18 @@
                                     <div class="col-12 col-md-6">
                                         @if (session('success'))
                                             <div class="alert alert-success alert-dismissible fade show">
-                                                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                                <strong><i class="fa fa-check-circle"></i> Success!</strong> {{ session('success') }}
+                                                <button type="button" class="close"
+                                                    data-dismiss="alert">&times;</button>
+                                                <strong><i class="fa fa-check-circle"></i> Success!</strong>
+                                                {{ session('success') }}
                                             </div>
                                         @endif
                                         @if (session('error'))
                                             <div class="alert alert-danger alert-dismissible fade show">
-                                                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                                <strong><i class="fa fa-exclamation-circle"></i> Error!</strong> {{ session('error') }}
+                                                <button type="button" class="close"
+                                                    data-dismiss="alert">&times;</button>
+                                                <strong><i class="fa fa-exclamation-circle"></i> Error!</strong>
+                                                {{ session('error') }}
                                             </div>
                                         @endif
                                     </div>
@@ -188,13 +213,17 @@
                                                 <i class="fa fa-upload me-2"></i>Installment Forecast Upload
                                             </div>
                                             <div class="card-body">
-                                                <form action="{{ route('document.upload') }}" method="POST" enctype="multipart/form-data" id="installmentForm">
+                                                <form action="{{ route('document.upload') }}" method="POST"
+                                                    enctype="multipart/form-data" id="installmentForm">
                                                     @csrf
                                                     <div class="mb-3">
-                                                        <label for="remit_installment_file" class="form-label">Select File</label>
-                                                        <input type="file" class="form-control" id="remit_installment_file" name="file">
+                                                        <label for="remit_installment_file" class="form-label">Select
+                                                            File</label>
+                                                        <input type="file" class="form-control"
+                                                            id="remit_installment_file" name="file">
                                                     </div>
-                                                    <button type="submit" class="btn btn-primary w-100" id="installmentSubmitBtn">
+                                                    <button type="submit" class="btn btn-primary w-100"
+                                                        id="installmentSubmitBtn">
                                                         <i class="fa fa-upload me-1"></i> Upload Installment File
                                                     </button>
                                                 </form>
@@ -207,36 +236,57 @@
                                                 <i class="fa fa-upload me-2"></i>Savings & Loans Remittance Upload
                                             </div>
                                             <div class="card-body">
-                                                <form action="{{ route('remittance.upload') }}" method="POST" enctype="multipart/form-data" id="loansSavingsForm">
+                                                <form action="{{ route('remittance.upload') }}" method="POST"
+                                                    enctype="multipart/form-data" id="loansSavingsForm">
                                                     @csrf
                                                     <div class="mb-3">
                                                         <label class="form-label">Select File</label>
-                                                        <input type="file" class="form-control" name="file" id="file" accept=".xlsx,.xls,.csv" required>
+                                                        <input type="file" class="form-control" name="file"
+                                                            id="file" accept=".xlsx,.xls,.csv" required>
                                                     </div>
-                                                    <input type="hidden" name="billing_type" id="billingTypeInput" value="regular">
+                                                    <input type="hidden" name="billing_type" id="billingTypeInput"
+                                                        value="regular">
                                                     <div class="mb-3">
-                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name, Loans, Savings Product Names.</small>
+                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv).
+                                                            Required headers: CID, Name, Loans, Savings Product
+                                                            Names.</small>
                                                     </div>
-                                                    <button type="button" class="btn btn-success btn-block mt-2" id="showBillingTypeModalBtn">
-                                                        <i class="fa fa-upload me-1"></i> Upload and Process Loans & Savings Remittance
+                                                    <button type="button" class="btn btn-success btn-block mt-2"
+                                                        id="showBillingTypeModalBtn">
+                                                        <i class="fa fa-upload me-1"></i> Upload and Process Loans &
+                                                        Savings Remittance
                                                     </button>
-                                                    <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#loansSavingsFormatModal">
+                                                    <button type="button" class="btn btn-warning btn-block mt-2"
+                                                        data-toggle="modal" data-target="#loansSavingsFormatModal">
                                                         <i class="fa fa-eye me-1"></i> View Expected Format
                                                     </button>
                                                     @php
-                                                        $loansSavingsEnabled = $exportStatuses->get('loans_savings') ? $exportStatuses->get('loans_savings')->is_enabled : true;
-                                                        $loansSavingsWithProductEnabled = $exportStatuses->get('loans_savings_with_product') ? $exportStatuses->get('loans_savings_with_product')->is_enabled : true;
+                                                        $loansSavingsEnabled = $exportStatuses->get('loans_savings')
+                                                            ? $exportStatuses->get('loans_savings')->is_enabled
+                                                            : true;
+                                                        $loansSavingsWithProductEnabled = $exportStatuses->get(
+                                                            'loans_savings_with_product',
+                                                        )
+                                                            ? $exportStatuses->get('loans_savings_with_product')
+                                                                ->is_enabled
+                                                            : true;
                                                     @endphp
-                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2 {{ !$loansSavingsEnabled ? 'disabled' : '' }}" onclick="{{ $loansSavingsEnabled ? 'generateExport(\'loans_savings\')' : 'void(0)' }}">
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-primary btn-block mt-2 {{ !$loansSavingsEnabled ? 'disabled' : '' }}"
+                                                        onclick="{{ $loansSavingsEnabled ? 'generateExport(\'loans_savings\')' : 'void(0)' }}">
                                                         Collection file for Loans & Savings
-                                                        @if(!$loansSavingsEnabled)
-                                                            <br><small class="text-muted">(Disabled - Upload new remittance to enable)</small>
+                                                        @if (!$loansSavingsEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new
+                                                                remittance to enable)</small>
                                                         @endif
                                                     </a>
-                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2 {{ !$loansSavingsWithProductEnabled ? 'disabled' : '' }}" onclick="{{ $loansSavingsWithProductEnabled ? 'generateExport(\'loans_savings_with_product\')' : 'void(0)' }}">
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-info btn-block mt-2 {{ !$loansSavingsWithProductEnabled ? 'disabled' : '' }}"
+                                                        onclick="{{ $loansSavingsWithProductEnabled ? 'generateExport(\'loans_savings_with_product\')' : 'void(0)' }}">
                                                         Collection file for Loans & Savings (with Product Name)
-                                                        @if(!$loansSavingsWithProductEnabled)
-                                                            <br><small class="text-muted">(Disabled - Upload new remittance to enable)</small>
+                                                        @if (!$loansSavingsWithProductEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new
+                                                                remittance to enable)</small>
                                                         @endif
                                                     </a>
                                                 </form>
@@ -249,37 +299,56 @@
                                                 <i class="fa fa-upload me-2"></i>Share Remittance Upload
                                             </div>
                                             <div class="card-body">
-                                                <form action="{{ route('remittance.upload.share') }}" method="POST" enctype="multipart/form-data" id="shareForm">
+                                                <form action="{{ route('remittance.upload.share') }}" method="POST"
+                                                    enctype="multipart/form-data" id="shareForm">
                                                     @csrf
                                                     <div class="mb-3">
                                                         <label class="form-label">Select File</label>
-                                                        <input type="file" class="form-control" name="file" id="shareFile" accept=".xlsx,.xls,.csv" required>
+                                                        <input type="file" class="form-control" name="file"
+                                                            id="shareFile" accept=".xlsx,.xls,.csv" required>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name (LASTNAME, FIRSTNAME), Share (amount).</small>
+                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv).
+                                                            Required headers: CID, Name (LASTNAME, FIRSTNAME), Share
+                                                            (amount).</small>
                                                     </div>
 
-                                                        <button type="submit" class="btn btn-success btn-block mt-2" id="shareSubmitBtn">
-                                                            <i class="fa fa-upload me-1"></i> Upload and Process Share Remittance
-                                                        </button>
-                                                        <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#sharesFormatModal">
-                                                            <i class="fa fa-eye me-1"></i> View Expected Format
-                                                        </button>
+                                                    <button type="submit" class="btn btn-success btn-block mt-2"
+                                                        id="shareSubmitBtn">
+                                                        <i class="fa fa-upload me-1"></i> Upload and Process Share
+                                                        Remittance
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning btn-block mt-2"
+                                                        data-toggle="modal" data-target="#sharesFormatModal">
+                                                        <i class="fa fa-eye me-1"></i> View Expected Format
+                                                    </button>
 
                                                     @php
-                                                        $sharesEnabled = $exportStatuses->get('shares') ? $exportStatuses->get('shares')->is_enabled : true;
-                                                        $sharesWithProductEnabled = $exportStatuses->get('shares_with_product') ? $exportStatuses->get('shares_with_product')->is_enabled : true;
+                                                        $sharesEnabled = $exportStatuses->get('shares')
+                                                            ? $exportStatuses->get('shares')->is_enabled
+                                                            : true;
+                                                        $sharesWithProductEnabled = $exportStatuses->get(
+                                                            'shares_with_product',
+                                                        )
+                                                            ? $exportStatuses->get('shares_with_product')->is_enabled
+                                                            : true;
                                                     @endphp
-                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2 {{ !$sharesEnabled ? 'disabled' : '' }}" onclick="{{ $sharesEnabled ? 'generateExport(\'shares\')' : 'void(0)' }}">
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-primary btn-block mt-2 {{ !$sharesEnabled ? 'disabled' : '' }}"
+                                                        onclick="{{ $sharesEnabled ? 'generateExport(\'shares\')' : 'void(0)' }}">
                                                         Collection file for Shares
-                                                        @if(!$sharesEnabled)
-                                                            <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
+                                                        @if (!$sharesEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new shares
+                                                                to enable)</small>
                                                         @endif
                                                     </a>
-                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}" onclick="{{ $sharesWithProductEnabled ? 'generateExport(\'shares_with_product\')' : 'void(0)' }}">
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-info btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}"
+                                                        onclick="{{ $sharesWithProductEnabled ? 'generateExport(\'shares_with_product\')' : 'void(0)' }}">
                                                         Collection file for Shares (with Product Name)
-                                                        @if(!$sharesWithProductEnabled)
-                                                            <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
+                                                        @if (!$sharesWithProductEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new shares
+                                                                to enable)</small>
                                                         @endif
                                                     </a>
                                                 </form>
@@ -288,35 +357,27 @@
                                     </div>
                                 </div>
 
-                                <!-- Remittance Preview Section - Now Consolidated -->
-                                <div class="card shadow-sm mb-4">
-                                    <div class="card-body">
-                                        <div class="alert alert-info">
-                                            <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Preview Tables Consolidated</h6>
-                                            <p class="mb-0">The separate preview tables have been consolidated into the comprehensive table below. Use the filters to view specific data types and billing types.</p>
-                                        </div>
-                                    </div>
-                                </div>
+                               
 
 
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {{-- Consolidated Remittance Table --}}
-                <div class="mb-3 text-right">
-                    <a href="{{ route('remittance.exportRegularSpecial') }}" class="btn btn-success">
-                        <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
-                    </a>
+            {{-- Consolidated Remittance Table --}}
+            <div class="mb-3 text-right p-6">
+                <a href="{{ route('remittance.exportRegularSpecial') }}" class="btn btn-success">
+                    <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
+                </a>
 
-                </div>
+            </div>
 
-                @include('components.admin.remittance.consolidated_remittance_table')
+            @include('components.admin.remittance.consolidated_remittance_table')
 
-    </div>
         </div>
+    </div>
     </div>
 
     <style>
@@ -560,7 +621,8 @@
     </div>
 
     <!-- Billing Type Modal -->
-    <div class="modal fade" id="billingTypeModal" tabindex="-1" role="dialog" aria-labelledby="billingTypeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="billingTypeModal" tabindex="-1" role="dialog"
+        aria-labelledby="billingTypeModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -573,27 +635,32 @@
                     <div class="form-group">
                         <label><strong>Choose which billing type to process for this upload:</strong></label>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="billing_type_modal" id="billingTypeRegular" value="regular" checked>
+                            <input class="form-check-input" type="radio" name="billing_type_modal"
+                                id="billingTypeRegular" value="regular" checked>
                             <label class="form-check-label" for="billingTypeRegular">Regular</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="billing_type_modal" id="billingTypeSpecial" value="special">
+                            <input class="form-check-input" type="radio" name="billing_type_modal"
+                                id="billingTypeSpecial" value="special">
                             <label class="form-check-label" for="billingTypeSpecial">Special</label>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmBillingTypeBtn">Proceed with Upload</button>
+                    <button type="button" class="btn btn-primary" id="confirmBillingTypeBtn">Proceed with
+                        Upload</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Forecast Upload Guide Pop-up -->
-    <div id="forecastGuidePopup" class="position-fixed" style="bottom: 24px; right: 24px; z-index: 1055; min-width: 320px; max-width: 90vw;">
+    <div id="forecastGuidePopup" class="position-fixed"
+        style="bottom: 24px; right: 24px; z-index: 1055; min-width: 320px; max-width: 90vw;">
         <div class="alert alert-info alert-dismissible fade show shadow" role="alert">
-            <strong><i class="fa fa-info-circle"></i> Reminder:</strong> Please upload the <b>Installment Forecast</b> first before uploading any remittance files.<br>
+            <strong><i class="fa fa-info-circle"></i> Reminder:</strong> Please upload the <b>Installment Forecast</b>
+            first before uploading any remittance files.<br>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
