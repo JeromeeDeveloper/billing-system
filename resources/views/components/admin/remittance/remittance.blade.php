@@ -288,137 +288,12 @@
                                     </div>
                                 </div>
 
-                                <!-- Remittance Preview Section (unchanged, just add card and spacing) -->
+                                <!-- Remittance Preview Section - Now Consolidated -->
                                 <div class="card shadow-sm mb-4">
                                     <div class="card-body">
-                                        {{-- Loans & Savings Remittance Preview --}}
-                                        <div class="mb-4">
-                                            <h5 class="text-center">Loans & Savings Remittance Preview</h5>
-                                            <div class="row mb-3 justify-content-between align-items-center">
-                                                <div class="col-12 col-md-7 mb-2 mb-md-0">
-                                                    <div class="btn-group" role="group">
-                                                        <!-- Filter buttons (unchanged) -->
-                                                        @php $filter = request('loans_filter'); @endphp
-                                                        <a href="{{ route('remittance.index') }}" class="btn {{ !$filter ? 'btn-primary' : 'btn-outline-primary' }} mr-2">All Records</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'matched'])) }}" class="btn {{ $filter === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">Matched Only</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'unmatched'])) }}" class="btn {{ $filter === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">Unmatched Only</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'no_branch'])) }}" class="btn {{ $filter === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">No Branch</a>
-                                                    </div>
-                                                </div>
-                                                <div class="col-12 col-md-5 d-flex justify-content-md-end">
-                                                    <form method="GET" class="form-inline w-100 justify-content-end">
-                                                        @if (request()->has('loans_filter'))
-                                                            <input type="hidden" name="loans_filter" value="{{ request('loans_filter') }}">
-                                                        @endif
-                                                        <input type="text" name="loans_search" value="{{ request('loans_search') }}" class="form-control mr-2 w-auto" placeholder="Search by name or emp_id">
-                                                        <button type="submit" class="btn btn-outline-secondary btn-sm mr-2">Search</button>
-                                                        @if (request()->has('loans_search') || request()->has('loans_filter'))
-                                                            <a href="{{ route('remittance.index') }}" class="btn btn-outline-warning btn-sm">Clear</a>
-                                                        @endif
-                                                    </form>
-                                                </div>
-                                            </div>
-                                            <div class="table-responsive">
-                                                <table class="table table-bordered text-center">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Member</th>
-                                                            <th>Loans</th>
-                                                            <th>Savings</th>
-                                                            <th>Status</th>
-                                                            <th>Message</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @forelse($loansSavingsPreviewPaginated as $row)
-                                                            <tr>
-                                                                <td>{{ $row['name'] }}</td>
-                                                                <td>{{ number_format($row['loans'], 2) }}</td>
-                                                                <td>{{ number_format($row['savings'], 2) }}</td>
-                                                                <td>
-                                                                    <span class="badge badge-{{ $row['status'] === 'success' ? 'success' : 'danger' }}">
-                                                                        {{ ucfirst($row['status']) }}
-                                                                    </span>
-                                                                </td>
-                                                                <td>{{ $row['message'] }}</td>
-                                                            </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="5" class="text-center text-muted">No records found.</td>
-                                                            </tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-12 d-flex justify-content-center text-center">
-                                                    {{ $loansSavingsPreviewPaginated->appends(request()->except('loans_page'))->links() }}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Shares Remittance Preview --}}
-                                        <div class="mb-4">
-                                            <h5 class="text-center">Shares Remittance Preview</h5>
-                                            <div class="row mb-3 justify-content-between align-items-center">
-                                                <div class="col-12 col-md-7 mb-2 mb-md-0">
-                                                    <div class="btn-group" role="group">
-                                                        <!-- Filter buttons (unchanged) -->
-                                                        @php $filter = request('shares_filter'); @endphp
-                                                        <a href="{{ route('remittance.index') }}" class="btn {{ !$filter ? 'btn-primary' : 'btn-outline-primary' }} mr-2">All Records</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'matched'])) }}" class="btn {{ $filter === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">Matched Only</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'unmatched'])) }}" class="btn {{ $filter === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">Unmatched Only</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'no_branch'])) }}" class="btn {{ $filter === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">No Branch</a>
-                                                    </div>
-                                                </div>
-                                                <div class="col-12 col-md-5 d-flex justify-content-md-end">
-                                                    <form method="GET" class="form-inline w-100 justify-content-end">
-                                                        @if (request()->has('shares_filter'))
-                                                            <input type="hidden" name="shares_filter" value="{{ request('shares_filter') }}">
-                                                        @endif
-                                                        <input type="text" name="shares_search" value="{{ request('shares_search') }}" class="form-control mr-2 w-auto" placeholder="Search by name or emp_id">
-                                                        <button type="submit" class="btn btn-outline-secondary btn-sm mr-2">Search</button>
-                                                        @if (request()->has('shares_search') || request()->has('shares_filter'))
-                                                            <a href="{{ route('remittance.index') }}" class="btn btn-outline-warning btn-sm">Clear</a>
-                                                        @endif
-                                                    </form>
-                                                </div>
-                                            </div>
-                                            <div class="table-responsive">
-                                                <table class="table table-bordered text-center">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Member</th>
-                                                            <th>Shares</th>
-                                                            <th>Status</th>
-                                                            <th>Message</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @forelse($sharesPreviewPaginated as $row)
-                                                            <tr>
-                                                                <td>{{ $row['name'] }}</td>
-                                                                <td>{{ number_format($row['share_amount'], 2) }}</td>
-                                                                <td>
-                                                                    <span class="badge badge-{{ $row['status'] === 'success' ? 'success' : 'danger' }}">
-                                                                        {{ ucfirst($row['status']) }}
-                                                                    </span>
-                                                                </td>
-                                                                <td>{{ $row['message'] }}</td>
-                                                            </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="4" class="text-center text-muted">No records found.</td>
-                                                            </tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-12 d-flex justify-content-center text-center">
-                                                    {{ $sharesPreviewPaginated->appends(request()->except('shares_page'))->links() }}
-                                                </div>
-                                            </div>
+                                        <div class="alert alert-info">
+                                            <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Preview Tables Consolidated</h6>
+                                            <p class="mb-0">The separate preview tables have been consolidated into the comprehensive table below. Use the filters to view specific data types and billing types.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -430,27 +305,15 @@
                     </div>
                 </div>
 
-                {{-- Export Button for Regular & Special Billing Remittance --}}
+                {{-- Consolidated Remittance Table --}}
                 <div class="mb-3 text-right">
                     <a href="{{ route('remittance.exportRegularSpecial') }}" class="btn btn-success">
                         <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
                     </a>
+
                 </div>
 
-            @if (isset($regularRemittances) && $regularRemittances->count() > 0)
-                @include('components.admin.remittance.billing_table', [
-                    'remittances' => $regularRemittances,
-                    'billed' => $regularBilled,
-                    'type' => 'Regular'
-                ])
-            @endif
-            @if (isset($specialRemittances) && $specialRemittances->count() > 0)
-                @include('components.admin.remittance.billing_table', [
-                    'remittances' => $specialRemittances,
-                    'billed' => $specialBilled,
-                    'type' => 'Special'
-                ])
-            @endif
+                @include('components.admin.remittance.consolidated_remittance_table')
 
     </div>
         </div>

@@ -180,6 +180,7 @@ Route::get('admin/remittance/export-preview', [\App\Http\Controllers\RemittanceC
 Route::get('admin/remittance/export-comparison', [\App\Http\Controllers\RemittanceController::class, 'exportComparison'])->name('remittance.exportComparison');
 Route::get('admin/remittance/export-regular-special', [App\Http\Controllers\RemittanceController::class, 'exportRegularSpecial'])->name('remittance.exportRegularSpecial');
 
+
 Route::get('/admin/contra', [App\Http\Controllers\ContraController::class, 'showAdmin'])->name('admin.contra');
 Route::post('/admin/contra', [App\Http\Controllers\ContraController::class, 'storeAdmin']);
 Route::get('/admin/contra/accounts', [App\Http\Controllers\ContraController::class, 'getAccountsByType'])->name('admin.contra.accounts');
@@ -242,6 +243,7 @@ Route::get('/branch/special-billing/export', [BranchSpecialBillingController::cl
 Route::get('/branch/remittance', [BranchRemittanceController::class, 'index'])->name('branch.remittance.index');
 Route::get('/branch/remittance/generate-export', [BranchRemittanceController::class, 'generateExport'])->name('branch.remittance.generateExport');
 Route::get('/branch/remittance/export-regular-special', [App\Http\Controllers\BranchRemittanceController::class, 'exportRegularSpecial'])->name('branchRemittance.exportRegularSpecial');
+
 
 Route::get('/master/export-member-details-branch', [MasterController::class, 'exportMemberDetailsBranch'])->name('master.exportMemberDetailsBranch');
 Route::get('/master/export-members-no-regular-savings-branch', [MasterController::class, 'exportMembersNoRegularSavingsBranch'])->name('master.exportMembersNoRegularSavingsBranch');

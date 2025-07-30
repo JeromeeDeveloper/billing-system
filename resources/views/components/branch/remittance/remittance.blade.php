@@ -200,107 +200,15 @@
                                     </div>
                                 </div>
 
-                                <!-- Preview Section -->
-                                <div class="row">
-                                    <div class="col-12">
-                                        {{-- Loans & Savings Remittance Preview --}}
-                                        <div class="card mb-4">
-                                            <div class="card-body">
-                                                <h5 class="text-center">Loans & Savings Remittance Preview</h5>
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered text-center">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Member</th>
-                                                                <th>Loans</th>
-                                                                <th>Savings</th>
-                                                                <th>Status</th>
-                                                                <th>Message</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @forelse($loansSavingsPreviewPaginated ?? [] as $row)
-                                                                <tr>
-                                                                    <td>{{ $row->name }}</td>
-                                                                    <td>{{ $row->loans }}</td>
-                                                                    <td>{{ is_array($row->savings) ? $row->savings['total'] ?? 0 : $row->savings }}</td>
-                                                                    <td>{{ $row->status }}</td>
-                                                                    <td>{{ $row->message }}</td>
-                                                                </tr>
-                                                            @empty
-                                                                <tr>
-                                                                    <td colspan="5" class="text-center text-muted">No records found.</td>
-                                                                </tr>
-                                                            @endforelse
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-12 d-flex justify-content-center text-center">
-                                                        {{ $loansSavingsPreviewPaginated->appends(request()->except('loans_page'))->links() ?? '' }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Shares Remittance Preview --}}
-                                        <div class="card mb-4">
-                                            <div class="card-body">
-                                                <h5 class="text-center">Shares Remittance Preview</h5>
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered text-center">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Member</th>
-                                                                <th>Shares</th>
-                                                                <th>Status</th>
-                                                                <th>Message</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @forelse($sharesPreviewPaginated ?? [] as $row)
-                                                                <tr>
-                                                                    <td>{{ $row->name }}</td>
-                                                                    <td>{{ $row->share_amount }}</td>
-                                                                    <td>{{ $row->status }}</td>
-                                                                    <td>{{ $row->message }}</td>
-                                                                </tr>
-                                                            @empty
-                                                                <tr>
-                                                                    <td colspan="4" class="text-center text-muted">No records found.</td>
-                                                                </tr>
-                                                            @endforelse
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-12 d-flex justify-content-center text-center">
-                                                        {{ $sharesPreviewPaginated->appends(request()->except('shares_page'))->links() ?? '' }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Export Button for Regular & Special Billing Remittance --}}
+                                <!-- Consolidated Remittance Table -->
                                         <div class="mb-3 text-right">
-                                            <a href="{{ route('branchRemittance.exportRegularSpecial') }}" class="btn btn-success">
-                                                <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
-                                            </a>
+                                                            <a href="{{ route('branchRemittance.exportRegularSpecial') }}" class="btn btn-success">
+                    <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
+                </a>
+
                                         </div>
-                                        @if (isset($regularRemittances) && $regularRemittances->count() > 0)
-                                            @include('components.admin.remittance.billing_table', [
-                                                'remittances' => $regularRemittances,
-                                                'billed' => $regularBilled,
-                                                'type' => 'Regular'
-                                            ])
-                                        @endif
-                                        @if (isset($specialRemittances) && $specialRemittances->count() > 0)
-                                            @include('components.admin.remittance.billing_table', [
-                                                'remittances' => $specialRemittances,
-                                                'billed' => $specialBilled,
-                                                'type' => 'Special'
-                                            ])
-                                        @endif
+
+                                        @include('components.branch.remittance.consolidated_remittance_table_branch')
                                         {{-- If variables are missing, add a comment for the developer --}}
                                         @if (!isset($loansSavingsPreviewPaginated) || !isset($sharesPreviewPaginated) || !isset($regularRemittances) || !isset($specialRemittances) || !isset($regularBilled) || !isset($specialBilled))
                                             <div class="alert alert-warning mt-4">
@@ -346,47 +254,17 @@
                 $('.alert').fadeOut('slow');
             }, 25000);
 
-            // Show floating toast on page load ONLY if both preview tables have no records
-            var hasLoansSavingsRecords = false;
-            var hasSharesRecords = false;
-            $(".card-body").each(function() {
-                var header = $(this).find('h5.text-center').text().trim();
-                if (header === 'Loans & Savings Remittance Preview') {
-                    var rows = $(this).find('table tbody tr');
-                    hasLoansSavingsRecords = rows.filter(function() {
-                        return !$(this).text().includes('No records found.');
-                    }).length > 0;
-                }
-                if (header === 'Shares Remittance Preview') {
-                    var rows = $(this).find('table tbody tr');
-                    hasSharesRecords = rows.filter(function() {
-                        return !$(this).text().includes('No records found.');
-                    }).length > 0;
-                }
+            // Show floating toast on page load for consolidated table
+            Swal.fire({
+                toast: true,
+                position: 'bottom-end',
+                icon: 'success',
+                title: 'Consolidated Remittance View',
+                text: 'All remittance data is now consolidated in one table with filters.',
+                showConfirmButton: false,
+                timer: 8000,
+                timerProgressBar: true
             });
-            if (!hasLoansSavingsRecords && !hasSharesRecords) {
-                Swal.fire({
-                    toast: true,
-                    position: 'bottom-end',
-                    icon: 'info',
-                    title: 'No records yet for collection.',
-                    text: 'Please wait for the admin to upload remittance files.',
-                    showConfirmButton: false,
-                    timer: 8000,
-                    timerProgressBar: true
-                });
-            } else {
-                Swal.fire({
-                    toast: true,
-                    position: 'bottom-end',
-                    icon: 'success',
-                    title: "It's good to generate collection files now!",
-                    text: 'You may proceed to export your branch\'s collection files.',
-                    showConfirmButton: false,
-                    timer: 8000,
-                    timerProgressBar: true
-                });
-            }
         });
 
         function showExportLoading(type) {

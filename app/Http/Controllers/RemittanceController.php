@@ -739,9 +739,24 @@ class RemittanceController extends Controller
             ];
         });
 
+        // Get preview data
+        $loansSavingsPreviewPaginated = RemittancePreview::where('user_id', $userId)
+            ->where('type', 'admin')
+            ->where('billing_period', $billingPeriod)
+            ->where('remittance_type', 'loans_savings')
+            ->get();
+
+        $sharesPreviewPaginated = RemittancePreview::where('user_id', $userId)
+            ->where('type', 'admin')
+            ->where('billing_period', $billingPeriod)
+            ->where('remittance_type', 'shares')
+            ->get();
+
         return \Maatwebsite\Excel\Facades\Excel::download(
-            new RegularSpecialRemittanceExport($regularRemittances, $specialRemittances, $billingPeriod),
+            new RegularSpecialRemittanceExport($regularRemittances, $specialRemittances, $billingPeriod, $loansSavingsPreviewPaginated, $sharesPreviewPaginated, false, null),
             'Regular_Special_Billing_Remittance_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
         );
     }
+
+
 }

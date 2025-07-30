@@ -346,11 +346,28 @@ class BranchRemittanceController extends Controller
             $regularBilled->push(['member_id' => $memberId, 'total_billed' => $regularTotal]);
             $specialBilled->push(['member_id' => $memberId, 'total_billed' => $specialTotal]);
         }
+        // Get preview data for branch members
+        $loansSavingsPreviewPaginated = \App\Models\RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id);
+        })
+        ->where('billing_period', $currentBillingPeriod)
+        ->where('remittance_type', 'loans_savings')
+        ->get();
+
+        $sharesPreviewPaginated = \App\Models\RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+            $query->where('branch_id', $branch_id);
+        })
+        ->where('billing_period', $currentBillingPeriod)
+        ->where('remittance_type', 'shares')
+        ->get();
+
         return \Maatwebsite\Excel\Facades\Excel::download(
-            new RegularSpecialRemittanceExport($regularRemittances, $specialRemittances, $currentBillingPeriod, $regularBilled, $specialBilled),
+            new RegularSpecialRemittanceExport($regularRemittances, $specialRemittances, $currentBillingPeriod, $loansSavingsPreviewPaginated, $sharesPreviewPaginated, true, $branch_id),
             'Branch-Regular-Special-Billing-Remittance.xlsx'
         );
     }
+
+
 
     // Add a branch-specific comparison report method
     private function getRemittanceComparisonReport($branch_id, $period)

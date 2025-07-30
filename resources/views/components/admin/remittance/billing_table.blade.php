@@ -15,7 +15,7 @@
                             <th>Total Remitted</th>
                             <th>Total Billed</th>
                             <th>Remaining Balance</th>
-                            <th>Status</th>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -71,15 +71,7 @@
                                 <td class="{{ $remainingBalance < 0 ? 'text-success' : ($remainingBalance > 0 ? 'text-danger' : 'text-muted') }}">
                                     {{ number_format($remainingBalance, 2) }}
                                 </td>
-                                <td>
-                                    @if($remit->status)
-                                        <span class="badge badge-{{ $remit->status === 'success' ? 'success' : 'danger' }}">
-                                            {{ ucfirst($remit->status) }}
-                                        </span>
-                                    @else
-                                        <span class="badge badge-secondary">N/A</span>
-                                    @endif
-                                </td>
+
                             </tr>
                         @endforeach
                     </tbody>
