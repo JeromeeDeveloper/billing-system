@@ -162,6 +162,10 @@
                                                 </div>
                                             </div>
 
+                                            <div class="alert alert-warning mb-3 mx-3">
+                                                <i class="fa fa-exclamation-triangle"></i>
+                                                <strong>Important:</strong> Please ensure all files are correct before uploading.
+                                            </div>
 
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary"

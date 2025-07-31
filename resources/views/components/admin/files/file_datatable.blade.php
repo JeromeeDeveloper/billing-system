@@ -190,6 +190,10 @@
                                                 </div>
                                             </div>
 
+                                            <div class="alert alert-warning mb-3 mx-3">
+                                                <i class="fa fa-exclamation-triangle"></i>
+                                                <strong>Important:</strong> Please ensure all files are correct before uploading.
+                                            </div>
 
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary"
@@ -243,11 +247,11 @@
                                     To view all files and manage file retention, use the <strong>File Retention</strong> button above.
                                 </div>
 
-                                <div class="alert alert-warning mb-3">
+                                {{-- <div class="alert alert-warning mb-3">
                                     <i class="fa fa-exclamation-triangle me-2"></i>
                                     <strong>Important:</strong> If you're uploading files downloaded from websites and encounter "Invalid Spreadsheet file" errors,
                                     please open the file in Excel and save it as a new .csv file before uploading. This ensures compatibility with our system.
-                                </div>
+                                </div> --}}
                                 <div class="table-responsive">
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
