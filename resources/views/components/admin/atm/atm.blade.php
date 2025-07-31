@@ -462,7 +462,7 @@
                                                     <div class="modal-dialog modal-xl">
                                                         <div class="modal-content">
                                                             <div class="modal-header bg-primary text-white">
-                                                                <h5 class="modal-title">
+                                                                <h5 class="modal-title text-white">
                                                                     <i class="fa fa-money-bill me-2"></i>
                                                                     Post ATM Withdrawal - {{ $member->lname }}, {{ $member->fname }}
                                                                 </h5>
@@ -630,8 +630,8 @@
                                                                         <div class="col-md-12">
                                                                             <div class="card bg-light border-primary">
                                                                                 <div class="card-header bg-primary text-white">
-                                                                                    <h6 class="card-title mb-0">
-                                                                                        <i class="fa fa-file-invoice me-2"></i>Payment Details
+                                                                                    <h6 class="card-title mb-0 text-white">
+                                                                                        <i class="fa fa-file-invoice me-2"></i> Payment Details
                                                                                     </h6>
                                                                                 </div>
                                                                                 <div class="card-body">

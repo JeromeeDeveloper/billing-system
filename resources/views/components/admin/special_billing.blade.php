@@ -140,7 +140,7 @@
                                     <table class="table table-striped table-bordered">
                                         <thead>
                                             <tr>
-                                                <th>CID</th>h
+                                                <th>CID</th>
                                                 <th>Employee ID</th>
                                                 <th>Name</th>
                                                 <th>Amortization</th>
@@ -164,7 +164,7 @@
                                             </tr>
                                             @empty
                                             <tr>
-                                                <td colspan="7" class="text-center">No special billing records found.</td>
+                                                <td colspan="8" class="text-center">No special billing records found.</td>
                                             </tr>
                                             @endforelse
                                         </tbody>

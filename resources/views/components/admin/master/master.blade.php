@@ -272,7 +272,7 @@
                                                 <th>EMPID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-
+                                                <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -284,7 +284,7 @@
                                                     <td>{{ $item->member->lname ?? '' }},
                                                         {{ $item->member->fname ?? '' }}</td>
                                                     <td>{{ $item->member->branch ? $item->member->branch->name : 'N/A' }}</td>
-
+                                                    <td>{{ $item->member->member_tagging ?? 'N/A' }}</td>
 
 
                                                     <td>
@@ -364,7 +364,7 @@
                                                 <th>EMPID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-
+                                                <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

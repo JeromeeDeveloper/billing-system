@@ -176,20 +176,120 @@ class BillingController extends Controller
 
     public function viewExports(Request $request)
     {
-        $query = BillingExport::with('user')
-            ->orderBy('billing_period', 'desc')
-            ->orderBy('created_at', 'desc');
+        try {
+            // Test database connection
+            try {
+                \DB::connection()->getPdo();
+                Log::info('Database connection successful');
+            } catch (\Exception $e) {
+                throw new \Exception('Database connection failed: ' . $e->getMessage());
+            }
 
-        if ($request->has('billing_period')) {
-            $billingPeriod = $request->billing_period;
-            // Convert YYYY-MM to YYYY-MM-01 format
-            $formattedPeriod = $billingPeriod . '-01';
-            $query->where('billing_period', $formattedPeriod);
+            // Check if BillingExport model exists and is accessible
+            if (!class_exists('App\Models\BillingExport')) {
+                throw new \Exception('BillingExport model not found');
+            }
+
+            // Check if User model exists and is accessible
+            if (!class_exists('App\Models\User')) {
+                throw new \Exception('User model not found');
+            }
+
+            // Test if billing_exports table exists
+            try {
+                $tableExists = \Schema::hasTable('billing_exports');
+                Log::info('Billing exports table exists: ' . ($tableExists ? 'yes' : 'no'));
+                if (!$tableExists) {
+                    throw new \Exception('Billing exports table does not exist');
+                }
+            } catch (\Exception $e) {
+                throw new \Exception('Error checking table: ' . $e->getMessage());
+            }
+
+            // Test basic query without relationships
+            try {
+                $basicQuery = BillingExport::query();
+                $count = $basicQuery->count();
+                Log::info('Basic BillingExport count: ' . $count);
+            } catch (\Exception $e) {
+                throw new \Exception('Error in basic query: ' . $e->getMessage());
+            }
+
+            // Simple query without any Excel processing
+            $query = BillingExport::select('id', 'billing_period', 'filename', 'filepath', 'generated_by', 'created_at')
+                ->orderBy('billing_period', 'desc')
+                ->orderBy('created_at', 'desc');
+
+            if ($request->has('billing_period')) {
+                $billingPeriod = $request->billing_period;
+                // Convert YYYY-MM to YYYY-MM-01 format
+                $formattedPeriod = $billingPeriod . '-01';
+                $query->where('billing_period', $formattedPeriod);
+            }
+
+            // Get all exports first
+            $allExports = $query->get();
+
+            // Filter out invalid files
+            $validExports = $allExports->filter(function ($export) {
+                $filePath = $export->filepath;
+
+                // Check if file exists
+                if (!Storage::disk('public')->exists($filePath)) {
+                    Log::info('Filtering out non-existent file: ' . $filePath);
+                    return false;
+                }
+
+                // Check if file is not empty
+                $fileSize = Storage::disk('public')->size($filePath);
+                if ($fileSize === 0) {
+                    Log::info('Filtering out empty file: ' . $filePath . ' (size: ' . $fileSize . ' bytes)');
+                    return false;
+                }
+
+                // Check if file has minimum size (Excel files should be at least 1KB)
+                if ($fileSize < 1024) {
+                    Log::info('Filtering out suspiciously small file: ' . $filePath . ' (size: ' . $fileSize . ' bytes)');
+                    return false;
+                }
+
+                return true;
+            });
+
+            Log::info('Filtered exports: ' . $validExports->count() . ' valid out of ' . $allExports->count() . ' total');
+
+            // Create pagination manually for filtered results
+            $page = $request->get('page', 1);
+            $perPage = 10;
+            $offset = ($page - 1) * $perPage;
+
+            $exports = new \Illuminate\Pagination\LengthAwarePaginator(
+                $validExports->slice($offset, $perPage),
+                $validExports->count(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            // Log the results for debugging
+            Log::info('BillingExport results:', [
+                'count' => $exports->count(),
+                'total' => $exports->total(),
+                'first_item' => $exports->firstItem(),
+                'last_item' => $exports->lastItem()
+            ]);
+
+            return view('components.admin.billing.exports', compact('exports'));
+        } catch (\Exception $e) {
+            Log::error('Error in viewExports: ' . $e->getMessage());
+            Log::error('Error trace: ' . $e->getTraceAsString());
+            Log::error('Error file: ' . $e->getFile() . ':' . $e->getLine());
+
+            // Return empty exports with error message
+            $exports = collect([])->paginate(10);
+            return view('components.admin.billing.exports', compact('exports'))
+                ->with('error', 'Unable to load export history. Error: ' . $e->getMessage());
         }
-
-        $exports = $query->paginate(10)->withQueryString();
-
-        return view('components.admin.billing.exports', compact('exports'));
     }
 
 
@@ -212,11 +312,30 @@ class BillingController extends Controller
 
             if (Storage::disk('public')->exists($filePath)) {
                 Log::info('File exists, downloading...');
-                return Storage::disk('public')->download($filePath, $fileName);
+
+                // Check file size to ensure it's not empty
+                $fileSize = Storage::disk('public')->size($filePath);
+                Log::info('File size: ' . $fileSize . ' bytes');
+
+                if ($fileSize === 0) {
+                    Log::error('Export file is empty: ' . $filePath);
+                    return back()->with('error', 'Export file is empty or corrupted. Please regenerate the export.');
+                }
+
+                // Try to download the file
+                try {
+                    return Storage::disk('public')->download($filePath, $fileName);
+                } catch (\PhpOffice\PhpSpreadsheet\Exception\InvalidFormatException $e) {
+                    Log::error('Excel format error: ' . $e->getMessage());
+                    return back()->with('error', 'The export file is corrupted or has invalid format. Please regenerate the export.');
+                } catch (\Exception $e) {
+                    Log::error('Download error: ' . $e->getMessage());
+                    return back()->with('error', 'Failed to download file: ' . $e->getMessage());
+                }
             }
 
             Log::error('Export file not found at path: ' . $filePath);
-            return back()->with('error', 'Export file not found.');
+            return back()->with('error', 'Export file not found. Please regenerate the export.');
         } catch (\Exception $e) {
             Log::error('Error downloading export: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
@@ -353,20 +472,92 @@ class BillingController extends Controller
 
     public function viewExports_branch(Request $request)
     {
-        $query = BillingExport::with('user')
-            ->orderBy('billing_period', 'desc')
-            ->orderBy('created_at', 'desc');
+        try {
+            // Check if BillingExport model exists and is accessible
+            if (!class_exists('App\Models\BillingExport')) {
+                throw new \Exception('BillingExport model not found');
+            }
 
-        if ($request->has('billing_period')) {
-            $billingPeriod = $request->billing_period;
-            // Convert YYYY-MM to YYYY-MM-01 format
-            $formattedPeriod = $billingPeriod . '-01';
-            $query->where('billing_period', $formattedPeriod);
+            // Check if User model exists and is accessible
+            if (!class_exists('App\Models\User')) {
+                throw new \Exception('User model not found');
+            }
+
+            // Simple query without any Excel processing
+            $query = BillingExport::select('id', 'billing_period', 'filename', 'filepath', 'generated_by', 'created_at')
+                ->orderBy('billing_period', 'desc')
+                ->orderBy('created_at', 'desc');
+
+            if ($request->has('billing_period')) {
+                $billingPeriod = $request->billing_period;
+                // Convert YYYY-MM to YYYY-MM-01 format
+                $formattedPeriod = $billingPeriod . '-01';
+                $query->where('billing_period', $formattedPeriod);
+            }
+
+            // Get all exports first
+            $allExports = $query->get();
+
+            // Filter out invalid files
+            $validExports = $allExports->filter(function ($export) {
+                $filePath = $export->filepath;
+
+                // Check if file exists
+                if (!Storage::disk('public')->exists($filePath)) {
+                    Log::info('Filtering out non-existent file: ' . $filePath);
+                    return false;
+                }
+
+                // Check if file is not empty
+                $fileSize = Storage::disk('public')->size($filePath);
+                if ($fileSize === 0) {
+                    Log::info('Filtering out empty file: ' . $filePath . ' (size: ' . $fileSize . ' bytes)');
+                    return false;
+                }
+
+                // Check if file has minimum size (Excel files should be at least 1KB)
+                if ($fileSize < 1024) {
+                    Log::info('Filtering out suspiciously small file: ' . $filePath . ' (size: ' . $fileSize . ' bytes)');
+                    return false;
+                }
+
+                return true;
+            });
+
+            Log::info('Filtered exports (branch): ' . $validExports->count() . ' valid out of ' . $allExports->count() . ' total');
+
+            // Create pagination manually for filtered results
+            $page = $request->get('page', 1);
+            $perPage = 10;
+            $offset = ($page - 1) * $perPage;
+
+            $exports = new \Illuminate\Pagination\LengthAwarePaginator(
+                $validExports->slice($offset, $perPage),
+                $validExports->count(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            // Log the results for debugging
+            Log::info('BillingExport branch results:', [
+                'count' => $exports->count(),
+                'total' => $exports->total(),
+                'first_item' => $exports->firstItem(),
+                'last_item' => $exports->lastItem()
+            ]);
+
+            return view('components.branch.billing.exports', compact('exports'));
+        } catch (\Exception $e) {
+            Log::error('Error in viewExports_branch: ' . $e->getMessage());
+            Log::error('Error trace: ' . $e->getTraceAsString());
+            Log::error('Error file: ' . $e->getFile() . ':' . $e->getLine());
+
+            // Return empty exports with error message
+            $exports = collect([])->paginate(10);
+            return view('components.branch.billing.exports', compact('exports'))
+                ->with('error', 'Unable to load export history. Error: ' . $e->getMessage());
         }
-
-        $exports = $query->paginate(10)->withQueryString();
-
-        return view('components.branch.billing.exports', compact('exports'));
     }
 
     public function downloadExport_branch($id)
@@ -389,11 +580,30 @@ class BillingController extends Controller
 
             if (Storage::disk('public')->exists($filePath)) {
                 Log::info('File exists, downloading...');
-                return Storage::disk('public')->download($filePath, $fileName);
+
+                // Check file size to ensure it's not empty
+                $fileSize = Storage::disk('public')->size($filePath);
+                Log::info('File size: ' . $fileSize . ' bytes');
+
+                if ($fileSize === 0) {
+                    Log::error('Export file is empty: ' . $filePath);
+                    return back()->with('error', 'Export file is empty or corrupted. Please regenerate the export.');
+                }
+
+                // Try to download the file
+                try {
+                    return Storage::disk('public')->download($filePath, $fileName);
+                } catch (\PhpOffice\PhpSpreadsheet\Exception\InvalidFormatException $e) {
+                    Log::error('Excel format error: ' . $e->getMessage());
+                    return back()->with('error', 'The export file is corrupted or has invalid format. Please regenerate the export.');
+                } catch (\Exception $e) {
+                    Log::error('Download error: ' . $e->getMessage());
+                    return back()->with('error', 'Failed to download file: ' . $e->getMessage());
+                }
             }
 
             Log::error('Export file not found at path: ' . $filePath);
-            return back()->with('error', 'Export file not found.');
+            return back()->with('error', 'Export file not found. Please regenerate the export.');
         } catch (\Exception $e) {
             Log::error('Error downloading export: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
@@ -632,6 +842,7 @@ class BillingController extends Controller
         // Clear special billings for the new billing period
         \App\Models\SpecialBilling::truncate();
         \App\Models\LoanRemittance::truncate();
+        \App\Models\AtmPayment::truncate();
 
         // Members reset (keep only cid and member_tagging)
         \App\Models\Member::query()->update([
