@@ -212,6 +212,26 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             return null;
                         }
 
+                        // Skip if account_status is 'non-deduction' and within hold period
+                        if ($member->account_status === 'non-deduction') {
+                            $currentDate = now()->format('Y-m-01');
+                            $startHold = $member->start_hold;
+                            $expiryDate = $member->expiry_date;
+
+                            // Check if within hold period (start_hold is in the future AND expiry_date hasn't passed)
+                            if ($startHold && $expiryDate) {
+                                $startHoldDate = \Carbon\Carbon::createFromFormat('Y-m', $startHold)->startOfMonth();
+                                $expiryDateObj = \Carbon\Carbon::createFromFormat('Y-m', $expiryDate)->endOfMonth();
+                                $currentDateObj = \Carbon\Carbon::createFromFormat('Y-m', $currentDate)->startOfMonth();
+
+                                // Skip if within hold period (current date is between start_hold and expiry_date)
+                                if ($currentDateObj->between($startHoldDate, $expiryDateObj)) {
+                                    Log::info("Skipping loan forecast for member {$member->id} - account is on hold (non-deduction)");
+                                    return null;
+                                }
+                            }
+                        }
+
                         return [
                             'forecast' => $forecast,
                             'prioritization' => $loanProduct ? $loanProduct->prioritization : 999,
@@ -221,7 +241,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'created_at' => $forecast->created_at,
                         ];
                     })
-                    ->filter() // Remove nulls (skipped not_billed or not matching type)
+                    ->filter() // Remove nulls (skipped not_billed, not matching type, or on hold)
                     ->sort(function($a, $b) {
                         // Sort by prioritization (asc)
                         if ($a['prioritization'] !== $b['prioritization']) {

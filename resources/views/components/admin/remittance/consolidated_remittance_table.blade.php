@@ -1,20 +1,30 @@
 <div class="container-fluid">
     <div class="card mb-4">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">Consolidated Remittance Report</h5>
-            <div class="d-flex gap-2 flex-wrap">
-                <select id="billingTypeFilter" class="form-select form-select-sm" style="width: auto;">
-                    <option value="">All Types</option>
-                    <option value="regular">Regular Billing</option>
-                    <option value="special">Special Billing</option>
-                </select>
-                <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
-                    <option value="">All Status</option>
-                    <option value="success">Matched</option>
-                    <option value="danger">Unmatched</option>
-                    <option value="no_branch">No Branch</option>
-                </select>
-                <input type="text" id="searchFilter" class="form-control form-control-sm" placeholder="Search member..." style="width: 200px;">
+        <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center py-3">
+            <div class="d-flex align-items-center">
+                <i class="fa fa-chart-bar me-2"></i>
+                <h5 class="mb-0 fw-bold">Consolidated Remittance Report</h5>
+            </div>
+            <div class="d-flex gap-3 align-items-center">
+                <div class="d-flex gap-2">
+                    <select id="billingTypeFilter" class="form-select form-select-sm border-0 bg-white bg-opacity-90" style="width: 140px;">
+                        <option value="">All Types</option>
+                        <option value="regular">Regular Billing</option>
+                        <option value="special">Special Billing</option>
+                    </select>
+                    <select id="statusFilter" class="form-select form-select-sm" style="display: none;">
+                        <option value="no_branch">No Branch</option>
+                    </select>
+                    <input type="text" id="searchFilter" class="form-control form-control-sm border-0 bg-white bg-opacity-90" placeholder="Search members..." style="width: 180px;">
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('remittance.exportRegularSpecial') }}" class="btn btn-light btn-sm shadow-sm">
+                        <i class="fa fa-file-excel-o text-success me-1"></i> Export Regular & Special
+                    </a>
+                    <a href="{{ route('remittance.exportConsolidated') }}" class="btn btn-light btn-sm shadow-sm">
+                        <i class="fa fa-file-excel-o text-info me-1"></i> Matched / Unmatched Remittance
+                    </a>
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -343,6 +353,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchFilter = document.getElementById('searchFilter');
     const tableRows = document.querySelectorAll('.data-row');
 
+    // Set default value for status filter (show all records by default)
+    statusFilter.value = '';
+
     function filterTable() {
         const billingType = billingTypeFilter.value;
         const status = statusFilter.value;
@@ -360,15 +373,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 showRow = false;
             }
 
-            // Filter by status
-            if (status) {
-                if (status === 'success' && rowStatus !== 'success') {
-                    showRow = false;
-                } else if (status === 'danger' && rowStatus !== 'danger') {
-                    showRow = false;
-                } else if (status === 'no_branch' && rowStatus !== 'no_branch') {
-                    showRow = false;
-                }
+            // Filter by status (only "no_branch" now)
+            if (status && status === 'no_branch' && rowStatus !== 'no_branch') {
+                showRow = false;
             }
 
             // Filter by search term
@@ -383,5 +390,8 @@ document.addEventListener('DOMContentLoaded', function() {
     billingTypeFilter.addEventListener('change', filterTable);
     statusFilter.addEventListener('change', filterTable);
     searchFilter.addEventListener('input', filterTable);
+
+    // Trigger filter on page load to show default (matched) records
+    filterTable();
 });
 </script>

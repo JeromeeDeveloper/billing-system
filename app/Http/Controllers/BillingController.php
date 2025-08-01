@@ -134,7 +134,10 @@ class BillingController extends Controller
             ->where('generated_by', $userId)
             ->exists();
 
-        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'alreadyExported'));
+        // Check if there's any billing export record for this billing period (to disable cancel approval)
+        $hasBillingExportForPeriod = \App\Models\BillingExport::where('billing_period', $billingPeriod)->exists();
+
+        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'alreadyExported', 'hasBillingExportForPeriod'));
     }
 
     public function export(Request $request)
@@ -844,6 +847,7 @@ class BillingController extends Controller
         \App\Models\LoanRemittance::truncate();
         \App\Models\AtmPayment::truncate();
 
+
         // Members reset (keep only cid and member_tagging)
         \App\Models\Member::query()->update([
             'savings_balance' => 0,
@@ -893,6 +897,19 @@ class BillingController extends Controller
             'success' => true,
             'message' => 'Billing period closed and records reset for new period. You will be logged out.',
             'logout' => true
+        ]);
+    }
+
+    public function checkExportStatus(Request $request)
+    {
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
+
+        // Check if there's any billing export record for this billing period
+        $hasExport = \App\Models\BillingExport::where('billing_period', $billingPeriod)->exists();
+
+        return response()->json([
+            'hasExport' => $hasExport,
+            'billingPeriod' => $billingPeriod
         ]);
     }
 }

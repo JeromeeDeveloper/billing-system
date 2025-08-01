@@ -136,7 +136,7 @@ class BranchRemittanceController extends Controller
         // --- End of new logic ---
 
         // Get export statuses for this billing period
-        $exportStatuses = ExportStatus::getStatuses($currentBillingPeriod);
+        $exportStatuses = ExportStatus::getStatuses($currentBillingPeriod, Auth::id());
 
         return view('components.branch.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
@@ -189,7 +189,7 @@ class BranchRemittanceController extends Controller
 
             if ($type === 'shares') {
                 // Check if export is enabled
-                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares')) {
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares', Auth::id())) {
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new shares remittance file to enable export.');
                 }
 
@@ -217,13 +217,13 @@ class BranchRemittanceController extends Controller
                 }
 
                 // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares');
+                ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id());
 
                 $export = new \App\Exports\BranchSharesExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
-            } else if ($type === 'shares_with_product') {
+            } elseif ($type === 'shares_with_product') {
                 // Check if export is enabled
-                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares_with_product')) {
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares_with_product', Auth::id())) {
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new shares remittance file to enable export.');
                 }
 
@@ -251,29 +251,29 @@ class BranchRemittanceController extends Controller
                 }
 
                 // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product');
+                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product', Auth::id());
 
                 $export = new \App\Exports\BranchSharesWithProductExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
-            } else if ($type === 'loans_savings_with_product') {
+            } elseif ($type === 'loans_savings_with_product') {
                 // Check if export is enabled
-                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings_with_product')) {
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings_with_product', Auth::id())) {
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
                 // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product');
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id());
 
                 $export = new \App\Exports\BranchLoansAndSavingsWithProductExport($remittanceData, $branch_id);
                 $filename = 'branch_loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             } else {
                 // Check if export is enabled
-                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings')) {
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings', Auth::id())) {
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
                 // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings');
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id());
 
                 $export = new \App\Exports\BranchLoansAndSavingsExport($remittanceData, $branch_id);
                 $filename = 'branch_loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';

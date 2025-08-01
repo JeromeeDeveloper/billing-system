@@ -271,7 +271,7 @@ class RemittanceController extends Controller
         $sharesRemittanceImportCount = RemittanceUploadCount::getCount($billingPeriod, 'shares');
 
         // Get export statuses for this billing period
-        $exportStatuses = ExportStatus::getStatuses($billingPeriod);
+        $exportStatuses = ExportStatus::getStatuses($billingPeriod, Auth::id());
 
         return view('components.admin.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
@@ -359,8 +359,8 @@ class RemittanceController extends Controller
             RemittanceUploadCount::incrementCount($currentBillingPeriod, $billingType);
 
             // Mark new upload for loans & savings exports
-            ExportStatus::markUploaded($currentBillingPeriod, 'loans_savings');
-            ExportStatus::markUploaded($currentBillingPeriod, 'loans_savings_with_product');
+            ExportStatus::markUploaded($currentBillingPeriod, 'loans_savings', Auth::id());
+            ExportStatus::markUploaded($currentBillingPeriod, 'loans_savings_with_product', Auth::id());
 
             DB::commit();
 
@@ -433,8 +433,8 @@ class RemittanceController extends Controller
             RemittanceUploadCount::incrementCount($currentBillingPeriod, 'shares');
 
             // Mark new upload for shares exports
-            ExportStatus::markUploaded($currentBillingPeriod, 'shares');
-            ExportStatus::markUploaded($currentBillingPeriod, 'shares_with_product');
+            ExportStatus::markUploaded($currentBillingPeriod, 'shares', Auth::id());
+            ExportStatus::markUploaded($currentBillingPeriod, 'shares_with_product', Auth::id());
 
             DB::commit();
 
@@ -466,8 +466,7 @@ class RemittanceController extends Controller
             }
 
             // Get remittance data for the latest batch only
-            $remittanceData = RemittancePreview::where('user_id', Auth::id())
-                ->where('type', 'admin')
+            $remittanceData = RemittancePreview::where('type', 'admin')
                 ->where('billing_period', $currentBillingPeriod)
                 ->where('remittance_type', 'loans_savings')
                 ->where('created_at', '>=', $latestBatch->imported_at)
@@ -481,7 +480,7 @@ class RemittanceController extends Controller
 
             if ($type === 'shares') {
                 // Check if export is enabled
-                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares')) {
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares', Auth::id())) {
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new shares remittance file to enable export.');
                 }
 
@@ -495,8 +494,7 @@ class RemittanceController extends Controller
                     return redirect()->back()->with('error', 'No shares remittance batch found for the current billing period. Please upload a shares file first.');
                 }
 
-                $remittanceData = RemittancePreview::where('user_id', Auth::id())
-                    ->where('type', 'admin')
+                $remittanceData = RemittancePreview::where('type', 'admin')
                     ->where('billing_period', $currentBillingPeriod)
                     ->where('remittance_type', 'shares')
                     ->where('created_at', '>=', $latestSharesBatch->imported_at)
@@ -507,13 +505,13 @@ class RemittanceController extends Controller
                 }
 
                 // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares');
+                ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id());
 
                 $export = new \App\Exports\SharesExport($remittanceData);
                 $filename = 'shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
             } else if ($type === 'shares_with_product') {
                 // Check if export is enabled
-                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares_with_product')) {
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'shares_with_product', Auth::id())) {
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new shares remittance file to enable export.');
                 }
 
@@ -527,8 +525,7 @@ class RemittanceController extends Controller
                     return redirect()->back()->with('error', 'No shares remittance batch found for the current billing period. Please upload a shares file first.');
                 }
 
-                $remittanceData = RemittancePreview::where('user_id', Auth::id())
-                    ->where('type', 'admin')
+                $remittanceData = RemittancePreview::where('type', 'admin')
                     ->where('billing_period', $currentBillingPeriod)
                     ->where('remittance_type', 'shares')
                     ->where('created_at', '>=', $latestSharesBatch->imported_at)
@@ -539,29 +536,29 @@ class RemittanceController extends Controller
                 }
 
                 // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product');
+                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product', Auth::id());
 
                 $export = new \App\Exports\SharesWithProductExport($remittanceData);
                 $filename = 'shares_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
             } else if ($type === 'loans_savings_with_product') {
                 // Check if export is enabled
-                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings_with_product')) {
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings_with_product', Auth::id())) {
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
                 // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product');
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id());
 
                 $export = new \App\Exports\LoansAndSavingsWithProductExport($remittanceData);
                 $filename = 'loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
             } else {
                 // Check if export is enabled
-                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings')) {
+                if (!ExportStatus::isEnabled($currentBillingPeriod, 'loans_savings', Auth::id())) {
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
                 // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings');
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id());
 
                 $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
                 $filename = 'loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
@@ -755,6 +752,17 @@ class RemittanceController extends Controller
         return \Maatwebsite\Excel\Facades\Excel::download(
             new RegularSpecialRemittanceExport($regularRemittances, $specialRemittances, $billingPeriod, $loansSavingsPreviewPaginated, $sharesPreviewPaginated, false, null),
             'Regular_Special_Billing_Remittance_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportConsolidated()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+        $userId = Auth::id();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ConsolidatedRemittanceReportExport($billingPeriod, $userId),
+            'Consolidated_Remittance_Report_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
         );
     }
 

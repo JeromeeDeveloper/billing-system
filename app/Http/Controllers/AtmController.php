@@ -583,12 +583,29 @@ class AtmController extends Controller
         // Get branch name for header
         $branchName = 'Head Office'; // Default for admin
 
+        // Prepare images for PDF
+        $picture1Path = public_path('images/Picture1.png');
+        $picture2Path = public_path('images/Picture2.png');
+
+        $picture1Base64 = '';
+        $picture2Base64 = '';
+
+        if (file_exists($picture1Path)) {
+            $picture1Base64 = 'data:image/png;base64,' . base64_encode(file_get_contents($picture1Path));
+        }
+
+        if (file_exists($picture2Path)) {
+            $picture2Base64 = 'data:image/png;base64,' . base64_encode(file_get_contents($picture2Path));
+        }
+
         // Generate PDF
         $pdf = Pdf::loadView('reports.atm-batch', [
             'reportData' => $reportData,
             'branchName' => $branchName,
             'date' => $date,
-            'allDates' => $allDates
+            'allDates' => $allDates,
+            'picture1Base64' => $picture1Base64,
+            'picture2Base64' => $picture2Base64
         ]);
 
         $filename = 'ATM_Batch_Report_' . $branchName . '_' . $date . '.pdf';

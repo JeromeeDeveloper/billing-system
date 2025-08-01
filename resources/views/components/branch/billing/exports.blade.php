@@ -100,7 +100,7 @@
                                                     <tr>
                                                         <td>{{ \Carbon\Carbon::createFromFormat('Y-m-d', $export->billing_period)->format('F Y') }}</td>
                                                         <td>{{ $export->created_at->format('M d, Y h:i A') }}</td>
-                                                        <td>User ID: {{ $export->generated_by }}</td>
+                                                        <td>{{ optional($export->user)->name ?? 'Head Office' }}</td>
                                                         <td>
                                                             <a href="{{ route('billing.download-export.branch', $export->id) }}"
                                                                class="btn btn-primary btn-sm">

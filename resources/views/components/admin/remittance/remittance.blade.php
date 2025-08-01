@@ -220,7 +220,7 @@
                                                         <label for="remit_installment_file" class="form-label">Select
                                                             File</label>
                                                         <input type="file" class="form-control"
-                                                            id="remit_installment_file" name="file">
+                                                            id="remit_installment_file" name="file" accept=".xlsx,.xls,.csv">
                                                     </div>
                                                     <button type="submit" class="btn btn-primary w-100"
                                                         id="installmentSubmitBtn">
@@ -251,6 +251,18 @@
                                                             Required headers: CID, Name, Loans, Savings Product
                                                             Names.</small>
                                                     </div>
+
+                                                    <!-- Warning Message -->
+                                                    <div class="alert alert-warning alert-dismissible fade show mb-3">
+                                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                                        <strong><i class="fa fa-exclamation-triangle"></i> Important:</strong>
+                                                        <ul class="mb-0 mt-2">
+                                                            <li>Please ensure the file contents are correct before uploading</li>
+                                                            <li>This action cannot be undone once processed</li>
+                                                            <li>Double-check all data before proceeding</li>
+                                                        </ul>
+                                                    </div>
+
                                                     <button type="button" class="btn btn-success btn-block mt-2"
                                                         id="showBillingTypeModalBtn">
                                                         <i class="fa fa-upload me-1"></i> Upload and Process Loans &
@@ -305,12 +317,23 @@
                                                     <div class="mb-3">
                                                         <label class="form-label">Select File</label>
                                                         <input type="file" class="form-control" name="file"
-                                                            id="shareFile" accept=".xlsx,.xls,.csv" required>
+                                                            id="shareFile" accept=".xlsx,.xls,.csv">
                                                     </div>
                                                     <div class="mb-3">
                                                         <small class="text-muted">Excel format (.xlsx, .xls, .csv).
                                                             Required headers: CID, Name (LASTNAME, FIRSTNAME), Share
                                                             (amount).</small>
+                                                    </div>
+
+                                                    <!-- Warning Message -->
+                                                    <div class="alert alert-warning alert-dismissible fade show mb-3">
+                                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                                        <strong><i class="fa fa-exclamation-triangle"></i> Important:</strong>
+                                                        <ul class="mb-0 mt-2">
+                                                            <li>Please ensure the file contents are correct before uploading</li>
+                                                            <li>This action cannot be undone once processed</li>
+                                                            <li>Double-check all data before proceeding</li>
+                                                        </ul>
                                                     </div>
 
                                                     <button type="submit" class="btn btn-success btn-block mt-2"
@@ -357,7 +380,7 @@
                                     </div>
                                 </div>
 
-                               
+
 
 
                             </div>
@@ -367,13 +390,6 @@
             </div>
 
             {{-- Consolidated Remittance Table --}}
-            <div class="mb-3 text-right p-6">
-                <a href="{{ route('remittance.exportRegularSpecial') }}" class="btn btn-success">
-                    <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
-                </a>
-
-            </div>
-
             @include('components.admin.remittance.consolidated_remittance_table')
 
         </div>
@@ -705,6 +721,55 @@
             const installmentForm = document.getElementById('installmentForm');
             if (installmentForm) {
                 installmentForm.addEventListener('submit', function(e) {
+                    // Check if a file is selected
+                    const fileInput = document.getElementById('remit_installment_file');
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No File Selected',
+                            text: 'Please select a file before proceeding with the upload.',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Check file type
+                    const file = fileInput.files[0];
+                    const allowedTypes = [
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                        'application/vnd.ms-excel', // .xls
+                        'text/csv', // .csv
+                        'application/csv' // .csv alternative
+                    ];
+
+                    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid File Type',
+                            text: 'Please select a valid Excel or CSV file (.xlsx, .xls, .csv).',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Check file size (max 10MB)
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    if (file.size > maxSize) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'Please select a file smaller than 10MB.',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
                     const submitBtn = document.getElementById('installmentSubmitBtn');
                     const originalText = submitBtn.innerHTML;
 
@@ -749,19 +814,95 @@
             const shareForm = document.getElementById('shareForm');
             if (shareForm) {
                 shareForm.addEventListener('submit', function(e) {
-                    const submitBtn = document.getElementById('shareSubmitBtn');
-                    const originalText = submitBtn.innerHTML;
+                    // Check if a file is selected
+                    const fileInput = document.getElementById('shareFile');
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No File Selected',
+                            text: 'Please select a file before proceeding with the upload.',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
 
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+                    // Check file type
+                    const file = fileInput.files[0];
+                    const allowedTypes = [
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                        'application/vnd.ms-excel', // .xls
+                        'text/csv', // .csv
+                        'application/csv' // .csv alternative
+                    ];
 
+                    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid File Type',
+                            text: 'Please select a valid Excel or CSV file (.xlsx, .xls, .csv).',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Check file size (max 10MB)
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    if (file.size > maxSize) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'Please select a file smaller than 10MB.',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Show confirmation dialog
+                    e.preventDefault();
                     Swal.fire({
-                        title: 'Processing Share Remittance...',
-                        html: 'Please wait while we match and process your share remittance data. This may take a few moments.',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        didOpen: () => {
-                            Swal.showLoading();
+                        icon: 'warning',
+                        title: 'Confirm Share Upload',
+                        html: `
+                            <div class="text-left">
+                                <p><strong>Are you sure you want to proceed?</strong></p>
+                                <ul class="text-left">
+                                    <li>This action cannot be undone</li>
+                                    <li>Please ensure all data is correct</li>
+                                    <li>Double-check the file contents before proceeding</li>
+                                </ul>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, Upload Now',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const submitBtn = document.getElementById('shareSubmitBtn');
+                            const originalText = submitBtn.innerHTML;
+
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+                            Swal.fire({
+                                title: 'Processing Share Remittance...',
+                                html: 'Please wait while we match and process your share remittance data. This may take a few moments.',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+
+                            // Submit the form
+                            document.getElementById('shareForm').submit();
                         }
                     });
                 });
@@ -793,6 +934,53 @@
 
             // Show modal on upload button click
             document.getElementById('showBillingTypeModalBtn').addEventListener('click', function(e) {
+                // Check if a file is selected
+                const fileInput = document.getElementById('file');
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No File Selected',
+                        text: 'Please select a file before proceeding with the upload.',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Check file type
+                const file = fileInput.files[0];
+                const allowedTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                    'application/vnd.ms-excel', // .xls
+                    'text/csv', // .csv
+                    'application/csv' // .csv alternative
+                ];
+
+                if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid File Type',
+                        text: 'Please select a valid Excel or CSV file (.xlsx, .xls, .csv).',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Check file size (max 10MB)
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                if (file.size > maxSize) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'Please select a file smaller than 10MB.',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // If all validations pass, show the modal
                 $('#billingTypeModal').modal('show');
             });
             // On confirm, set hidden input and submit form
@@ -800,29 +988,52 @@
                 var selectedType = document.querySelector('input[name="billing_type_modal"]:checked').value;
                 document.getElementById('billingTypeInput').value = selectedType;
 
-                // Show loading state
-                const confirmBtn = document.getElementById('confirmBillingTypeBtn');
-                const originalText = confirmBtn.innerHTML;
-
-                confirmBtn.disabled = true;
-                confirmBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
-
-                // Close modal
-                $('#billingTypeModal').modal('hide');
-
-                // Show SweetAlert loading
+                // Show final confirmation dialog
                 Swal.fire({
-                    title: 'Processing Remittance Upload...',
-                    html: 'Please wait while we match and process your remittance data. This may take a few moments.',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false,
-                    didOpen: () => {
-                        Swal.showLoading();
+                    icon: 'warning',
+                    title: 'Confirm Upload',
+                    html: `
+                        <div class="text-left">
+                            <p><strong>Are you sure you want to proceed?</strong></p>
+                            <ul class="text-left">
+                                <li>This action cannot be undone</li>
+                                <li>Please ensure all data is correct</li>
+                                <li>Double-check the file contents before proceeding</li>
+                            </ul>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, Upload Now',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading state
+                        const confirmBtn = document.getElementById('confirmBillingTypeBtn');
+                        const originalText = confirmBtn.innerHTML;
+
+                        confirmBtn.disabled = true;
+                        confirmBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+                        // Close modal
+                        $('#billingTypeModal').modal('hide');
+
+                        // Show SweetAlert loading
+                        Swal.fire({
+                            title: 'Processing Remittance Upload...',
+                            html: 'Please wait while we match and process your remittance data. This may take a few moments.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Submit the form
+                        document.getElementById('loansSavingsForm').submit();
                     }
                 });
-
-                // Submit the form
-                document.getElementById('loansSavingsForm').submit();
             });
         });
     </script>

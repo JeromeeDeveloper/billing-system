@@ -16,6 +16,29 @@
             margin-bottom: 30px;
             border-bottom: 2px solid #333;
             padding-bottom: 10px;
+            position: relative;
+        }
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .header-left {
+            flex: 1;
+            text-align: left;
+        }
+        .header-center {
+            flex: 2;
+            text-align: center;
+        }
+        .header-right {
+            flex: 1;
+            text-align: right;
+        }
+        .header-image {
+            max-height: 60px;
+            max-width: 120px;
         }
         .header h1 {
             margin: 0;
@@ -71,8 +94,22 @@
 </head>
 <body>
     <div class="header">
-        <h1>ATM BATCH REPORT</h1>
-        <h2>{{ $branchName }}</h2>
+        <div class="header-container">
+            <div class="header-left">
+                @if($picture1Base64)
+                    <img src="{{ $picture1Base64 }}" alt="Logo Left" class="header-image">
+                @endif
+            </div>
+            <div class="header-center">
+                <h1>ATM BATCH REPORT</h1>
+                <h2>{{ $branchName }}</h2>
+            </div>
+            <div class="header-right">
+                @if($picture2Base64)
+                    <img src="{{ $picture2Base64 }}" alt="Logo Right" class="header-image">
+                @endif
+            </div>
+        </div>
     </div>
 
     <div class="report-info">

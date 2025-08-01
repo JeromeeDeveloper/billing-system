@@ -179,6 +179,7 @@ Route::get('/special-billing/export', [SpecialBillingController::class, 'export'
 Route::get('admin/remittance/export-preview', [\App\Http\Controllers\RemittanceController::class, 'exportPreview'])->name('remittance.exportPreview');
 Route::get('admin/remittance/export-comparison', [\App\Http\Controllers\RemittanceController::class, 'exportComparison'])->name('remittance.exportComparison');
 Route::get('admin/remittance/export-regular-special', [App\Http\Controllers\RemittanceController::class, 'exportRegularSpecial'])->name('remittance.exportRegularSpecial');
+Route::get('admin/remittance/export-consolidated', [App\Http\Controllers\RemittanceController::class, 'exportConsolidated'])->name('remittance.exportConsolidated');
 
 
 Route::get('/admin/contra', [App\Http\Controllers\ContraController::class, 'showAdmin'])->name('admin.contra');
@@ -211,6 +212,7 @@ Route::get('/Branch/billing/exports/{id}/download', [BillingController::class, '
 Route::put('/Branch/billing/{member}', [BillingController::class, 'update_branch'])->name('billing.update.branch');
 Route::delete('/Branch/billing/{member}', [BillingController::class, 'destroy_branch'])->name('billing.destroy.branch');
 Route::post('/Branch/billing/approve', [BillingController::class, 'approve'])->name('billing.approve');
+Route::post('/Branch/billing/check-export-status', [BillingController::class, 'checkExportStatus'])->name('billing.check-export-status');
 Route::post('/Branch/billing/cancel-approval', [BillingController::class, 'cancelApproval'])->name('billing.cancel-approval');
 
 
