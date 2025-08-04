@@ -190,9 +190,10 @@
                                                 <th>CID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-                                                <th>Savings</th>
-                                                <th>Share Balance</th>
-                                                <th>Loan Balance</th>
+                                                <th>Savings Accounts</th>
+                                                <th>Share Accounts</th>
+                                                <th>Loan Accounts</th>
+
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -204,21 +205,21 @@
                                                     <td>{{ $member->branch ? $member->branch->name : 'N/A' }}</td>
                                                     <td>
                                                         @foreach ($member->savings as $saving)
-                                                            <div>{{ $saving->account_number }}:
-                                                                ₱{{ number_format($saving->current_balance, 2) }}</div>
+                                                            <div>{{ $saving->account_number }},
+                                                            </div>
                                                         @endforeach
                                                     </td>
                                                     <td>
                                                         @foreach ($member->shares as $share)
-                                                            <div>{{ $share->account_number }}:
-                                                                ₱{{ number_format($share->current_balance, 2) }}</div>
+                                                            <div>{{ $share->account_number }},
+                                                            </div>
                                                         @endforeach
                                                     </td>
                                                     <td>
                                                         @foreach ($member->loanForecasts as $index => $loan)
                                                             @if (floatval($loan->total_due) > 0)
-                                                                <div>{{ $loan->loan_acct_no }}:
-                                                                    ₱{{ number_format($loan->total_due, 2) }}</div>
+                                                                <div>{{ $loan->loan_acct_no }}
+                                                                    ₱{{ number_format($loan->total_due, 2) }},</div>
                                                             @endif
                                                         @endforeach
                                                     </td>

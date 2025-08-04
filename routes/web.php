@@ -245,6 +245,7 @@ Route::get('/branch/special-billing/export', [BranchSpecialBillingController::cl
 Route::get('/branch/remittance', [BranchRemittanceController::class, 'index'])->name('branch.remittance.index');
 Route::get('/branch/remittance/generate-export', [BranchRemittanceController::class, 'generateExport'])->name('branch.remittance.generateExport');
 Route::get('/branch/remittance/export-regular-special', [App\Http\Controllers\BranchRemittanceController::class, 'exportRegularSpecial'])->name('branchRemittance.exportRegularSpecial');
+Route::get('/branch/remittance/export-consolidated', [App\Http\Controllers\BranchRemittanceController::class, 'exportConsolidated'])->name('branchRemittance.exportConsolidated');
 
 
 Route::get('/master/export-member-details-branch', [MasterController::class, 'exportMemberDetailsBranch'])->name('master.exportMemberDetailsBranch');

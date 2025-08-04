@@ -486,8 +486,14 @@ class BillingController extends Controller
                 throw new \Exception('User model not found');
             }
 
-            // Simple query without any Excel processing
+            // Get the current user's branch ID
+            $userBranchId = Auth::user()->branch_id;
+
+            // Simple query without any Excel processing - filter by branch
             $query = BillingExport::select('id', 'billing_period', 'filename', 'filepath', 'generated_by', 'created_at')
+                ->whereHas('user', function($query) use ($userBranchId) {
+                    $query->where('branch_id', $userBranchId);
+                })
                 ->orderBy('billing_period', 'desc')
                 ->orderBy('created_at', 'desc');
 
@@ -498,7 +504,7 @@ class BillingController extends Controller
                 $query->where('billing_period', $formattedPeriod);
             }
 
-            // Get all exports first
+            // Get all exports for this branch first
             $allExports = $query->get();
 
             // Filter out invalid files
@@ -568,7 +574,13 @@ class BillingController extends Controller
         try {
             Log::info('Downloading export with ID: ' . $id);
 
-            $export = BillingExport::findOrFail($id);
+            // Get the current user's branch ID
+            $userBranchId = Auth::user()->branch_id;
+
+            // Find export and ensure it belongs to the user's branch
+            $export = BillingExport::whereHas('user', function($query) use ($userBranchId) {
+                $query->where('branch_id', $userBranchId);
+            })->findOrFail($id);
 
             Log::info('Found export:', $export->toArray());
 

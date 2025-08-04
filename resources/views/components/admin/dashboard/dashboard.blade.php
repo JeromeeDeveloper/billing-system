@@ -222,7 +222,7 @@
                             </div>
                         </div>
 
-                        <div class="card">
+                        {{-- <div class="card">
                             <div class="card-body text-center">
                                 <div class="m-t-10">
                                     <h4 class="card-title">Member Status Distribution</h4>
@@ -238,7 +238,7 @@
                                                 class="ti-hand-point-down"></i>New</span></li>
                                 </ul>
                             </div>
-                        </div>
+                        </div> --}}
 
 
 

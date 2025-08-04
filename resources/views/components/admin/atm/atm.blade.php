@@ -185,20 +185,20 @@
                                                     <td>{{ $member->branch ? $member->branch->name : 'N/A' }}</td>
                                                     <td>
                                                         @foreach ($member->savings as $saving)
-                                                            <div>{{ $saving->account_number }}:
-                                                                ₱{{ number_format($saving->current_balance, 2) }}</div>
+                                                            <div>{{ $saving->account_number }},
+                                                            </div>
                                                         @endforeach
                                                     </td>
                                                     <td>
                                                         @foreach ($member->shares as $share)
-                                                            <div>{{ $share->account_number }}:
-                                                                ₱{{ number_format($share->current_balance, 2) }}</div>
+                                                            <div>{{ $share->account_number }},
+                                                            </div>
                                                         @endforeach
                                                     </td>
                                                     <td>
                                                         @foreach ($member->loanForecasts as $loan)
                                                             <div>{{ $loan->loan_acct_no }}:
-                                                                ₱{{ number_format($loan->total_due, 2) }}</div>
+                                                                ₱{{ number_format($loan->total_due, 2) }},</div>
                                                         @endforeach
                                                     </td>
                                                     <td>

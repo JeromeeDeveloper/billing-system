@@ -367,6 +367,17 @@ class BranchRemittanceController extends Controller
         );
     }
 
+    public function exportConsolidated()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+        $branchId = Auth::user()->branch_id;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\BranchConsolidatedRemittanceReportExport($billingPeriod, $branchId),
+            'Branch-Matched-Unmatched-Remittance-Report_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
 
 
     // Add a branch-specific comparison report method

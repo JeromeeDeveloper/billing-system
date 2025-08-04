@@ -132,6 +132,17 @@ class DashboardController extends Controller
         $totalSavings = Member::where('branch_id', $branchId)
             ->sum('savings_balance');
 
+        // Get special product type count from LoanProduct model
+        $specialProductTypeCount = LoanProduct::where('billing_type', 'special')->count();
+
+        // Get approved branches data
+        $approvedBranches = Branch::whereHas('users', function($query) {
+            $query->where('status', 'approved');
+        })->pluck('name')->toArray();
+
+        // Get all branches with member counts for status display
+        $allBranches = Branch::withCount('members')->get();
+
         // Get branch-based member statistics for the chart (for branch dashboard, show all branches)
         $branchStats = Branch::withCount('members')->get();
 
@@ -177,6 +188,9 @@ class DashboardController extends Controller
             'totalActiveLoans',
             'totalLoanAmount',
             'totalSavings',
+            'specialProductTypeCount',
+            'approvedBranches',
+            'allBranches',
             'branches',
             'memberCounts',
             'pgbPercentage',

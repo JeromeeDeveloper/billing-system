@@ -201,12 +201,12 @@
                                 </div>
 
                                 <!-- Consolidated Remittance Table -->
-                                        <div class="mb-3 text-right">
+                                        {{-- <div class="mb-3 text-right">
                                                             <a href="{{ route('branchRemittance.exportRegularSpecial') }}" class="btn btn-success">
                     <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
                 </a>
 
-                                        </div>
+                                        </div> --}}
 
                                         @include('components.branch.remittance.consolidated_remittance_table_branch')
                                         {{-- If variables are missing, add a comment for the developer --}}
