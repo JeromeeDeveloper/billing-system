@@ -888,6 +888,12 @@ class BillingController extends Controller
             Log::warning('Could not clear AtmPayment table: ' . $e->getMessage());
         }
 
+        try {
+            \App\Models\Remittance::query()->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear AtmPayment table: ' . $e->getMessage());
+        }
+
 
         // Members reset (keep only cid and member_tagging)
         \App\Models\Member::query()->update([

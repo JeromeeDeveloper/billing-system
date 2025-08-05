@@ -390,20 +390,23 @@
                                 <div class="card-body">
                                     <strong>Required Columns (Row 5 as header):</strong>
                                     <ul>
-                                        <li>cid</li>
-                                        <li>branch_code</li>
-                                        <li>branch_name</li>
-                                        <li>name (Lastname, Firstname)</li>
-                                        <li>loan_account_no</li>
-                                        <li>open_date</li>
-                                        <li>maturity_date</li>
-                                        <li>amortization_due_date</li>
-                                        <li>total_due</li>
-                                        <li>principal</li>
-                                        <li>interest</li>
-                                        <li>penalty</li>
+                                        <li>Branch Name</li>
+                                        <li>Branch Code</li>
+                                        <li>CID</li>
+                                        <li>Name (Lastname, Firstname)</li>
+                                        <li>Loan Account No.</li>
+                                        <li>Open Date</li>
+                                        <li>Maturity Date</li>
+                                        <li>Amortization Due Date</li>
+                                        <li>Principal</li>
+                                        <li>Interest</li>
+                                        <li>Total Amort</li>
+                                        <li>Total Due</li>
+                                        <li>Principal Due</li>
+                                        <li>Interest Due</li>
+                                        <li>Penalty Due</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                 </div>
                             </div>
                         </div>
@@ -419,17 +422,17 @@
                                 <div class="card-body">
                                     <strong>Required Columns (Row 6 as header):</strong>
                                     <ul>
-                                        <li>customer_no</li>
-                                        <li>account_no</li>
-                                        <li>product_code</li>
-                                        <li>open_date</li>
-                                        <li>current_bal</li>
-                                        <li>available_bal</li>
-                                        <li>interest_due_amount</li>
-                                        <li>status</li>
-                                        <li>last_trn_date</li>
+                                        <li>Customer No.</li>
+                                        <li>Account No.</li>
+                                        <li>Product Code</li>
+                                        <li>Open Date</li>
+                                        <li>Current Balance</li>
+                                        <li>Available Balance</li>
+                                        <li>Interest Due Amount</li>
+                                        <li>Status</li>
+                                        <li>Last Transaction Date</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                 </div>
                             </div>
                         </div>
@@ -445,17 +448,17 @@
                                 <div class="card-body">
                                     <strong>Required Columns (Row 6 as header):</strong>
                                     <ul>
-                                        <li>customer_no</li>
-                                        <li>account_no</li>
-                                        <li>product_code</li>
-                                        <li>open_date</li>
-                                        <li>current_bal</li>
-                                        <li>available_bal</li>
-                                        <li>interest_due_amount</li>
-                                        <li>status</li>
-                                        <li>last_trn_date</li>
+                                        <li>Customer No.</li>
+                                        <li>Account No.</li>
+                                        <li>Product Code</li>
+                                        <li>Open Date</li>
+                                        <li>Current Balance</li>
+                                        <li>Available Balance</li>
+                                        <li>Interest Due Amount</li>
+                                        <li>Status</li>
+                                        <li>Last Transaction Date</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                 </div>
                             </div>
                         </div>
@@ -471,20 +474,20 @@
                                 <div class="card-body">
                                     <strong>Required Columns (Row 4 as header):</strong>
                                     <ul>
-                                        <li>customer_no</li>
-                                        <li>customer_name (Lastname, Firstname)</li>
-                                        <li>birth_date</li>
-                                        <li>date_registered</li>
-                                        <li>gender</li>
-                                        <li>customer_type</li>
-                                        <li>customer_classification</li>
-                                        <li>industry</li>
-                                        <li>area_officer</li>
-                                        <li>area</li>
-                                        <li>status</li>
-                                        <li>address</li>
+                                        <li>Customer No.</li>
+                                        <li>Customer Name (Lastname, Firstname)</li>
+                                        <li>Birth Date</li>
+                                        <li>Date Registered</li>
+                                        <li>Gender</li>
+                                        <li>Customer Type</li>
+                                        <li>Customer Classification</li>
+                                        <li>Industry</li>
+                                        <li>Area Officer</li>
+                                        <li>Area</li>
+                                        <li>Status</li>
+                                        <li>Address</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                 </div>
                             </div>
                         </div>
@@ -506,7 +509,7 @@
                                         <li>End Date (Column I)</li>
                                         <li>Principal (Column L)</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                     <br><small class="text-muted">Note: Other columns may exist but are not required for import.</small>
                                 </div>
                             </div>

@@ -379,22 +379,53 @@
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
           <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title" id="closePeriodModalLabel"><i class="fa fa-exclamation-triangle"></i> Are you absolutely sure?</h5>
+            <h5 class="modal-title" id="closePeriodModalLabel"><i class="fa fa-exclamation-triangle"></i> Close Billing Period Confirmation</h5>
             <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
           <div class="modal-body">
             <div class="text-center">
-              <p><b>This will close the current billing period for <span class="text-danger">ALL users</span> and move to the next period.</b></p>
-              <p class="text-danger font-weight-bold">This action cannot be undone.</p>
-              <p><b>If there are late remittances or unfinished tasks for this period, they will be <span class="text-danger">locked out</span>.</b></p>
-              <p class="text-danger">Please double-check with your team before proceeding.</p>
+              <!-- Current Billing Period Display -->
+              <div class="alert alert-info mb-4">
+                <h6 class="alert-heading"><i class="fa fa-calendar"></i> Current Billing Period</h6>
+                <h4 class="text-primary mb-0">
+                  {{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->format('F Y') : 'Not Set' }}
+                </h4>
+                {{-- <small class="text-muted">{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->format('Y-m-01') : '' }}</small> --}}
+              </div>
+
+              <!-- Next Billing Period Display -->
+              <div class="alert alert-warning mb-4">
+                <h6 class="alert-heading"><i class="fa fa-calendar-plus"></i> Next Billing Period</h6>
+                <h4 class="text-warning mb-0">
+                  {{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->addMonth()->format('F Y') : 'Not Set' }}
+                </h4>
+                {{-- <small class="text-muted">{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->addMonth()->format('Y-m-01') : '' }}</small> --}}
+              </div>
+
+              <!-- Warning Messages -->
+              <div class="alert alert-danger">
+                <h6 class="alert-heading"><i class="fa fa-exclamation-triangle"></i> Important Warnings</h6>
+                <ul class="text-left mb-0">
+                  <li><strong>This will close the current billing period for <span class="text-danger">ALL users</span></strong></li>
+                  <li><strong>All users will be moved to the next billing period</strong></li>
+                  <li><strong>This action cannot be undone</strong></li>
+                  <li><strong>Late remittances or unfinished tasks will be <span class="text-danger">locked out</span></strong></li>
+                  <li><strong>All branch users will be set to 'pending' status</strong></li>
+                </ul>
+              </div>
+
+              <p class="text-danger font-weight-bold mt-3">Please double-check with your team before proceeding.</p>
             </div>
           </div>
           <div class="modal-footer justify-content-center">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-danger" id="confirmClosePeriod">Yes, Close Billing Period</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">
+              <i class="fa fa-times"></i> Cancel
+            </button>
+            <button type="button" class="btn btn-danger" id="confirmClosePeriod">
+              <i class="fa fa-calendar-times-o"></i> Yes, Close Billing Period
+            </button>
           </div>
         </div>
       </div>
@@ -405,6 +436,10 @@
             var confirmBtn = document.getElementById('confirmClosePeriod');
             if (confirmBtn) {
                 confirmBtn.addEventListener('click', function() {
+                    // Get current and next billing period for display
+                    var currentPeriod = '{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->format("F Y") : "Not Set" }}';
+                    var nextPeriod = '{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->addMonth()->format("F Y") : "Not Set" }}';
+                    
                     // Show loading state
                     confirmBtn.disabled = true;
                     confirmBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
@@ -422,10 +457,18 @@
                         if (data.success) {
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Billing Period Closed!',
-                                text: data.message,
+                                title: 'Billing Period Closed Successfully!',
+                                html: `
+                                    <div class="text-left">
+                                        <p><strong>Current Period:</strong> ${currentPeriod}</p>
+                                        <p><strong>New Period:</strong> ${nextPeriod}</p>
+                                        <p><strong>Status:</strong> All users have been moved to the new billing period.</p>
+                                        <p><strong>Note:</strong> All branch users have been set to 'pending' status.</p>
+                                    </div>
+                                `,
                                 confirmButtonColor: '#3085d6',
-                                allowOutsideClick: false
+                                allowOutsideClick: false,
+                                confirmButtonText: 'OK - Logout Now'
                             }).then((result) => {
                                 if (result.isConfirmed) {
                                     // Redirect to login page
@@ -435,7 +478,7 @@
                         } else {
                             Swal.fire({
                                 icon: 'error',
-                                title: 'Error',
+                                title: 'Error Closing Billing Period',
                                 text: data.message || 'An error occurred while closing the billing period.',
                                 confirmButtonColor: '#d33'
                             });
@@ -446,14 +489,14 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Error',
-                            text: 'An error occurred while closing the billing period.',
+                            text: 'An error occurred while closing the billing period. Please try again or contact support.',
                             confirmButtonColor: '#d33'
                         });
                     })
                     .finally(() => {
                         // Reset button state
                         confirmBtn.disabled = false;
-                        confirmBtn.innerHTML = 'Yes, Close Billing Period';
+                        confirmBtn.innerHTML = '<i class="fa fa-calendar-times-o"></i> Yes, Close Billing Period';
                     });
                 });
             }
