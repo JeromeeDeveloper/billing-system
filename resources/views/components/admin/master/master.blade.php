@@ -1303,7 +1303,7 @@
                             <strong>🏥 Mortuary Product Detected!</strong><br>
                             <strong>Product:</strong> ${mortuaryProduct.product_name} (Code: ${mortuaryProduct.product_code})<br>
                             <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
-                            <strong>Prioritization:</strong> ${mortuaryProduct.prioritization}
+                         
                         </div>
                     </div>
                     ` : `

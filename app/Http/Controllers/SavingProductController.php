@@ -10,9 +10,29 @@ use Illuminate\Support\Facades\Auth;
 
 class SavingProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $savingProducts = SavingProduct::with('members')->get();
+        $query = SavingProduct::with('members');
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('product_name', 'like', "%{$search}%")
+                  ->orWhere('product_code', 'like', "%{$search}%")
+                  ->orWhere('product_type', 'like', "%{$search}%");
+            });
+        }
+        
+        // Show entries functionality
+        $perPage = $request->get('per_page', 10);
+        $savingProducts = $query
+            ->orderByRaw('ISNULL(prioritization), prioritization ASC')
+            ->paginate($perPage);
+        
+        // Preserve search and pagination parameters for form actions
+        $savingProducts->appends($request->except('page'));
+        
         return view('components.admin.savings.saving_products', compact('savingProducts'));
     }
 
@@ -21,13 +41,20 @@ class SavingProductController extends Controller
         $request->validate([
             'product_name' => 'required|string',
             'product_code' => 'required|string|unique:saving_products',
-            'product_type' => 'nullable|in:mortuary,regular',
+            'product_type' => 'nullable|in:mortuary,regular,atm',
             'amount_to_deduct' => 'nullable|numeric|min:0',
             'prioritization' => 'nullable|integer|min:1'
         ]);
 
         SavingProduct::create($request->all());
-        return redirect()->back()->with('success', 'Saving product created successfully');
+        
+        // Preserve pagination and search parameters
+        $redirectParams = $request->only(['search', 'per_page']);
+        if ($request->filled('page')) {
+            $redirectParams['page'] = $request->get('page');
+        }
+
+        return redirect()->route('saving-products.index', $redirectParams)->with('success', 'Saving product created successfully');
     }
 
     public function update(Request $request, $id)
@@ -35,7 +62,7 @@ class SavingProductController extends Controller
         $request->validate([
             'product_name' => 'required|string',
             'product_code' => 'required|string|unique:saving_products,product_code,' . $id,
-            'product_type' => 'nullable|in:mortuary,regular',
+            'product_type' => 'nullable|in:mortuary,regular,atm',
             'amount_to_deduct' => 'nullable|numeric|min:0',
             'prioritization' => 'nullable|integer|min:1'
         ]);
@@ -57,17 +84,30 @@ class SavingProductController extends Controller
             if ($updatedCount > 0) {
                 $message .= " and deduction amount updated for {$updatedCount} savings account(s)";
             }
-
-            return redirect()->back()->with('success', $message);
+        } else {
+            $message = 'Saving product updated successfully';
         }
 
-        return redirect()->back()->with('success', 'Saving product updated successfully');
+        // Preserve pagination and search parameters
+        $redirectParams = $request->only(['search', 'per_page']);
+        if ($request->filled('page')) {
+            $redirectParams['page'] = $request->get('page');
+        }
+
+        return redirect()->route('saving-products.index', $redirectParams)->with('success', $message);
     }
 
     public function destroy($id)
     {
         SavingProduct::destroy($id);
-        return redirect()->back()->with('success', 'Saving product deleted successfully');
+        
+        // Preserve pagination and search parameters
+        $redirectParams = request()->only(['search', 'per_page']);
+        if (request()->filled('page')) {
+            $redirectParams['page'] = request()->get('page');
+        }
+
+        return redirect()->route('saving-products.index', $redirectParams)->with('success', 'Saving product deleted successfully');
     }
 
     public function assignMember(Request $request, $id)
