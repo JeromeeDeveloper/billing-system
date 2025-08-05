@@ -70,9 +70,9 @@
                     </div>
                 </div>
 
-                <!-- Search Section -->
-                <div class="row mb-4">
-                    <div class="col-md-12">
+                <!-- Account Balances Table -->
+                <div class="row">
+                    <div class="col-12">
                         <div class="card">
                             <div class="card-body">
                                 <form method="GET" action="{{ route('atm') }}">
@@ -99,8 +99,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3 d-flex align-items-end">
-                                            <button type="submit" class="btn btn-primary mr-2">Search</button>
-                                            <a href="{{ route('atm') }}" class="btn btn-secondary mr-2">Reset</a>
+                                            <button type="submit" class="btn btn-primary btn btn-primary w-100">Search</button>
                                             {{-- <a href="{{ route('atm.export-posted-payments') }}" class="btn btn-success">
                                                 <i class="fa fa-file-excel"></i> Export Posted Payments
                                             </a> --}}
@@ -108,60 +107,57 @@
                                     </div>
                                 </form>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Account Balances Table -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="row mb-2 p-2">
-                                <div class="col-md-6">
-                                    <form method="GET" action="{{ route('atm.export-posted-payments') }}" class="form-inline" id="exportPostedPaymentsForm">
-                                        <div class="form-group mr-2">
-                                            <label for="export_date" class="mr-2">Export Date:</label>
-                                            <input type="date" id="export_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates')) disabled @endif>
+                            <div class="row">
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="card">
+                                        <div class="card-body p-3">
+                                            <form method="GET" action="{{ route('atm.export-posted-payments') }}" id="exportPostedPaymentsForm">
+                                                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                                                    <div class="form-group mb-2 mb-md-0 me-md-3 flex-grow-1">
+                                                        <label for="export_date" class="form-label fw-bold mb-1">Export Date:</label>
+                                                        <input type="date" id="export_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates')) disabled @endif>
+                                                    </div>
+                                                    <div class="form-group mb-2 mb-md-0 me-md-3">
+                                                        <div class="d-flex align-items-center mt-4">
+                                                            <input type="checkbox" id="all_dates" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }} class="me-2">
+                                                            <label for="all_dates" class="mb-0">All Dates</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group mb-0">
+                                                        <button type="submit" class="btn btn-success">
+                                                            <i class="fa fa-file-excel me-1"></i> Export Posted Payments
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
-                                        <div class="form-group mr-2">
-                                            <input type="checkbox" id="all_dates" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
-                                            <label for="all_dates" class="ml-1">All Dates</label>
-                                        </div>
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fa fa-file-excel"></i> Export Posted Payments
-                                        </button>
-                                    </form>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <form method="GET" action="{{ route('atm.generate-batch-report') }}" class="form-inline" id="generateBatchReportForm">
-                                        <div class="form-group mr-2">
-                                            <label for="batch_report_date" class="mr-2">Report Date:</label>
-                                            <input type="date" id="batch_report_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates_batch')) disabled @endif>
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="card">
+                                        <div class="card-body p-3">
+                                            <form method="GET" action="{{ route('atm.generate-batch-report') }}" id="generateBatchReportForm">
+                                                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
+                                                    <div class="form-group mb-2 mb-md-0 me-md-3 flex-grow-1">
+                                                        <label for="batch_report_date" class="form-label fw-bold mb-1">Report Date:</label>
+                                                        <input type="date" id="batch_report_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates_batch')) disabled @endif>
+                                                    </div>
+                                                    <div class="form-group mb-2 mb-md-0 me-md-3">
+                                                        <div class="d-flex align-items-center mt-4">
+                                                            <input type="checkbox" id="all_dates_batch" name="all_dates" value="1" {{ request('all_dates_batch') ? 'checked' : '' }} class="me-2">
+                                                            <label for="all_dates_batch" class="mb-0">All Dates</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group mb-0">
+                                                        <button type="submit" class="btn btn-primary">
+                                                            <i class="fa fa-file-pdf me-1"></i> ATM Batch Report
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
                                         </div>
-                                        <div class="form-group mr-2">
-                                            <input type="checkbox" id="all_dates_batch" name="all_dates" value="1" {{ request('all_dates_batch') ? 'checked' : '' }}>
-                                            <label for="all_dates_batch" class="ml-1">All Dates</label>
-                                        </div>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fa fa-file-pdf"></i> ATM Batch Report
-                                        </button>
-                                    </form>
+                                    </div>
                                 </div>
-                                {{-- <div class="col-md-6">
-                                    <form method="GET" action="{{ route('atm.export-posted-payments-detailed') }}" class="form-inline" id="exportPostedPaymentsDetailedForm">
-                                        <div class="form-group mr-2">
-                                            <label for="export_date_detailed" class="mr-2">Export Date:</label>
-                                            <input type="date" id="export_date_detailed" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates_detailed')) disabled @endif>
-                                        </div>
-                                        <div class="form-group mr-2">
-                                            <input type="checkbox" id="all_dates_detailed" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
-                                            <label for="all_dates_detailed" class="ml-1">All Dates</label>
-                                        </div>
-                                        <button type="submit" class="btn btn-info">
-                                            <i class="fa fa-file-excel"></i> Export with Principal/Penalty/Interest
-                                        </button>
-                                    </form>
-                                </div> --}}
                             </div>
                             <div class="card-body">
                                 <div class="table-responsive">

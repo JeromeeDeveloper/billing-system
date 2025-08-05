@@ -8,11 +8,22 @@ use App\Models\User;
 use App\Models\BillingExport;
 use App\Models\Notification;
 use App\Models\RemittanceBatch;
+use App\Models\RemittanceReport;
+use App\Models\RemittancePreview;
+use App\Models\RemittanceUploadCount;
+use App\Models\LoanPayment;
+use App\Models\SpecialBilling;
+use App\Models\LoanRemittance;
+use App\Models\AtmPayment;
+use App\Models\LoanForecast;
+use App\Models\Saving;
+use App\Models\Shares;
 use Illuminate\Http\Request;
 use App\Exports\BillingExport as BillingExcelExport;
 use App\Exports\MembersNoBranchExport;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -801,10 +812,14 @@ class BillingController extends Controller
 
     public function closeBillingPeriod(Request $request)
     {
-        // Only allow admin
-        if (!Auth::user() || Auth::user()->role !== 'admin') {
-            abort(403);
-        }
+        try {
+            // Only allow admin
+            if (!Auth::user() || Auth::user()->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied. Only administrators can close billing periods.'
+                ], 403);
+            }
 
         $billingPeriod = Auth::user()->billing_period;
 
@@ -855,9 +870,23 @@ class BillingController extends Controller
         \App\Models\LoanPayment::truncate();
 
         // Clear special billings for the new billing period
-        \App\Models\SpecialBilling::truncate();
-        \App\Models\LoanRemittance::truncate();
-        \App\Models\AtmPayment::truncate();
+        try {
+            \App\Models\SpecialBilling::query()->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear SpecialBilling table: ' . $e->getMessage());
+        }
+
+        try {
+            \App\Models\LoanRemittance::query()->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear LoanRemittance table: ' . $e->getMessage());
+        }
+
+        try {
+            \App\Models\AtmPayment::query()->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear AtmPayment table: ' . $e->getMessage());
+        }
 
 
         // Members reset (keep only cid and member_tagging)
@@ -910,6 +939,19 @@ class BillingController extends Controller
             'message' => 'Billing period closed and records reset for new period. You will be logged out.',
             'logout' => true
         ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error closing billing period: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'billing_period' => Auth::user()->billing_period ?? 'unknown',
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while closing the billing period. Please try again or contact support.'
+            ], 500);
+        }
     }
 
     public function checkExportStatus(Request $request)

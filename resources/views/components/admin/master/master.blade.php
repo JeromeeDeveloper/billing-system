@@ -1154,6 +1154,8 @@
         // Button click handlers for loans
         $('#btnNext').click(function() {
             if (currentLoanIndex < loans.length - 1) {
+                // Save current form data before navigating
+                saveCurrentLoanData();
                 currentLoanIndex++;
                 renderLoan(currentLoanIndex);
                 updateNavButtons();
@@ -1162,6 +1164,8 @@
 
         $('#btnPrev').click(function() {
             if (currentLoanIndex > 0) {
+                // Save current form data before navigating
+                saveCurrentLoanData();
                 currentLoanIndex--;
                 renderLoan(currentLoanIndex);
                 updateNavButtons();
@@ -1171,6 +1175,8 @@
         // Button click handlers for savings
         $('#btnNextSavings').click(function() {
             if (currentSavingsIndex < savings.length - 1) {
+                // Save current form data before navigating
+                saveCurrentSavingsData();
                 currentSavingsIndex++;
                 renderSavings(currentSavingsIndex);
                 updateNavButtons();
@@ -1179,6 +1185,8 @@
 
         $('#btnPrevSavings').click(function() {
             if (currentSavingsIndex > 0) {
+                // Save current form data before navigating
+                saveCurrentSavingsData();
                 currentSavingsIndex--;
                 renderSavings(currentSavingsIndex);
                 updateNavButtons();
@@ -1188,6 +1196,8 @@
         // Button click handlers for shares
         $('#btnNextShares').click(function() {
             if (currentSharesIndex < shares.length - 1) {
+                // Save current form data before navigating
+                saveCurrentSharesData();
                 currentSharesIndex++;
                 renderShares(currentSharesIndex);
                 updateNavButtons();
@@ -1196,6 +1206,8 @@
 
         $('#btnPrevShares').click(function() {
             if (currentSharesIndex > 0) {
+                // Save current form data before navigating
+                saveCurrentSharesData();
                 currentSharesIndex--;
                 renderShares(currentSharesIndex);
                 updateNavButtons();
@@ -1516,6 +1528,86 @@
             });
             // Initial calculation
             updateTotalDue();
+        }
+
+        // Function to save current loan data to the loans array
+        function saveCurrentLoanData() {
+            if (loans.length === 0 || currentLoanIndex >= loans.length) return;
+
+            const currentLoan = loans[currentLoanIndex];
+            if (!currentLoan) return;
+
+            // Get form values
+            const principalDue = parseFloat($(`#principal_due_${currentLoanIndex}`).val()) || 0;
+            const interestDue = parseFloat($(`#interest_due_${currentLoanIndex}`).val()) || 0;
+            const totalDue = parseFloat($(`#total_due_${currentLoanIndex}`).val()) || 0;
+            const accountStatus = $(`select[name="loan_forecasts[${currentLoanIndex}][account_status]"]`).val();
+            const startHold = $(`input[name="loan_forecasts[${currentLoanIndex}][start_hold]"]`).val();
+            const expiryDate = $(`input[name="loan_forecasts[${currentLoanIndex}][expiry_date]"]`).val();
+            const approvalNo = $(`input[name="loan_forecasts[${currentLoanIndex}][approval_no]"]`).val();
+
+            // Update the loan object in the array
+            currentLoan.principal_due = principalDue;
+            currentLoan.interest_due = interestDue;
+            currentLoan.total_due = totalDue;
+            currentLoan.account_status = accountStatus;
+            currentLoan.start_hold = startHold;
+            currentLoan.expiry_date = expiryDate;
+            currentLoan.approval_no = approvalNo;
+
+            console.log('Saved loan data for index', currentLoanIndex, ':', currentLoan);
+        }
+
+        // Function to save current savings data to the savings array
+        function saveCurrentSavingsData() {
+            if (savings.length === 0 || currentSavingsIndex >= savings.length) return;
+
+            const currentSaving = savings[currentSavingsIndex];
+            if (!currentSaving) return;
+
+            // Get form values
+            const startHold = $(`input[name="savings[${currentSavingsIndex}][start_hold]"]`).val();
+            const expiryDate = $(`input[name="savings[${currentSavingsIndex}][expiry_date]"]`).val();
+            const accountStatus = $(`select[name="savings[${currentSavingsIndex}][account_status]"]`).val();
+            const deductionAmount = parseFloat($(`input[name="savings[${currentSavingsIndex}][deduction_amount]"]`).val()) || 0;
+            const approvalNo = $(`input[name="savings[${currentSavingsIndex}][approval_no]"]`).val();
+            const remarks = $(`textarea[name="savings[${currentSavingsIndex}][remarks]"]`).val();
+
+            // Update the saving object in the array
+            currentSaving.start_hold = startHold;
+            currentSaving.expiry_date = expiryDate;
+            currentSaving.account_status = accountStatus;
+            currentSaving.deduction_amount = deductionAmount;
+            currentSaving.approval_no = approvalNo;
+            currentSaving.remarks = remarks;
+
+            console.log('Saved savings data for index', currentSavingsIndex, ':', currentSaving);
+        }
+
+        // Function to save current shares data to the shares array
+        function saveCurrentSharesData() {
+            if (shares.length === 0 || currentSharesIndex >= shares.length) return;
+
+            const currentShare = shares[currentSharesIndex];
+            if (!currentShare) return;
+
+            // Get form values
+            const startHold = $(`input[name="shares[${currentSharesIndex}][start_hold]"]`).val();
+            const expiryDate = $(`input[name="shares[${currentSharesIndex}][expiry_date]"]`).val();
+            const accountStatus = $(`select[name="shares[${currentSharesIndex}][account_status]"]`).val();
+            const deductionAmount = parseFloat($(`input[name="shares[${currentSharesIndex}][deduction_amount]"]`).val()) || 0;
+            const approvalNo = $(`input[name="shares[${currentSharesIndex}][approval_no]"]`).val();
+            const remarks = $(`textarea[name="shares[${currentSharesIndex}][remarks]"]`).val();
+
+            // Update the share object in the array
+            currentShare.start_hold = startHold;
+            currentShare.expiry_date = expiryDate;
+            currentShare.account_status = accountStatus;
+            currentShare.deduction_amount = deductionAmount;
+            currentShare.approval_no = approvalNo;
+            currentShare.remarks = remarks;
+
+            console.log('Saved shares data for index', currentSharesIndex, ':', currentShare);
         }
 
         $('#viewModal').on('show.bs.modal', function(event) {
