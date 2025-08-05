@@ -129,7 +129,7 @@
                                                                     </div>
                                                                 </div>
 
-                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                {{-- <div class="d-flex justify-content-between align-items-center">
                                                                     <small class="text-muted">{{ $percentage }}% of total</small>
                                                                     @if($memberCount > 0)
                                                                         <span class="badge badge-pill" style="background-color: {{ $color }}; color: white;">
@@ -138,7 +138,7 @@
                                                                     @else
                                                                         <span class="badge badge-pill badge-secondary">No Members</span>
                                                                     @endif
-                                                                </div>
+                                                                </div> --}}
                                                             </div>
                                                         </div>
                                                     </div>
