@@ -68,6 +68,10 @@
             background-color: #007bff;
             border-color: #007bff;
         }
+
+        .flex.justify-between.flex-1.sm\:hidden {
+            display: none;
+        }
     </style>
 </head>
 
@@ -121,21 +125,30 @@
                                     <div class="col-md-3">
                                         <label for="time_filter">Time Filter:</label>
                                         <select class="form-control" id="time_filter" name="time_filter">
-                                            <option value="all" {{ $timeFilter == 'all' ? 'selected' : '' }}>All Time</option>
-                                            <option value="today" {{ $timeFilter == 'today' ? 'selected' : '' }}>Today</option>
-                                            <option value="yesterday" {{ $timeFilter == 'yesterday' ? 'selected' : '' }}>Yesterday</option>
-                                            <option value="week" {{ $timeFilter == 'week' ? 'selected' : '' }}>This Week</option>
-                                            <option value="month" {{ $timeFilter == 'month' ? 'selected' : '' }}>This Month</option>
-                                            <option value="last_month" {{ $timeFilter == 'last_month' ? 'selected' : '' }}>Last Month</option>
-                                            <option value="custom" {{ $timeFilter == 'custom' ? 'selected' : '' }}>Custom Range</option>
+                                            <option value="all" {{ $timeFilter == 'all' ? 'selected' : '' }}>All Time
+                                            </option>
+                                            <option value="today" {{ $timeFilter == 'today' ? 'selected' : '' }}>Today
+                                            </option>
+                                            <option value="yesterday"
+                                                {{ $timeFilter == 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+                                            <option value="week" {{ $timeFilter == 'week' ? 'selected' : '' }}>This
+                                                Week</option>
+                                            <option value="month" {{ $timeFilter == 'month' ? 'selected' : '' }}>This
+                                                Month</option>
+                                            <option value="last_month"
+                                                {{ $timeFilter == 'last_month' ? 'selected' : '' }}>Last Month</option>
+                                            <option value="custom" {{ $timeFilter == 'custom' ? 'selected' : '' }}>
+                                                Custom Range</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="type_filter">Type Filter:</label>
                                         <select class="form-control" id="type_filter" name="type_filter">
-                                            <option value="all" {{ $typeFilter == 'all' ? 'selected' : '' }}>All Types</option>
-                                            @foreach($notificationTypes as $type)
-                                                <option value="{{ $type }}" {{ $typeFilter == $type ? 'selected' : '' }}>
+                                            <option value="all" {{ $typeFilter == 'all' ? 'selected' : '' }}>All
+                                                Types</option>
+                                            @foreach ($notificationTypes as $type)
+                                                <option value="{{ $type }}"
+                                                    {{ $typeFilter == $type ? 'selected' : '' }}>
                                                     {{ ucfirst(str_replace('_', ' ', $type)) }}
                                                 </option>
                                             @endforeach
@@ -144,9 +157,12 @@
                                     <div class="col-md-3">
                                         <label for="status_filter">Status Filter:</label>
                                         <select class="form-control" id="status_filter" name="status_filter">
-                                            <option value="all" {{ $statusFilter == 'all' ? 'selected' : '' }}>All Status</option>
-                                            <option value="unread" {{ $statusFilter == 'unread' ? 'selected' : '' }}>Unread</option>
-                                            <option value="read" {{ $statusFilter == 'read' ? 'selected' : '' }}>Read</option>
+                                            <option value="all" {{ $statusFilter == 'all' ? 'selected' : '' }}>All
+                                                Status</option>
+                                            <option value="unread" {{ $statusFilter == 'unread' ? 'selected' : '' }}>
+                                                Unread</option>
+                                            <option value="read" {{ $statusFilter == 'read' ? 'selected' : '' }}>Read
+                                            </option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
@@ -162,18 +178,23 @@
                                 </div>
 
                                 <!-- Custom Date Range (hidden by default) -->
-                                <div class="row mb-3 custom-date-range" id="custom_date_range" style="display: {{ $timeFilter == 'custom' ? 'flex' : 'none' }};">
+                                <div class="row mb-3 custom-date-range" id="custom_date_range"
+                                    style="display: {{ $timeFilter == 'custom' ? 'flex' : 'none' }};">
                                     <div class="col-md-3">
                                         <label for="start_date">Start Date:</label>
-                                        <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request('start_date') }}">
+                                        <input type="date" class="form-control" id="start_date" name="start_date"
+                                            value="{{ request('start_date') }}">
                                     </div>
                                     <div class="col-md-3">
                                         <label for="end_date">End Date:</label>
-                                        <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request('end_date') }}">
+                                        <input type="date" class="form-control" id="end_date" name="end_date"
+                                            value="{{ request('end_date') }}">
                                     </div>
                                     <div class="col-md-6 d-flex align-items-end">
-                                        <button type="button" class="btn btn-secondary btn-filter" id="apply_filters">Apply Filters</button>
-                                        <button type="button" class="btn btn-outline-secondary btn-filter" id="clear_filters">Clear Filters</button>
+                                        <button type="button" class="btn btn-secondary btn-filter"
+                                            id="apply_filters">Apply Filters</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-filter"
+                                            id="clear_filters">Clear Filters</button>
                                     </div>
                                 </div>
 
@@ -181,7 +202,9 @@
                                 <div class="row mb-3">
                                     <div class="col-12">
                                         <div class="alert alert-info results-summary">
-                                            <strong>Showing {{ $notifications->firstItem() ?? 0 }} to {{ $notifications->lastItem() ?? 0 }} of {{ $notifications->total() }} notifications</strong>
+                                            <strong>Showing {{ $notifications->firstItem() ?? 0 }} to
+                                                {{ $notifications->lastItem() ?? 0 }} of {{ $notifications->total() }}
+                                                notifications</strong>
                                         </div>
                                     </div>
                                 </div>
@@ -202,7 +225,7 @@
                                             @forelse($notifications as $notification)
                                                 <tr class="{{ $notification->is_read ? '' : 'table-light' }}">
                                                     <td>
-                                                        @if($notification->type === 'document_upload')
+                                                        @if ($notification->type === 'document_upload')
                                                             <span class="badge badge-success">
                                                                 <i class="ti-file"></i> Document Upload
                                                             </span>
@@ -228,14 +251,15 @@
                                                             </span>
                                                         @else
                                                             <span class="badge badge-secondary">
-                                                                <i class="ti-info"></i> {{ ucfirst($notification->type) }}
+                                                                <i class="ti-info"></i>
+                                                                {{ ucfirst($notification->type) }}
                                                             </span>
                                                         @endif
                                                     </td>
                                                     <td>{{ $notification->message }}</td>
                                                     <td>{{ $notification->user->name }}</td>
                                                     <td>
-                                                        @if($notification->billing_period)
+                                                        @if ($notification->billing_period)
                                                             <span class="badge badge-info">
                                                                 {{ \Carbon\Carbon::parse($notification->billing_period)->format('F Y') }}
                                                             </span>
@@ -245,7 +269,7 @@
                                                     </td>
                                                     <td>{{ $notification->created_at->diffForHumans() }}</td>
                                                     <td>
-                                                        @if($notification->is_read)
+                                                        @if ($notification->is_read)
                                                             <span class="badge badge-success">Read</span>
                                                         @else
                                                             <span class="badge badge-warning">Unread</span>
@@ -254,7 +278,8 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="6" class="text-center">No notifications found.</td>
+                                                    <td colspan="6" class="text-center">No notifications found.
+                                                    </td>
                                                 </tr>
                                             @endforelse
                                         </tbody>
@@ -276,7 +301,8 @@
 
         <div class="footer">
             <div class="copyright">
-                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/" target="_blank">MASS-SPECC COOPERATIVE</a>2025</p>
+                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/"
+                        target="_blank">MASS-SPECC COOPERATIVE</a>2025</p>
             </div>
         </div>
     </div>
@@ -306,7 +332,7 @@
 
             // Clear filters button
             $('#clear_filters').click(function() {
-                window.location.href = '{{ route("notifications.index") }}';
+                window.location.href = '{{ route('notifications.index') }}';
             });
 
             // Function to apply filters
@@ -326,12 +352,12 @@
                 }
 
                 // Redirect with parameters
-                window.location.href = '{{ route("notifications.index") }}?' + params.toString();
+                window.location.href = '{{ route('notifications.index') }}?' + params.toString();
             }
 
             // Mark all as read functionality
             $('#mark-all-read').click(function() {
-                $.post('{{ route("notifications.mark-read") }}', {
+                $.post('{{ route('notifications.mark-read') }}', {
                     _token: '{{ csrf_token() }}'
                 }, function() {
                     location.reload();
@@ -340,11 +366,13 @@
 
             // Auto-submit form when custom date range is filled
             $('#start_date, #end_date').change(function() {
-                if ($('#time_filter').val() === 'custom' && $('#start_date').val() && $('#end_date').val()) {
+                if ($('#time_filter').val() === 'custom' && $('#start_date').val() && $('#end_date')
+                .val()) {
                     // Don't auto-submit, let user click apply button
                 }
             });
         });
     </script>
 </body>
+
 </html>

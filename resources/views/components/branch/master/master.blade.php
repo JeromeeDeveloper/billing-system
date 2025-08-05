@@ -236,7 +236,7 @@
                                     </div>
                                     <div class="col-12 col-md-8 d-flex flex-column align-items-md-end align-items-center">
                                         <form method="GET" action="{{ url()->current() }}" class="d-flex flex-grow-1 flex-md-grow-0 gap-2 align-items-center mb-2 mb-md-0 justify-content-md-end w-100" style="max-width: 400px;">
-                                            <input type="text" name="search" value="{{ request('search') }}" class="form-control flex-grow-1" placeholder="Search members..." />
+                                            <input type="text" name="search" value="{{ request('search') }}" class="form-control flex-grow-1 mr-2" placeholder="Search members..." />
                                             <button type="submit" class="btn btn-primary d-flex align-items-center px-3">
                                                 <i class="fa fa-search me-2"></i> <span class="d-none d-md-inline">Search</span>
                                             </button>
@@ -244,13 +244,13 @@
 
                                     </div>
                                     <div class="action-bar d-flex flex-wrap flex-md-nowrap gap-2 justify-content-center align-items-center p-2 rounded shadow-sm mt-2 w-100" style="background: #f8f9fa;">
-                                        <a href="#" class="btn btn-success d-flex align-items-center px-3" data-toggle="modal" data-target="#addModal">
+                                        <a href="#" class="btn btn-success d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
                                             <i class="fa fa-plus-circle me-2 mr-2"></i> <span class="d-none d-md-inline">Add New Member</span>
                                         </a>
-                                        <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-outline-success d-flex align-items-center px-3">
+                                        <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-outline-success d-flex align-items-center px-3 mr-2">
                                             <i class="fa fa-download me-2 mr-2"></i> <span class="d-none d-md-inline">Export Details (CSV)</span>
                                         </a>
-                                        <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-outline-warning d-flex align-items-center px-3">
+                                        <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-outline-warning d-flex align-items-center px-3 mr-2">
                                             <i class="fa fa-exclamation-triangle me-2"></i> <span class="d-none d-md-inline">No Regular Savings (Excel)</span>
                                         </a>
                                     </div>

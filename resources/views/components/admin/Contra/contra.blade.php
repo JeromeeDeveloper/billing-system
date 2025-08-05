@@ -46,22 +46,44 @@
                                 @if(session('success'))
                                     <div class="alert alert-success">{{ session('success') }}</div>
                                 @endif
+                                @if(session('error'))
+                                    <div class="alert alert-danger">{{ session('error') }}</div>
+                                @endif
+                                
+                                <!-- Check which types already have contra entries -->
+                                @php
+                                    $existingTypes = $contraAccs->pluck('type')->unique()->toArray();
+                                @endphp
+                                
                                 <form method="POST" action="{{ route('admin.contra') }}">
                                     @csrf
                                     <div class="form-group">
                                         <label for="type">Type</label>
                                         <select class="form-control" id="type" name="type" required>
                                             <option value="">Select Type</option>
-                                            <option value="shares">Shares</option>
-                                            <option value="savings">Savings</option>
-                                            <option value="loans">Loans</option>
+                                            <option value="shares" {{ in_array('shares', $existingTypes) ? 'disabled' : '' }}>
+                                                Shares {{ in_array('shares', $existingTypes) ? '(Already exists)' : '' }}
+                                            </option>
+                                            <option value="savings" {{ in_array('savings', $existingTypes) ? 'disabled' : '' }}>
+                                                Savings {{ in_array('savings', $existingTypes) ? '(Already exists)' : '' }}
+                                            </option>
+                                            <option value="loans" {{ in_array('loans', $existingTypes) ? 'disabled' : '' }}>
+                                                Loans {{ in_array('loans', $existingTypes) ? '(Already exists)' : '' }}
+                                            </option>
                                         </select>
+                                        @if(count($existingTypes) >= 3)
+                                            <small class="text-muted">All contra account types have been created. You can edit existing entries or delete them to create new ones.</small>
+                                        @else
+                                            <small class="text-muted">Only one contra account is allowed per type. Disabled options already have contra accounts.</small>
+                                        @endif
                                     </div>
                                     <div class="form-group" id="account-input-group">
                                         <label for="account_numbers">GL Account Number(s)</label>
                                         <input type="text" class="form-control" id="account_numbers" name="account_numbers" placeholder="Enter GL account number(s), comma-separated if multiple" required>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                    <button type="submit" class="btn btn-primary" id="submit-btn" {{ count($existingTypes) >= 3 ? 'disabled' : '' }}>
+                                        Submit
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -150,10 +172,17 @@
                                                                     <div class="form-group">
                                                                         <label for="type{{ $contra->id }}">Type</label>
                                                                         <select class="form-control" id="type{{ $contra->id }}" name="type" required>
-                                                                            <option value="shares" {{ $contra->type == 'shares' ? 'selected' : '' }}>Shares</option>
-                                                                            <option value="savings" {{ $contra->type == 'savings' ? 'selected' : '' }}>Savings</option>
-                                                                            <option value="loans" {{ $contra->type == 'loans' ? 'selected' : '' }}>Loans</option>
+                                                                            <option value="shares" {{ $contra->type == 'shares' ? 'selected' : '' }} {{ in_array('shares', $existingTypes) && $contra->type != 'shares' ? 'disabled' : '' }}>
+                                                                                Shares {{ in_array('shares', $existingTypes) && $contra->type != 'shares' ? '(Already exists)' : '' }}
+                                                                            </option>
+                                                                            <option value="savings" {{ $contra->type == 'savings' ? 'selected' : '' }} {{ in_array('savings', $existingTypes) && $contra->type != 'savings' ? 'disabled' : '' }}>
+                                                                                Savings {{ in_array('savings', $existingTypes) && $contra->type != 'savings' ? '(Already exists)' : '' }}
+                                                                            </option>
+                                                                            <option value="loans" {{ $contra->type == 'loans' ? 'selected' : '' }} {{ in_array('loans', $existingTypes) && $contra->type != 'loans' ? 'disabled' : '' }}>
+                                                                                Loans {{ in_array('loans', $existingTypes) && $contra->type != 'loans' ? '(Already exists)' : '' }}
+                                                                            </option>
                                                                         </select>
+                                                                        <small class="text-muted">You can only change to types that don't already have contra accounts.</small>
                                                                     </div>
                                                                     <div class="form-group">
                                                                         <label for="account_number{{ $contra->id }}">GL Account Number</label>
@@ -196,8 +225,25 @@
         $(document).ready(function() {
             $('#type').on('change', function() {
                 var type = $(this).val();
-                // No longer needed for account_numbers as it's a plain input
+                var submitBtn = $('#submit-btn');
+                
+                // Check if the selected option is disabled
+                if ($(this).find('option:selected').prop('disabled')) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Type Already Exists',
+                        text: 'This type already has a contra account. You can edit the existing entry instead.',
+                        confirmButtonText: 'OK'
+                    });
+                    $(this).val(''); // Reset selection
+                    submitBtn.prop('disabled', true);
+                } else if (type) {
+                    submitBtn.prop('disabled', false);
+                } else {
+                    submitBtn.prop('disabled', true);
+                }
             });
+            
             // SweetAlert2 for delete confirmation
             $('.delete-contra-btn').on('click', function(e) {
                 e.preventDefault();
@@ -216,6 +262,16 @@
                     }
                 });
             });
+            
+            // Show info message if all types are disabled
+            if ($('#type option:not([disabled])').length <= 1) { // Only "Select Type" option available
+                Swal.fire({
+                    icon: 'info',
+                    title: 'All Contra Types Created',
+                    text: 'All contra account types (Shares, Savings, Loans) have been created. You can edit existing entries or delete them to create new ones.',
+                    confirmButtonText: 'OK'
+                });
+            }
         });
     </script>
 </body>

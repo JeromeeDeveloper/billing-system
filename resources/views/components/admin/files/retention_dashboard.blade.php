@@ -51,7 +51,7 @@
                         $totalFiles = 0;
                         $totalSize = 0;
                         $filesOverLimit = 0;
-                        foreach($stats as $data) {
+                        foreach ($stats as $data) {
                             $totalFiles += $data['count'];
                             $totalSize += $data['total_size_bytes'];
                             $filesOverLimit += $data['files_over_limit'];
@@ -66,7 +66,8 @@
                                         <i class="fa fa-file"></i>
                                     </span>
                                     <div class="media-body">
-                                        <h3 class="mb-0 text-black"><span class="counter ml-0">{{ $totalFiles }}</span></h3>
+                                        <h3 class="mb-0 text-black"><span
+                                                class="counter ml-0">{{ $totalFiles }}</span></h3>
                                         <p class="mb-0">Total Files</p>
                                     </div>
                                 </div>
@@ -81,7 +82,8 @@
                                         <i class="fa fa-hdd-o"></i>
                                     </span>
                                     <div class="media-body">
-                                        <h3 class="mb-0 text-black"><span class="counter ml-0">{{ $totalSizeMB }}</span> MB</h3>
+                                        <h3 class="mb-0 text-black"><span
+                                                class="counter ml-0">{{ $totalSizeMB }}</span> MB</h3>
                                         <p class="mb-0">Total Size</p>
                                     </div>
                                 </div>
@@ -96,7 +98,8 @@
                                         <i class="fa fa-exclamation-triangle"></i>
                                     </span>
                                     <div class="media-body">
-                                        <h3 class="mb-0 text-black"><span class="counter ml-0">{{ $filesOverLimit }}</span></h3>
+                                        <h3 class="mb-0 text-black"><span
+                                                class="counter ml-0">{{ $filesOverLimit }}</span></h3>
                                         <p class="mb-0">Files Over Limit</p>
                                     </div>
                                 </div>
@@ -111,7 +114,8 @@
                                         <i class="fa fa-file"></i>
                                     </span>
                                     <div class="media-body">
-                                        <h3 class="mb-0 text-black"><span class="counter ml-0">{{ $maxFilesPerType }}</span></h3>
+                                        <h3 class="mb-0 text-black"><span
+                                                class="counter ml-0">{{ $maxFilesPerType }}</span></h3>
                                         <p class="mb-0">Max Files Per Type</p>
                                     </div>
                                 </div>
@@ -154,58 +158,61 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($stats as $type => $data)
-                                            <tr>
-                                                <td>{{ $type }}</td>
-                                                <td>{{ $data['count'] }}</td>
-                                                <td>{{ $data['total_size_mb'] }}</td>
-                                                <td>
-                                                    @if($data['oldest_file'])
-                                                        @if($type === 'Billing Exports')
-                                                            {{ \Carbon\Carbon::parse($data['oldest_file'])->format('Y-m-d H:i') }}
+                                            @foreach ($stats as $type => $data)
+                                                <tr>
+                                                    <td>{{ $type }}</td>
+                                                    <td>{{ $data['count'] }}</td>
+                                                    <td>{{ $data['total_size_mb'] }}</td>
+                                                    <td>
+                                                        @if ($data['oldest_file'])
+                                                            @if ($type === 'Billing Exports')
+                                                                {{ \Carbon\Carbon::parse($data['oldest_file'])->format('Y-m-d H:i') }}
+                                                            @else
+                                                                {{ $data['oldest_file']->format('Y-m-d H:i') }}
+                                                            @endif
                                                         @else
-                                                            {{ $data['oldest_file']->format('Y-m-d H:i') }}
+                                                            N/A
                                                         @endif
-                                                    @else
-                                                        N/A
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if($data['newest_file'])
-                                                        @if($type === 'Billing Exports')
-                                                            {{ \Carbon\Carbon::parse($data['newest_file'])->format('Y-m-d H:i') }}
+                                                    </td>
+                                                    <td>
+                                                        @if ($data['newest_file'])
+                                                            @if ($type === 'Billing Exports')
+                                                                {{ \Carbon\Carbon::parse($data['newest_file'])->format('Y-m-d H:i') }}
+                                                            @else
+                                                                {{ $data['newest_file']->format('Y-m-d H:i') }}
+                                                            @endif
                                                         @else
-                                                            {{ $data['newest_file']->format('Y-m-d H:i') }}
+                                                            N/A
                                                         @endif
-                                                    @else
-                                                        N/A
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if($data['at_limit'])
-                                                        <span class="badge badge-warning">At Limit</span>
-                                                    @elseif($data['files_over_limit'] > 0)
-                                                        <span class="badge badge-danger">{{ $data['files_over_limit'] }} Over</span>
-                                                    @else
-                                                        <span class="badge badge-success">OK</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if($data['count'] > 0)
-                                                        <button type="button" class="btn btn-sm btn-info" onclick="viewFiles('{{ $type }}')">
-                                                            <i class="fa fa-eye"></i> View Files
-                                                        </button>
-                                                    @endif
-                                                    @if($data['files_over_limit'] > 0)
-
-                                                        <button type="button" class="btn btn-sm btn-danger" onclick="performCleanup('{{ $type }}')">
-                                                            <i class="fa fa-trash"></i> Cleanup
-                                                        </button>
-                                                    @else
-                                                        <span class="text-muted">No action needed</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
+                                                    </td>
+                                                    <td>
+                                                        @if ($data['at_limit'])
+                                                            <span class="badge badge-warning">At Limit</span>
+                                                        @elseif($data['files_over_limit'] > 0)
+                                                            <span
+                                                                class="badge badge-danger">{{ $data['files_over_limit'] }}
+                                                                Over</span>
+                                                        @else
+                                                            <span class="badge badge-success">OK</span>
+                                                        @endif
+                                                    </td>
+                                                    <td>
+                                                        @if ($data['count'] > 0)
+                                                            <button type="button" class="btn btn-sm btn-info"
+                                                                onclick="viewFiles('{{ $type }}')">
+                                                                <i class="fa fa-eye"></i> View Files
+                                                            </button>
+                                                        @endif
+                                                        @if ($data['files_over_limit'] > 0)
+                                                            <button type="button" class="btn btn-sm btn-danger"
+                                                                onclick="performCleanup('{{ $type }}')">
+                                                                <i class="fa fa-trash"></i> Cleanup
+                                                            </button>
+                                                        @else
+                                                            <span class="text-muted">No action needed</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
                                             @endforeach
                                         </tbody>
                                     </table>
@@ -219,13 +226,15 @@
 
         <div class="footer">
             <div class="copyright">
-                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/" target="_blank">MASS-SPECC COOPERATIVE</a> 2025</p>
+                <p>Copyright © Designed &amp; Developed by <a href="https://mass-specc.coop/"
+                        target="_blank">MASS-SPECC COOPERATIVE</a> 2025</p>
             </div>
         </div>
     </div>
 
     <!-- Files Modal -->
-    <div class="modal fade" id="filesModal" tabindex="-1" role="dialog" aria-labelledby="filesModalLabel" aria-hidden="true">
+    <div class="modal fade" id="filesModal" tabindex="-1" role="dialog" aria-labelledby="filesModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -246,7 +255,8 @@
                         </div>
                         <div class="col-md-6">
                             <label for="searchFilter">Search Files:</label>
-                            <input type="text" id="searchFilter" class="form-control" placeholder="Search by filename..." onkeyup="filterFiles()">
+                            <input type="text" id="searchFilter" class="form-control"
+                                placeholder="Search by filename..." onkeyup="filterFiles()">
                         </div>
                     </div>
                     <div id="filesList" class="table-responsive">
@@ -304,7 +314,7 @@
                 });
         }
 
-                function displayFiles(files, documentType) {
+        function displayFiles(files, documentType) {
             if (files.length === 0) {
                 $('#filesList').html('<div class="alert alert-info">No files found for this document type.</div>');
                 return;
@@ -329,23 +339,33 @@
                 const fileSize = formatFileSize(file.size);
                 const uploadDate = new Date(file.upload_date).toLocaleString();
                 const uploadedBy = file.uploaded_by_name || 'Unknown';
-                const billingPeriod = file.billing_period || 'N/A';
+
+                // Format billing period
+                let billingPeriodFormatted = 'N/A';
+                if (file.billing_period) {
+                    const dateObj = new Date(file.billing_period);
+                    billingPeriodFormatted = dateObj.toLocaleDateString('en-US', {
+                        month: 'long',
+                        year: 'numeric'
+                    });
+                }
 
                 tableHtml += `
-                    <tr data-billing-period="${billingPeriod}" data-filename="${file.filename.toLowerCase()}">
-                        <td>${file.filename}</td>
-                        <td><span class="badge badge-info">${billingPeriod}</span></td>
-                        <td>${fileSize}</td>
-                        <td>${uploadDate}</td>
-                        <td>${uploadedBy}</td>
-                        <td>
-                            <a href="${file.download_url}" class="btn btn-sm btn-primary" target="_blank">
-                                <i class="fa fa-download"></i> Download
-                            </a>
-                        </td>
-                    </tr>
-                `;
+        <tr data-billing-period="${file.billing_period}" data-filename="${file.filename.toLowerCase()}">
+            <td>${file.filename}</td>
+            <td><span class="badge badge-info">${billingPeriodFormatted}</span></td>
+            <td>${fileSize}</td>
+            <td>${uploadDate}</td>
+            <td>${uploadedBy}</td>
+            <td>
+                <a href="${file.download_url}" class="btn btn-sm btn-primary" target="_blank">
+                    <i class="fa fa-download"></i> Download
+                </a>
+            </td>
+        </tr>
+    `;
             });
+
 
             tableHtml += `
                     </tbody>
@@ -396,7 +416,8 @@
             const totalRows = $('#filesList tbody tr').length;
 
             if (visibleRows !== totalRows) {
-                $('#filesList').prepend(`<div class="alert alert-info mb-3">Showing ${visibleRows} of ${totalRows} files</div>`);
+                $('#filesList').prepend(
+                    `<div class="alert alert-info mb-3">Showing ${visibleRows} of ${totalRows} files</div>`);
             } else {
                 $('#filesList .alert-info').remove();
             }
@@ -418,23 +439,25 @@
 
         function previewCleanup(documentType = null) {
             const url = '/admin/file-retention/preview';
-            const data = documentType ? { document_type: documentType } : {};
+            const data = documentType ? {
+                document_type: documentType
+            } : {};
 
             fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const info = data.data;
-                    Swal.fire({
-                        title: 'Cleanup Preview',
-                        html: `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const info = data.data;
+                        Swal.fire({
+                            title: 'Cleanup Preview',
+                            html: `
                             <div class="text-left">
                                 <p><strong>Document Type:</strong> ${info.document_type}</p>
                                 <p><strong>Total Files:</strong> ${info.total_files}</p>
@@ -445,17 +468,17 @@
                                 <p><strong>Newest File:</strong> ${info.newest_file || 'N/A'}</p>
                             </div>
                         `,
-                        icon: 'info',
-                        confirmButtonText: 'OK'
-                    });
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Error', 'Failed to preview cleanup', 'error');
-            });
+                            icon: 'info',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Failed to preview cleanup', 'error');
+                });
         }
 
         function performCleanup(documentType) {
@@ -470,30 +493,33 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     const url = '/admin/file-retention/cleanup-type';
-                    const data = { document_type: documentType };
+                    const data = {
+                        document_type: documentType
+                    };
 
                     fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify(data)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Success', data.message, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire('Error', 'Failed to perform cleanup', 'error');
-                    });
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                    'content')
+                            },
+                            body: JSON.stringify(data)
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Success', data.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'Failed to perform cleanup', 'error');
+                        });
                 }
             });
         }
@@ -512,26 +538,27 @@
                     const url = '/admin/file-retention/cleanup-all';
 
                     fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('Success', data.message, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire('Error', 'Failed to perform cleanup', 'error');
-                    });
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
+                                    'content')
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire('Success', data.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire('Error', 'Failed to perform cleanup', 'error');
+                        });
                 }
             });
         }
@@ -547,47 +574,47 @@
             });
 
             fetch('/admin/file-retention/backup', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({
-                        title: 'Backup Created Successfully!',
-                        html: `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Backup Created Successfully!',
+                            html: `
                             <div class="text-left">
                                 <p><strong>Filename:</strong> ${data.filename}</p>
                                 <p><strong>Total Files:</strong> ${data.total_files}</p>
                                 <p><strong>Total Size:</strong> ${data.total_size_mb} MB</p>
                             </div>
                         `,
-                        icon: 'success',
-                        showCancelButton: true,
-                        confirmButtonText: 'Download Backup',
-                        cancelButtonText: 'Close'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Create a temporary link to download the file
-                            const link = document.createElement('a');
-                            link.href = data.download_url;
-                            link.download = data.filename;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                        }
-                    });
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                Swal.fire('Error', 'Failed to create backup', 'error');
-            });
+                            icon: 'success',
+                            showCancelButton: true,
+                            confirmButtonText: 'Download Backup',
+                            cancelButtonText: 'Close'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Create a temporary link to download the file
+                                const link = document.createElement('a');
+                                link.href = data.download_url;
+                                link.download = data.filename;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            }
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error', 'Failed to create backup', 'error');
+                });
         }
     </script>
 
