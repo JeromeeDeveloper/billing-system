@@ -58,13 +58,12 @@
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> Branch ATM Management Flow & User Guide</h5>
                                     <ol class="mb-2">
-                                        <li><strong>Account Overview:</strong> View account balances for members in your branch only.</li>
+                                        <li><strong>Account Overview:</strong> View account for members in your branch only.</li>
                                         <li><strong>Post Payments:</strong> Post loan payments with automatic prioritization (highest priority loans first).</li>
-                                        <li><strong>Edit Balances:</strong> Edit account balances for corrections and adjustments within your branch.</li>
                                         <li><strong>Export Reports:</strong> Export posted payment records for your branch.</li>
                                     </ol>
                                     <ul class="mb-2">
-                                        <li><strong>Search & Filter:</strong> Find members by name, employee ID, or CID within your branch.</li>
+                                        <li><strong>Search:</strong> Find members by name, employee ID, or CID within your branch.</li>
                                         <li><strong>Branch-Specific:</strong> All operations and reports are limited to your branch's member data.</li>
                                     </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> This page allows you to manage member accounts and process payments specifically for your branch.</small></p>

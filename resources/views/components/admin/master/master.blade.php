@@ -13,12 +13,12 @@
 
     <link href="{{ asset('vendor/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet">
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
-    <link href="{{ asset('icons/font-awesome-old/css/font-awesome.min.css') }}" rel="stylesheet">
+    {{-- <link href="{{ asset('icons/font-awesome-old/css/font-awesome.min.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/material-design-iconic-font/css/materialdesignicons.min.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/line-awesome/css/line-awesome.min.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/simple-line-icons/css/simple-line-icons.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/themify-icons/css/themify-icons.css') }}" rel="stylesheet">
-    <link href="{{ asset('icons/avasta/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('icons/avasta/css/style.css') }}" rel="stylesheet"> --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 
@@ -1240,7 +1240,7 @@
             if (!saving) return;
 
             // Debug log
-            console.log('Rendering savings data:', saving);
+            // console.log('Rendering savings data:', saving);
 
             // Count mortuary savings
             let mortuaryCount = countMortuarySavings(savings);
@@ -1303,7 +1303,7 @@
                             <strong>🏥 Mortuary Product Detected!</strong><br>
                             <strong>Product:</strong> ${mortuaryProduct.product_name} (Code: ${mortuaryProduct.product_code})<br>
                             <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
-                         
+
                         </div>
                     </div>
                     ` : `
@@ -1408,7 +1408,7 @@
             let loan = loans[index];
             if (!loan) return;
 
-            console.log('Rendering loan data:', loan);
+            // console.log('Rendering loan data:', loan);
 
             // Get loan product info from loan account number
             let productInfo = getLoanProductInfo(loan.loan_acct_no);
@@ -1555,7 +1555,7 @@
             currentLoan.expiry_date = expiryDate;
             currentLoan.approval_no = approvalNo;
 
-            console.log('Saved loan data for index', currentLoanIndex, ':', currentLoan);
+            // console.log('Saved loan data for index', currentLoanIndex, ':', currentLoan);
         }
 
         // Function to save current savings data to the savings array
@@ -1581,7 +1581,7 @@
             currentSaving.approval_no = approvalNo;
             currentSaving.remarks = remarks;
 
-            console.log('Saved savings data for index', currentSavingsIndex, ':', currentSaving);
+            // console.log('Saved savings data for index', currentSavingsIndex, ':', currentSaving);
         }
 
         // Function to save current shares data to the shares array
@@ -1607,7 +1607,7 @@
             currentShare.approval_no = approvalNo;
             currentShare.remarks = remarks;
 
-            console.log('Saved shares data for index', currentSharesIndex, ':', currentShare);
+            // console.log('Saved shares data for index', currentSharesIndex, ':', currentShare);
         }
 
         $('#viewModal').on('show.bs.modal', function(event) {

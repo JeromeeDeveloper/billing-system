@@ -151,16 +151,11 @@
                                     </h5>
                                     <div class="collapse show" id="infoNoteContent">
                                         <ol class="mb-2">
-                                            <li><strong>Review & Edit:</strong> Branch users can view and edit billing records for their branch only.</li>
+                                            <li><strong>Review:</strong> Branch users can view billing records for their branch only.</li>
                                             <li><strong>Amortization:</strong> Only regular loans are included in the amortization column. Members with zero amortization are hidden.</li>
                                             <li><strong>Approval:</strong> Once all records are correct, approve your branch's billing. Admin cannot generate the consolidated export until all branches approve.</li>
                                             <li><strong>Export:</strong> Export your branch's billing data (if allowed) and view export history.</li>
-                                            <li><strong>Loan Reports:</strong> Generate detailed loan reports showing total billed vs remitted amounts for your branch members.</li>
                                         </ol>
-                                        <ul class="mb-2">
-                                            <li><strong>Search & Filter:</strong> Use the search bar and filters to quickly find members or billing records within your branch.</li>
-                                            <li><strong>Record Management:</strong> Edit or delete billing records as needed using the Actions column.</li>
-                                        </ul>
                                         <p class="mb-0"><small><strong>Note:</strong> Only regular loans are included in amortization calculations. Approval is required before admin can generate the final report.</small></p>
                                     </div>
                                 </div>

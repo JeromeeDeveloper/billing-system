@@ -56,12 +56,11 @@
                                     <ol class="mb-2">
                                         <li><strong>Account Overview:</strong> View all member account balances (savings, shares, loans) across all branches.</li>
                                         <li><strong>Post Payments:</strong> Post loan payments with automatic prioritization (highest priority loans first).</li>
-                                        <li><strong>Edit Balances:</strong> Edit account balances for corrections and adjustments.</li>
                                         <li><strong>Export Posted Payments:</strong> Export records of posted payments from this page.</li>
+                                        <li><strong>ATM Batch Report:</strong> Export records of posted payments from this page.</li>
                                     </ol>
                                     <ul class="mb-2">
                                         <li><strong>Search & Filter:</strong> Find members by name, employee ID, or CID across all branches.</li>
-                                        <li><strong>Report Generation:</strong> Access comprehensive reports from the Dashboard page.</li>
                                     </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> This is the central hub for managing member accounts and processing payments across all branches. For other reports, visit the Dashboard.</small></p>
                                 </div>

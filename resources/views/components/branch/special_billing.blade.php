@@ -75,9 +75,6 @@
                                         <li><strong>Export:</strong> Export special billing data for your branch as needed.</li>
                                         <li><strong>Filtered Data:</strong> All data and exports are limited to your branch's members.</li>
                                     </ol>
-                                    <ul class="mb-2">
-                                        <li><strong>History:</strong> View and download previous special billing exports for your branch.</li>
-                                    </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> Branch users cannot upload special billing data. All exports are restricted to your branch's members only.</small></p>
                                 </div>
 
