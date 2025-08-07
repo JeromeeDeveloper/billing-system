@@ -99,10 +99,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 }
             }
 
-            // Prepare total_due value
-            $newTotalDue = $this->cleanNumber($row['total_amort'] ?? $row['k5'] ?? 0);
+            // Prepare values from Excel
             $newPrincipalDue = $this->cleanNumber($row['principal'] ?? $row['i5'] ?? 0);
             $newInterestDue = $this->cleanNumber($row['interest'] ?? $row['j5'] ?? 0);
+            // Calculate total_due based on principal_due + interest_due
+            $newTotalDue = $newPrincipalDue + $newInterestDue;
 
             // Update or create loan forecast with billing period (without total_due)
             $existingForecast = LoanForecast::where('loan_acct_no', $row['loan_account_no'])->first();
@@ -150,7 +151,6 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                     'amortization_due_date' => $this->parseDate($row['amortization_due_date']),
                     'principal_due' => $newPrincipalDue,
                     'interest_due' => $newInterestDue,
-                    'total_due' => $newTotalDue,
                     'member_id' => $member->id,
                     'billing_period' => $this->billingPeriod,
                     'updated_at' => $now,
@@ -162,10 +162,7 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 ]);
             }
 
-            // Only update total_due if new value is not zero
-            if ($newTotalDue != 0) {
-                $loanForecast->update(['total_due' => $newTotalDue]);
-            }
+            // total_due will be auto-calculated by the model based on principal_due + interest_due
 
             // Set original_total_due if null or if billing_period is different or if original values are 0 (reset)
             if (is_null($loanForecast->original_total_due) ||
