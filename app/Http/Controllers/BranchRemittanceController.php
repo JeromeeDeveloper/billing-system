@@ -93,50 +93,180 @@ class BranchRemittanceController extends Controller
         );
 
         // --- Add logic for regular/special billing tables for branch ---
-        $loanRemittances = \App\Models\LoanRemittance::with('loanForecast', 'member')
-            ->where('billing_period', $currentBillingPeriod)
-            ->whereHas('member', function($q) use ($branch_id) {
-                $q->where('branch_id', $branch_id);
-            })
-            ->get();
-        $loanRemittances = $loanRemittances->map(function ($remit) {
-            $forecast = $remit->loanForecast;
-            $productCode = null;
-            if ($forecast && $forecast->loan_acct_no) {
-                $segments = explode('-', $forecast->loan_acct_no);
-                $productCode = $segments[2] ?? null;
-            }
-            $product = $productCode ? \App\Models\LoanProduct::where('product_code', $productCode)->first() : null;
-            $remit->billing_type = $product ? $product->billing_type : 'regular';
-            $remit->remitted_savings = 0; // Placeholder, add logic if needed
-            $remit->remitted_shares = 0;  // Placeholder, add logic if needed
-            return $remit;
-        });
-        $regularRemittances = $loanRemittances->where('billing_type', 'regular');
-        $specialRemittances = $loanRemittances->where('billing_type', 'special');
-        $billings = \App\Models\Billing::with('loanForecast')
-            ->where('start', 'like', $currentBillingPeriod . '%')
-            ->whereHas('member', function($q) use ($branch_id) {
-                $q->where('branch_id', $branch_id);
-            })
-            ->get();
-        $billings = $billings->map(function ($bill) {
-            $forecast = $bill->loanForecast;
-            $productCode = null;
-            if ($forecast && $forecast->loan_acct_no) {
-                $segments = explode('-', $forecast->loan_acct_no);
-                $productCode = $segments[2] ?? null;
-            }
-            $product = $productCode ? \App\Models\LoanProduct::where('product_code', $productCode)->first() : null;
-            $bill->billing_type = $product ? $product->billing_type : 'regular';
-            return $bill;
-        });
-        $regularBilled = $billings->where('billing_type', 'regular');
-        $specialBilled = $billings->where('billing_type', 'special');
+        // Get the latest RemittanceBatch for this billing period
+        $latestBatch = \App\Models\RemittanceBatch::where('billing_period', $currentBillingPeriod)
+            ->whereIn('billing_type', ['regular', 'special'])
+            ->orderBy('imported_at', 'desc')
+            ->first();
+
+        if ($latestBatch) {
+            // Use the same logic as exportRegularSpecial
+            $loanRemittances = \App\Models\LoanRemittance::with('loanForecast', 'member')
+                ->where('billing_period', $currentBillingPeriod)
+                ->where('created_at', '>=', $latestBatch->imported_at)
+                ->whereHas('member', function($q) use ($branch_id) {
+                    $q->where('branch_id', $branch_id);
+                })
+                ->get();
+            $loanRemittances = $loanRemittances->map(function ($remit) {
+                $forecast = $remit->loanForecast;
+                $productCode = null;
+                if ($forecast && $forecast->loan_acct_no) {
+                    $segments = explode('-', $forecast->loan_acct_no);
+                    $productCode = $segments[2] ?? null;
+                }
+                $remit->product_code = $productCode;
+                $remit->billing_type = null;
+                if ($productCode) {
+                    $loanProduct = \App\Models\LoanProduct::where('product_code', $productCode)->first();
+                    $remit->billing_type = $loanProduct ? $loanProduct->billing_type : null;
+                }
+                return $remit;
+            });
+
+            // Don't filter by latest batch billing type - show all remittance data
+            $regularRemittances = $loanRemittances->where('billing_type', 'regular')->values();
+            $specialRemittances = $loanRemittances->where('billing_type', 'special')->values();
+        } else {
+            // Fallback to empty collections if no batch found
+            $regularRemittances = collect();
+            $specialRemittances = collect();
+        }
+
+        // Calculate billed totals for each member (same logic as export)
+        $memberIds = isset($loanRemittances) ? $loanRemittances->pluck('member_id')->unique() : collect();
+        $regularBilled = collect();
+        $specialBilled = collect();
+        foreach ($memberIds as $memberId) {
+            $forecasts = \App\Models\LoanForecast::where('member_id', $memberId)
+                ->where('billing_period', $currentBillingPeriod)
+                ->get();
+            $regularTotal = $forecasts->filter(function($forecast) {
+                $productCode = null;
+                if ($forecast->loan_acct_no) {
+                    $segments = explode('-', $forecast->loan_acct_no);
+                    $productCode = $segments[2] ?? null;
+                }
+                if (!$productCode) return false;
+                $loanProduct = \App\Models\LoanProduct::where('product_code', $productCode)->first();
+                return $loanProduct && $loanProduct->billing_type === 'regular';
+            })->sum('total_due');
+            $specialTotal = $forecasts->filter(function($forecast) {
+                $productCode = null;
+                if ($forecast->loan_acct_no) {
+                    $segments = explode('-', $forecast->loan_acct_no);
+                    $productCode = $segments[2] ?? null;
+                }
+                if (!$productCode) return false;
+                $loanProduct = \App\Models\LoanProduct::where('product_code', $productCode)->first();
+                return $loanProduct && $loanProduct->billing_type === 'special';
+            })->sum('total_due');
+            $regularBilled->push(['member_id' => $memberId, 'total_billed' => $regularTotal]);
+            $specialBilled->push(['member_id' => $memberId, 'total_billed' => $specialTotal]);
+        }
         // --- End of new logic ---
 
         // Get export statuses for this billing period
         $exportStatuses = ExportStatus::getStatuses($currentBillingPeriod, Auth::id());
+
+        // === MONITORING DATA ===
+        // Get latest remittance batches for this billing period
+        $latestBatches = \App\Models\RemittanceBatch::where('billing_period', $currentBillingPeriod)
+            ->orderBy('imported_at', 'desc')
+            ->get()
+            ->groupBy('billing_type');
+
+        // Get data counts for monitoring
+        $monitoringData = [
+            'loans_savings' => [
+                'total_records' => RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                })
+                ->where('billing_period', $currentBillingPeriod)
+                ->where('remittance_type', 'loans_savings')
+                ->count(),
+                'matched_records' => RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                })
+                ->where('billing_period', $currentBillingPeriod)
+                ->where('remittance_type', 'loans_savings')
+                ->where('status', 'success')
+                ->count(),
+                'latest_batch' => $latestBatches->get('regular')?->first() ?? $latestBatches->get('special')?->first(),
+                'available_types' => $latestBatches->keys()->filter(function($type) {
+                    return in_array($type, ['regular', 'special']);
+                })->values()
+            ],
+            'shares' => [
+                'total_records' => RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                })
+                ->where('billing_period', $currentBillingPeriod)
+                ->where('remittance_type', 'shares')
+                ->count(),
+                'matched_records' => RemittancePreview::whereHas('member', function($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                })
+                ->where('billing_period', $currentBillingPeriod)
+                ->where('remittance_type', 'shares')
+                ->where('status', 'success')
+                ->count(),
+                'latest_batch' => $latestBatches->get('shares')?->first(),
+                'available_types' => $latestBatches->keys()->filter(function($type) {
+                    return $type === 'shares';
+                })->values()
+            ]
+        ];
+
+        // Get export generation history
+        $exportHistory = ExportStatus::where('billing_period', $currentBillingPeriod)
+            ->where('user_id', Auth::id())
+            ->get()
+            ->keyBy('export_type');
+
+        // Calculate collection readiness with generation status
+        $collectionStatus = [
+            'loans_savings' => [
+                'ready' => $monitoringData['loans_savings']['total_records'] > 0,
+                'has_latest_batch' => $monitoringData['loans_savings']['latest_batch'] !== null,
+                'match_rate' => $monitoringData['loans_savings']['total_records'] > 0
+                    ? round(($monitoringData['loans_savings']['matched_records'] / $monitoringData['loans_savings']['total_records']) * 100, 1)
+                    : 0,
+                'last_generated' => $exportHistory->get('loans_savings')?->last_export_at,
+                'is_enabled' => $exportHistory->get('loans_savings')?->is_enabled ?? true,
+                'generation_count' => $exportHistory->get('loans_savings')?->generation_count ?? 0
+            ],
+            'loans_savings_with_product' => [
+                'ready' => $monitoringData['loans_savings']['total_records'] > 0,
+                'has_latest_batch' => $monitoringData['loans_savings']['latest_batch'] !== null,
+                'match_rate' => $monitoringData['loans_savings']['total_records'] > 0
+                    ? round(($monitoringData['loans_savings']['matched_records'] / $monitoringData['loans_savings']['total_records']) * 100, 1)
+                    : 0,
+                'last_generated' => $exportHistory->get('loans_savings_with_product')?->last_export_at,
+                'is_enabled' => $exportHistory->get('loans_savings_with_product')?->is_enabled ?? true,
+                'generation_count' => $exportHistory->get('loans_savings_with_product')?->generation_count ?? 0
+            ],
+            'shares' => [
+                'ready' => $monitoringData['shares']['total_records'] > 0,
+                'has_latest_batch' => $monitoringData['shares']['latest_batch'] !== null,
+                'match_rate' => $monitoringData['shares']['total_records'] > 0
+                    ? round(($monitoringData['shares']['matched_records'] / $monitoringData['shares']['total_records']) * 100, 1)
+                    : 0,
+                'last_generated' => $exportHistory->get('shares')?->last_export_at,
+                'is_enabled' => $exportHistory->get('shares')?->is_enabled ?? true,
+                'generation_count' => $exportHistory->get('shares')?->generation_count ?? 0
+            ],
+            'shares_with_product' => [
+                'ready' => $monitoringData['shares']['total_records'] > 0,
+                'has_latest_batch' => $monitoringData['shares']['latest_batch'] !== null,
+                'match_rate' => $monitoringData['shares']['total_records'] > 0
+                    ? round(($monitoringData['shares']['matched_records'] / $monitoringData['shares']['total_records']) * 100, 1)
+                    : 0,
+                'last_generated' => $exportHistory->get('shares_with_product')?->last_export_at,
+                'is_enabled' => $exportHistory->get('shares_with_product')?->is_enabled ?? true,
+                'generation_count' => $exportHistory->get('shares_with_product')?->generation_count ?? 0
+            ]
+        ];
 
         return view('components.branch.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
@@ -146,7 +276,9 @@ class BranchRemittanceController extends Controller
             'specialRemittances',
             'regularBilled',
             'specialBilled',
-            'exportStatuses'
+            'exportStatuses',
+            'monitoringData',
+            'collectionStatus'
         ));
     }
 
@@ -294,87 +426,88 @@ class BranchRemittanceController extends Controller
         $branch_id = Auth::user()->branch_id;
         $currentBillingPeriod = Auth::user()->billing_period;
 
-        // Get the latest RemittanceBatch for this billing period
-        $latestBatch = \App\Models\RemittanceBatch::where('billing_period', $currentBillingPeriod)
-            ->whereIn('billing_type', ['regular', 'special'])
-            ->orderBy('imported_at', 'desc')
-            ->first();
-
-        if (!$latestBatch) {
-            return redirect()->back()->with('error', 'No remittance batch found for the current billing period. Please upload a file first.');
-        }
-
-        $loanRemittances = \App\Models\LoanRemittance::with('loanForecast', 'member')
-            ->where('billing_period', $currentBillingPeriod)
-            ->where('created_at', '>=', $latestBatch->imported_at)
+        // Use the same source and mapping as Admin (RegularSpecialRemittanceExport basis), but filtered to branch members
+        // 1) Accumulated remittance data for the period
+        $allRemittanceData = \App\Models\RemittanceReport::where('period', $currentBillingPeriod)
             ->whereHas('member', function($q) use ($branch_id) {
                 $q->where('branch_id', $branch_id);
             })
             ->get();
-        $loanRemittances = $loanRemittances->map(function ($remit) {
-            $forecast = $remit->loanForecast;
-            $productCode = null;
-            if ($forecast && $forecast->loan_acct_no) {
-                $segments = explode('-', $forecast->loan_acct_no);
-                $productCode = $segments[2] ?? null;
+
+        // 2) Billing type mapping from latest preview uploads (branch only)
+        $billingTypeMap = \App\Models\RemittancePreview::whereHas('member', function($q) use ($branch_id) {
+                $q->where('branch_id', $branch_id);
+            })
+            ->where('billing_period', $currentBillingPeriod)
+            ->where('remittance_type', 'loans_savings')
+            ->get()
+            ->groupBy('member_id')
+            ->map(function ($group) {
+                return $group->sortByDesc('created_at')->first()->billing_type ?? 'regular';
+            });
+
+        // 3) Separate members by billing type (same as admin)
+        $regularMembers = [];
+        $specialMembers = [];
+
+        foreach ($allRemittanceData as $report) {
+            if ($report->remitted_loans <= 0 && $report->remitted_savings <= 0 && $report->remitted_shares <= 0) {
+                continue;
             }
-            $remit->product_code = $productCode;
-            $remit->billing_type = null;
-            if ($productCode) {
-                $loanProduct = \App\Models\LoanProduct::where('product_code', $productCode)->first();
-                $remit->billing_type = $loanProduct ? $loanProduct->billing_type : null;
+
+            $cid = $report->cid; // Use CID like admin; export will resolve to member_id
+            $billingType = $billingTypeMap->get($cid, 'regular');
+
+            $memberData = [
+                'member_id' => $cid,
+                'name' => $report->member_name,
+                'loans_total' => $report->remitted_loans,
+                'savings_total' => $report->remitted_savings,
+                'shares_total' => $report->remitted_shares,
+                'status' => 'success',
+                'message' => 'Accumulated remittance data (branch)'
+            ];
+
+            if ($billingType === 'regular') {
+                $regularMembers[$cid] = $memberData;
+            } else {
+                $specialMembers[$cid] = $memberData;
             }
-            return $remit;
-        });
-
-        // Filter by the latest batch's billing type
-        $loanRemittances = $loanRemittances->filter(function ($remit) use ($latestBatch) {
-            return $remit->billing_type === $latestBatch->billing_type;
-        });
-
-        $regularRemittances = $loanRemittances->where('billing_type', 'regular')->values();
-        $specialRemittances = $loanRemittances->where('billing_type', 'special')->values();
-
-        // Calculate billed totals for each member (sum of total_due from LoanForecast for the billing type)
-        $memberIds = $loanRemittances->pluck('member_id')->unique();
-        $regularBilled = collect();
-        $specialBilled = collect();
-        foreach ($memberIds as $memberId) {
-            $forecasts = \App\Models\LoanForecast::where('member_id', $memberId)
-                ->where('billing_period', $currentBillingPeriod)
-                ->get();
-            $regularTotal = $forecasts->filter(function($forecast) {
-                $productCode = null;
-                if ($forecast->loan_acct_no) {
-                    $segments = explode('-', $forecast->loan_acct_no);
-                    $productCode = $segments[2] ?? null;
-                }
-                if (!$productCode) return false;
-                $loanProduct = \App\Models\LoanProduct::where('product_code', $productCode)->first();
-                return $loanProduct && $loanProduct->billing_type === 'regular';
-            })->sum('total_due');
-            $specialTotal = $forecasts->filter(function($forecast) {
-                $productCode = null;
-                if ($forecast->loan_acct_no) {
-                    $segments = explode('-', $forecast->loan_acct_no);
-                    $productCode = $segments[2] ?? null;
-                }
-                if (!$productCode) return false;
-                $loanProduct = \App\Models\LoanProduct::where('product_code', $productCode)->first();
-                return $loanProduct && $loanProduct->billing_type === 'special';
-            })->sum('total_due');
-            $regularBilled->push(['member_id' => $memberId, 'total_billed' => $regularTotal]);
-            $specialBilled->push(['member_id' => $memberId, 'total_billed' => $specialTotal]);
         }
 
-        // Get preview data for branch members (filtered by latest batch)
+        // 4) Map into objects expected by RegularSpecialRemittanceExport (same structure as admin)
+        $regularRemittances = collect($regularMembers)->map(function ($member) {
+            return (object) [
+                'member_id' => $member['member_id'],
+                'member' => (object) ['full_name' => $member['name']],
+                'remitted_amount' => $member['loans_total'],
+                'remitted_savings' => $member['savings_total'],
+                'remitted_shares' => $member['shares_total'],
+                'billing_type' => 'regular',
+                'status' => $member['status'],
+                'message' => $member['message']
+            ];
+        });
+
+        $specialRemittances = collect($specialMembers)->map(function ($member) {
+            return (object) [
+                'member_id' => $member['member_id'],
+                'member' => (object) ['full_name' => $member['name']],
+                'remitted_amount' => $member['loans_total'],
+                'remitted_savings' => $member['savings_total'],
+                'remitted_shares' => $member['shares_total'],
+                'billing_type' => 'special',
+                'status' => $member['status'],
+                'message' => $member['message']
+            ];
+        });
+
+        // 5) Preview data restricted to branch (all uploads)
         $loansSavingsPreviewPaginated = \App\Models\RemittancePreview::whereHas('member', function($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })
         ->where('billing_period', $currentBillingPeriod)
         ->where('remittance_type', 'loans_savings')
-        ->where('created_at', '>=', $latestBatch->imported_at)
-        ->where('billing_type', $latestBatch->billing_type)
         ->get();
 
         $sharesPreviewPaginated = \App\Models\RemittancePreview::whereHas('member', function($query) use ($branch_id) {
@@ -382,7 +515,6 @@ class BranchRemittanceController extends Controller
         })
         ->where('billing_period', $currentBillingPeriod)
         ->where('remittance_type', 'shares')
-        ->where('created_at', '>=', $latestBatch->imported_at)
         ->get();
 
         return \Maatwebsite\Excel\Facades\Excel::download(

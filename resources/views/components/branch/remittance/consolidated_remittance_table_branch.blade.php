@@ -73,65 +73,51 @@
                                     $memberName = $member->full_name ?? 'N/A';
 
                                     // Get billed total for this member based on loan_acct_no and billing type
-                                    // For branch, use the LoanRemittance's loanForecast relationship
-        $billedTotal = 0;
-        if ($remit->loanForecast) {
-            $forecast = $remit->loanForecast;
-            $productCode = null;
-            if ($forecast->loan_acct_no) {
-                $segments = explode('-', $forecast->loan_acct_no);
-                $productCode = $segments[2] ?? null;
-            }
-            $product = $productCode
-                ? \App\Models\LoanProduct::where('product_code', $productCode)->first()
-                : null;
-            if ($product && $product->billing_type === 'regular') {
-                $billedTotal = $forecast->total_due;
-            }
-        }
+                                    $billedTotal = 0;
+                                    if ($remit->loanForecast) {
+                                        $forecast = $remit->loanForecast;
+                                        $productCode = null;
+                                        if ($forecast->loan_acct_no) {
+                                            $segments = explode('-', $forecast->loan_acct_no);
+                                            $productCode = $segments[2] ?? null;
+                                        }
+                                        $product = $productCode
+                                            ? \App\Models\LoanProduct::where('product_code', $productCode)->first()
+                                            : null;
+                                        if ($product && $product->billing_type === 'regular') {
+                                            $billedTotal = $forecast->total_due;
+                                        }
+                                    }
 
-        if ($remit->loanForecast) {
-            $forecast = $remit->loanForecast;
-            $productCode = null;
-            if ($forecast->loan_acct_no) {
-                $segments = explode('-', $forecast->loan_acct_no);
-                $productCode = $segments[2] ?? null;
-            }
-            $product = $productCode
-                ? \App\Models\LoanProduct::where('product_code', $productCode)->first()
-                : null;
-        }
+                                    $consolidatedData[$memberId] = [
+                                        'member_id' => $memberId,
+                                        'member_name' => $memberName,
+                                        'billing_type' => 'regular',
+                                        'remitted_loans' => $remit->remitted_amount ?? 0,
+                                        'remitted_savings' => 0, // Will be updated with preview data
+                                        'remitted_shares' => 0, // Will be updated with preview data
+                                        'total_remitted' => $remit->remitted_amount ?? 0,
+                                        'total_billed' => $billedTotal,
+                                        'remaining_balance' => $billedTotal - ($remit->remitted_amount ?? 0),
+                                        'status_class' =>
+                                            $billedTotal - ($remit->remitted_amount ?? 0) <= 0 ? 'success' : 'warning',
+                                    ];
+                                }
+                            }
 
-        $consolidatedData[$memberId] = [
-            'member_id' => $memberId,
-            'member_name' => $memberName,
-            'billing_type' => 'regular',
-            'remitted_loans' => $remit->remitted_amount ?? 0,
-            'remitted_savings' => 0, // LoanRemittance doesn't have savings field
-                                        'remitted_shares' => 0, // LoanRemittance doesn't have shares field
-            'total_remitted' => $remit->remitted_amount ?? 0,
-            'total_billed' => $billedTotal,
-            'remaining_balance' => $billedTotal - ($remit->remitted_amount ?? 0),
-            'status_class' =>
-                $billedTotal - ($remit->remitted_amount ?? 0) <= 0 ? 'success' : 'warning',
-        ];
-    }
-}
+                            // Process Special Billing data (branch members only)
+                            if (isset($specialRemittances) && $specialRemittances->count() > 0) {
+                                foreach ($specialRemittances as $remit) {
+                                    // Check if member belongs to this branch
+                                    $member = $remit->member;
+                                    if (!$member || $member->branch_id != $branch_id) {
+                                        continue;
+                                    }
 
-// Process Special Billing data (branch members only)
-if (isset($specialRemittances) && $specialRemittances->count() > 0) {
-    foreach ($specialRemittances as $remit) {
-        // Check if member belongs to this branch
-        $member = $remit->member;
-        if (!$member || $member->branch_id != $branch_id) {
-            continue;
-        }
+                                    $memberId = $remit->member_id;
+                                    $memberName = $member->full_name ?? 'N/A';
 
-        $memberId = $remit->member_id;
-        $memberName = $member->full_name ?? 'N/A';
-
-        // Get billed total for this member based on loan_acct_no and billing type
-        // For branch, use the LoanRemittance's loanForecast relationship
+                                    // Get billed total for this member based on loan_acct_no and billing type
                                     $billedTotal = 0;
                                     if ($remit->loanForecast) {
                                         $forecast = $remit->loanForecast;
@@ -148,36 +134,13 @@ if (isset($specialRemittances) && $specialRemittances->count() > 0) {
                                         }
                                     }
 
-                                    // Debug: Log the calculation details for branch special billing
-                                    $debugDetails = [];
-                                    if ($remit->loanForecast) {
-                                        $forecast = $remit->loanForecast;
-                                        $productCode = null;
-                                        if ($forecast->loan_acct_no) {
-                                            $segments = explode('-', $forecast->loan_acct_no);
-                                            $productCode = $segments[2] ?? null;
-                                        }
-                                        $product = $productCode
-                                            ? \App\Models\LoanProduct::where('product_code', $productCode)->first()
-                                            : null;
-                                        $debugDetails[] = [
-                                            'loan_acct_no' => $forecast->loan_acct_no,
-                                            'product_code' => $productCode,
-                                            'product_exists' => $product ? 'YES' : 'NO',
-                                            'billing_type' => $product ? $product->billing_type : 'N/A',
-                                            'total_due' => $forecast->total_due,
-                                            'included' =>
-                                                $product && $product->billing_type === 'special' ? 'YES' : 'NO',
-                                        ];
-                                    }
-
                                     $consolidatedData[$memberId] = [
                                         'member_id' => $memberId,
                                         'member_name' => $memberName,
                                         'billing_type' => 'special',
                                         'remitted_loans' => $remit->remitted_amount ?? 0,
-                                        'remitted_savings' => 0, // LoanRemittance doesn't have savings field
-            'remitted_shares' => 0, // LoanRemittance doesn't have shares field
+                                        'remitted_savings' => 0, // Will be updated with preview data
+                                        'remitted_shares' => 0, // Will be updated with preview data
                                         'total_remitted' => $remit->remitted_amount ?? 0,
                                         'total_billed' => $billedTotal,
                                         'remaining_balance' => $billedTotal - ($remit->remitted_amount ?? 0),
@@ -210,18 +173,48 @@ if (isset($specialRemittances) && $specialRemittances->count() > 0) {
                                     }
 
                                     if (isset($consolidatedData[$memberId])) {
-                                        // Merge with existing billing data
+                                        // Merge with existing billing data - add savings to existing record
+                                        $savingsAmount = 0;
+                                        if (is_array($row['savings'])) {
+                                            // If savings is an array, sum all amounts
+                                            foreach ($row['savings'] as $saving) {
+                                                if (is_array($saving) && isset($saving['amount'])) {
+                                                    $savingsAmount += floatval($saving['amount']);
+                                                } elseif (is_numeric($saving)) {
+                                                    $savingsAmount += floatval($saving);
+                                                }
+                                            }
+                                        } else {
+                                            $savingsAmount = floatval($row['savings'] ?? 0);
+                                        }
+
+                                        $consolidatedData[$memberId]['remitted_savings'] = $savingsAmount;
+                                        $consolidatedData[$memberId]['total_remitted'] += $savingsAmount;
                                         $consolidatedData[$memberId]['status_class'] = $statusClass;
                                     } else {
                                         // Create new record for preview only
+                                        $savingsAmount = 0;
+                                        if (is_array($row['savings'])) {
+                                            // If savings is an array, sum all amounts
+                                            foreach ($row['savings'] as $saving) {
+                                                if (is_array($saving) && isset($saving['amount'])) {
+                                                    $savingsAmount += floatval($saving['amount']);
+                                                } elseif (is_numeric($saving)) {
+                                                    $savingsAmount += floatval($saving);
+                                                }
+                                            }
+                                        } else {
+                                            $savingsAmount = floatval($row['savings'] ?? 0);
+                                        }
+
                                         $consolidatedData[$memberId] = [
                                             'member_id' => $memberId,
                                             'member_name' => $row['name'] ?? 'N/A',
                                             'billing_type' => 'preview',
                                             'remitted_loans' => $row['loans'] ?? 0,
-                                            'remitted_savings' => $row['savings'] ?? 0,
+                                            'remitted_savings' => $savingsAmount,
                                             'remitted_shares' => 0,
-                                            'total_remitted' => ($row['loans'] ?? 0) + ($row['savings'] ?? 0),
+                                            'total_remitted' => ($row['loans'] ?? 0) + $savingsAmount,
                                             'total_billed' => 0,
                                             'remaining_balance' => 0,
                                             'status_class' => $statusClass,
@@ -253,8 +246,8 @@ if (isset($specialRemittances) && $specialRemittances->count() > 0) {
                                     }
 
                                     if (isset($consolidatedData[$memberId])) {
-                                        // Merge with existing data
-                                        $consolidatedData[$memberId]['remitted_shares'] += $row['share_amount'] ?? 0;
+                                        // Merge with existing data - add shares to existing record
+                                        $consolidatedData[$memberId]['remitted_shares'] = $row['share_amount'] ?? 0;
                                         $consolidatedData[$memberId]['total_remitted'] += $row['share_amount'] ?? 0;
                                         $consolidatedData[$memberId]['status_class'] = $statusClass;
                                     } else {
@@ -288,11 +281,7 @@ if (isset($specialRemittances) && $specialRemittances->count() > 0) {
                         {{-- Display Consolidated Data (Branch Members Only) --}}
                         @foreach ($consolidatedData as $memberId => $data)
                             @php
-                                // Skip upload preview only records when showing all types
-                                if ($data['billing_type'] === 'preview') {
-                                    continue;
-                                }
-
+                                // Show all records including preview data
                                 $totalLoans += $data['remitted_loans'];
                                 $totalSavings += $data['remitted_savings'];
                                 $totalShares += $data['remitted_shares'];
@@ -300,9 +289,18 @@ if (isset($specialRemittances) && $specialRemittances->count() > 0) {
                                 $totalBilled += $data['total_billed'];
                                 $totalRemaining += $data['remaining_balance'];
 
-                                $billingTypeLabel =
-                                    $data['billing_type'] === 'regular' ? 'Regular Billing' : 'Special Billing';
-                                $billingTypeClass = $data['billing_type'] === 'regular' ? 'primary' : 'warning';
+                                $billingTypeLabel = match($data['billing_type']) {
+                                    'regular' => 'Regular Billing',
+                                    'special' => 'Special Billing',
+                                    'preview' => 'Preview Data',
+                                    default => 'Unknown'
+                                };
+                                $billingTypeClass = match($data['billing_type']) {
+                                    'regular' => 'primary',
+                                    'special' => 'warning',
+                                    'preview' => 'info',
+                                    default => 'secondary'
+                                };
                             @endphp
                             <tr class="data-row" data-billing-type="{{ $data['billing_type'] }}"
                                 data-status="{{ $data['status_class'] }}">

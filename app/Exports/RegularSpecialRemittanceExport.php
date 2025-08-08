@@ -42,8 +42,6 @@ class RegularSpecialRemittanceExport implements WithMultipleSheets
                 $this->isBranch,
                 $this->branchId
             ),
-            new RemittanceSheetExport($this->regularRemittances, $this->billingPeriod, 'Regular Billing'),
-            new RemittanceSheetExport($this->specialRemittances, $this->billingPeriod, 'Special Billing'),
         ];
     }
 }
@@ -153,36 +151,22 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
                     $actualMemberId = $member ? $member->id : null;
                 }
 
-                // For branch, use the LoanRemittance's loanForecast relationship
-                if ($this->isBranch && is_object($remit) && $remit->loanForecast) {
-                    $forecast = $remit->loanForecast;
+                // Unified billed total calculation (admin and branch):
+                // Sum all LoanForecast records for this member and billing period that match the billing type
+                $loanForecasts = LoanForecast::where('member_id', $actualMemberId)
+                    ->where('billing_period', $this->billingPeriod)
+                    ->get();
+
+                $billedTotal = 0;
+                foreach ($loanForecasts as $forecast) {
                     $productCode = null;
                     if ($forecast->loan_acct_no) {
                         $segments = explode('-', $forecast->loan_acct_no);
                         $productCode = $segments[2] ?? null;
                     }
                     $product = $productCode ? LoanProduct::where('product_code', $productCode)->first() : null;
-                    $billedTotal = 0;
                     if ($product && $product->billing_type === 'regular') {
-                        $billedTotal = $forecast->total_due;
-                    }
-                } else {
-                    // For admin, query all LoanForecast records
-                    $loanForecasts = LoanForecast::where('member_id', $actualMemberId)
-                        ->where('billing_period', $this->billingPeriod)
-                        ->get();
-
-                    $billedTotal = 0;
-                    foreach ($loanForecasts as $forecast) {
-                        $productCode = null;
-                        if ($forecast->loan_acct_no) {
-                            $segments = explode('-', $forecast->loan_acct_no);
-                            $productCode = $segments[2] ?? null;
-                        }
-                        $product = $productCode ? LoanProduct::where('product_code', $productCode)->first() : null;
-                        if ($product && $product->billing_type === 'regular') {
-                            $billedTotal += $forecast->total_due;
-                        }
+                        $billedTotal += $forecast->total_due;
                     }
                 }
 
@@ -217,36 +201,22 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
                     $actualMemberId = $member ? $member->id : null;
                 }
 
-                // For branch, use the LoanRemittance's loanForecast relationship
-                if ($this->isBranch && is_object($remit) && $remit->loanForecast) {
-                    $forecast = $remit->loanForecast;
+                // Unified billed total calculation (admin and branch):
+                // Sum all LoanForecast records for this member and billing period that match the billing type
+                $loanForecasts = LoanForecast::where('member_id', $actualMemberId)
+                    ->where('billing_period', $this->billingPeriod)
+                    ->get();
+
+                $billedTotal = 0;
+                foreach ($loanForecasts as $forecast) {
                     $productCode = null;
                     if ($forecast->loan_acct_no) {
                         $segments = explode('-', $forecast->loan_acct_no);
                         $productCode = $segments[2] ?? null;
                     }
                     $product = $productCode ? LoanProduct::where('product_code', $productCode)->first() : null;
-                    $billedTotal = 0;
                     if ($product && $product->billing_type === 'special') {
-                        $billedTotal = $forecast->total_due;
-                    }
-                } else {
-                    // For admin, query all LoanForecast records
-                    $loanForecasts = LoanForecast::where('member_id', $actualMemberId)
-                        ->where('billing_period', $this->billingPeriod)
-                        ->get();
-
-                    $billedTotal = 0;
-                    foreach ($loanForecasts as $forecast) {
-                        $productCode = null;
-                        if ($forecast->loan_acct_no) {
-                            $segments = explode('-', $forecast->loan_acct_no);
-                            $productCode = $segments[2] ?? null;
-                        }
-                        $product = $productCode ? LoanProduct::where('product_code', $productCode)->first() : null;
-                        if ($product && $product->billing_type === 'special') {
-                            $billedTotal += $forecast->total_due;
-                        }
+                        $billedTotal += $forecast->total_due;
                     }
                 }
 
@@ -273,14 +243,29 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
 
                 $name = is_array($row) ? ($row['name'] ?? 'N/A') : ($row->name ?? 'N/A');
                 $loans = is_array($row) ? (is_numeric($row['loans']) ? $row['loans'] : 0) : (is_numeric($row->loans) ? $row->loans : 0);
-                $savings = is_array($row) ? (is_numeric($row['savings']) ? $row['savings'] : 0) : (is_numeric($row->savings) ? $row->savings : 0);
+
+                // Handle savings as array or numeric value (same logic as admin table)
+                $savingsAmount = 0;
+                $savings = is_array($row) ? ($row['savings'] ?? 0) : ($row->savings ?? 0);
+                if (is_array($savings)) {
+                    // If savings is an array, sum all amounts
+                    foreach ($savings as $saving) {
+                        if (is_array($saving) && isset($saving['amount'])) {
+                            $savingsAmount += floatval($saving['amount']);
+                        } elseif (is_numeric($saving)) {
+                            $savingsAmount += floatval($saving);
+                        }
+                    }
+                } else {
+                    $savingsAmount = floatval($savings);
+                }
 
                 if (isset($consolidatedData[$memberId])) {
                     // Merge with existing billing data
                     $consolidatedData[$memberId]['remitted_loans'] += $loans;
-                    $consolidatedData[$memberId]['remitted_savings'] += $savings;
-                    $consolidatedData[$memberId]['total_remitted'] += $loans + $savings;
-                    $consolidatedData[$memberId]['remaining_balance'] -= ($loans + $savings);
+                    $consolidatedData[$memberId]['remitted_savings'] += $savingsAmount;
+                    $consolidatedData[$memberId]['total_remitted'] += $loans + $savingsAmount;
+                    $consolidatedData[$memberId]['remaining_balance'] -= ($loans + $savingsAmount);
                 } else {
                     // Create new record for preview only
                     $consolidatedData[$memberId] = [
@@ -288,9 +273,9 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
                         'member_name' => $name,
                         'billing_type' => 'preview',
                         'remitted_loans' => $loans,
-                        'remitted_savings' => $savings,
+                        'remitted_savings' => $savingsAmount,
                         'remitted_shares' => 0,
-                        'total_remitted' => $loans + $savings,
+                        'total_remitted' => $loans + $savingsAmount,
                         'total_billed' => 0,
                         'remaining_balance' => 0
                     ];
@@ -309,8 +294,8 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
                 $shareAmount = is_array($row) ? (is_numeric($row['share_amount']) ? $row['share_amount'] : 0) : (is_numeric($row->share_amount) ? $row->share_amount : 0);
 
                 if (isset($consolidatedData[$memberId])) {
-                    // Merge with existing data
-                    $consolidatedData[$memberId]['remitted_shares'] += $shareAmount;
+                    // Merge with existing data - replace shares amount (same logic as admin table)
+                    $consolidatedData[$memberId]['remitted_shares'] = $shareAmount;
                     $consolidatedData[$memberId]['total_remitted'] += $shareAmount;
                     $consolidatedData[$memberId]['remaining_balance'] -= $shareAmount;
                 } else {
