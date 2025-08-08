@@ -79,7 +79,7 @@
                             <div class="card-body p-4">
                                 <div class="media ai-icon">
                                     <span class="mr-3 bgl-warning text-warning">
-                                        <i class="fa fa-hdd-o"></i>
+                                        <i class="fa fa-file-archive"></i>
                                     </span>
                                     <div class="media-body">
                                         <h3 class="mb-0 text-black"><span

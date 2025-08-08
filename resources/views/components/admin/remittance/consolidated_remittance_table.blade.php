@@ -39,7 +39,7 @@
                             <th>Remitted Shares</th>
                             <th>Total Remitted</th>
                             <th>Total Billed</th>
-                            <th>Remaining Balance</th>
+                            <th>Remaining Amort Due</th>
                         </tr>
                     </thead>
                     <tbody>

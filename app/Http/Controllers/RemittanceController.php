@@ -335,7 +335,8 @@ class RemittanceController extends Controller
                     'message' => $result['message'],
                     'type' => 'admin',
                     'billing_period' => $currentBillingPeriod,
-                    'remittance_type' => $remittanceType2
+                    'remittance_type' => $remittanceType2,
+                    'billing_type' => $billingType
                 ]);
                 if ($result['status'] !== 'success') {
                     $hasUnmatched = true;
@@ -465,11 +466,12 @@ class RemittanceController extends Controller
                 return redirect()->back()->with('error', 'No remittance batch found for the current billing period. Please upload a file first.');
             }
 
-            // Get remittance data for the latest batch only
+            // Get remittance data for the latest batch only, filtered by billing type
             $remittanceData = RemittancePreview::where('type', 'admin')
                 ->where('billing_period', $currentBillingPeriod)
                 ->where('remittance_type', 'loans_savings')
                 ->where('created_at', '>=', $latestBatch->imported_at)
+                ->where('billing_type', $latestBatch->billing_type)
                 ->get();
 
             if ($remittanceData->isEmpty()) {
@@ -549,7 +551,7 @@ class RemittanceController extends Controller
                 // Mark export as generated
                 ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id());
 
-                $export = new \App\Exports\LoansAndSavingsWithProductExport($remittanceData);
+                $export = new \App\Exports\LoansAndSavingsWithProductExport($remittanceData, $currentBillingPeriod);
                 $filename = 'loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
             } else {
                 // Check if export is enabled
@@ -560,7 +562,7 @@ class RemittanceController extends Controller
                 // Mark export as generated
                 ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id());
 
-                $export = new \App\Exports\LoansAndSavingsExport($remittanceData);
+                $export = new \App\Exports\LoansAndSavingsExport($remittanceData, $currentBillingPeriod);
                 $filename = 'loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
             }
 
@@ -664,42 +666,45 @@ class RemittanceController extends Controller
         $billingPeriod = Auth::user()->billing_period;
         $userId = Auth::id();
 
-        // Get accumulated remittance report data for the current billing period
-        $allRemittanceData = RemittanceReport::where('period', $billingPeriod)->get();
+        // Get the latest RemittanceBatch for this billing period
+        $latestBatch = RemittanceBatch::where('billing_period', $billingPeriod)
+            ->whereIn('billing_type', ['regular', 'special'])
+            ->orderBy('imported_at', 'desc')
+            ->first();
 
-        // Get billing type information from RemittancePreview to determine which members belong to which billing type
-        $billingTypeMap = RemittancePreview::where('user_id', $userId)
+        if (!$latestBatch) {
+            return redirect()->back()->with('error', 'No remittance batch found for the current billing period. Please upload a file first.');
+        }
+
+        // Get remittance data for the latest batch only, filtered by billing type
+        $remittanceData = RemittancePreview::where('user_id', $userId)
             ->where('type', 'admin')
             ->where('billing_period', $billingPeriod)
             ->where('remittance_type', 'loans_savings')
-            ->get()
-            ->groupBy('member_id')
-            ->map(function ($group) {
-                // Get the most recent billing type for each member
-                return $group->sortByDesc('created_at')->first()->billing_type ?? 'regular';
-            });
+            ->where('created_at', '>=', $latestBatch->imported_at)
+            ->where('billing_type', $latestBatch->billing_type)
+            ->get();
 
-        // Separate members by billing type
+        if ($remittanceData->isEmpty()) {
+            return redirect()->back()->with('error', 'No remittance data found for the latest batch. Please upload a file first.');
+        }
+
+        // Group data by billing type
         $regularMembers = [];
         $specialMembers = [];
 
-        foreach ($allRemittanceData as $report) {
-            // Skip members with no values
-            if ($report->remitted_loans <= 0 && $report->remitted_savings <= 0 && $report->remitted_shares <= 0) {
-                continue;
-            }
-
-            $memberId = $report->cid;
-            $billingType = $billingTypeMap->get($memberId, 'regular');
+        foreach ($remittanceData as $remit) {
+            $memberId = $remit->member_id;
+            $billingType = $remit->billing_type ?? 'regular';
 
             $memberData = [
                 'member_id' => $memberId,
-                'name' => $report->member_name,
-                'loans_total' => $report->remitted_loans,
-                'savings_total' => $report->remitted_savings,
-                'shares_total' => $report->remitted_shares,
-                'status' => 'success',
-                'message' => 'Accumulated remittance data'
+                'name' => $remit->name,
+                'loans_total' => $remit->loans ?? 0,
+                'savings_total' => is_array($remit->savings) ? ($remit->savings['total'] ?? 0) : ($remit->savings ?? 0),
+                'shares_total' => 0, // Shares are handled separately
+                'status' => $remit->status,
+                'message' => $remit->message
             ];
 
             if ($billingType === 'regular') {
@@ -736,17 +741,20 @@ class RemittanceController extends Controller
             ];
         });
 
-        // Get preview data
+        // Get preview data for the latest batch only
         $loansSavingsPreviewPaginated = RemittancePreview::where('user_id', $userId)
             ->where('type', 'admin')
             ->where('billing_period', $billingPeriod)
             ->where('remittance_type', 'loans_savings')
+            ->where('created_at', '>=', $latestBatch->imported_at)
+            ->where('billing_type', $latestBatch->billing_type)
             ->get();
 
         $sharesPreviewPaginated = RemittancePreview::where('user_id', $userId)
             ->where('type', 'admin')
             ->where('billing_period', $billingPeriod)
             ->where('remittance_type', 'shares')
+            ->where('created_at', '>=', $latestBatch->imported_at)
             ->get();
 
         return \Maatwebsite\Excel\Facades\Excel::download(

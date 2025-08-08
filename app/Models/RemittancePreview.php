@@ -21,7 +21,8 @@ class RemittancePreview extends Model
         'message',
         'type',
         'billing_period',
-        'remittance_type'
+        'remittance_type',
+        'billing_type'
     ];
 
     protected $casts = [

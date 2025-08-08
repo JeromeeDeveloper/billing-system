@@ -21,6 +21,7 @@ class LoanRemittance extends Model
         'remittance_date',
         'remittance_tag',
         'billing_period',
+        'billing_type',
     ];
 
     public function member()

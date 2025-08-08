@@ -869,9 +869,9 @@
                         icon: 'warning',
                         title: 'Confirm Share Upload',
                         html: `
-                            <div class="text-left">
+                            <div class="text-center">
                                 <p><strong>Are you sure you want to proceed?</strong></p>
-                                <ul class="text-left">
+                                <ul class="text-center">
                                     <li>This action cannot be undone</li>
                                     <li>Please ensure all data is correct</li>
                                     <li>Double-check the file contents before proceeding</li>
@@ -993,9 +993,9 @@
                     icon: 'warning',
                     title: 'Confirm Upload',
                     html: `
-                        <div class="text-left">
+                        <div class="text-center">
                             <p><strong>Are you sure you want to proceed?</strong></p>
-                            <ul class="text-left">
+                            <ul class="text-center">
                                 <li>This action cannot be undone</li>
                                 <li>Please ensure all data is correct</li>
                                 <li>Double-check the file contents before proceeding</li>

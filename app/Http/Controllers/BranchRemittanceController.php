@@ -172,13 +172,14 @@ class BranchRemittanceController extends Controller
                 return redirect()->back()->with('error', 'No remittance batch found for the current billing period. Please upload a file first.');
             }
 
-            // Get remittance data for the latest batch only (branch members)
+            // Get remittance data for the latest batch only (branch members), filtered by billing type
             $remittanceData = RemittancePreview::whereHas('member', function($query) use ($branch_id) {
                 $query->where('branch_id', $branch_id);
             })
             ->where('billing_period', $currentBillingPeriod)
             ->where('remittance_type', 'loans_savings')
             ->where('created_at', '>=', $latestBatch->imported_at)
+            ->where('billing_type', $latestBatch->billing_type)
             ->get();
 
             if ($remittanceData->isEmpty()) {
@@ -264,7 +265,7 @@ class BranchRemittanceController extends Controller
                 // Mark export as generated
                 ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id());
 
-                $export = new \App\Exports\BranchLoansAndSavingsWithProductExport($remittanceData, $branch_id);
+                $export = new \App\Exports\BranchLoansAndSavingsWithProductExport($remittanceData, $branch_id, $currentBillingPeriod);
                 $filename = 'branch_loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             } else {
                 // Check if export is enabled
@@ -275,7 +276,7 @@ class BranchRemittanceController extends Controller
                 // Mark export as generated
                 ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id());
 
-                $export = new \App\Exports\BranchLoansAndSavingsExport($remittanceData, $branch_id);
+                $export = new \App\Exports\BranchLoansAndSavingsExport($remittanceData, $branch_id, $currentBillingPeriod);
                 $filename = 'branch_loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
             }
 
@@ -292,8 +293,20 @@ class BranchRemittanceController extends Controller
     {
         $branch_id = Auth::user()->branch_id;
         $currentBillingPeriod = Auth::user()->billing_period;
+
+        // Get the latest RemittanceBatch for this billing period
+        $latestBatch = \App\Models\RemittanceBatch::where('billing_period', $currentBillingPeriod)
+            ->whereIn('billing_type', ['regular', 'special'])
+            ->orderBy('imported_at', 'desc')
+            ->first();
+
+        if (!$latestBatch) {
+            return redirect()->back()->with('error', 'No remittance batch found for the current billing period. Please upload a file first.');
+        }
+
         $loanRemittances = \App\Models\LoanRemittance::with('loanForecast', 'member')
             ->where('billing_period', $currentBillingPeriod)
+            ->where('created_at', '>=', $latestBatch->imported_at)
             ->whereHas('member', function($q) use ($branch_id) {
                 $q->where('branch_id', $branch_id);
             })
@@ -313,8 +326,15 @@ class BranchRemittanceController extends Controller
             }
             return $remit;
         });
+
+        // Filter by the latest batch's billing type
+        $loanRemittances = $loanRemittances->filter(function ($remit) use ($latestBatch) {
+            return $remit->billing_type === $latestBatch->billing_type;
+        });
+
         $regularRemittances = $loanRemittances->where('billing_type', 'regular')->values();
         $specialRemittances = $loanRemittances->where('billing_type', 'special')->values();
+
         // Calculate billed totals for each member (sum of total_due from LoanForecast for the billing type)
         $memberIds = $loanRemittances->pluck('member_id')->unique();
         $regularBilled = collect();
@@ -346,12 +366,15 @@ class BranchRemittanceController extends Controller
             $regularBilled->push(['member_id' => $memberId, 'total_billed' => $regularTotal]);
             $specialBilled->push(['member_id' => $memberId, 'total_billed' => $specialTotal]);
         }
-        // Get preview data for branch members
+
+        // Get preview data for branch members (filtered by latest batch)
         $loansSavingsPreviewPaginated = \App\Models\RemittancePreview::whereHas('member', function($query) use ($branch_id) {
             $query->where('branch_id', $branch_id);
         })
         ->where('billing_period', $currentBillingPeriod)
         ->where('remittance_type', 'loans_savings')
+        ->where('created_at', '>=', $latestBatch->imported_at)
+        ->where('billing_type', $latestBatch->billing_type)
         ->get();
 
         $sharesPreviewPaginated = \App\Models\RemittancePreview::whereHas('member', function($query) use ($branch_id) {
@@ -359,6 +382,7 @@ class BranchRemittanceController extends Controller
         })
         ->where('billing_period', $currentBillingPeriod)
         ->where('remittance_type', 'shares')
+        ->where('created_at', '>=', $latestBatch->imported_at)
         ->get();
 
         return \Maatwebsite\Excel\Facades\Excel::download(
