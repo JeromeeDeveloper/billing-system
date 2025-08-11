@@ -50,6 +50,14 @@ class BranchRemittanceReportPerBranchExport implements FromArray, WithStyles, Wi
         $rows[] = ['PRODUCT', 'AMOUNT', 'COUNT'];
 
         // --- LOAN PRODUCTS ---
+        // Use RemittanceReport for consistent data with Consolidated report
+        $branchMembers = $branch->members()->pluck('cid')->toArray();
+        $remittanceReports = \App\Models\RemittanceReport::where('period', $this->billingPeriod)
+            ->whereIn('cid', $branchMembers)
+            ->where('remitted_loans', '>', 0)
+            ->get();
+
+        // Group by loan products using LoanRemittance for product breakdown
         $loanRemits = LoanRemittance::where('billing_period', $this->billingPeriod)
             ->whereHas('member', function($q) use ($branch) {
                 $q->where('branch_id', $branch->id);
@@ -75,28 +83,34 @@ class BranchRemittanceReportPerBranchExport implements FromArray, WithStyles, Wi
         }
 
         // --- SAVINGS PRODUCTS ---
+        // Use RemittanceReport for total savings amount (includes excess)
+        $totalSavingsFromReports = $remittanceReports->sum('remitted_savings');
+
+        // Get savings breakdown by product from Savings table
         $savingsRemits = Savings::whereHas('member', function($q) use ($branch) {
                 $q->where('branch_id', $branch->id);
             })
             ->where('remittance_amount', '>', 0)
             ->get();
         $savingsByProduct = $savingsRemits->groupBy('product_code');
-        foreach ($savingsByProduct as $productCode => $remits) {
-            $product = SavingProduct::where('product_code', $productCode)->first();
-            if (!$product) continue;
-            $totalAmount = $remits->sum('remittance_amount');
-            $memberCount = $remits->unique('member_id')->count();
-            $rows[] = [$product->product_name, $totalAmount > 0 ? $totalAmount : '', $memberCount > 0 ? $memberCount : ''];
+
+        // If we have savings from reports, show them grouped by product
+        if ($totalSavingsFromReports > 0) {
+            foreach ($savingsByProduct as $productCode => $remits) {
+                $product = SavingProduct::where('product_code', $productCode)->first();
+                if (!$product) continue;
+                $totalAmount = $remits->sum('remittance_amount');
+                $memberCount = $remits->unique('member_id')->count();
+                $rows[] = [$product->product_name, $totalAmount > 0 ? $totalAmount : '', $memberCount > 0 ? $memberCount : ''];
+            }
         }
 
         // --- SHARE PRODUCTS ---
-        $shareRemits = Remittance::where('branch_id', $branch->id)
-            ->where('share_dep', '>', 0)
-            ->get();
-        $totalShare = $shareRemits->sum('share_dep');
-        $shareCount = $shareRemits->unique('member_id')->count();
-        if ($totalShare > 0) {
-            $rows[] = ['Shares', $totalShare, $shareCount];
+        // Use RemittanceReport for shares amount
+        $totalSharesFromReports = $remittanceReports->sum('remitted_shares');
+        if ($totalSharesFromReports > 0) {
+            $shareCount = $remittanceReports->where('remitted_shares', '>', 0)->count();
+            $rows[] = ['Shares', $totalSharesFromReports, $shareCount];
         }
 
         return $rows;

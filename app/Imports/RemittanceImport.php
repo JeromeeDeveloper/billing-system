@@ -174,7 +174,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                                 'product_type' => $regularSavings->savingProduct->product_type ?? null,
                                 'amount' => $remainingSavings,
                                 'deduction_amount' => 0,
-                                'is_remaining' => true
+                                'is_remaining' => true,
+                                'source' => 'savings_excess'
                             ];
                             Log::info("[RemittanceImport] Remaining savings remittance of {$remainingSavings} deposited to regular savings for member {$member->id}");
                         }
@@ -334,7 +335,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                                 'product_type' => $regularSavings->savingProduct->product_type ?? null,
                                 'amount' => $remainingPayment,
                                 'deduction_amount' => 0,
-                                'is_remaining' => true
+                                'is_remaining' => true,
+                                'source' => 'loan_excess'
                             ];
                             Log::info("[RemittanceImport] Remaining loan payment of {$remainingPayment} deposited to regular savings for member {$member->id}");
                         } else {

@@ -409,7 +409,24 @@ class RemittanceController extends Controller
                 ]);
                 $report->member_name = $result['name'];
                 $report->remitted_loans += $result['loans'];
-                $report->remitted_savings += $result['savings_total'] ?? 0;
+
+                                // Calculate total savings including excess amounts from loans only
+                $totalSavings = $result['savings_total'] ?? 0;
+
+                // Check if there are excess amounts from loans that went to regular savings
+                if (isset($result['savings_distribution']) && is_array($result['savings_distribution'])) {
+                    foreach ($result['savings_distribution'] as $distribution) {
+                        // Only add excess amounts that come from loans (not from savings)
+                        if (isset($distribution['is_remaining']) && $distribution['is_remaining']) {
+                            // Only add if this excess came from loan processing
+                            if (isset($distribution['source']) && $distribution['source'] === 'loan_excess') {
+                                $totalSavings += $distribution['amount'];
+                            }
+                        }
+                    }
+                }
+
+                $report->remitted_savings += $totalSavings;
                 $report->save();
             }
             if ($hasUnmatched) {
