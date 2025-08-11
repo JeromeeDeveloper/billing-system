@@ -273,6 +273,65 @@ class RemittanceController extends Controller
         // Get export statuses for this billing period
         $exportStatuses = ExportStatus::getStatuses($billingPeriod, Auth::id());
 
+        // === MONITORING DATA ===
+        // Get latest remittance batches for this billing period
+        $latestBatches = \App\Models\RemittanceBatch::where('billing_period', $billingPeriod)
+            ->orderBy('imported_at', 'desc')
+            ->get()
+            ->groupBy('billing_type');
+
+        // Get data counts for monitoring
+        $monitoringData = [
+            'loans_savings' => [
+                'total_records' => RemittancePreview::where('user_id', Auth::id())
+                    ->where('type', 'admin')
+                    ->where('billing_period', $billingPeriod)
+                    ->where('remittance_type', 'loans_savings')
+                    ->count(),
+                'matched_records' => RemittancePreview::where('user_id', Auth::id())
+                    ->where('type', 'admin')
+                    ->where('billing_period', $billingPeriod)
+                    ->where('remittance_type', 'loans_savings')
+                    ->where('status', 'success')
+                    ->count(),
+                'latest_batch' => $latestBatches->get('regular')?->first() ?? $latestBatches->get('special')?->first(),
+                'available_types' => $latestBatches->keys()->filter(function($type) {
+                    return in_array($type, ['regular', 'special']);
+                })->values()
+            ],
+            'shares' => [
+                'total_records' => RemittancePreview::where('user_id', Auth::id())
+                    ->where('type', 'admin')
+                    ->where('billing_period', $billingPeriod)
+                    ->where('remittance_type', 'shares')
+                    ->count(),
+                'matched_records' => RemittancePreview::where('user_id', Auth::id())
+                    ->where('type', 'admin')
+                    ->where('billing_period', $billingPeriod)
+                    ->where('remittance_type', 'shares')
+                    ->where('status', 'success')
+                    ->count(),
+                'latest_batch' => $latestBatches->get('shares')?->first(),
+                'available_types' => $latestBatches->keys()->filter(function($type) {
+                    return in_array($type, ['shares']);
+                })->values()
+            ]
+        ];
+
+        // Calculate collection status
+        $collectionStatus = [
+            'loans_savings' => [
+                'match_rate' => $monitoringData['loans_savings']['total_records'] > 0
+                    ? round(($monitoringData['loans_savings']['matched_records'] / $monitoringData['loans_savings']['total_records']) * 100, 1)
+                    : 0
+            ],
+            'shares' => [
+                'match_rate' => $monitoringData['shares']['total_records'] > 0
+                    ? round(($monitoringData['shares']['matched_records'] / $monitoringData['shares']['total_records']) * 100, 1)
+                    : 0
+            ]
+        ];
+
         return view('components.admin.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
             'sharesPreviewPaginated',
@@ -284,7 +343,9 @@ class RemittanceController extends Controller
             'remittanceImportRegularCount',
             'remittanceImportSpecialCount',
             'sharesRemittanceImportCount',
-            'exportStatuses'
+            'exportStatuses',
+            'monitoringData',
+            'collectionStatus'
         ));
     }
 
@@ -363,6 +424,14 @@ class RemittanceController extends Controller
             ExportStatus::markUploaded($currentBillingPeriod, 'loans_savings', Auth::id());
             ExportStatus::markUploaded($currentBillingPeriod, 'loans_savings_with_product', Auth::id());
 
+            // Enable exports for all users (including branch users) when admin uploads
+            // Get all users and enable exports for them
+            $allUsers = \App\Models\User::all();
+            foreach ($allUsers as $user) {
+                ExportStatus::markUploaded($currentBillingPeriod, 'loans_savings', $user->id);
+                ExportStatus::markUploaded($currentBillingPeriod, 'loans_savings_with_product', $user->id);
+            }
+
             DB::commit();
 
             return redirect()->route('remittance.index')
@@ -436,6 +505,14 @@ class RemittanceController extends Controller
             // Mark new upload for shares exports
             ExportStatus::markUploaded($currentBillingPeriod, 'shares', Auth::id());
             ExportStatus::markUploaded($currentBillingPeriod, 'shares_with_product', Auth::id());
+
+            // Enable exports for all users (including branch users) when admin uploads shares
+            // Get all users and enable exports for them
+            $allUsers = \App\Models\User::all();
+            foreach ($allUsers as $user) {
+                ExportStatus::markUploaded($currentBillingPeriod, 'shares', $user->id);
+                ExportStatus::markUploaded($currentBillingPeriod, 'shares_with_product', $user->id);
+            }
 
             DB::commit();
 

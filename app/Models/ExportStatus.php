@@ -78,6 +78,45 @@ class ExportStatus extends Model
     }
 
     /**
+     * Check if export is enabled for branch users based on recent admin uploads
+     * This method checks if there's a recent admin upload that should enable branch exports
+     */
+    public static function isEnabledForBranch($billingPeriod, $exportType, $currentUserId = null)
+    {
+        // First check if the current user has a specific export status
+        if ($currentUserId) {
+            $userStatus = static::where('billing_period', $billingPeriod)
+                ->where('export_type', $exportType)
+                ->where('user_id', $currentUserId)
+                ->first();
+
+            if ($userStatus) {
+                return $userStatus->is_enabled;
+            }
+        }
+
+        // If no user-specific status, check if there's a recent admin upload
+        // Look for any admin user who has uploaded this export type recently
+        $adminStatus = static::where('billing_period', $billingPeriod)
+            ->where('export_type', $exportType)
+            ->whereHas('user', function($query) {
+                $query->where('role', 'admin');
+            })
+            ->where('is_enabled', true)
+            ->orderBy('last_upload_at', 'desc')
+            ->first();
+
+        if ($adminStatus) {
+            // Check if the admin upload is recent (within the last 30 days)
+            $daysSinceUpload = now()->diffInDays($adminStatus->last_upload_at);
+            return $daysSinceUpload <= 30;
+        }
+
+        // Default to enabled if no admin upload found
+        return true;
+    }
+
+    /**
      * Get export status for all types in a billing period
      */
     public static function getStatuses($billingPeriod, $userId = null)
@@ -86,5 +125,44 @@ class ExportStatus extends Model
             ->where('user_id', $userId)
             ->get()
             ->keyBy('export_type');
+    }
+
+    /**
+     * Get export status for all types in a billing period with branch logic
+     */
+    public static function getStatusesForBranch($billingPeriod, $userId = null)
+    {
+        $userStatuses = static::where('billing_period', $billingPeriod)
+            ->where('user_id', $userId)
+            ->get()
+            ->keyBy('export_type');
+
+        // For each export type, check if it should be enabled for branch users
+        $exportTypes = ['loans_savings', 'loans_savings_with_product', 'shares', 'shares_with_product'];
+
+        foreach ($exportTypes as $exportType) {
+            if (!$userStatuses->has($exportType)) {
+                // Create a virtual status object for branch users
+                $isEnabled = static::isEnabledForBranch($billingPeriod, $exportType, $userId);
+                $userStatuses->put($exportType, (object) [
+                    'billing_period' => $billingPeriod,
+                    'export_type' => $exportType,
+                    'user_id' => $userId,
+                    'is_enabled' => $isEnabled,
+                    'last_export_at' => null,
+                    'last_upload_at' => null
+                ]);
+            }
+        }
+
+        return $userStatuses;
+    }
+
+    /**
+     * Relationship to User model
+     */
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
     }
 }

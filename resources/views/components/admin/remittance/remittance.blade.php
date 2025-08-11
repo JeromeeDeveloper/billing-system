@@ -205,6 +205,258 @@
 
                                 </div>
 
+                                <!-- Collection Monitoring Dashboard -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-header bg-gradient-primary text-white">
+                                                <h5 class="mb-0">
+                                                    <i class="fa fa-tachometer-alt"></i> Collection Monitoring Dashboard
+                                                </h5>
+                                                <small class="text-white-50">Comprehensive overview of collection generation status and data availability</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <!-- Detailed Monitoring Cards -->
+                                                <div class="row">
+                                                    <!-- Loans & Savings Detailed Monitoring -->
+                                                    <div class="col-md-6 mb-4">
+                                                        <div class="card h-100 border-left" style="border-left-width: 4px;">
+                                                            <div class="card-header bg-light">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <h6 class="mb-0 text-primary">
+                                                                        <i class="fa fa-money-bill-wave"></i> Loans & Savings Collection
+                                                                    </h6>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <!-- Statistics Grid -->
+                                                                <div class="row text-center mb-3">
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-success mb-0">{{ $monitoringData['loans_savings']['total_records'] }}</h4>
+                                                                            <small class="text-muted">Total Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-info mb-0">{{ $monitoringData['loans_savings']['matched_records'] }}</h4>
+                                                                            <small class="text-muted">Matched Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-warning mb-0">{{ $collectionStatus['loans_savings']['match_rate'] }}%</h4>
+                                                                            <small class="text-muted">Match Rate</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Detailed Information -->
+                                                                @if($monitoringData['loans_savings']['latest_batch'])
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-info-circle"></i> Latest Import Details</h6>
+                                                                        <div class="row">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Date:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['loans_savings']['latest_batch']->imported_at)->format('M d, Y') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Time:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['loans_savings']['latest_batch']->imported_at)->format('g:i A') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Billing Type:</small>
+                                                                                    <div>
+                                                                                        <span class="badge badge-{{ $monitoringData['loans_savings']['latest_batch']->billing_type === 'regular' ? 'primary' : 'success' }}">
+                                                                                            {{ ucfirst($monitoringData['loans_savings']['latest_batch']->billing_type) }}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Latest Upload:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        @if($remittanceImportRegularCount > 0)
+                                                                                            {{ $remittanceImportRegularCount }}{{ $remittanceImportRegularCount == 1 ? 'st' : ($remittanceImportRegularCount == 2 ? 'nd' : ($remittanceImportRegularCount == 3 ? 'rd' : 'th')) }} Upload
+                                                                                        @else
+                                                                                            No Uploads
+                                                                                        @endif
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-12">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Time Since Import:</small>
+                                                                                    <div class="font-weight-bold text-info">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['loans_savings']['latest_batch']->imported_at)->diffForHumans() }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="mt-3 text-center">
+                                                                        <div class="alert alert-warning mb-0">
+                                                                            <i class="fa fa-exclamation-triangle"></i>
+                                                                            <strong>No Import Data Available</strong><br>
+                                                                            <small>No remittance batches found for loans & savings in this billing period.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+
+                                                                <!-- Available Types -->
+                                                                @if($monitoringData['loans_savings']['available_types']->count() > 0)
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-tags"></i> Available Billing Types</h6>
+                                                                        <div class="d-flex flex-wrap">
+                                                                            @foreach($monitoringData['loans_savings']['available_types'] as $type)
+                                                                                <span class="badge badge-{{ $type === 'regular' ? 'primary' : 'success' }} mr-2 mb-1">
+                                                                                    {{ ucfirst($type) }}
+                                                                                </span>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Shares Detailed Monitoring -->
+                                                    <div class="col-md-6 mb-4">
+                                                        <div class="card h-100 border-left" style="border-left-width: 4px;">
+                                                            <div class="card-header bg-light">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <h6 class="mb-0 text-info">
+                                                                        <i class="fa fa-chart-pie"></i> Shares Collection
+                                                                    </h6>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <!-- Statistics Grid -->
+                                                                <div class="row text-center mb-3">
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-success mb-0">{{ $monitoringData['shares']['total_records'] }}</h4>
+                                                                            <small class="text-muted">Total Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-info mb-0">{{ $monitoringData['shares']['matched_records'] }}</h4>
+                                                                            <small class="text-muted">Matched Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-warning mb-0">{{ $collectionStatus['shares']['match_rate'] }}%</h4>
+                                                                            <small class="text-muted">Match Rate</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Detailed Information -->
+                                                                @if($monitoringData['shares']['latest_batch'])
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-info-circle"></i> Latest Import Details</h6>
+                                                                        <div class="row">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Date:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['shares']['latest_batch']->imported_at)->format('M d, Y') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                                                                                                         <div class="col-6">
+                                                                                 <div class="detail-item">
+                                                                                     <small class="text-muted">Import Time:</small>
+                                                                                     <div class="font-weight-bold">
+                                                                                         {{ \Carbon\Carbon::parse($monitoringData['shares']['latest_batch']->imported_at)->format('g:i A') }}
+                                                                                     </div>
+                                                                                 </div>
+                                                                             </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Billing Type:</small>
+                                                                                    <div>
+                                                                                        <span class="badge badge-info">
+                                                                                            Shares
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Latest Upload:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        @if($sharesRemittanceImportCount > 0)
+                                                                                            {{ $sharesRemittanceImportCount }}{{ $sharesRemittanceImportCount == 1 ? 'st' : ($sharesRemittanceImportCount == 2 ? 'nd' : ($sharesRemittanceImportCount == 3 ? 'rd' : 'th')) }} Upload
+                                                                                        @else
+                                                                                            No Uploads
+                                                                                        @endif
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-12">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Time Since Import:</small>
+                                                                                    <div class="font-weight-bold text-info">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['shares']['latest_batch']->imported_at)->diffForHumans() }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="mt-3 text-center">
+                                                                        <div class="alert alert-warning mb-0">
+                                                                            <i class="fa fa-exclamation-triangle"></i>
+                                                                            <strong>No Import Data Available</strong><br>
+                                                                            <small>No remittance batches found for shares in this billing period.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+
+                                                                <!-- Available Types -->
+                                                                @if($monitoringData['shares']['available_types']->count() > 0)
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-tags"></i> Available Billing Types</h6>
+                                                                        <div class="d-flex flex-wrap">
+                                                                            @foreach($monitoringData['shares']['available_types'] as $type)
+                                                                                <span class="badge badge-info mr-2 mb-1">
+                                                                                    {{ ucfirst($type) }}
+                                                                                </span>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Modernized Remittance Upload Section (Installment Forecast on top, others below) -->
                                 <div class="row g-4 mb-4">
                                     <div class="col-12 mb-3">

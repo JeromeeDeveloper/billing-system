@@ -255,6 +255,82 @@
                                                 <small class="text-white-50">Comprehensive overview of collection generation status and data availability</small>
                                             </div>
                                             <div class="card-body">
+                                                <!-- Upload Count Monitoring Cards (Same as Admin) -->
+                                                <div class="row mb-4">
+                                                    <div class="col-md-4">
+                                                        <div class="card stats-card bg-light border-primary">
+                                                            <div class="card-body text-center">
+                                                                <h5 class="card-title text-primary mb-2">
+                                                                    <i class="fa fa-upload"></i> Remittance (Regular)
+                                                                </h5>
+                                                                <h2 class="mb-0">{{ $remittanceImportRegularCount }}</h2>
+                                                                @php
+                                                                    $regularCount = $remittanceImportRegularCount;
+                                                                    $ordinal = '';
+                                                                    if ($regularCount == 1) {
+                                                                        $ordinal = '1st';
+                                                                    } elseif ($regularCount == 2) {
+                                                                        $ordinal = '2nd';
+                                                                    } elseif ($regularCount == 3) {
+                                                                        $ordinal = '3rd';
+                                                                    } else {
+                                                                        $ordinal = $regularCount . 'th';
+                                                                    }
+                                                                @endphp
+                                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="card stats-card bg-light border-warning">
+                                                            <div class="card-body text-center">
+                                                                <h5 class="card-title text-warning mb-2">
+                                                                    <i class="fa fa-upload"></i> Remittance (Special)
+                                                                </h5>
+                                                                <h2 class="mb-0">{{ $remittanceImportSpecialCount }}</h2>
+                                                                @php
+                                                                    $specialCount = $remittanceImportSpecialCount;
+                                                                    $ordinal = '';
+                                                                    if ($specialCount == 1) {
+                                                                        $ordinal = '1st';
+                                                                    } elseif ($specialCount == 2) {
+                                                                        $ordinal = '2nd';
+                                                                    } elseif ($specialCount == 3) {
+                                                                        $ordinal = '3rd';
+                                                                    } else {
+                                                                        $ordinal = $specialCount . 'th';
+                                                                    }
+                                                                @endphp
+                                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="card stats-card bg-light border-info">
+                                                            <div class="card-body text-center">
+                                                                <h5 class="card-title text-info mb-2">
+                                                                    <i class="fa fa-upload"></i> Remittance (Shares)
+                                                                </h5>
+                                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount }}</h2>
+                                                                @php
+                                                                    $sharesCount = $sharesRemittanceImportCount;
+                                                                    $ordinal = '';
+                                                                    if ($sharesCount == 1) {
+                                                                        $ordinal = '1st';
+                                                                    } elseif ($sharesCount == 2) {
+                                                                        $ordinal = '2nd';
+                                                                    } elseif ($sharesCount == 3) {
+                                                                        $ordinal = '3rd';
+                                                                    } else {
+                                                                        $ordinal = $sharesCount . 'th';
+                                                                    }
+                                                                @endphp
+                                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <!-- Detailed Monitoring Cards -->
                                                 <div class="row">
                                                     <!-- Loans & Savings Detailed Monitoring -->
@@ -323,14 +399,18 @@
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
-                                                                            <div class="col-6">
-                                                                                <div class="detail-item">
-                                                                                    <small class="text-muted">Remittance Tag:</small>
-                                                                                    <div class="font-weight-bold">
-                                                                                        #{{ $monitoringData['loans_savings']['latest_batch']->remittance_tag }}
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
+                                                                                                                        <div class="col-6">
+                                                <div class="detail-item">
+                                                    <small class="text-muted">Latest Upload:</small>
+                                                    <div class="font-weight-bold">
+                                                        @if($remittanceImportRegularCount > 0)
+                                                            {{ $remittanceImportRegularCount }}{{ $remittanceImportRegularCount == 1 ? 'st' : ($remittanceImportRegularCount == 2 ? 'nd' : ($remittanceImportRegularCount == 3 ? 'rd' : 'th')) }} Upload
+                                                        @else
+                                                            No Uploads
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
                                                                         </div>
                                                                         <div class="row mt-2">
                                                                             <div class="col-12">
@@ -368,7 +448,7 @@
                                                                  @endif
 
                                                                  <!-- Generation Status -->
-                                                                 <div class="mt-3">
+                                                                 {{-- <div class="mt-3">
                                                                      <h6 class="text-muted mb-2"><i class="fa fa-download"></i> Generation Status</h6>
                                                                      <div class="row">
                                                                          <div class="col-6">
@@ -406,7 +486,7 @@
                                                                              </div>
                                                                          </div>
                                                                      </div>
-                                                                 </div>
+                                                                 </div> --}}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -477,14 +557,18 @@
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
-                                                                            <div class="col-6">
-                                                                                <div class="detail-item">
-                                                                                    <small class="text-muted">Remittance Tag:</small>
-                                                                                    <div class="font-weight-bold">
-                                                                                        #{{ $monitoringData['shares']['latest_batch']->remittance_tag }}
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
+                                                                                                                        <div class="col-6">
+                                                <div class="detail-item">
+                                                    <small class="text-muted">Latest Upload:</small>
+                                                    <div class="font-weight-bold">
+                                                        @if($sharesRemittanceImportCount > 0)
+                                                            {{ $sharesRemittanceImportCount }}{{ $sharesRemittanceImportCount == 1 ? 'st' : ($sharesRemittanceImportCount == 2 ? 'nd' : ($sharesRemittanceImportCount == 3 ? 'rd' : 'th')) }} Upload
+                                                        @else
+                                                            No Uploads
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
                                                                         </div>
                                                                         <div class="row mt-2">
                                                                             <div class="col-12">
@@ -522,27 +606,9 @@
                                                                  @endif
 
                                                                  <!-- Generation Status -->
-                                                                 <div class="mt-3">
-                                                                     <h6 class="text-muted mb-2"><i class="fa fa-download"></i> Generation Status</h6>
-                                                                     <div class="row">
-                                                                         <div class="col-6">
-                                                                             <div class="detail-item">
-                                                                                 <small class="text-muted">Basic Collection:</small>
-                                                                                 <div>
-                                                                                     @if($collectionStatus['shares']['last_generated'])
-                                                                                         <span class="badge badge-success badge-pill">
-                                                                                             <i class="fa fa-check"></i> Generated
-                                                                                         </span>
-                                                                                         <br><small class="text-muted">{{ \Carbon\Carbon::parse($collectionStatus['shares']['last_generated'])->format('M d, g:i A') }}</small>
-                                                                                     @else
-                                                                                         <span class="badge badge-secondary badge-pill">
-                                                                                             <i class="fa fa-clock"></i> Not Generated
-                                                                                         </span>
-                                                                                     @endif
-                                                                                 </div>
-                                                                             </div>
-                                                                         </div>
-                                                                         <div class="col-6">
+
+
+                                                                         {{-- <div class="col-6">
                                                                              <div class="detail-item">
                                                                                  <small class="text-muted">With Product Names:</small>
                                                                                  <div>
@@ -558,7 +624,7 @@
                                                                                      @endif
                                                                                  </div>
                                                                              </div>
-                                                                         </div>
+                                                                         </div> --}}
                                                                      </div>
                                                                  </div>
                                                             </div>
@@ -567,7 +633,7 @@
                                                 </div>
 
                                                 <!-- Detailed Information Panel -->
-                                           
+
                                             </div>
                                         </div>
                                     </div>

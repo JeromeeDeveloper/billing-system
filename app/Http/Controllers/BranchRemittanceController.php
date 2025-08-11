@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\RemittancePreview;
 use App\Exports\RegularSpecialRemittanceExport;
 use App\Models\ExportStatus;
+use App\Models\RemittanceUploadCount;
 
 class BranchRemittanceController extends Controller
 {
@@ -166,8 +167,13 @@ class BranchRemittanceController extends Controller
         }
         // --- End of new logic ---
 
-        // Get export statuses for this billing period
-        $exportStatuses = ExportStatus::getStatuses($currentBillingPeriod, Auth::id());
+        // Get export statuses for this billing period with branch logic
+        $exportStatuses = ExportStatus::getStatusesForBranch($currentBillingPeriod, Auth::id());
+
+        // Get remittance upload counts for monitoring (same as admin)
+        $remittanceImportRegularCount = \App\Models\RemittanceUploadCount::getCount($currentBillingPeriod, 'regular');
+        $remittanceImportSpecialCount = \App\Models\RemittanceUploadCount::getCount($currentBillingPeriod, 'special');
+        $sharesRemittanceImportCount = \App\Models\RemittanceUploadCount::getCount($currentBillingPeriod, 'shares');
 
         // === MONITORING DATA ===
         // Get latest remittance batches for this billing period
@@ -278,7 +284,10 @@ class BranchRemittanceController extends Controller
             'specialBilled',
             'exportStatuses',
             'monitoringData',
-            'collectionStatus'
+            'collectionStatus',
+            'remittanceImportRegularCount',
+            'remittanceImportSpecialCount',
+            'sharesRemittanceImportCount'
         ));
     }
 
@@ -517,6 +526,10 @@ class BranchRemittanceController extends Controller
         ->where('remittance_type', 'shares')
         ->get();
 
+        // Mark exports as generated for both loans_savings and shares since this export uses both
+        ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id());
+        ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id());
+
         return \Maatwebsite\Excel\Facades\Excel::download(
             new RegularSpecialRemittanceExport($regularRemittances, $specialRemittances, $currentBillingPeriod, $loansSavingsPreviewPaginated, $sharesPreviewPaginated, true, $branch_id),
             'Branch-Regular-Special-Billing-Remittance.xlsx'
@@ -527,6 +540,12 @@ class BranchRemittanceController extends Controller
     {
         $billingPeriod = Auth::user()->billing_period;
         $branchId = Auth::user()->branch_id;
+
+        // Mark exports as generated for all types since consolidated export uses all data
+        ExportStatus::markExported($billingPeriod, 'loans_savings', Auth::id());
+        ExportStatus::markExported($billingPeriod, 'loans_savings_with_product', Auth::id());
+        ExportStatus::markExported($billingPeriod, 'shares', Auth::id());
+        ExportStatus::markExported($billingPeriod, 'shares_with_product', Auth::id());
 
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\BranchConsolidatedRemittanceReportExport($billingPeriod, $branchId),
