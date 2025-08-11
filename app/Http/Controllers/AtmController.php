@@ -175,9 +175,9 @@ class AtmController extends Controller
             $validated = $request->validate([
                 'member_id' => 'required|exists:members,id',
                 'withdrawal_amount' => 'required|numeric|min:0',
-                'selected_loans' => 'required|array|min:1',
+                'selected_loans' => 'nullable|array',
                 'selected_loans.*' => 'string',
-                'loan_amounts' => 'required|array',
+                'loan_amounts' => 'nullable|array',
                 'payment_date' => 'required|date',
                 'payment_reference' => 'required|string',
                 'notes' => 'nullable|string'
@@ -185,9 +185,21 @@ class AtmController extends Controller
 
             $member = Member::with(['loanForecasts', 'savings'])->findOrFail($validated['member_id']);
             $withdrawalAmount = $validated['withdrawal_amount'];
-            $selectedLoans = $validated['selected_loans'];
-            $loanAmounts = $validated['loan_amounts'];
+            $selectedLoans = $validated['selected_loans'] ?? [];
+            $loanAmounts = $validated['loan_amounts'] ?? [];
             $savingsAmounts = $request->input('savings_amounts', []); // New: get savings payments from modal
+
+            // Require at least one of: a selected loan OR a positive savings amount
+            $hasPositiveSavings = false;
+            foreach ($savingsAmounts as $amount) {
+                if (is_numeric($amount) && $amount > 0) {
+                    $hasPositiveSavings = true;
+                    break;
+                }
+            }
+            if ((empty($selectedLoans) || count($selectedLoans) === 0) && !$hasPositiveSavings) {
+                return redirect()->back()->with('error', 'Please select at least one loan or enter a positive savings amount.');
+            }
 
             // Validate loan amounts for selected loans only
             foreach ($selectedLoans as $loanAcctNo) {
