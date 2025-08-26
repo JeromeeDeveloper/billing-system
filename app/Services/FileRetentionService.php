@@ -104,15 +104,12 @@ class FileRetentionService
      */
     public function cleanupAllOldFiles(): array
     {
-        $documentTypes = [
-            'Installment File',
-            'Savings',
-            'Shares',
-            'CIF',
-            'Loan',
-            'CoreID',
-            'Savings & Shares Product'
-        ];
+        // Get all unique document types from the database dynamically
+        $documentTypes = DocumentUpload::distinct()
+            ->pluck('document_type')
+            ->filter()
+            ->values()
+            ->toArray();
 
         $stats = [
             'total_deleted' => 0,
@@ -170,15 +167,12 @@ class FileRetentionService
     public function getStorageStats(): array
     {
         $stats = [];
-        $documentTypes = [
-            'Installment File',
-            'Savings',
-            'Shares',
-            'CIF',
-            'Loan',
-            'CoreID',
-            'Savings & Shares Product'
-        ];
+        // Get all unique document types from the database dynamically
+        $documentTypes = DocumentUpload::distinct()
+            ->pluck('document_type')
+            ->filter()
+            ->values()
+            ->toArray();
 
         foreach ($documentTypes as $type) {
             $files = DocumentUpload::where('document_type', $type)->get();

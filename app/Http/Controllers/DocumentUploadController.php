@@ -10,6 +10,7 @@ use App\Imports\SharesImport;
 use App\Imports\SavingsImport;
 use App\Models\DocumentUpload;
 use App\Imports\LoanForecastImport;
+use App\Imports\BranchLoanForecastImport;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
@@ -75,6 +76,28 @@ class DocumentUploadController extends Controller
         }
     }
 
+    /**
+     * Create the appropriate import class based on file type and request parameters
+     */
+    private function createImportClass($importClass, $billingPeriod, $request, $fileType)
+    {
+        // Handle branch-specific installment forecast import
+        if ($fileType === 'Installment File' && $request->input('forecast_type') === 'branch') {
+            $branchId = $request->input('branch_id');
+
+            if ($importClass === \App\Imports\LoanForecastImport::class) {
+                return new \App\Imports\BranchLoanForecastImport($billingPeriod, $branchId);
+            }
+        }
+
+        // Default case - use the original import class
+        if (in_array($fileType, ['CIF', 'Installment File', 'Savings', 'Shares', 'Loan'])) {
+            return new $importClass($billingPeriod);
+        } else {
+            return new $importClass();
+        }
+    }
+
     public function store(Request $request)
     {
         ini_set('max_execution_time', 2000);
@@ -87,6 +110,8 @@ class DocumentUploadController extends Controller
             'shares_file'    => 'nullable|file',
             'cif_file'       => 'nullable|file',
             'loan_file'      => 'nullable|file',
+            'forecast_type'  => 'nullable|in:consolidated,branch',
+            'branch_id'      => 'nullable|required_if:forecast_type,branch|exists:branches,id',
         ]);
 
         try {
@@ -166,11 +191,16 @@ class DocumentUploadController extends Controller
 
                     // Try to process the file first before storing
                     try {
-                        if (in_array($options['type'], ['CIF', 'Installment File', 'Savings', 'Shares', 'Loan'])) {
-                            $importClass = new $options['import']($billingPeriod);
-                        } else {
-                            $importClass = new $options['import']();
+                        // Debug: Check what we're creating
+                        $forecastType = $request->input('forecast_type');
+                        $branchId = $request->input('branch_id');
+
+                        if ($options['type'] === 'Installment File') {
+                            Log::info("Creating import for Installment File - forecast_type: {$forecastType}, branch_id: {$branchId}");
                         }
+
+                        $importClass = $this->createImportClass($options['import'], $billingPeriod, $request, $options['type']);
+                        Log::info("Import class created: " . get_class($importClass));
 
                         // Use different import methods based on file type with better error handling
                         if ($extension === 'csv') {
@@ -213,11 +243,18 @@ class DocumentUploadController extends Controller
                     $newFileName = time() . '-' . $file->getClientOriginalName();
                     $path = $file->storeAs('uploads/documents', $newFileName, 'public');
 
+                    // Update document type for branch-specific installment forecast
+                    $documentType = $options['type'];
+                    if ($options['type'] === 'Installment File' && $request->input('forecast_type') === 'branch') {
+                        $branch = \App\Models\Branch::find($request->input('branch_id'));
+                        $documentType = 'Branch Forecast - ' . ($branch ? $branch->name : 'Branch');
+                    }
+
                     $documentUpload = DocumentUpload::create([
-                        'document_type'  => $options['type'],
+                        'document_type'  => $documentType,
                         'filename'       => $newFileName,
                         'filepath'       => $path,
-                        'mime_type'      => $file->getClientMimeType(),
+                        'mime_type'      => $file->getMimeType(),
                         'uploaded_by'    => Auth::id(),
                         'upload_date'    => now(),
                         'billing_period' => $billingPeriod,
@@ -417,12 +454,24 @@ class DocumentUploadController extends Controller
         $user = Auth::user();
         $billingPeriod = $user->billing_period; // e.g. '2025-05'
 
-        // For admin users, check if there are any branch users in approved status
+        // For admin users, move validation to modal: always enable Upload button,
+        // but compute branch approval statuses to drive per-option disabling in the modal
+        $hasApprovedBranches = false;
+        $branchStatuses = collect();
         if ($user->role === 'admin') {
             $hasApprovedBranches = User::where('role', 'branch')
                 ->where('status', 'approved')
-                ->count() > 0;
-            $isApproved = !$hasApprovedBranches; // Upload is enabled only if NO branch users are approved
+                ->exists();
+            $branchStatuses = User::where('role', 'branch')
+                ->select('branch_id', 'status')
+                ->get()
+                ->groupBy('branch_id')
+                ->map(function ($rows) {
+                    // If any user for the branch is approved, treat branch as approved
+                    return $rows->contains(function ($r) { return $r->status === 'approved'; }) ? 'approved' : 'pending';
+                });
+            // Always allow opening Upload modal for admin; validations are in the modal UI
+            $isApproved = true;
         } else {
             // For branch users, check their own status
             $isApproved = $user->status === 'pending';
@@ -434,7 +483,7 @@ class DocumentUploadController extends Controller
             ->limit(5)
             ->get();
 
-        return view('components.admin.files.file_datatable', compact('documents', 'isApproved'));
+        return view('components.admin.files.file_datatable', compact('documents', 'isApproved', 'hasApprovedBranches', 'branchStatuses'));
     }
 
     public function index_branch()

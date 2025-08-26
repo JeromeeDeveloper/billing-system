@@ -85,23 +85,13 @@
                                         </span>
                                         File Retention
                                     </a>
-                                    @if($isApproved)
-                                        <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
-                                            data-target="#exampleModalpopover">
-                                            <span class="btn-icon-left text-primary">
-                                                <i class="fa fa-upload"></i>
-                                            </span>
-                                            Upload
-                                        </button>
-                                    @else
-                                        <button type="button" class="btn btn-rounded btn-secondary" disabled
-                                            title="File upload is currently disabled because one or more branch users have been approved.">
-                                            <span class="btn-icon-left text-secondary">
-                                                <i class="fa fa-upload"></i>
-                                            </span>
-                                            Upload (Disabled)
-                                        </button>
-                                    @endif
+                                    <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
+                                        data-target="#exampleModalpopover">
+                                        <span class="btn-icon-left text-primary">
+                                            <i class="fa fa-upload"></i>
+                                        </span>
+                                        Upload
+                                    </button>
                                 </div>
                             </div>
 
@@ -131,11 +121,47 @@
 
 
                                                 <div class="form-group">
-
                                                     <label for="file" class="font-weight-bold mb-2">📁 Installment
                                                         Forecast
                                                         File
                                                     </label>
+                                                    <div class="form-check mb-2">
+                                                        @php
+                                                            $consolidatedDisabled = isset($hasApprovedBranches) && $hasApprovedBranches;
+                                                        @endphp
+                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_consolidated" value="consolidated" {{ $consolidatedDisabled ? 'disabled' : 'checked' }}>
+                                                        <label class="form-check-label" for="forecast_consolidated">
+                                                            <strong>Consolidated</strong> - Upload for all branches
+                                                            @if($consolidatedDisabled)
+                                                                <span class="badge badge-warning ml-2">Disabled: at least one branch is approved</span>
+                                                            @endif
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_branch" value="branch" {{ $consolidatedDisabled ? '' : '' }}>
+                                                        <label class="form-check-label" for="forecast_branch">
+                                                            <strong>Per Branch</strong> - Upload for specific branch only (shows as "Branch Forecast - [Branch Name]")
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-group" id="branch_selection_group" style="display: none;">
+                                                        <label for="branch_id" class="font-weight-bold mb-2">Select Branch</label>
+                                                        <select class="form-control" id="branch_id" name="branch_id">
+                                                            <option value="">Select a branch...</option>
+                                                            @php $branches = \App\Models\Branch::orderBy('name')->get(); @endphp
+                                                            @foreach($branches as $branch)
+                                                                @php
+                                                                    $status = isset($branchStatuses) ? ($branchStatuses[$branch->id] ?? 'pending') : 'pending';
+                                                                    $disabled = $status === 'approved';
+                                                                @endphp
+                                                                <option value="{{ $branch->id }}" {{ $disabled ? 'disabled' : '' }}>
+                                                                    {{ $branch->name }} {{ $disabled ? '(Approved - disabled)' : '' }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        @if(isset($branchStatuses) && collect($branchStatuses)->contains('approved'))
+                                                            <small class="text-muted">Branches marked as Approved are disabled and cannot be selected.</small>
+                                                        @endif
+                                                    </div>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="file"
                                                             name="file" accept=".csv" required>
@@ -357,6 +383,29 @@
                     }
                 });
             });
+
+            // Handle forecast type radio button selection
+            var forecastConsolidated = document.getElementById('forecast_consolidated');
+            var forecastBranch = document.getElementById('forecast_branch');
+            var branchSelectionGroup = document.getElementById('branch_selection_group');
+            var branchSelect = document.getElementById('branch_id');
+
+            function toggleBranchSelection() {
+                if (forecastBranch.checked) {
+                    branchSelectionGroup.style.display = 'block';
+                    branchSelect.required = true;
+                } else {
+                    branchSelectionGroup.style.display = 'none';
+                    branchSelect.required = false;
+                    branchSelect.value = '';
+                }
+            }
+
+            forecastConsolidated.addEventListener('change', toggleBranchSelection);
+            forecastBranch.addEventListener('change', toggleBranchSelection);
+
+            // Initial state
+            toggleBranchSelection();
         });
     </script>
 
