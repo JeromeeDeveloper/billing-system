@@ -91,6 +91,13 @@ class SharesImport implements ToCollection, WithHeadingRow, WithChunkReading, Wi
                 continue;
             }
 
+            // Check if member has a branch assignment
+            if (!$member->branch_id) {
+                Log::warning("Shares Import - Skipped CID {$cid}: Member has no branch assignment");
+                $skipped++;
+                continue;
+            }
+
             // Create unique key for member + product code combination
             $memberProductKey = $member->id . '_' . $productCode;
 

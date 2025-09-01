@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Member;
+use App\Models\Branch;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -17,7 +18,8 @@ class CoreIdImport implements ToCollection, WithHeadingRow
         'unmatched' => 0,
         'inserted' => 0,
         'updated' => 0,
-        'removed' => 0
+        'removed' => 0,
+        'branch_not_found' => 0
     ];
 
     public function collection(Collection $rows)
@@ -34,17 +36,18 @@ class CoreIdImport implements ToCollection, WithHeadingRow
 
             // Check for different possible header names
             $cidColumn = null;
-            if (isset($firstRow['coreid'])) {
-                $cidColumn = 'coreid';
-            } elseif (isset($firstRow['customer_no'])) {
+            $branchCodeColumn = null;
+
+            // Check for Customer No column (A1)
+            if (isset($firstRow['customer_no'])) {
                 $cidColumn = 'customer_no';
+            } elseif (isset($firstRow['coreid'])) {
+                $cidColumn = 'coreid';
             } elseif (isset($firstRow['customer_no_'])) {
                 $cidColumn = 'customer_no_';
-            } elseif (isset($firstRow['customer_no'])) {
-                $cidColumn = 'customer_no';
             } else {
                 // Try to find any column that might contain the CID data
-                $possibleColumns = ['coreid', 'customer_no', 'customer_no_', 'cid', 'customer_number', 'customer_id'];
+                $possibleColumns = ['customer_no', 'coreid', 'customer_no_', 'cid', 'customer_number', 'customer_id'];
                 foreach ($possibleColumns as $column) {
                     if (isset($firstRow[$column])) {
                         $cidColumn = $column;
@@ -53,9 +56,30 @@ class CoreIdImport implements ToCollection, WithHeadingRow
                 }
 
                 if (!$cidColumn) {
-                    throw new \Exception('File must have "CoreID" or "Customer No" header in the first column. Available columns: ' . implode(', ', array_keys($firstRow->toArray())));
+                    throw new \Exception('File must have "Customer No" header in column A. Available columns: ' . implode(', ', array_keys($firstRow->toArray())));
                 }
             }
+
+            // Check for Branch Code column (B1)
+            if (isset($firstRow['branch_code'])) {
+                $branchCodeColumn = 'branch_code';
+            } elseif (isset($firstRow['branch'])) {
+                $branchCodeColumn = 'branch';
+            } elseif (isset($firstRow['branchcode'])) {
+                $branchCodeColumn = 'branchcode';
+            } else {
+                // Try to find any column that might contain the branch code data
+                $possibleBranchColumns = ['branch_code', 'branch', 'branchcode', 'branch_code_', 'branch_cd'];
+                foreach ($possibleBranchColumns as $column) {
+                    if (isset($firstRow[$column])) {
+                        $branchCodeColumn = $column;
+                        break;
+                    }
+                }
+            }
+
+            // Log the detected columns for debugging
+            Log::info("CoreID Import - Detected columns: CID='{$cidColumn}', Branch='{$branchCodeColumn}'");
 
             // Get all existing CIDs from the uploaded file
             $uploadedCids = $rows->pluck($cidColumn)->map(function($cid) {
@@ -68,6 +92,7 @@ class CoreIdImport implements ToCollection, WithHeadingRow
             // Process each row in the uploaded file
             foreach ($rows as $row) {
                 $cid = str_pad($row[$cidColumn], 9, '0', STR_PAD_LEFT);
+                $branchCode = $branchCodeColumn ? trim($row[$branchCodeColumn] ?? '') : null;
 
                 // Find member with this CID
                 $member = Member::where('cid', $cid)->first();
@@ -85,10 +110,31 @@ class CoreIdImport implements ToCollection, WithHeadingRow
                         'action' => 'updated'
                     ];
                 } else {
-                    // Insert new member with PGB tagging
+                    // For new members, check if branch exists if branch_code is provided
+                    $branchId = null;
+                    if ($branchCode) {
+                        $branch = Branch::where('code', $branchCode)->first();
+                        if ($branch) {
+                            $branchId = $branch->id;
+                        } else {
+                            // Log branch not found and skip this member
+                            Log::warning("CoreID Import - Branch with code '{$branchCode}' not found for CID: {$cid}");
+                            $this->stats['branch_not_found']++;
+                            $this->results[] = [
+                                'cid' => $cid,
+                                'status' => 'skipped',
+                                'message' => "Branch with code '{$branchCode}' not found. Please create branch manually first.",
+                                'action' => 'skipped'
+                            ];
+                            continue;
+                        }
+                    }
+
+                    // Insert new member with PGB tagging and branch_id if available
                     Member::create([
                         'cid' => $cid,
-                        'member_tagging' => 'PGB'
+                        'member_tagging' => 'PGB',
+                        'branch_id' => $branchId
                     ]);
                     $this->stats['unmatched']++;
                     $this->stats['inserted']++;
@@ -96,7 +142,7 @@ class CoreIdImport implements ToCollection, WithHeadingRow
                     $this->results[] = [
                         'cid' => $cid,
                         'status' => 'success',
-                        'message' => 'New member created with PGB tagging',
+                        'message' => $branchId ? "New member created with PGB tagging and assigned to branch '{$branchCode}'" : "New member created with PGB tagging (no branch assignment)",
                         'action' => 'inserted'
                     ];
                 }

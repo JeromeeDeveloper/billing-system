@@ -92,6 +92,12 @@ class LoanImport implements ToCollection
                 continue;
             }
 
+            // Check if member has a branch assignment
+            if (!$member->branch_id) {
+                Log::warning("Loan Import - Skipped CID {$cid}: Member has no branch assignment");
+                continue;
+            }
+
             Log::info("Processing member: {$member->fname} {$member->lname} (CID: {$cid})");
             Log::info("Regular loans count: " . count($loans['regular_loans']));
 
