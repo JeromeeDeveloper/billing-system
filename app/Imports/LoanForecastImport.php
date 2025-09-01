@@ -44,15 +44,21 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            // Cache branch - update or create
+            // Find existing branch by code (no creation/updating)
             $branchCode = $row['branch_code'];
             $branch = $this->branchCache[$branchCode] ?? null;
             if (!$branch) {
-                $branch = Branch::updateOrCreate(
-                    ['code' => $branchCode],
-                    ['name' => $row['branch_name']]
-                );
-                $this->branchCache[$branchCode] = $branch;
+                $branch = Branch::where('code', $branchCode)->first();
+                if ($branch) {
+                    $this->branchCache[$branchCode] = $branch;
+                }
+            }
+
+            // Skip if branch doesn't exist (branches must be manually created first)
+            if (!$branch) {
+                Log::info("LoanForecast Import - Skipped CID {$row['cid']}: Branch with code '{$branchCode}' not found. Please create branch manually first.");
+                $this->stats['not_found']++;
+                continue;
             }
 
             // Parse name - Format as "Lastname, Firstname"

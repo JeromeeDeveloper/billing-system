@@ -412,7 +412,6 @@
                   <li><strong>All users will be moved to the next billing period</strong></li>
                   <li><strong>This action cannot be undone</strong></li>
                   <li><strong>Late remittances or unfinished tasks will be <span class="text-danger">locked out</span></strong></li>
-                  <li><strong>All branch users will be set to 'pending' status</strong></li>
                 </ul>
               </div>
 
@@ -439,7 +438,7 @@
                     // Get current and next billing period for display
                     var currentPeriod = '{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->format("F Y") : "Not Set" }}';
                     var nextPeriod = '{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->addMonth()->format("F Y") : "Not Set" }}';
-                    
+
                     // Show loading state
                     confirmBtn.disabled = true;
                     confirmBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
