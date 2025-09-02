@@ -190,14 +190,16 @@ class BranchRemittanceController extends Controller
                 })
                 ->where('billing_period', $currentBillingPeriod)
                 ->where('remittance_type', 'loans_savings')
-                ->count(),
+                ->distinct('emp_id')
+                ->count('emp_id'),
                 'matched_records' => RemittancePreview::whereHas('member', function($query) use ($branch_id) {
                     $query->where('branch_id', $branch_id);
                 })
                 ->where('billing_period', $currentBillingPeriod)
                 ->where('remittance_type', 'loans_savings')
                 ->where('status', 'success')
-                ->count(),
+                ->distinct('emp_id')
+                ->count('emp_id'),
                 'latest_batch' => $latestBatches->get('regular')?->first() ?? $latestBatches->get('special')?->first(),
                 'available_types' => $latestBatches->keys()->filter(function($type) {
                     return in_array($type, ['regular', 'special']);
@@ -209,14 +211,16 @@ class BranchRemittanceController extends Controller
                 })
                 ->where('billing_period', $currentBillingPeriod)
                 ->where('remittance_type', 'shares')
-                ->count(),
+                ->distinct('emp_id')
+                ->count('emp_id'),
                 'matched_records' => RemittancePreview::whereHas('member', function($query) use ($branch_id) {
                     $query->where('branch_id', $branch_id);
                 })
                 ->where('billing_period', $currentBillingPeriod)
                 ->where('remittance_type', 'shares')
                 ->where('status', 'success')
-                ->count(),
+                ->distinct('emp_id')
+                ->count('emp_id'),
                 'latest_batch' => $latestBatches->get('shares')?->first(),
                 'available_types' => $latestBatches->keys()->filter(function($type) {
                     return $type === 'shares';
@@ -526,9 +530,8 @@ class BranchRemittanceController extends Controller
         ->where('remittance_type', 'shares')
         ->get();
 
-        // Mark exports as generated for both loans_savings and shares since this export uses both
-        ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id());
-        ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id());
+        // Do not mark collection exports as generated when exporting this report
+        // This prevents disabling the collection export buttons unintentionally
 
         return \Maatwebsite\Excel\Facades\Excel::download(
             new RegularSpecialRemittanceExport($regularRemittances, $specialRemittances, $currentBillingPeriod, $loansSavingsPreviewPaginated, $sharesPreviewPaginated, true, $branch_id),
@@ -541,11 +544,8 @@ class BranchRemittanceController extends Controller
         $billingPeriod = Auth::user()->billing_period;
         $branchId = Auth::user()->branch_id;
 
-        // Mark exports as generated for all types since consolidated export uses all data
-        ExportStatus::markExported($billingPeriod, 'loans_savings', Auth::id());
-        ExportStatus::markExported($billingPeriod, 'loans_savings_with_product', Auth::id());
-        ExportStatus::markExported($billingPeriod, 'shares', Auth::id());
-        ExportStatus::markExported($billingPeriod, 'shares_with_product', Auth::id());
+        // Do not mark collection exports as generated when exporting consolidated report
+        // This prevents disabling the collection export buttons unintentionally
 
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\BranchConsolidatedRemittanceReportExport($billingPeriod, $branchId),

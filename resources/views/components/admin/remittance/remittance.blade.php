@@ -457,31 +457,9 @@
                                     </div>
                                 </div>
 
-                                <!-- Modernized Remittance Upload Section (Installment Forecast on top, others below) -->
+                                <!-- Modernized Remittance Upload Section (Forecast moved into forms below) -->
                                 <div class="row g-4 mb-4">
-                                    <div class="col-12 mb-3">
-                                        <div class="card shadow-sm h-100">
-                                            <div class="card-header bg-primary text-white">
-                                                <i class="fa fa-upload me-2"></i>Installment Forecast Upload
-                                            </div>
-                                            <div class="card-body">
-                                                <form action="{{ route('document.upload') }}" method="POST"
-                                                    enctype="multipart/form-data" id="installmentForm">
-                                                    @csrf
-                                                    <div class="mb-3">
-                                                        <label for="remit_installment_file" class="form-label">Select
-                                                            File</label>
-                                                        <input type="file" class="form-control"
-                                                            id="remit_installment_file" name="file" accept=".xlsx,.xls,.csv">
-                                                    </div>
-                                                    <button type="submit" class="btn btn-primary w-100"
-                                                        id="installmentSubmitBtn">
-                                                        <i class="fa fa-upload me-1"></i> Upload Installment File
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
+
                                     <div class="col-12 col-lg-6">
                                         <div class="card shadow-sm h-100">
                                             <div class="card-header bg-success text-white">
@@ -492,9 +470,14 @@
                                                     enctype="multipart/form-data" id="loansSavingsForm">
                                                     @csrf
                                                     <div class="mb-3">
-                                                        <label class="form-label">Select File</label>
+                                                        <label class="form-label">Loans & Savings File</label>
                                                         <input type="file" class="form-control" name="file"
                                                             id="file" accept=".xlsx,.xls,.csv" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Installment Forecast File</label>
+                                                        <input type="file" class="form-control" name="forecast_file" id="forecast_file" accept=".xlsx,.xls,.csv" required>
+                                                        <small class="text-muted">Required. Upload the corresponding installment forecast for this period.</small>
                                                     </div>
                                                     <input type="hidden" name="billing_type" id="billingTypeInput"
                                                         value="regular">
@@ -538,7 +521,7 @@
                                                     <a href="javascript:void(0);"
                                                         class="btn btn-primary btn-block mt-2 {{ !$loansSavingsEnabled ? 'disabled' : '' }}"
                                                         onclick="{{ $loansSavingsEnabled ? 'generateExport(\'loans_savings\')' : 'void(0)' }}">
-                                                        Collection file for Loans & Savings
+                                                        Generate Batch for Import
                                                         @if (!$loansSavingsEnabled)
                                                             <br><small class="text-muted">(Disabled - Upload new
                                                                 remittance to enable)</small>
@@ -567,10 +550,11 @@
                                                     enctype="multipart/form-data" id="shareForm">
                                                     @csrf
                                                     <div class="mb-3">
-                                                        <label class="form-label">Select File</label>
+                                                        <label class="form-label">Shares File</label>
                                                         <input type="file" class="form-control" name="file"
                                                             id="shareFile" accept=".xlsx,.xls,.csv">
                                                     </div>
+
                                                     <div class="mb-3">
                                                         <small class="text-muted">Excel format (.xlsx, .xls, .csv).
                                                             Required headers: CID, Name (LASTNAME, FIRSTNAME), Share
@@ -611,7 +595,7 @@
                                                     <a href="javascript:void(0);"
                                                         class="btn btn-primary btn-block mt-2 {{ !$sharesEnabled ? 'disabled' : '' }}"
                                                         onclick="{{ $sharesEnabled ? 'generateExport(\'shares\')' : 'void(0)' }}">
-                                                        Collection file for Shares
+                                                        Generate Batch for Import
                                                         @if (!$sharesEnabled)
                                                             <br><small class="text-muted">(Disabled - Upload new shares
                                                                 to enable)</small>

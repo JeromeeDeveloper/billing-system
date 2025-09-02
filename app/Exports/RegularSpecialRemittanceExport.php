@@ -75,7 +75,7 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
     public function headings(): array
     {
         return [
-            ['Member Name', 'Type', 'Remitted Loans', 'Remitted Savings', 'Remitted Shares', 'Total Remitted', 'Total Billed', 'Remaining Balance']
+            ['Member Name', 'CID', 'Type', 'Remitted Loans', 'Remitted Savings', 'Remitted Shares', 'Total Remitted', 'Total Billed', 'Remaining Balance']
         ];
     }
 
@@ -105,6 +105,7 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
 
             $rows[] = [
                 $data['member_name'],
+                $data['cid'] ?? '',
                 ucfirst($data['billing_type']),
                 $data['remitted_loans'],
                 $data['remitted_savings'],
@@ -118,6 +119,7 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
         // Totals row
         $rows[] = [
             'Total',
+            '',
             '',
             $totalRemittedLoans,
             $totalRemittedSavings,
@@ -173,6 +175,7 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
                 $consolidatedData[$memberId] = [
                     'member_id' => $memberId,
                     'member_name' => $memberName,
+                    'cid' => isset($member) && $member ? $member->cid : (is_object($remit) && isset($remit->billing_type) ? $memberId : (\App\Models\Member::find($memberId)->cid ?? '')),
                     'billing_type' => 'regular',
                     'remitted_loans' => $remittedAmount,
                     'remitted_savings' => $remittedSavings,
@@ -223,6 +226,7 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
                 $consolidatedData[$memberId] = [
                     'member_id' => $memberId,
                     'member_name' => $memberName,
+                    'cid' => isset($member) && $member ? $member->cid : (is_object($remit) && isset($remit->billing_type) ? $memberId : (\App\Models\Member::find($memberId)->cid ?? '')),
                     'billing_type' => 'special',
                     'remitted_loans' => $remittedAmount,
                     'remitted_savings' => $remittedSavings,
@@ -271,6 +275,7 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
                     $consolidatedData[$memberId] = [
                         'member_id' => $memberId,
                         'member_name' => $name,
+                        'cid' => (\App\Models\Member::find($memberId)->cid ?? ''),
                         'billing_type' => 'preview',
                         'remitted_loans' => $loans,
                         'remitted_savings' => $savingsAmount,
@@ -303,6 +308,7 @@ class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, With
                     $consolidatedData[$memberId] = [
                         'member_id' => $memberId,
                         'member_name' => $name,
+                        'cid' => (\App\Models\Member::find($memberId)->cid ?? ''),
                         'billing_type' => 'preview',
                         'remitted_loans' => 0,
                         'remitted_savings' => 0,

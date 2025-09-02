@@ -380,7 +380,11 @@ class RemittanceController extends Controller
 
             // Store new preview data and accumulate remitted values
             $hasUnmatched = false;
+            $matchedCount = 0;
+            $unmatchedCount = 0;
+
             foreach ($results as $result) {
+                // Always store in preview (both matched and unmatched)
                 RemittancePreview::create([
                     'user_id' => Auth::id(),
                     'emp_id' => $result['cid'],
@@ -399,10 +403,17 @@ class RemittanceController extends Controller
                     'remittance_type' => $remittanceType2,
                     'billing_type' => $billingType
                 ]);
+
                 if ($result['status'] !== 'success') {
                     $hasUnmatched = true;
+                    $unmatchedCount++;
+                    // Skip unmatched members - don't store in remittance_reports
+                    continue;
                 }
-                // Accumulate remitted values in remittance_reports
+
+                $matchedCount++;
+
+                // Only accumulate remitted values for MATCHED members in remittance_reports
                 $report = RemittanceReport::firstOrNew([
                     'cid' => $result['cid'],
                     'period' => $currentBillingPeriod,
@@ -410,7 +421,7 @@ class RemittanceController extends Controller
                 $report->member_name = $result['name'];
                 $report->remitted_loans += $result['loans'];
 
-                                // Calculate total savings including excess amounts from loans only
+                // Calculate total savings including excess amounts from loans only
                 $totalSavings = $result['savings_total'] ?? 0;
 
                 // Check if there are excess amounts from loans that went to regular savings
@@ -429,10 +440,9 @@ class RemittanceController extends Controller
                 $report->remitted_savings += $totalSavings;
                 $report->save();
             }
-            if ($hasUnmatched) {
-                DB::rollBack();
-                return redirect()->route('remittance.index')->with('error', 'Import failed: There are unmatched CIDs in your file. Please review the preview and correct unmatched entries before importing.');
-            }
+
+            // Don't rollback - allow import to complete with both matched and unmatched
+            // Unmatched members won't be in remittance_reports, so they won't appear in collection exports
 
             // Increment the upload count for this billing type
             RemittanceUploadCount::incrementCount($currentBillingPeriod, $billingType);
@@ -451,8 +461,16 @@ class RemittanceController extends Controller
 
             DB::commit();
 
+            // Prepare success message with counts
+            $successMessage = "File processed successfully! ";
+            $successMessage .= "Matched: {$matchedCount} members, ";
+            if ($unmatchedCount > 0) {
+                $successMessage .= "Unmatched: {$unmatchedCount} members (excluded from collection exports). ";
+            }
+            $successMessage .= "Check the preview below.";
+
             return redirect()->route('remittance.index')
-                ->with('success', 'File processed successfully. Check the preview below.');
+                ->with('success', $successMessage);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -466,6 +484,7 @@ class RemittanceController extends Controller
         ini_set('max_execution_time', 2000);
         $request->validate([
             'file' => 'required|file|max:10240', // max 10MB
+            'forecast_file' => 'required|file|max:10240',
         ]);
 
         $remittanceType = 'shares';
@@ -490,7 +509,11 @@ class RemittanceController extends Controller
                 ->delete();
 
             // Store new preview data and accumulate remitted shares
+            $matchedCount = 0;
+            $unmatchedCount = 0;
+
             foreach ($results as $result) {
+                // Always store in preview (both matched and unmatched)
                 RemittancePreview::create([
                     'user_id' => Auth::id(),
                     'emp_id' => $result['cid'],
@@ -506,7 +529,15 @@ class RemittanceController extends Controller
                     'remittance_type' => $remittanceType
                 ]);
 
-                // Accumulate remitted shares in remittance_reports
+                if ($result['status'] !== 'success') {
+                    $unmatchedCount++;
+                    // Skip unmatched members - don't store in remittance_reports
+                    continue;
+                }
+
+                $matchedCount++;
+
+                // Only accumulate remitted shares for MATCHED members in remittance_reports
                 $report = RemittanceReport::firstOrNew([
                     'cid' => $result['cid'],
                     'period' => $currentBillingPeriod,
@@ -533,8 +564,16 @@ class RemittanceController extends Controller
 
             DB::commit();
 
+            // Prepare success message with counts
+            $successMessage = "Share remittance file processed successfully! ";
+            $successMessage .= "Matched: {$matchedCount} members, ";
+            if ($unmatchedCount > 0) {
+                $successMessage .= "Unmatched: {$unmatchedCount} members (excluded from collection exports). ";
+            }
+            $successMessage .= "Check the preview below.";
+
             return redirect()->route('remittance.index')
-                ->with('success', 'Share remittance file processed successfully. Check the preview below.');
+                ->with('success', $successMessage);
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
