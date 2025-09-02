@@ -780,22 +780,6 @@
                 $(this).next('.custom-file-label').html(fileName);
             });
 
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert').fadeOut('slow');
-            }, 25000);
-
-            // Show floating toast on page load for consolidated table
-            Swal.fire({
-                toast: true,
-                position: 'bottom-end',
-                icon: 'success',
-                title: 'Consolidated Remittance View',
-                text: 'All remittance data is now consolidated in one table with filters.',
-                showConfirmButton: false,
-                timer: 8000,
-                timerProgressBar: true
-            });
         });
 
         function showExportLoading(type) {
