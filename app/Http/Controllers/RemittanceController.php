@@ -413,31 +413,24 @@ class RemittanceController extends Controller
 
                 $matchedCount++;
 
-                // Only accumulate remitted values for MATCHED members in remittance_reports
+                // Get the remittance tag from the import
+                $remittanceTag = $import->getRemittanceTag();
+
+                // Create or update remittance report with per-remittance tracking
                 $report = RemittanceReport::firstOrNew([
                     'cid' => $result['cid'],
                     'period' => $currentBillingPeriod,
+                    'remittance_tag' => $remittanceTag,
+                    'remittance_type' => 'loans_savings',
                 ]);
                 $report->member_name = $result['name'];
-                $report->remitted_loans += $result['loans'];
+                $report->remitted_loans = $result['loans']; // Use actual amount, don't accumulate
+                $report->remitted_savings = $result['savings_total'] ?? 0; // Use actual amount, don't accumulate
+                $report->remitted_shares = 0; // Shares are handled separately
 
-                // Calculate total savings including excess amounts from loans only
-                $totalSavings = $result['savings_total'] ?? 0;
+                // Use billed amount from import result
+                $report->billed_amount = $result['billed_amount'] ?? 0;
 
-                // Check if there are excess amounts from loans that went to regular savings
-                if (isset($result['savings_distribution']) && is_array($result['savings_distribution'])) {
-                    foreach ($result['savings_distribution'] as $distribution) {
-                        // Only add excess amounts that come from loans (not from savings)
-                        if (isset($distribution['is_remaining']) && $distribution['is_remaining']) {
-                            // Only add if this excess came from loan processing
-                            if (isset($distribution['source']) && $distribution['source'] === 'loan_excess') {
-                                $totalSavings += $distribution['amount'];
-                            }
-                        }
-                    }
-                }
-
-                $report->remitted_savings += $totalSavings;
                 $report->save();
             }
 
@@ -537,13 +530,21 @@ class RemittanceController extends Controller
 
                 $matchedCount++;
 
-                // Only accumulate remitted shares for MATCHED members in remittance_reports
+                // Get the remittance tag from the import
+                $remittanceTag = $import->getRemittanceTag();
+
+                // Create or update remittance report for shares with per-remittance tracking
                 $report = RemittanceReport::firstOrNew([
                     'cid' => $result['cid'],
                     'period' => $currentBillingPeriod,
+                    'remittance_tag' => $remittanceTag,
+                    'remittance_type' => 'shares',
                 ]);
                 $report->member_name = $result['name'];
-                $report->remitted_shares += $result['share'];
+                $report->remitted_loans = 0; // Shares don't have loans
+                $report->remitted_savings = 0; // Shares don't have savings
+                $report->remitted_shares = $result['share']; // Use actual amount, don't accumulate
+                $report->billed_amount = 0; // Shares don't have billed amounts
                 $report->save();
             }
 
@@ -898,6 +899,16 @@ class RemittanceController extends Controller
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\ConsolidatedRemittanceReportExport($billingPeriod, $userId),
             'Consolidated_Remittance_Report_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittance()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceReportExport($billingPeriod, false, null),
+            'Per_Remittance_Report_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
         );
     }
 

@@ -101,7 +101,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             'cid' => $cid,
             'name' => $member ? trim(($member->fname ?? '') . ' ' . ($member->lname ?? '')) : '',
             'member_id' => $member ? $member->id : null,
-            'loans' => $loans,
+            'loans' => $loans, // This will be updated to actualLoansPaid after processing
             'savings_total' => $savingsTotal,
             'status' => 'error',
             'message' => '',
@@ -185,6 +185,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 // Process loan payments and deductions
                 if ($loans > 0) {
                     $remainingPayment = $loans;
+                    $actualLoansPaid = 0; // Track how much actually went to loans
 
                     // Reset total_due_after_remittance to 0 for all forecasts
                     // This ensures we start fresh when re-uploading
@@ -277,6 +278,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             $deductedInterest = $deduct;
                             $interestDue -= $deduct;
                             $remainingPayment -= $deduct;
+                            $actualLoansPaid += $deduct;
                         }
                         // Then deduct from principal_due
                         if ($remainingPayment > 0 && $principalDue > 0) {
@@ -284,6 +286,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             $deductedPrincipal = $deduct;
                             $principalDue -= $deduct;
                             $remainingPayment -= $deduct;
+                            $actualLoansPaid += $deduct;
                         }
 
                         // Update the forecast in the database
@@ -378,6 +381,20 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                     }
                 }
 
+                // Update the loans amount to reflect only what actually went to loans (exclude excess)
+                if ($loans > 0) {
+                    $result['loans'] = $actualLoansPaid;
+                }
+
+                // Calculate billed amount from loan forecasts for this member and billing type
+                $billedAmount = 0;
+                if ($member) {
+                    $billedAmount = $member->loanForecasts()
+                        ->where('billing_type', $this->billingType)
+                        ->sum('total_due');
+                }
+                $result['billed_amount'] = $billedAmount;
+
                 // Always include distributionDetails in the result for export
                 $result['savings_distribution'] = $distributionDetails;
 
@@ -448,5 +465,10 @@ class RemittanceImport implements ToCollection, WithHeadingRow
     public function getStats()
     {
         return $this->stats;
+    }
+
+    public function getRemittanceTag()
+    {
+        return $this->remittance_tag;
     }
 }

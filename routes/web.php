@@ -181,6 +181,7 @@ Route::get('admin/remittance/export-preview', [\App\Http\Controllers\RemittanceC
 Route::get('admin/remittance/export-comparison', [\App\Http\Controllers\RemittanceController::class, 'exportComparison'])->name('remittance.exportComparison');
 Route::get('admin/remittance/export-regular-special', [App\Http\Controllers\RemittanceController::class, 'exportRegularSpecial'])->name('remittance.exportRegularSpecial');
 Route::get('admin/remittance/export-consolidated', [App\Http\Controllers\RemittanceController::class, 'exportConsolidated'])->name('remittance.exportConsolidated');
+Route::get('admin/remittance/export-per-remittance', [App\Http\Controllers\RemittanceController::class, 'exportPerRemittance'])->name('remittance.exportPerRemittance');
 
 
 Route::get('/admin/contra', [App\Http\Controllers\ContraController::class, 'showAdmin'])->name('admin.contra');

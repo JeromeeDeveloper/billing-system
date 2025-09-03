@@ -18,6 +18,9 @@ class RemittanceReport extends Model
         'remitted_savings',
         'remitted_shares',
         'period',
+        'remittance_tag',
+        'remittance_type',
+        'billed_amount',
     ];
 
     public function member()

@@ -21,6 +21,7 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
         'total_amount' => 0
     ];
     protected $billingPeriod;
+    protected $remittance_tag;
 
     public function __construct($billingPeriod = null)
     {
@@ -35,12 +36,12 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
 
         // Use RemittanceBatch to determine next remittance_tag for this billing period
         $maxTag = RemittanceBatch::where('billing_period', $this->billingPeriod)->max('remittance_tag');
-        $remittance_tag = $maxTag ? $maxTag + 1 : 1;
+        $this->remittance_tag = $maxTag ? $maxTag + 1 : 1;
 
         // Insert new batch row for shares
         RemittanceBatch::create([
             'billing_period' => $this->billingPeriod,
-            'remittance_tag' => $remittance_tag,
+            'remittance_tag' => $this->remittance_tag,
             'imported_at' => $imported_at,
             'billing_type' => 'shares',
         ]);
@@ -135,6 +136,20 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
                     $result['message'] = "Created new share record for member: {$member->fname} {$member->lname}";
                 }
 
+                // Create or update remittance report for shares
+                $report = \App\Models\RemittanceReport::firstOrNew([
+                    'cid' => $result['cid'],
+                    'period' => $this->billingPeriod,
+                    'remittance_tag' => $this->remittance_tag,
+                    'remittance_type' => 'shares',
+                ]);
+                $report->member_name = $result['name'];
+                $report->remitted_loans = 0; // Shares don't have loans
+                $report->remitted_savings = 0; // Shares don't have savings
+                $report->remitted_shares = $share;
+                $report->billed_amount = 0; // Shares don't have billed amounts like loans
+                $report->save();
+
                 DB::commit();
                 $result['status'] = 'success';
             } catch (\Exception $e) {
@@ -164,5 +179,10 @@ class ShareRemittanceImport implements ToCollection, WithHeadingRow
     public function getStats()
     {
         return $this->stats;
+    }
+
+    public function getRemittanceTag()
+    {
+        return $this->remittance_tag;
     }
 }
