@@ -4,6 +4,8 @@ namespace App\Exports;
 
 use App\Models\RemittanceReport;
 use App\Models\RemittanceBatch;
+use App\Models\LoanForecast;
+use App\Models\Member;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
@@ -18,217 +20,233 @@ use Illuminate\Support\Collection;
 
 class PerRemittanceReportExport implements FromArray, WithHeadings, WithTitle, WithStyles
 {
-    protected $billingPeriod;
-    protected $isBranch;
-    protected $branchId;
+	protected $billingPeriod;
+	protected $isBranch;
+	protected $branchId;
 
-    public function __construct($billingPeriod, $isBranch = false, $branchId = null)
-    {
-        $this->billingPeriod = $billingPeriod;
-        $this->isBranch = $isBranch;
-        $this->branchId = $branchId;
-    }
+	public function __construct($billingPeriod, $isBranch = false, $branchId = null)
+	{
+		$this->billingPeriod = $billingPeriod;
+		$this->isBranch = $isBranch;
+		$this->branchId = $branchId;
+	}
 
-    public function title(): string
-    {
-        return $this->isBranch ? 'Branch Per-Remittance Report' : 'Admin Per-Remittance Report';
-    }
+	public function title(): string
+	{
+		return $this->isBranch ? 'Branch Per-Remittance Report' : 'Admin Per-Remittance Report';
+	}
 
-    public function headings(): array
-    {
-        // We don't need headings here since we'll add them in the array() method
-        return [];
-    }
+	public function headings(): array
+	{
+		// We don't need headings here since we'll add them in the array() method
+		return [];
+	}
 
-    public function array(): array
-    {
-        // Get all remittance tags for this billing period
-        $remittanceTags = RemittanceBatch::where('billing_period', $this->billingPeriod)
-            ->orderBy('remittance_tag')
-            ->pluck('remittance_tag')
-            ->toArray();
+	public function array(): array
+	{
+		// Get billing type for this billing period (Regular/Special)
+		$billingType = RemittanceBatch::where('billing_period', $this->billingPeriod)
+			->value('billing_type') ?? 'Regular';
 
-        $maxTags = count($remittanceTags);
+		// Get all remittance tags for this billing period
+		$remittanceTags = RemittanceBatch::where('billing_period', $this->billingPeriod)
+			->orderBy('remittance_tag')
+			->pluck('remittance_tag')
+			->toArray();
 
-        // Get all members with remittance data
-        $query = RemittanceReport::where('period', $this->billingPeriod);
+		$maxTags = count($remittanceTags);
 
-        if ($this->isBranch && $this->branchId) {
-            $query->whereHas('member', function($q) {
-                $q->where('branch_id', $this->branchId);
-            });
-        }
+		// Get all members with remittance data
+		$query = RemittanceReport::where('period', $this->billingPeriod);
 
-        $reports = $query->get();
+		if ($this->isBranch && $this->branchId) {
+			$query->whereHas('member', function($q) {
+				$q->where('branch_id', $this->branchId);
+			});
+		}
 
-        // Group by CID
-        $groupedData = $reports->groupBy('cid');
+		$reports = $query->get();
 
-        $rows = [];
+		// Group by CID
+		$groupedData = $reports->groupBy('cid');
 
-        // Add first section header: Summary
-        $summaryHeaders = ['CID', 'Member Name', 'Type', 'Remitted Loans', 'Remitted Savings', 'Remitted Shares', 'Total Remitted'];
-        $rows[] = $summaryHeaders;
+		$rows = [];
 
-                // Add summary data for all members (only if they have non-zero values)
-        foreach ($groupedData as $cid => $memberReports) {
-            $memberName = $memberReports->first()->member_name ?? '';
+		// Add first section header: Summary
+		$summaryHeaders = ['CID', 'Member Name', 'Type', 'Remitted Loans', 'Remitted Savings', 'Remitted Shares', 'Total Remitted'];
+		$rows[] = $summaryHeaders;
 
-            $totalLoans = $memberReports->where('remittance_type', 'loans_savings')->sum('remitted_loans');
-            $totalSavings = $memberReports->where('remittance_type', 'loans_savings')->sum('remitted_savings');
-            $totalShares = $memberReports->where('remittance_type', 'shares')->sum('remitted_shares');
-            $totalRemitted = $totalLoans + $totalSavings + $totalShares;
+		// Add summary data for all members (only if they have non-zero values)
+		foreach ($groupedData as $cid => $memberReports) {
+			$memberName = $memberReports->first()->member_name ?? '';
 
-            // Only include member if they have non-zero values
-            if ($totalRemitted > 0) {
-                $summaryRow = [
-                    $cid,
-                    $memberName,
-                    'Total',
-                    $totalLoans,
-                    $totalSavings,
-                    $totalShares,
-                    $totalRemitted
-                ];
-                $rows[] = $summaryRow;
-            }
-        }
+			$totalLoans = $memberReports->where('remittance_type', 'loans_savings')->sum('remitted_loans');
+			$totalSavings = $memberReports->where('remittance_type', 'loans_savings')->sum('remitted_savings');
+			$totalShares = $memberReports->where('remittance_type', 'shares')->sum('remitted_shares');
+			$totalRemitted = $totalLoans + $totalSavings + $totalShares;
 
-        // Add empty row for spacing
-        $rows[] = array_fill(0, 7, '');
+			// Only include member if they have non-zero values
+			if ($totalRemitted > 0) {
+				$summaryRow = [
+					$cid,
+					$memberName,
+					$billingType,
+					$totalLoans,
+					$totalSavings,
+					$totalShares,
+					$totalRemitted
+				];
+				$rows[] = $summaryRow;
+			}
+		}
 
-        // Add second section header: Loans breakdown
-        $loansHeaders = ['CID', 'Member Name', 'Type', 'Billed Amount'];
-        for ($i = 1; $i <= $maxTags; $i++) {
-            $loansHeaders[] = "Remittance Loans {$i}";
-        }
-        $loansHeaders[] = 'Running Balance';
-        $rows[] = $loansHeaders;
+		// Add empty row for spacing
+		$rows[] = array_fill(0, 7, '');
 
-                        // Add loans data for all members (only if they have non-zero loan values)
-        foreach ($groupedData as $cid => $memberReports) {
-            $memberName = $memberReports->first()->member_name ?? '';
+		// Add second section header: Loans breakdown
+		$loansHeaders = ['CID', 'Member Name', 'Type', 'Billed Amount'];
+		for ($i = 1; $i <= $maxTags; $i++) {
+			$loansHeaders[] = "Remittance Loans {$i}";
+		}
+		$loansHeaders[] = 'Running Balance';
+		$rows[] = $loansHeaders;
 
-            $totalLoans = $memberReports->where('remittance_type', 'loans_savings')->sum('remitted_loans');
+		// Add loans data for all members (only if they have non-zero loan values)
+		foreach ($groupedData as $cid => $memberReports) {
+			$memberName = $memberReports->first()->member_name ?? '';
 
-            // Only include member if they have non-zero loan values
-            if ($totalLoans > 0) {
-                $loansRow = [
-                    $cid,
-                    $memberName,
-                    'Loans',
-                    $memberReports->where('remittance_type', 'loans_savings')->sum('billed_amount')
-                ];
+			$totalLoans = $memberReports->where('remittance_type', 'loans_savings')->sum('remitted_loans');
 
-                $totalLoansPaid = 0;
-                foreach ($remittanceTags as $tag) {
-                    $loanAmount = $memberReports->where('remittance_tag', $tag)->where('remittance_type', 'loans_savings')->first()->remitted_loans ?? 0;
-                    $loansRow[] = $loanAmount;
-                    $totalLoansPaid += $loanAmount;
-                }
+			// Only include member if they have non-zero loan values
+			if ($totalLoans > 0) {
+				// billed amount = original_total_due for this period via member relationship
+				$billedAmount = 0;
+				$member = Member::where('cid', $cid)->first();
+				if ($member) {
+					$origPrincipal = (float) $member->loanForecasts()
+						->where('billing_period', $this->billingPeriod)
+						->sum('original_principal_due');
+					$origInterest = (float) $member->loanForecasts()
+						->where('billing_period', $this->billingPeriod)
+						->sum('original_interest_due');
+					$billedAmount = $origPrincipal + $origInterest;
+				}
 
-                $billedAmount = $memberReports->where('remittance_type', 'loans_savings')->sum('billed_amount');
-                $runningBalance = $billedAmount - $totalLoansPaid;
-                $loansRow[] = $runningBalance;
-                $rows[] = $loansRow;
-            }
-        }
+				$loansRow = [
+					$cid,
+					$memberName,
+					$billingType,
+					$billedAmount
+				];
 
-        // Add empty row for spacing
-        $rows[] = array_fill(0, 4 + $maxTags, '');
+				$totalLoansPaid = 0;
+				foreach ($remittanceTags as $tag) {
+					$loanAmount = $memberReports->where('remittance_tag', $tag)->where('remittance_type', 'loans_savings')->first()->remitted_loans ?? 0;
+					$loansRow[] = $loanAmount;
+					$totalLoansPaid += $loanAmount;
+				}
 
-        // Add third section header: Savings breakdown
-        $savingsHeaders = ['CID', 'Member Name', 'Type'];
-        for ($i = 1; $i <= $maxTags; $i++) {
-            $savingsHeaders[] = "Remittance Savings {$i}";
-        }
-        $savingsHeaders[] = 'Total Remittance on Savings';
-        $rows[] = $savingsHeaders;
+				$runningBalance = $billedAmount - $totalLoansPaid;
+				$loansRow[] = $runningBalance;
+				$rows[] = $loansRow;
+			}
+		}
 
-                        // Add savings data for all members (only if they have non-zero savings values)
-        foreach ($groupedData as $cid => $memberReports) {
-            $memberName = $memberReports->first()->member_name ?? '';
+		// Add empty row for spacing
+		$rows[] = array_fill(0, 4 + $maxTags, '');
 
-            $totalSavings = $memberReports->where('remittance_type', 'loans_savings')->sum('remitted_savings');
+		// Add third section header: Savings breakdown
+		$savingsHeaders = ['CID', 'Member Name', 'Type'];
+		for ($i = 1; $i <= $maxTags; $i++) {
+			$savingsHeaders[] = "Remittance Savings {$i}";
+		}
+		$savingsHeaders[] = 'Total Remittance on Savings';
+		$rows[] = $savingsHeaders;
 
-            // Only include member if they have non-zero savings values
-            if ($totalSavings > 0) {
-                $savingsRow = [
-                    $cid,
-                    $memberName,
-                    'Savings'
-                ];
+		// Add savings data for all members (only if they have non-zero savings values)
+		foreach ($groupedData as $cid => $memberReports) {
+			$memberName = $memberReports->first()->member_name ?? '';
 
-                $totalSavingsPaid = 0;
-                foreach ($remittanceTags as $tag) {
-                    $savingsAmount = $memberReports->where('remittance_tag', $tag)->where('remittance_type', 'loans_savings')->first()->remitted_savings ?? 0;
-                    $savingsRow[] = $savingsAmount;
-                    $totalSavingsPaid += $savingsAmount;
-                }
-                $savingsRow[] = $totalSavingsPaid;
-                $rows[] = $savingsRow;
-            }
-        }
+			$totalSavings = $memberReports->where('remittance_type', 'loans_savings')->sum('remitted_savings');
 
-        // Add empty row for spacing
-        $rows[] = array_fill(0, 3 + $maxTags, '');
+			// Only include member if they have non-zero savings values
+			if ($totalSavings > 0) {
+				$savingsRow = [
+					$cid,
+					$memberName,
+					$billingType
+				];
 
-        // Add fourth section header: Shares breakdown
-        $sharesHeaders = ['CID', 'Member Name', 'Type'];
-        for ($i = 1; $i <= $maxTags; $i++) {
-            $sharesHeaders[] = "Remittance Share {$i}";
-        }
-        $sharesHeaders[] = 'Total Remittance on Share';
-        $rows[] = $sharesHeaders;
+				$totalSavingsPaid = 0;
+				foreach ($remittanceTags as $tag) {
+					$savingsAmount = $memberReports->where('remittance_tag', $tag)->where('remittance_type', 'loans_savings')->first()->remitted_savings ?? 0;
+					$savingsRow[] = $savingsAmount;
+					$totalSavingsPaid += $savingsAmount;
+				}
+				$savingsRow[] = $totalSavingsPaid;
+				$rows[] = $savingsRow;
+			}
+		}
 
-                        // Add shares data for all members (only if they have non-zero shares values)
-        foreach ($groupedData as $cid => $memberReports) {
-            $memberName = $memberReports->first()->member_name ?? '';
+		// Add empty row for spacing
+		$rows[] = array_fill(0, 3 + $maxTags, '');
 
-            $totalShares = $memberReports->where('remittance_type', 'shares')->sum('remitted_shares');
+		// Add fourth section header: Shares breakdown
+		$sharesHeaders = ['CID', 'Member Name', 'Type'];
+		for ($i = 1; $i <= $maxTags; $i++) {
+			$sharesHeaders[] = "Remittance Share {$i}";
+		}
+		$sharesHeaders[] = 'Total Remittance on Share';
+		$rows[] = $sharesHeaders;
 
-            // Only include member if they have non-zero shares values
-            if ($totalShares > 0) {
-                $sharesRow = [
-                    $cid,
-                    $memberName,
-                    'Shares'
-                ];
+		// Add shares data for all members (only if they have non-zero shares values)
+		foreach ($groupedData as $cid => $memberReports) {
+			$memberName = $memberReports->first()->member_name ?? '';
 
-                $totalSharesPaid = 0;
-                foreach ($remittanceTags as $tag) {
-                    $sharesAmount = $memberReports->where('remittance_tag', $tag)->where('remittance_type', 'shares')->first()->remitted_shares ?? 0;
-                    $sharesRow[] = $sharesAmount;
-                    $totalSharesPaid += $sharesAmount;
-                }
-                $sharesRow[] = $totalSharesPaid;
-                $rows[] = $sharesRow;
-            }
-        }
+			$totalShares = $memberReports->where('remittance_type', 'shares')->sum('remitted_shares');
 
-        return $rows;
-    }
+			// Only include member if they have non-zero shares values
+			if ($totalShares > 0) {
+				$sharesRow = [
+					$cid,
+					$memberName,
+					$billingType
+				];
 
-    public function styles(Worksheet $sheet)
-    {
-        // Style the headers
-        $sheet->getStyle('A1:G1')->applyFromArray([
-            'font' => ['bold' => true],
-            'fill' => ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => 'E2EFDA']],
-            'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
-        ]);
+				$totalSharesPaid = 0;
+				foreach ($remittanceTags as $tag) {
+					$sharesAmount = $memberReports->where('remittance_tag', $tag)->where('remittance_type', 'shares')->first()->remitted_shares ?? 0;
+					$sharesRow[] = $sharesAmount;
+					$totalSharesPaid += $sharesAmount;
+				}
+				$sharesRow[] = $totalSharesPaid;
+				$rows[] = $sharesRow;
+			}
+		}
 
-        // Auto-size columns
-        foreach (range('A', $sheet->getHighestColumn()) as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
+		return $rows;
+	}
 
-        // Number formatting for amount columns
-        $highestRow = $sheet->getHighestRow();
-        for ($row = 1; $row <= $highestRow; $row++) {
-            $sheet->getStyle("D{$row}:G{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
-        }
+	public function styles(Worksheet $sheet)
+	{
+		// Style the headers
+		$sheet->getStyle('A1:G1')->applyFromArray([
+			'font' => ['bold' => true],
+			'fill' => ['fillType' => Fill::FILL_SOLID, 'color' => ['rgb' => 'E2EFDA']],
+			'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
+		]);
 
-        return $sheet;
-    }
+		// Auto-size columns
+		foreach (range('A', $sheet->getHighestColumn()) as $col) {
+			$sheet->getColumnDimension($col)->setAutoSize(true);
+		}
+
+		// Number formatting for amount columns
+		$highestRow = $sheet->getHighestRow();
+		for ($row = 1; $row <= $highestRow; $row++) {
+			$sheet->getStyle("D{$row}:G{$row}")->getNumberFormat()->setFormatCode('#,##0.00');
+		}
+
+		return $sheet;
+	}
 }

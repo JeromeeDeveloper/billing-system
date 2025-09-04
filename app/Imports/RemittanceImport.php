@@ -390,7 +390,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 $billedAmount = 0;
                 if ($member) {
                     $billedAmount = $member->loanForecasts()
-                        ->where('billing_type', $this->billingType)
+                        ->where('billing_period', $this->billingPeriod)
                         ->sum('total_due');
                 }
                 $result['billed_amount'] = $billedAmount;

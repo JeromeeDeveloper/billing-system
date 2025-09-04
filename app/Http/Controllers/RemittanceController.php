@@ -332,6 +332,63 @@ class RemittanceController extends Controller
             ]
         ];
 
+        // Get remittance data for the new per-remittance table
+        $remittanceData = RemittanceReport::with('member')
+            ->where('period', $billingPeriod)
+            ->get()
+            ->map(function ($report) {
+                return [
+                    'cid' => $report->cid,
+                    'member_name' => $report->member_name,
+                    'remittance_type' => $report->remittance_type,
+                    'remittance_tag' => $report->remittance_tag,
+                    'remitted_loans' => $report->remitted_loans ?? 0,
+                    'remitted_savings' => $report->remitted_savings ?? 0,
+                    'remitted_shares' => $report->remitted_shares ?? 0,
+                    'billed_amount' => $report->billed_amount ?? 0,
+                ];
+            });
+
+        // If no data in RemittanceReport, try to get from RemittancePreview as fallback
+        if ($remittanceData->isEmpty()) {
+            $previewData = \App\Models\RemittancePreview::where('user_id', $userId)
+                ->where('type', 'admin')
+                ->where('billing_period', $billingPeriod)
+                ->whereNotNull('name')
+                ->where('name', '!=', '')
+                ->get()
+                ->map(function ($preview) {
+                    return [
+                        'cid' => $preview->member_id,
+                        'member_name' => $preview->name,
+                        'remittance_type' => $preview->remittance_type,
+                        'remittance_tag' => 1, // Default to 1 for preview data
+                        'remitted_loans' => $preview->loans ?? 0,
+                        'remitted_savings' => is_array($preview->savings) ? ($preview->savings['total'] ?? 0) : ($preview->savings ?? 0),
+                        'remitted_shares' => $preview->share_amount ?? 0,
+                        'billed_amount' => 0, // No billed amount in preview
+                    ];
+                });
+            $remittanceData = $previewData;
+        }
+
+        // Get unique remittance tags
+        $remittanceTags = RemittanceBatch::where('billing_period', $billingPeriod)
+            ->pluck('remittance_tag')
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+
+        // If no remittance tags, create default ones
+        if (empty($remittanceTags)) {
+            $remittanceTags = [1]; // Default to remittance 1
+        }
+
+        // Debug: Log the data (temporary)
+        Log::info('Remittance Data Count: ' . $remittanceData->count());
+        Log::info('Remittance Tags: ' . json_encode($remittanceTags));
+
         return view('components.admin.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
             'sharesPreviewPaginated',
@@ -345,7 +402,9 @@ class RemittanceController extends Controller
             'sharesRemittanceImportCount',
             'exportStatuses',
             'monitoringData',
-            'collectionStatus'
+            'collectionStatus',
+            'remittanceData',
+            'remittanceTags'
         ));
     }
 
@@ -355,6 +414,7 @@ class RemittanceController extends Controller
         ini_set('max_execution_time', 2000);
         $request->validate([
             'file' => 'required|file|max:10240', // max 10MB
+            'forecast_file' => 'required|file|max:10240', // max 10MB
         ]);
 
         $remittanceType2 = 'loans_savings';
@@ -366,6 +426,11 @@ class RemittanceController extends Controller
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;
 
+            // Process forecast file first
+            $forecastImport = new \App\Imports\LoanForecastImport($currentBillingPeriod);
+            Excel::import($forecastImport, $request->file('forecast_file'));
+
+            // Then process the remittance file
             $import = new RemittanceImport($currentBillingPeriod, $billingType);
             Excel::import($import, $request->file('file'));
 
