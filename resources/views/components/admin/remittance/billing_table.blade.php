@@ -14,7 +14,8 @@
                             <th>Remitted Shares</th>
                             <th>Total Remitted</th>
                             <th>Total Billed</th>
-                            <th>Remaining Loans</th>
+                            <th>Remaining Amort Due</th>
+
                         </tr>
                     </thead>
                     <tbody>
@@ -27,7 +28,6 @@
                             $totalRemaining = 0;
                             $billingType = strtolower($type);
                             $billingPeriod = auth()->user()->billing_period;
-                            $billedTotals = [];
                         @endphp
                         @foreach($remittances as $remit)
                             @php
@@ -36,7 +36,8 @@
                                 $remittedSavings = $remit->remitted_savings ?? 0;
                                 $remittedShares = $remit->remitted_shares ?? 0;
                                 $totalRemit = $remittedLoans + $remittedSavings + $remittedShares;
-                                // Compute billed total for this member and billing type
+
+                                // Get billed total for this member and billing type
                                 $billedTotal = \App\Models\LoanForecast::where('member_id', $remit->member_id)
                                     ->where('billing_period', $billingPeriod)
                                     ->get()
@@ -50,35 +51,42 @@
                                         return $product && $product->billing_type === $billingType;
                                     })
                                     ->sum('total_due');
-                                $remainingLoans = $billedTotal - $remittedLoans;
+
+                                $remainingBalance = $billedTotal - $remittedLoans;
+
                                 $totalLoans += $remittedLoans;
                                 $totalSavings += $remittedSavings;
                                 $totalShares += $remittedShares;
                                 $totalRemitted += $totalRemit;
                                 $totalBilled += $billedTotal;
-                                $totalRemaining += $remainingLoans;
-                                $billedTotals[] = $billedTotal;
+                                $totalRemaining += $remainingBalance;
                             @endphp
                             <tr>
-                                <td>{{ $member->full_name ?? ($member->fname . ' ' . $member->lname) ?? 'N/A' }}</td>
+                                <td>{{ $member->full_name ?? 'N/A' }}</td>
                                 <td>{{ number_format($remittedLoans, 2) }}</td>
                                 <td>{{ number_format($remittedSavings, 2) }}</td>
                                 <td>{{ number_format($remittedShares, 2) }}</td>
                                 <td>{{ number_format($totalRemit, 2) }}</td>
                                 <td>{{ number_format($billedTotal, 2) }}</td>
-                                <td>{{ number_format($remainingLoans, 2) }}</td>
+                                <td class="{{ $remainingBalance < 0 ? 'text-success' : ($remainingBalance > 0 ? 'text-danger' : 'text-muted') }}">
+                                    {{ number_format($remainingBalance, 2) }}
+                                </td>
+
                             </tr>
                         @endforeach
                     </tbody>
                     <tfoot>
-                        <tr>
+                        <tr class="table-info">
                             <th>Total</th>
                             <th>{{ number_format($totalLoans, 2) }}</th>
                             <th>{{ number_format($totalSavings, 2) }}</th>
                             <th>{{ number_format($totalShares, 2) }}</th>
                             <th>{{ number_format($totalRemitted, 2) }}</th>
-                            <th>{{ number_format(array_sum($billedTotals), 2) }}</th>
-                            <th>{{ number_format($totalRemaining, 2) }}</th>
+                            <th>{{ number_format($totalBilled, 2) }}</th>
+                            <th class="{{ $totalRemaining < 0 ? 'text-success' : ($totalRemaining > 0 ? 'text-danger' : 'text-muted') }}">
+                                {{ number_format($totalRemaining, 2) }}
+                            </th>
+                            <th></th>
                         </tr>
                     </tfoot>
                 </table>

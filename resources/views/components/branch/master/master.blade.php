@@ -2,18 +2,29 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <title>Billing and Collection</title>
-
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
-
-    <link href="{{ asset('vendor/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet">
-    <link href="{{ asset('css/style.css') }}" rel="stylesheet">
+    @include('layouts.partials.head')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        .card-header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .status-badge {
+            min-width: 160px;
+        }
+        .info-note-toggle {
+            cursor: pointer;
+        }
+        .table-responsive {
+            margin-top: 1rem;
+        }
+        .pagination-container {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -225,7 +236,7 @@
                                     </div>
                                     <div class="col-12 col-md-8 d-flex flex-column align-items-md-end align-items-center">
                                         <form method="GET" action="{{ url()->current() }}" class="d-flex flex-grow-1 flex-md-grow-0 gap-2 align-items-center mb-2 mb-md-0 justify-content-md-end w-100" style="max-width: 400px;">
-                                            <input type="text" name="search" value="{{ request('search') }}" class="form-control flex-grow-1" placeholder="Search members..." />
+                                            <input type="text" name="search" value="{{ request('search') }}" class="form-control flex-grow-1 mr-2" placeholder="Search members..." />
                                             <button type="submit" class="btn btn-primary d-flex align-items-center px-3">
                                                 <i class="fa fa-search me-2"></i> <span class="d-none d-md-inline">Search</span>
                                             </button>
@@ -233,13 +244,13 @@
 
                                     </div>
                                     <div class="action-bar d-flex flex-wrap flex-md-nowrap gap-2 justify-content-center align-items-center p-2 rounded shadow-sm mt-2 w-100" style="background: #f8f9fa;">
-                                        <a href="#" class="btn btn-success d-flex align-items-center px-3" data-toggle="modal" data-target="#addModal">
+                                        <a href="#" class="btn btn-success d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
                                             <i class="fa fa-plus-circle me-2 mr-2"></i> <span class="d-none d-md-inline">Add New Member</span>
                                         </a>
-                                        <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-outline-success d-flex align-items-center px-3">
+                                        <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-outline-success d-flex align-items-center px-3 mr-2">
                                             <i class="fa fa-download me-2 mr-2"></i> <span class="d-none d-md-inline">Export Details (CSV)</span>
                                         </a>
-                                        <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-outline-warning d-flex align-items-center px-3">
+                                        <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-outline-warning d-flex align-items-center px-3 mr-2">
                                             <i class="fa fa-exclamation-triangle me-2"></i> <span class="d-none d-md-inline">No Regular Savings (Excel)</span>
                                         </a>
                                     </div>
@@ -728,8 +739,8 @@
                                                         <p><strong>Industry:</strong> <span id="view-industry"></span>
                                                         </p>
                                                         {{-- <p><strong>Status:</strong> <span id="view-status"></span></p> --}}
-                                                        <p><strong>Account Status:</strong> <span
-                                                                id="view-account_status"></span></p>
+                                                        {{-- <p><strong>Account Status:</strong> <span
+                                                                id="view-account_status"></span></p> --}}
                                                         {{-- <p><strong>Savings Balance:</strong> <span
                                                                 id="view-savings_balance"></span></p>
                                                         <p><strong>Share Balance:</strong> <span
@@ -1125,6 +1136,8 @@
         // Button click handlers for loans
         $('#btnNext').click(function() {
             if (currentLoanIndex < loans.length - 1) {
+                // Save current form data before navigating
+                saveCurrentLoanData();
                 currentLoanIndex++;
                 renderLoan(currentLoanIndex);
                 updateNavButtons();
@@ -1133,6 +1146,8 @@
 
         $('#btnPrev').click(function() {
             if (currentLoanIndex > 0) {
+                // Save current form data before navigating
+                saveCurrentLoanData();
                 currentLoanIndex--;
                 renderLoan(currentLoanIndex);
                 updateNavButtons();
@@ -1142,6 +1157,8 @@
         // Button click handlers for savings
         $('#btnNextSavings').click(function() {
             if (currentSavingsIndex < savings.length - 1) {
+                // Save current form data before navigating
+                saveCurrentSavingsData();
                 currentSavingsIndex++;
                 renderSavings(currentSavingsIndex);
                 updateNavButtons();
@@ -1150,6 +1167,8 @@
 
         $('#btnPrevSavings').click(function() {
             if (currentSavingsIndex > 0) {
+                // Save current form data before navigating
+                saveCurrentSavingsData();
                 currentSavingsIndex--;
                 renderSavings(currentSavingsIndex);
                 updateNavButtons();
@@ -1159,6 +1178,8 @@
         // Button click handlers for shares
         $('#btnNextShares').click(function() {
             if (currentSharesIndex < shares.length - 1) {
+                // Save current form data before navigating
+                saveCurrentSharesData();
                 currentSharesIndex++;
                 renderShares(currentSharesIndex);
                 updateNavButtons();
@@ -1167,6 +1188,8 @@
 
         $('#btnPrevShares').click(function() {
             if (currentSharesIndex > 0) {
+                // Save current form data before navigating
+                saveCurrentSharesData();
                 currentSharesIndex--;
                 renderShares(currentSharesIndex);
                 updateNavButtons();
@@ -1491,6 +1514,86 @@
             updateTotalDue();
         }
 
+        // Function to save current loan data to the loans array
+        function saveCurrentLoanData() {
+            if (loans.length === 0 || currentLoanIndex >= loans.length) return;
+
+            const currentLoan = loans[currentLoanIndex];
+            if (!currentLoan) return;
+
+            // Get form values
+            const principalDue = parseFloat($(`#principal_due_${currentLoanIndex}`).val()) || 0;
+            const interestDue = parseFloat($(`#interest_due_${currentLoanIndex}`).val()) || 0;
+            const totalDue = parseFloat($(`#total_due_${currentLoanIndex}`).val()) || 0;
+            const accountStatus = $(`select[name="loan_forecasts[${currentLoanIndex}][account_status]"]`).val();
+            const startHold = $(`input[name="loan_forecasts[${currentLoanIndex}][start_hold]"]`).val();
+            const expiryDate = $(`input[name="loan_forecasts[${currentLoanIndex}][expiry_date]"]`).val();
+            const approvalNo = $(`input[name="loan_forecasts[${currentLoanIndex}][approval_no]"]`).val();
+
+            // Update the loan object in the array
+            currentLoan.principal_due = principalDue;
+            currentLoan.interest_due = interestDue;
+            currentLoan.total_due = totalDue;
+            currentLoan.account_status = accountStatus;
+            currentLoan.start_hold = startHold;
+            currentLoan.expiry_date = expiryDate;
+            currentLoan.approval_no = approvalNo;
+
+            console.log('Saved loan data for index', currentLoanIndex, ':', currentLoan);
+        }
+
+        // Function to save current savings data to the savings array
+        function saveCurrentSavingsData() {
+            if (savings.length === 0 || currentSavingsIndex >= savings.length) return;
+
+            const currentSaving = savings[currentSavingsIndex];
+            if (!currentSaving) return;
+
+            // Get form values
+            const startHold = $(`input[name="savings[${currentSavingsIndex}][start_hold]"]`).val();
+            const expiryDate = $(`input[name="savings[${currentSavingsIndex}][expiry_date]"]`).val();
+            const accountStatus = $(`select[name="savings[${currentSavingsIndex}][account_status]"]`).val();
+            const deductionAmount = parseFloat($(`input[name="savings[${currentSavingsIndex}][deduction_amount]"]`).val()) || 0;
+            const approvalNo = $(`input[name="savings[${currentSavingsIndex}][approval_no]"]`).val();
+            const remarks = $(`textarea[name="savings[${currentSavingsIndex}][remarks]"]`).val();
+
+            // Update the saving object in the array
+            currentSaving.start_hold = startHold;
+            currentSaving.expiry_date = expiryDate;
+            currentSaving.account_status = accountStatus;
+            currentSaving.deduction_amount = deductionAmount;
+            currentSaving.approval_no = approvalNo;
+            currentSaving.remarks = remarks;
+
+            console.log('Saved savings data for index', currentSavingsIndex, ':', currentSaving);
+        }
+
+        // Function to save current shares data to the shares array
+        function saveCurrentSharesData() {
+            if (shares.length === 0 || currentSharesIndex >= shares.length) return;
+
+            const currentShare = shares[currentSharesIndex];
+            if (!currentShare) return;
+
+            // Get form values
+            const startHold = $(`input[name="shares[${currentSharesIndex}][start_hold]"]`).val();
+            const expiryDate = $(`input[name="shares[${currentSharesIndex}][expiry_date]"]`).val();
+            const accountStatus = $(`select[name="shares[${currentSharesIndex}][account_status]"]`).val();
+            const deductionAmount = parseFloat($(`input[name="shares[${currentSharesIndex}][deduction_amount]"]`).val()) || 0;
+            const approvalNo = $(`input[name="shares[${currentSharesIndex}][approval_no]"]`).val();
+            const remarks = $(`textarea[name="shares[${currentSharesIndex}][remarks]"]`).val();
+
+            // Update the share object in the array
+            currentShare.start_hold = startHold;
+            currentShare.expiry_date = expiryDate;
+            currentShare.account_status = accountStatus;
+            currentShare.deduction_amount = deductionAmount;
+            currentShare.approval_no = approvalNo;
+            currentShare.remarks = remarks;
+
+            console.log('Saved shares data for index', currentSharesIndex, ':', currentShare);
+        }
+
         $('#viewModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
 
@@ -1543,10 +1646,10 @@
 
                         <p><strong>Maturity Date:</strong> ${loan.maturity_date || 'N/A'}</p>
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
-                        <p><strong>Total Due:</strong> ${loan.total_due || '0.00'}</p>
-                        <p><strong>Original Total Due:</strong> ${loan.original_total_due || '0.00'}</p>
-                        <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
-                        <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
+                        <p><strong>Total Amort:</strong> ${loan.total_due || '0.00'}</p>
+                        <p><strong>Original Total Amort:</strong> ${loan.original_total_due || '0.00'}</p>
+                        <p><strong>Principal:</strong> ${loan.principal_due || '0.00'}</p>
+                        <p><strong>Interest:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>
                         <p><strong>Deduction Amount:</strong> ${loan.deduction_amount || '0.00'}</p>
                         <p><strong>Approval Number:</strong> ${loan.approval_no || 'N/A'}</p>

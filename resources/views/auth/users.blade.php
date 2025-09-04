@@ -208,7 +208,7 @@
                                             <div class="form-group">
                                                 <label>Status</label>
                                                 <select name="status" class="form-control" required>
-                                                    <option value="">Select Status</option>
+                                                    <option value="" disabled>Select Status</option>
                                                     <option value="pending">Pending</option>
                                                     <option value="approved">Approved</option>
                                                 </select>
@@ -379,12 +379,10 @@
             $('#view-branch').text(button.data('branch'));
             $('#view-created').text(button.data('created'));
         });
-
         $('#deleteModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget)
             $('#delete-id').val(button.data('id'));
         });
-
         // SweetAlert2 error for validation errors (e.g., password mismatch)
         @if ($errors->any())
             Swal.fire({
@@ -395,8 +393,6 @@
             });
         @endif
     </script>
-
-
 </body>
 
 </html>

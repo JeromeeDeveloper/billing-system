@@ -30,6 +30,116 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
         }
+
+        .btn.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn.disabled:hover {
+            opacity: 0.6;
+        }
+
+        /* Monitoring Dashboard Styles */
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .border-left-success {
+            border-left-color: #28a745 !important;
+        }
+
+        .border-left-warning {
+            border-left-color: #ffc107 !important;
+        }
+
+        .stat-item {
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+        }
+
+        .card.shadow-sm {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+        }
+
+        .badge-pill {
+            padding: 0.5em 1em;
+            font-size: 0.75em;
+        }
+
+        .card-header.bg-gradient-primary {
+            border-bottom: none;
+        }
+
+        .alert-info {
+            background-color: rgba(23, 162, 184, 0.1);
+            border-color: rgba(23, 162, 184, 0.2);
+        }
+
+        /* Detailed Monitoring Styles */
+        .detail-item {
+            margin-bottom: 8px;
+        }
+
+        .detail-item small {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .detail-item .font-weight-bold {
+            color: #495057;
+        }
+
+        .card-header.bg-light {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .border-left-success {
+            border-left-color: #28a745 !important;
+        }
+
+        .border-left-warning {
+            border-left-color: #ffc107 !important;
+        }
+
+        .stat-item {
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .stat-item:hover {
+            background: rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card.shadow-sm {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+        }
+
+        .badge-pill {
+            padding: 0.5em 1em;
+            font-size: 0.75em;
+        }
+
+        .card-header.bg-gradient-primary {
+            border-bottom: none;
+        }
     </style>
 </head>
 
@@ -134,6 +244,401 @@
                                     </p>
                                 </div>
 
+                                                                <!-- Collection Monitoring Dashboard -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-header bg-gradient-primary text-white">
+                                                <h5 class="mb-0">
+                                                    <i class="fa fa-tachometer-alt"></i> Collection Monitoring Dashboard
+                                                </h5>
+                                                <small class="text-white-50">Comprehensive overview of collection generation status and data availability</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <!-- Upload Count Monitoring Cards (Same as Admin) -->
+                                                <div class="row mb-4">
+                                                    <div class="col-md-4">
+                                                        <div class="card stats-card bg-light border-primary">
+                                                            <div class="card-body text-center">
+                                                                <h5 class="card-title text-primary mb-2">
+                                                                    <i class="fa fa-upload"></i> Remittance (Regular)
+                                                                </h5>
+                                                                <h2 class="mb-0">{{ $remittanceImportRegularCount }}</h2>
+                                                                @php
+                                                                    $regularCount = $remittanceImportRegularCount;
+                                                                    $ordinal = '';
+                                                                    if ($regularCount == 1) {
+                                                                        $ordinal = '1st';
+                                                                    } elseif ($regularCount == 2) {
+                                                                        $ordinal = '2nd';
+                                                                    } elseif ($regularCount == 3) {
+                                                                        $ordinal = '3rd';
+                                                                    } else {
+                                                                        $ordinal = $regularCount . 'th';
+                                                                    }
+                                                                @endphp
+                                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="card stats-card bg-light border-warning">
+                                                            <div class="card-body text-center">
+                                                                <h5 class="card-title text-warning mb-2">
+                                                                    <i class="fa fa-upload"></i> Remittance (Special)
+                                                                </h5>
+                                                                <h2 class="mb-0">{{ $remittanceImportSpecialCount }}</h2>
+                                                                @php
+                                                                    $specialCount = $remittanceImportSpecialCount;
+                                                                    $ordinal = '';
+                                                                    if ($specialCount == 1) {
+                                                                        $ordinal = '1st';
+                                                                    } elseif ($specialCount == 2) {
+                                                                        $ordinal = '2nd';
+                                                                    } elseif ($specialCount == 3) {
+                                                                        $ordinal = '3rd';
+                                                                    } else {
+                                                                        $ordinal = $specialCount . 'th';
+                                                                    }
+                                                                @endphp
+                                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="card stats-card bg-light border-info">
+                                                            <div class="card-body text-center">
+                                                                <h5 class="card-title text-info mb-2">
+                                                                    <i class="fa fa-upload"></i> Remittance (Shares)
+                                                                </h5>
+                                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount }}</h2>
+                                                                @php
+                                                                    $sharesCount = $sharesRemittanceImportCount;
+                                                                    $ordinal = '';
+                                                                    if ($sharesCount == 1) {
+                                                                        $ordinal = '1st';
+                                                                    } elseif ($sharesCount == 2) {
+                                                                        $ordinal = '2nd';
+                                                                    } elseif ($sharesCount == 3) {
+                                                                        $ordinal = '3rd';
+                                                                    } else {
+                                                                        $ordinal = $sharesCount . 'th';
+                                                                    }
+                                                                @endphp
+                                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this period</small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Detailed Monitoring Cards -->
+                                                <div class="row">
+                                                    <!-- Loans & Savings Detailed Monitoring -->
+                                                    <div class="col-md-6 mb-4">
+                                                        <div class="card h-100 border-left" style="border-left-width: 4px;">
+                                                            <div class="card-header bg-light">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <h6 class="mb-0 text-primary">
+                                                                        <i class="fa fa-money-bill-wave"></i> Loans & Savings Collection
+                                                                    </h6>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <!-- Statistics Grid -->
+                                                                <div class="row text-center mb-3">
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-success mb-0">{{ $monitoringData['loans_savings']['total_records'] }}</h4>
+                                                                            <small class="text-muted">Total Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-info mb-0">{{ $monitoringData['loans_savings']['matched_records'] }}</h4>
+                                                                            <small class="text-muted">Matched Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-warning mb-0">{{ $collectionStatus['loans_savings']['match_rate'] }}%</h4>
+                                                                            <small class="text-muted">Match Rate</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Detailed Information -->
+                                                                @if($monitoringData['loans_savings']['latest_batch'])
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-info-circle"></i> Latest Import Details</h6>
+                                                                        <div class="row">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Date:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['loans_savings']['latest_batch']->imported_at)->format('M d, Y') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Time:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['loans_savings']['latest_batch']->imported_at)->format('g:i A') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Billing Type:</small>
+                                                                                    <div>
+                                                                                        <span class="badge badge-{{ $monitoringData['loans_savings']['latest_batch']->billing_type === 'regular' ? 'primary' : 'success' }}">
+                                                                                            {{ ucfirst($monitoringData['loans_savings']['latest_batch']->billing_type) }}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                                                                        <div class="col-6">
+                                                <div class="detail-item">
+                                                    <small class="text-muted">Latest Upload:</small>
+                                                    <div class="font-weight-bold">
+                                                        @if($remittanceImportRegularCount > 0)
+                                                            {{ $remittanceImportRegularCount }}{{ $remittanceImportRegularCount == 1 ? 'st' : ($remittanceImportRegularCount == 2 ? 'nd' : ($remittanceImportRegularCount == 3 ? 'rd' : 'th')) }} Upload
+                                                        @else
+                                                            No Uploads
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-12">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Time Since Import:</small>
+                                                                                    <div class="font-weight-bold text-info">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['loans_savings']['latest_batch']->imported_at)->diffForHumans() }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="mt-3 text-center">
+                                                                        <div class="alert alert-warning mb-0">
+                                                                            <i class="fa fa-exclamation-triangle"></i>
+                                                                            <strong>No Import Data Available</strong><br>
+                                                                            <small>No remittance batches found for loans & savings in this billing period.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+
+                                                                                                                                 <!-- Available Types -->
+                                                                 @if($monitoringData['loans_savings']['available_types']->count() > 0)
+                                                                     <div class="mt-3">
+                                                                         <h6 class="text-muted mb-2"><i class="fa fa-tags"></i> Available Billing Types</h6>
+                                                                         <div class="d-flex flex-wrap">
+                                                                             @foreach($monitoringData['loans_savings']['available_types'] as $type)
+                                                                                 <span class="badge badge-{{ $type === 'regular' ? 'primary' : 'success' }} mr-2 mb-1">
+                                                                                     {{ ucfirst($type) }}
+                                                                                 </span>
+                                                                             @endforeach
+                                                                         </div>
+                                                                     </div>
+                                                                 @endif
+
+                                                                 <!-- Generation Status -->
+                                                                 {{-- <div class="mt-3">
+                                                                     <h6 class="text-muted mb-2"><i class="fa fa-download"></i> Generation Status</h6>
+                                                                     <div class="row">
+                                                                         <div class="col-6">
+                                                                             <div class="detail-item">
+                                                                                 <small class="text-muted">Basic Collection:</small>
+                                                                                 <div>
+                                                                                     @if($collectionStatus['loans_savings']['last_generated'])
+                                                                                         <span class="badge badge-success badge-pill">
+                                                                                             <i class="fa fa-check"></i> Generated
+                                                                                         </span>
+                                                                                         <br><small class="text-muted">{{ \Carbon\Carbon::parse($collectionStatus['loans_savings']['last_generated'])->format('M d, g:i A') }}</small>
+                                                                                     @else
+                                                                                         <span class="badge badge-secondary badge-pill">
+                                                                                             <i class="fa fa-clock"></i> Not Generated
+                                                                                         </span>
+                                                                                     @endif
+                                                                                 </div>
+                                                                             </div>
+                                                                         </div>
+                                                                         <div class="col-6">
+                                                                             <div class="detail-item">
+                                                                                 <small class="text-muted">With Product Names:</small>
+                                                                                 <div>
+                                                                                     @if($collectionStatus['loans_savings_with_product']['last_generated'])
+                                                                                         <span class="badge badge-success badge-pill">
+                                                                                             <i class="fa fa-check"></i> Generated
+                                                                                         </span>
+                                                                                         <br><small class="text-muted">{{ \Carbon\Carbon::parse($collectionStatus['loans_savings_with_product']['last_generated'])->format('M d, g:i A') }}</small>
+                                                                                     @else
+                                                                                         <span class="badge badge-secondary badge-pill">
+                                                                                             <i class="fa fa-clock"></i> Not Generated
+                                                                                         </span>
+                                                                                     @endif
+                                                                                 </div>
+                                                                             </div>
+                                                                         </div>
+                                                                     </div>
+                                                                 </div> --}}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Shares Detailed Monitoring -->
+                                                    <div class="col-md-6 mb-4">
+                                                        <div class="card h-100 border-left" style="border-left-width: 4px;">
+                                                            <div class="card-header bg-light">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <h6 class="mb-0 text-success">
+                                                                        <i class="fa fa-chart-pie"></i> Shares Collection
+                                                                    </h6>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <!-- Statistics Grid -->
+                                                                <div class="row text-center mb-3">
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-success mb-0">{{ $monitoringData['shares']['total_records'] }}</h4>
+                                                                            <small class="text-muted">Total Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-info mb-0">{{ $monitoringData['shares']['matched_records'] }}</h4>
+                                                                            <small class="text-muted">Matched Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-warning mb-0">{{ $collectionStatus['shares']['match_rate'] }}%</h4>
+                                                                            <small class="text-muted">Match Rate</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Detailed Information -->
+                                                                @if($monitoringData['shares']['latest_batch'])
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-info-circle"></i> Latest Import Details</h6>
+                                                                        <div class="row">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Date:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['shares']['latest_batch']->imported_at)->format('M d, Y') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Time:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['shares']['latest_batch']->imported_at)->format('g:i A') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Billing Type:</small>
+                                                                                    <div>
+                                                                                        <span class="badge badge-info">
+                                                                                            Shares
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                                                                        <div class="col-6">
+                                                <div class="detail-item">
+                                                    <small class="text-muted">Latest Upload:</small>
+                                                    <div class="font-weight-bold">
+                                                        @if($sharesRemittanceImportCount > 0)
+                                                            {{ $sharesRemittanceImportCount }}{{ $sharesRemittanceImportCount == 1 ? 'st' : ($sharesRemittanceImportCount == 2 ? 'nd' : ($sharesRemittanceImportCount == 3 ? 'rd' : 'th')) }} Upload
+                                                        @else
+                                                            No Uploads
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-12">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Time Since Import:</small>
+                                                                                    <div class="font-weight-bold text-info">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['shares']['latest_batch']->imported_at)->diffForHumans() }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="mt-3 text-center">
+                                                                        <div class="alert alert-warning mb-0">
+                                                                            <i class="fa fa-exclamation-triangle"></i>
+                                                                            <strong>No Import Data Available</strong><br>
+                                                                            <small>No remittance batches found for shares in this billing period.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+
+                                                                                                                                 <!-- Available Types -->
+                                                                 @if($monitoringData['shares']['available_types']->count() > 0)
+                                                                     <div class="mt-3">
+                                                                         <h6 class="text-muted mb-2"><i class="fa fa-tags"></i> Available Billing Types</h6>
+                                                                         <div class="d-flex flex-wrap">
+                                                                             @foreach($monitoringData['shares']['available_types'] as $type)
+                                                                                 <span class="badge badge-info mr-2 mb-1">
+                                                                                     {{ ucfirst($type) }}
+                                                                                 </span>
+                                                                             @endforeach
+                                                                         </div>
+                                                                     </div>
+                                                                 @endif
+
+                                                                 <!-- Generation Status -->
+
+
+                                                                         {{-- <div class="col-6">
+                                                                             <div class="detail-item">
+                                                                                 <small class="text-muted">With Product Names:</small>
+                                                                                 <div>
+                                                                                     @if($collectionStatus['shares_with_product']['last_generated'])
+                                                                                         <span class="badge badge-success badge-pill">
+                                                                                             <i class="fa fa-check"></i> Generated
+                                                                                         </span>
+                                                                                         <br><small class="text-muted">{{ \Carbon\Carbon::parse($collectionStatus['shares_with_product']['last_generated'])->format('M d, g:i A') }}</small>
+                                                                                     @else
+                                                                                         <span class="badge badge-secondary badge-pill">
+                                                                                             <i class="fa fa-clock"></i> Not Generated
+                                                                                         </span>
+                                                                                     @endif
+                                                                                 </div>
+                                                                             </div>
+                                                                         </div> --}}
+                                                                     </div>
+                                                                 </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Detailed Information Panel -->
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Export Section -->
                                 <div class="row mb-4">
                                     <div class="col-md-6">
@@ -142,12 +647,22 @@
                                                 <h6 class="mb-0 text-white"><i class="fa fa-file-excel"></i> Loans & Savings Collection</h6>
                                             </div>
                                             <div class="card-body">
+                                                @php
+                                                    $loansSavingsEnabled = $exportStatuses->get('loans_savings') ? $exportStatuses->get('loans_savings')->is_enabled : true;
+                                                    $loansSavingsWithProductEnabled = $exportStatuses->get('loans_savings_with_product') ? $exportStatuses->get('loans_savings_with_product')->is_enabled : true;
+                                                @endphp
                                                 <p class="text-muted small">Generate collection file for loans and savings remittance data.</p>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings']) }}" class="btn btn-primary btn-block">
+                                                <a href="{{ $loansSavingsEnabled ? route('branch.remittance.generateExport', ['type' => 'loans_savings']) : 'javascript:void(0)' }}" class="btn btn-primary btn-block {{ !$loansSavingsEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Loans & Savings
+                                                    @if(!$loansSavingsEnabled)
+                                                        <br><small class="text-muted">(Disabled - Upload new remittance to enable)</small>
+                                                    @endif
                                                 </a>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'loans_savings_with_product']) }}" class="btn btn-outline-primary btn-block mt-2">
+                                                <a href="{{ $loansSavingsWithProductEnabled ? route('branch.remittance.generateExport', ['type' => 'loans_savings_with_product']) : 'javascript:void(0)' }}" class="btn btn-outline-primary btn-block mt-2 {{ !$loansSavingsWithProductEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Loans & Savings (with Product Name)
+                                                    @if(!$loansSavingsWithProductEnabled)
+                                                        <br><small class="text-muted">(Disabled - Upload new remittance to enable)</small>
+                                                    @endif
                                                 </a>
                                             </div>
                                         </div>
@@ -158,125 +673,79 @@
                                                 <h6 class="mb-0 text-white"><i class="fa fa-file-excel"></i> Shares Collection</h6>
                                             </div>
                                             <div class="card-body">
+                                                @php
+                                                    $sharesEnabled = $exportStatuses->get('shares') ? $exportStatuses->get('shares')->is_enabled : true;
+                                                    $sharesWithProductEnabled = $exportStatuses->get('shares_with_product') ? $exportStatuses->get('shares_with_product')->is_enabled : true;
+                                                @endphp
                                                 <p class="text-muted small">Generate collection file for shares remittance data.</p>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares']) }}" class="btn btn-success btn-block  text-white">
+                                                <a href="{{ $sharesEnabled ? route('branch.remittance.generateExport', ['type' => 'shares']) : 'javascript:void(0)' }}" class="btn btn-success btn-block text-white {{ !$sharesEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Shares
+                                                    @if(!$sharesEnabled)
+                                                        <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
+                                                    @endif
                                                 </a>
-                                                <a href="{{ route('branch.remittance.generateExport', ['type' => 'shares_with_product']) }}" class="btn btn-outline-success btn-block mt-2">
+                                                <a href="{{ $sharesWithProductEnabled ? route('branch.remittance.generateExport', ['type' => 'shares_with_product']) : 'javascript:void(0)' }}" class="btn btn-outline-success btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Shares (with Product Name)
+                                                    @if(!$sharesWithProductEnabled)
+                                                        <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
+                                                    @endif
                                                 </a>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Preview Section -->
-                                <div class="row">
+                                <!-- Reports Section -->
+                                <div class="row mt-4">
                                     <div class="col-12">
-                                        {{-- Loans & Savings Remittance Preview --}}
-                                        <div class="card mb-4">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-header bg-gradient-info text-white">
+                                                <h5 class="mb-0">
+                                                    <i class="fa fa-file-alt"></i> Remittance Reports
+                                                </h5>
+                                                <small class="text-white-50">Generate comprehensive remittance reports for your branch</small>
+                                            </div>
                                             <div class="card-body">
-                                                <h5 class="text-center">Loans & Savings Remittance Preview</h5>
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered text-center">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Member</th>
-                                                                <th>Loans</th>
-                                                                <th>Savings</th>
-                                                                <th>Status</th>
-                                                                <th>Message</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @forelse($loansSavingsPreviewPaginated ?? [] as $row)
-                                                                <tr>
-                                                                    <td>{{ $row->name }}</td>
-                                                                    <td>{{ $row->loans }}</td>
-                                                                    <td>{{ is_array($row->savings) ? $row->savings['total'] ?? 0 : $row->savings }}</td>
-                                                                    <td>{{ $row->status }}</td>
-                                                                    <td>{{ $row->message }}</td>
-                                                                </tr>
-                                                            @empty
-                                                                <tr>
-                                                                    <td colspan="5" class="text-center text-muted">No records found.</td>
-                                                                </tr>
-                                                            @endforelse
-                                                        </tbody>
-                                                    </table>
-                                                </div>
                                                 <div class="row">
-                                                    <div class="col-12 d-flex justify-content-center text-center">
-                                                        {{ $loansSavingsPreviewPaginated->appends(request()->except('loans_page'))->links() ?? '' }}
+                                                    <div class="col-md-6 mb-3">
+                                                        <div class="card border-primary h-100">
+                                                            <div class="card-header bg-primary text-white">
+                                                                <h6 class="mb-0">
+                                                                    <i class="fa fa-file-excel"></i> Regular & Special Billing Report
+                                                                </h6>
+                                                            </div>
+                                                            <div class="card-body text-center">
+                                                                <p class="text-muted mb-3">
+                                                                    Generate a comprehensive report showing regular and special billing remittances with detailed breakdowns.
+                                                                </p>
+                                                                <a href="{{ route('branchRemittance.exportRegularSpecial') }}" class="btn btn-primary btn-lg">
+                                                                    <i class="fa fa-download"></i> Export Regular & Special
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6 mb-3">
+                                                        <div class="card border-success h-100">
+                                                            <div class="card-header bg-success text-white">
+                                                                <h6 class="mb-0">
+                                                                    <i class="fa fa-file-excel"></i> Matched/Unmatched Report
+                                                                </h6>
+                                                            </div>
+                                                            <div class="card-body text-center">
+                                                                <p class="text-muted mb-3">
+                                                                    Generate a report showing matched and unmatched remittance records with status indicators.
+                                                                </p>
+                                                                <a href="{{ route('branchRemittance.exportConsolidated') }}" class="btn btn-success btn-lg">
+                                                                    <i class="fa fa-download"></i> Export Matched/Unmatched
+                                                                </a>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {{-- Shares Remittance Preview --}}
-                                        <div class="card mb-4">
-                                            <div class="card-body">
-                                                <h5 class="text-center">Shares Remittance Preview</h5>
-                                                <div class="table-responsive">
-                                                    <table class="table table-bordered text-center">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Member</th>
-                                                                <th>Shares</th>
-                                                                <th>Status</th>
-                                                                <th>Message</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @forelse($sharesPreviewPaginated ?? [] as $row)
-                                                                <tr>
-                                                                    <td>{{ $row->name }}</td>
-                                                                    <td>{{ $row->share_amount }}</td>
-                                                                    <td>{{ $row->status }}</td>
-                                                                    <td>{{ $row->message }}</td>
-                                                                </tr>
-                                                            @empty
-                                                                <tr>
-                                                                    <td colspan="4" class="text-center text-muted">No records found.</td>
-                                                                </tr>
-                                                            @endforelse
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-12 d-flex justify-content-center text-center">
-                                                        {{ $sharesPreviewPaginated->appends(request()->except('shares_page'))->links() ?? '' }}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Export Button for Regular & Special Billing Remittance --}}
-                                        <div class="mb-3 text-right">
-                                            <a href="{{ route('branchRemittance.exportRegularSpecial') }}" class="btn btn-success">
-                                                <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
-                                            </a>
-                                        </div>
-                                        @if (isset($regularRemittances) && $regularRemittances->count() > 0)
-                                            @include('components.admin.remittance.billing_table', [
-                                                'remittances' => $regularRemittances,
-                                                'billed' => $regularBilled,
-                                                'type' => 'Regular'
-                                            ])
-                                        @endif
-                                        @if (isset($specialRemittances) && $specialRemittances->count() > 0)
-                                            @include('components.admin.remittance.billing_table', [
-                                                'remittances' => $specialRemittances,
-                                                'billed' => $specialBilled,
-                                                'type' => 'Special'
-                                            ])
-                                        @endif
-                                        {{-- If variables are missing, add a comment for the developer --}}
-                                        @if (!isset($loansSavingsPreviewPaginated) || !isset($sharesPreviewPaginated) || !isset($regularRemittances) || !isset($specialRemittances) || !isset($regularBilled) || !isset($specialBilled))
-                                            <div class="alert alert-warning mt-4">
-                                                <strong>Note:</strong> Please ensure the controller passes <code>$loansSavingsPreviewPaginated</code>, <code>$sharesPreviewPaginated</code>, <code>$regularRemittances</code>, <code>$specialRemittances</code>, <code>$regularBilled</code>, and <code>$specialBilled</code> to this view, as in the admin remittance controller.
-                                            </div>
-                                        @endif
+                                    </div>
+                                </div>
                                     </div>
                                 </div>
                             </div>
@@ -311,52 +780,6 @@
                 $(this).next('.custom-file-label').html(fileName);
             });
 
-            // Auto-hide alerts after 5 seconds
-            setTimeout(function() {
-                $('.alert').fadeOut('slow');
-            }, 25000);
-
-            // Show floating toast on page load ONLY if both preview tables have no records
-            var hasLoansSavingsRecords = false;
-            var hasSharesRecords = false;
-            $(".card-body").each(function() {
-                var header = $(this).find('h5.text-center').text().trim();
-                if (header === 'Loans & Savings Remittance Preview') {
-                    var rows = $(this).find('table tbody tr');
-                    hasLoansSavingsRecords = rows.filter(function() {
-                        return !$(this).text().includes('No records found.');
-                    }).length > 0;
-                }
-                if (header === 'Shares Remittance Preview') {
-                    var rows = $(this).find('table tbody tr');
-                    hasSharesRecords = rows.filter(function() {
-                        return !$(this).text().includes('No records found.');
-                    }).length > 0;
-                }
-            });
-            if (!hasLoansSavingsRecords && !hasSharesRecords) {
-                Swal.fire({
-                    toast: true,
-                    position: 'bottom-end',
-                    icon: 'info',
-                    title: 'No records yet for collection.',
-                    text: 'Please wait for the admin to upload remittance files.',
-                    showConfirmButton: false,
-                    timer: 8000,
-                    timerProgressBar: true
-                });
-            } else {
-                Swal.fire({
-                    toast: true,
-                    position: 'bottom-end',
-                    icon: 'success',
-                    title: "It's good to generate collection files now!",
-                    text: 'You may proceed to export your branch\'s collection files.',
-                    showConfirmButton: false,
-                    timer: 8000,
-                    timerProgressBar: true
-                });
-            }
         });
 
         function showExportLoading(type) {
@@ -370,6 +793,30 @@
                 }
             });
         }
+
+        // Monitoring Dashboard Enhancements
+        $(document).ready(function() {
+            // Add hover effects to monitoring cards
+            $('.card.border-left-success, .card.border-left-warning').hover(
+                function() {
+                    $(this).addClass('shadow');
+                },
+                function() {
+                    $(this).removeClass('shadow');
+                }
+            );
+
+            // Removed click to refresh functionality to prevent accidental page reloads
+
+            // Show tooltips for better UX
+            $('[data-toggle="tooltip"]').tooltip();
+
+            // Auto-refresh monitoring data every 30 seconds
+            setInterval(function() {
+                // You can add AJAX call here to refresh monitoring data without full page reload
+                console.log('Monitoring data can be refreshed via AJAX');
+            }, 30000);
+        });
     </script>
 </body>
 

@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!--===============================================================================================-->
-    <link rel="icon" type="image/png" href="assets/images/icons/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/logomsp.png') }}">
     <!--===============================================================================================-->
     <!--===============================================================================================-->
     <link rel="stylesheet" type="text/css" href="assets/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
@@ -25,22 +25,20 @@
             color: #222 !important;
             background: #fff !important;
         }
+        img {
+            height: auto;
+            width: 255px;
+        }
     </style>
 </head>
 
 <body>
-
     <div class="limiter">
         <div class="container-login100" style="background-image: url('assets/images/bg-01.jpg');">
             <div class="wrap-login100">
                 <form method="POST" action="{{ route('login') }}" class="login100-form validate-form">
                     @csrf
-                    <style>
-                        img {
-                            height: auto;
-                            width: 255px;
-                        }
-                    </style>
+
                     <span class="login100-form-logo">
                         <img src="assets/images/logo.png" alt="">
                     </span>
@@ -129,7 +127,6 @@
             });
         @endif
     </script>
-
 
 </body>
 

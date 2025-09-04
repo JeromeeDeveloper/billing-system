@@ -29,12 +29,14 @@ class RemittanceImport implements ToCollection, WithHeadingRow
     protected $imported_at;
     protected $billingPeriod;
     protected $remittance_tag;
+    protected $billingType;
 
-    public function __construct($billingPeriod = null)
+    public function __construct($billingPeriod = null, $billingType = 'regular')
     {
         // Load all saving products
         $this->savingProducts = SavingProduct::all();
         $this->billingPeriod = $billingPeriod;
+        $this->billingType = $billingType;
     }
 
     public function collection(Collection $rows)
@@ -49,6 +51,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             'billing_period' => $this->billingPeriod,
             'remittance_tag' => $this->remittance_tag,
             'imported_at' => $this->imported_at,
+            'billing_type' => $this->billingType, // Add this line
         ]);
         foreach ($rows as $row) {
             $result = $this->processRow($row);
@@ -98,7 +101,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
             'cid' => $cid,
             'name' => $member ? trim(($member->fname ?? '') . ' ' . ($member->lname ?? '')) : '',
             'member_id' => $member ? $member->id : null,
-            'loans' => $loans,
+            'loans' => $loans, // This will be updated to actualLoansPaid after processing
             'savings_total' => $savingsTotal,
             'status' => 'error',
             'message' => '',
@@ -171,7 +174,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                                 'product_type' => $regularSavings->savingProduct->product_type ?? null,
                                 'amount' => $remainingSavings,
                                 'deduction_amount' => 0,
-                                'is_remaining' => true
+                                'is_remaining' => true,
+                                'source' => 'savings_excess'
                             ];
                             Log::info("[RemittanceImport] Remaining savings remittance of {$remainingSavings} deposited to regular savings for member {$member->id}");
                         }
@@ -181,6 +185,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 // Process loan payments and deductions
                 if ($loans > 0) {
                     $remainingPayment = $loans;
+                    $actualLoansPaid = 0; // Track how much actually went to loans
 
                     // Reset total_due_after_remittance to 0 for all forecasts
                     // This ensures we start fresh when re-uploading
@@ -204,6 +209,30 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         if ($loanProduct && $loanProduct->billing_type === 'not_billed') {
                             return null;
                         }
+                        // Skip if billing_type does not match selected type
+                        if ($loanProduct && $this->billingType && $loanProduct->billing_type !== $this->billingType) {
+                            return null;
+                        }
+
+                        // Skip if account_status is 'non-deduction' and within hold period
+                        if ($member->account_status === 'non-deduction') {
+                            $currentDate = now()->format('Y-m-01');
+                            $startHold = $member->start_hold;
+                            $expiryDate = $member->expiry_date;
+
+                            // Check if within hold period (start_hold is in the future AND expiry_date hasn't passed)
+                            if ($startHold && $expiryDate) {
+                                $startHoldDate = \Carbon\Carbon::createFromFormat('Y-m', $startHold)->startOfMonth();
+                                $expiryDateObj = \Carbon\Carbon::createFromFormat('Y-m', $expiryDate)->endOfMonth();
+                                $currentDateObj = \Carbon\Carbon::createFromFormat('Y-m', $currentDate)->startOfMonth();
+
+                                // Skip if within hold period (current date is between start_hold and expiry_date)
+                                if ($currentDateObj->between($startHoldDate, $expiryDateObj)) {
+                                    Log::info("Skipping loan forecast for member {$member->id} - account is on hold (non-deduction)");
+                                    return null;
+                                }
+                            }
+                        }
 
                         return [
                             'forecast' => $forecast,
@@ -214,7 +243,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'created_at' => $forecast->created_at,
                         ];
                     })
-                    ->filter() // Remove nulls (skipped not_billed)
+                    ->filter() // Remove nulls (skipped not_billed, not matching type, or on hold)
                     ->sort(function($a, $b) {
                         // Sort by prioritization (asc)
                         if ($a['prioritization'] !== $b['prioritization']) {
@@ -249,6 +278,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             $deductedInterest = $deduct;
                             $interestDue -= $deduct;
                             $remainingPayment -= $deduct;
+                            $actualLoansPaid += $deduct;
                         }
                         // Then deduct from principal_due
                         if ($remainingPayment > 0 && $principalDue > 0) {
@@ -256,6 +286,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             $deductedPrincipal = $deduct;
                             $principalDue -= $deduct;
                             $remainingPayment -= $deduct;
+                            $actualLoansPaid += $deduct;
                         }
 
                         // Update the forecast in the database
@@ -265,6 +296,12 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'total_due' => max(0, $principalDue + $interestDue),
                             'total_due_after_remittance' => $deductedPrincipal + $deductedInterest
                         ]);
+                        // Set per-field status
+                        $forecast->refresh();
+                        $forecast->interest_due_status = floatval($forecast->interest_due) === 0.0 ? 'paid' : 'unpaid';
+                        $forecast->principal_due_status = floatval($forecast->principal_due) === 0.0 ? 'paid' : 'unpaid';
+                        $forecast->total_due_status = floatval($forecast->total_due) === 0.0 ? 'paid' : 'unpaid';
+                        $forecast->save();
 
                         // Create a LoanRemittance record for this deduction
                         \App\Models\LoanRemittance::create([
@@ -281,6 +318,7 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                             'imported_at' => $this->imported_at,
                             'remittance_tag' => $this->remittance_tag,
                             'billing_period' => $this->billingPeriod,
+                            'billing_type' => $this->billingType,
                         ]);
                     }
 
@@ -300,7 +338,8 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                                 'product_type' => $regularSavings->savingProduct->product_type ?? null,
                                 'amount' => $remainingPayment,
                                 'deduction_amount' => 0,
-                                'is_remaining' => true
+                                'is_remaining' => true,
+                                'source' => 'loan_excess'
                             ];
                             Log::info("[RemittanceImport] Remaining loan payment of {$remainingPayment} deposited to regular savings for member {$member->id}");
                         } else {
@@ -341,6 +380,20 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                         ]);
                     }
                 }
+
+                // Update the loans amount to reflect only what actually went to loans (exclude excess)
+                if ($loans > 0) {
+                    $result['loans'] = $actualLoansPaid;
+                }
+
+                // Calculate billed amount from loan forecasts for this member and billing type
+                $billedAmount = 0;
+                if ($member) {
+                    $billedAmount = $member->loanForecasts()
+                        ->where('billing_period', $this->billingPeriod)
+                        ->sum('total_due');
+                }
+                $result['billed_amount'] = $billedAmount;
 
                 // Always include distributionDetails in the result for export
                 $result['savings_distribution'] = $distributionDetails;
@@ -412,5 +465,10 @@ class RemittanceImport implements ToCollection, WithHeadingRow
     public function getStats()
     {
         return $this->stats;
+    }
+
+    public function getRemittanceTag()
+    {
+        return $this->remittance_tag;
     }
 }

@@ -85,6 +85,27 @@
                                 tr {
                                     text-align: center;
                                 }
+
+                                .members-checklist .form-check {
+                                    margin-bottom: 8px;
+                                    padding: 5px;
+                                    border-radius: 3px;
+                                    transition: background-color 0.2s;
+                                }
+
+                                .members-checklist .form-check:hover {
+                                    background-color: #e9ecef;
+                                }
+
+                                .members-checklist .form-check-label {
+                                    cursor: pointer;
+                                    margin-left: 5px;
+                                }
+
+                                .members-checklist .form-check-input:checked + .form-check-label {
+                                    font-weight: 500;
+                                    color: #007bff;
+                                }
                             </style>
 
                             <div class="card-body">
@@ -205,22 +226,44 @@
                             <label for="code">Branch Code</label>
                             <input type="text" class="form-control" id="editBranchCode" name="code">
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Assign Member to Branch</label>
-                            <form action="{{ route('branches.assignMember') }}" method="POST" class="d-flex align-items-center flex-column">
-                                @csrf
-                                <input type="hidden" name="branch_id" id="assignBranchId" value="">
-                                <input type="text" class="form-control mb-2" id="assignMemberSearch" placeholder="Search member by name or CID...">
-                                <select name="member_id" class="form-control me-2" required id="assignMemberSelect">
-                                    <option value="">Select Member</option>
-                                    @foreach (App\Models\Member::whereNull('branch_id')->get() as $member)
-                                        <option value="{{ $member->id }}">{{ $member->fname }} {{ $member->lname }} ({{ $member->cid }})</option>
-                                    @endforeach
-                                </select>
-                                <button type="submit" class="btn btn-primary ms-2 mt-2">Assign</button>
-                            </form>
-                        </div>
                     </form>
+
+                    <!-- Separate Assign Member Form -->
+                    <hr>
+                    <div class="form-group">
+                        <label class="form-label">Assign Members to Branch</label>
+                        <form action="{{ route('branches.assignMember') }}" method="POST" id="assignMemberForm">
+                            @csrf
+                            <input type="hidden" name="branch_id" id="assignBranchId" value="">
+
+                            <!-- Select All Checkbox -->
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="selectAllMembers">
+                                <label class="form-check-label" for="selectAllMembers">
+                                    <strong>Select All Members</strong>
+                                </label>
+                            </div>
+
+                            <!-- Selection Counter -->
+                            <div class="text-muted mb-2">
+                                <small id="selectionCounter">0 members selected</small>
+                            </div>
+
+                            <!-- Members Checklist -->
+                            <div class="members-checklist" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background-color: #f8f9fa;">
+                                @foreach (App\Models\Member::whereNull('branch_id')->get() as $member)
+                                    <div class="form-check">
+                                        <input class="form-check-input member-checkbox" type="checkbox" name="member_ids[]" value="{{ $member->id }}" id="member_{{ $member->id }}">
+                                        <label class="form-check-label" for="member_{{ $member->id }}">
+                                            {{ $member->fname }} {{ $member->lname }} ({{ $member->cid }})
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <button type="submit" class="btn btn-primary mt-3" id="assignMembersBtn">Assign Selected Members</button>
+                        </form>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -274,22 +317,17 @@
             modal.find('#editBranchCode').val(code);
             modal.find('#editForm').attr('action', '/branches/' + id);
             modal.find('#assignBranchId').val(id); // Set branch ID for the assign form
-            modal.find('#assignMemberSearch').val('');
+
             modal.find('#assignMemberSelect option').show();
+
+            // Reset checkboxes when modal opens
+            modal.find('.member-checkbox').prop('checked', false);
+            modal.find('#selectAllMembers').prop('checked', false);
+
+            // Initialize selection counter
+            updateSelectionCounter();
         });
 
-        // Assign Member Search Filtering
-        $(document).on('input', '#assignMemberSearch', function() {
-            var search = $(this).val().toLowerCase();
-            $('#assignMemberSelect option').each(function() {
-                var text = $(this).text().toLowerCase();
-                if (search === '' || text.includes(search)) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
-            });
-        });
 
         // View Modal
         $('#viewModal').on('show.bs.modal', function(event) {
@@ -310,6 +348,79 @@
             var id = button.data('id');
             var modal = $(this);
             modal.find('#deleteForm').attr('action', '/branches/' + id);
+        });
+
+        // Select All functionality
+        $(document).on('change', '#selectAllMembers', function() {
+            var isChecked = $(this).is(':checked');
+            $('.member-checkbox').prop('checked', isChecked);
+            updateSelectionCounter();
+        });
+
+        // Individual checkbox change
+        $(document).on('change', '.member-checkbox', function() {
+            var totalCheckboxes = $('.member-checkbox').length;
+            var checkedCheckboxes = $('.member-checkbox:checked').length;
+
+            if (checkedCheckboxes === totalCheckboxes) {
+                $('#selectAllMembers').prop('checked', true);
+            } else {
+                $('#selectAllMembers').prop('checked', false);
+            }
+
+            // Update selection counter
+            updateSelectionCounter();
+        });
+
+        // Function to update selection counter
+        function updateSelectionCounter() {
+            var checkedCount = $('.member-checkbox:checked').length;
+            var totalCount = $('.member-checkbox').length;
+            $('#selectionCounter').text(checkedCount + ' of ' + totalCount + ' members selected');
+        }
+
+        // Handle assign members form submission
+        $(document).on('submit', '#assignMemberForm', function(e) {
+            e.preventDefault();
+
+            var form = $(this);
+            var submitBtn = form.find('#assignMembersBtn');
+            var originalText = submitBtn.text();
+
+            // Get selected members
+            var selectedMembers = $('.member-checkbox:checked');
+
+            if (selectedMembers.length === 0) {
+                alert('Please select at least one member to assign.');
+                return;
+            }
+
+            // Show loading state
+            submitBtn.prop('disabled', true).text('Assigning...');
+
+            // Submit form via AJAX
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST',
+                data: form.serialize(),
+                success: function(response) {
+                    // Show success message
+                    alert('Members assigned to branch successfully!');
+                    // Close modal and refresh page
+                    $('#editModal').modal('hide');
+                    location.reload();
+                },
+                error: function(xhr) {
+                    var errorMessage = 'Failed to assign members';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    alert(errorMessage);
+                },
+                complete: function() {
+                    submitBtn.prop('disabled', false).text(originalText);
+                }
+            });
         });
     </script>
 

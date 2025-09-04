@@ -35,8 +35,34 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h4 class="card-title mb-0">Special Billing Data (Branch)</h4>
-                                <a href="{{ route('special-billing.export.branch') }}" class="btn btn-success">
+                                @php
+                                    $specialBillingEnabled = $exportStatuses->get('special_billing') ? $exportStatuses->get('special_billing')->is_enabled : true;
+                                    $userHasExported = $exportStatuses->get('special_billing') && !$exportStatuses->get('special_billing')->is_enabled;
+                                    $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && !$notAllApproved && $userIsApproved && $allBranchUsersApproved && !$anyBranchUsersPending && !$userHasExported;
+                                @endphp
+                                <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export.branch') : 'javascript:void(0);' }}"
+                                   class="btn btn-success {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
+                                   onclick="{{ $canExport && $hasSpecialBillingData ? '' : 'void(0)' }}">
                                     <i class="fa fa-file-excel"></i> Export Special Billing (Branch)
+                                    @if(!$hasSpecialBillingData)
+                                        <br><small class="text-muted">(Disabled - No special billing data for this period)</small>
+                                    @elseif($userHasExported)
+                                        <br><small class="text-muted">(Disabled - You have already exported for this billing period)</small>
+                                    @elseif(!$specialBillingEnabled)
+                                        <br><small class="text-muted">(Disabled - Already exported. Wait for next period to enable)</small>
+                                    @elseif($anyBranchUsersPending)
+                                        <br><small class="text-muted">(Disabled - Some branch users have pending status)</small>
+                                    @elseif($noBranch)
+                                        <br><small class="text-muted">(Disabled - Some members have no branch)</small>
+                                    @elseif($noRegularSavings)
+                                        <br><small class="text-muted">(Disabled - Some members have no regular savings)</small>
+                                    @elseif($notAllApproved)
+                                        <br><small class="text-muted">(Disabled - Some members are not approved)</small>
+                                    @elseif(!$userIsApproved)
+                                        <br><small class="text-muted">(Disabled - Your account is not approved)</small>
+                                    @elseif(!$allBranchUsersApproved)
+                                        <br><small class="text-muted">(Disabled - Not all branch users are approved)</small>
+                                    @endif
                                 </a>
                             </div>
                             <div class="card-body">
@@ -49,9 +75,6 @@
                                         <li><strong>Export:</strong> Export special billing data for your branch as needed.</li>
                                         <li><strong>Filtered Data:</strong> All data and exports are limited to your branch's members.</li>
                                     </ol>
-                                    <ul class="mb-2">
-                                        <li><strong>History:</strong> View and download previous special billing exports for your branch.</li>
-                                    </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> Branch users cannot upload special billing data. All exports are restricted to your branch's members only.</small></p>
                                 </div>
 
@@ -98,6 +121,7 @@
                                     <table class="table table-striped table-bordered">
                                         <thead>
                                             <tr>
+                                                <th>CID</th>
                                                 <th>Employee ID</th>
                                                 <th>Name</th>
                                                 <th>Amortization</th>
@@ -110,6 +134,7 @@
                                         <tbody>
                                             @forelse ($specialBillings as $billing)
                                             <tr>
+                                                <td>{{ $billing->cid }}</td>
                                                 <td>{{ $billing->employee_id }}</td>
                                                 <td>{{ $billing->name }}</td>
                                                 <td>{{ number_format($billing->amortization, 2) }}</td>

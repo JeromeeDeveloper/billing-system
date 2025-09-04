@@ -1015,7 +1015,7 @@ class MasterController extends Controller
 
             // Only store summary in session, not detailed results
             $message = "CoreID import completed successfully. ";
-            $message .= "Matched: {$stats['matched']}, ";
+            // $message .= "Matched: {$stats['matched']}, ";
             $message .= "Inserted: {$stats['inserted']}, ";
             $message .= "Removed: {$stats['removed']}";
 

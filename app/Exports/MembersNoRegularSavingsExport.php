@@ -57,11 +57,6 @@ class MembersNoRegularSavingsExport implements FromCollection, WithHeadings, Wit
             'Last Name',
 
             'Member Tagging',
-
-
-
-
-            'Savings Product Types'
         ];
     }
 
@@ -72,9 +67,7 @@ class MembersNoRegularSavingsExport implements FromCollection, WithHeadings, Wit
         $totalSavingsAccounts = $savingsAccounts->count();
 
         $savingsAccountNumbers = $savingsAccounts->pluck('account_number')->implode(', ');
-        $savingsProductTypes = $savingsAccounts->map(function ($saving) {
-            return $saving->savingProduct ? $saving->savingProduct->product_type : 'Unknown';
-        })->implode(', ');
+
 
         return [
             $member->branch ? $member->branch->name : 'N/A',
@@ -82,12 +75,8 @@ class MembersNoRegularSavingsExport implements FromCollection, WithHeadings, Wit
             $member->emp_id ?? '',
             $member->fname ?? '',
             $member->lname ?? '',
-
             $member->member_tagging ?? '',
 
-        
-
-            $savingsProductTypes
         ];
     }
 }

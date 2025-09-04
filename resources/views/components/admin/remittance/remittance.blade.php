@@ -37,6 +37,16 @@
         h5.text-center {
             padding: 18px;
         }
+
+        .btn.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn.disabled:hover {
+            opacity: 0.6;
+        }
     </style>
 </head>
 
@@ -70,12 +80,13 @@
                     </div>
                 </div>
 
+
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center title-container">
-                                    <h4 class="card-title mb-0">Upload Remittance Excel File</h4>
+                                    <h4 class="card-title mb-0">Remittance</h4>
                                 </div>
                                 <div class="d-flex align-items-center ms-3">
 
@@ -83,28 +94,92 @@
                             </div>
                             <div class="card-body">
                                 <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Remittance Flow & User Guide (Admin)</h5>
-                                    <ol class="mb-2">
-                                        <li><strong>Upload:</strong> Admin uploads remittance files for loans/savings
-                                            and shares.</li>
-                                        <li><strong>Processing:</strong> System matches and processes payments based on
-                                            prioritization and member data.</li>
-                                        <li><strong>Preview & Export:</strong> Admin can preview, process, and export
-                                            remittance data for all branches.</li>
-                                        <li><strong>Branch Filtering:</strong> Remittance data is automatically filtered
-                                            for each branch user.</li>
-                                    </ol>
-                                    <ul class="mb-2">
-                                        <li><strong>File Requirements:</strong> Ensure files meet the required format
-                                            and headers before uploading.</li>
-                                        <li><strong>History:</strong> View and download previous remittance uploads and
-                                            exports.</li>
-                                    </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> Only admin can upload remittance
-                                            data. Branch users can only export and view data filtered to their
-                                            branch.</small></p>
+                                <div class="row mb-4">
+                                    <div class="col-12 mb-3">
+                                        <div class="alert alert-info">
+                                            <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Remittance
+                                                Upload Information</h6>
+                                            <p class="mb-2"><strong>Current Billing Period:</strong>
+                                                {{ \Carbon\Carbon::parse(Auth::user()->billing_period)->format('Y F') }}
+                                            </p>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card stats-card bg-light border-primary">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-primary mb-2">
+                                                    <i class="fa fa-upload"></i> Remittance (Regular)
+                                                </h5>
+                                                <h2 class="mb-0">{{ $remittanceImportRegularCount }}</h2>
+                                                @php
+                                                    $regularCount = $remittanceImportRegularCount;
+                                                    $ordinal = '';
+                                                    if ($regularCount == 1) {
+                                                        $ordinal = '1st';
+                                                    } elseif ($regularCount == 2) {
+                                                        $ordinal = '2nd';
+                                                    } elseif ($regularCount == 3) {
+                                                        $ordinal = '3rd';
+                                                    } else {
+                                                        $ordinal = $regularCount . 'th';
+                                                    }
+                                                @endphp
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this
+                                                    period</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card stats-card bg-light border-warning">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-warning mb-2">
+                                                    <i class="fa fa-upload"></i> Remittance (Special)
+                                                </h5>
+                                                <h2 class="mb-0">{{ $remittanceImportSpecialCount }}</h2>
+                                                @php
+                                                    $specialCount = $remittanceImportSpecialCount;
+                                                    $ordinal = '';
+                                                    if ($specialCount == 1) {
+                                                        $ordinal = '1st';
+                                                    } elseif ($specialCount == 2) {
+                                                        $ordinal = '2nd';
+                                                    } elseif ($specialCount == 3) {
+                                                        $ordinal = '3rd';
+                                                    } else {
+                                                        $ordinal = $specialCount . 'th';
+                                                    }
+                                                @endphp
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this
+                                                    period</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card stats-card bg-light border-info">
+                                            <div class="card-body text-center">
+                                                <h5 class="card-title text-info mb-2">
+                                                    <i class="fa fa-upload"></i> Remittance (Shares)
+                                                </h5>
+                                                <h2 class="mb-0">{{ $sharesRemittanceImportCount }}</h2>
+                                                @php
+                                                    $sharesCount = $sharesRemittanceImportCount;
+                                                    $ordinal = '';
+                                                    if ($sharesCount == 1) {
+                                                        $ordinal = '1st';
+                                                    } elseif ($sharesCount == 2) {
+                                                        $ordinal = '2nd';
+                                                    } elseif ($sharesCount == 3) {
+                                                        $ordinal = '3rd';
+                                                    } else {
+                                                        $ordinal = $sharesCount . 'th';
+                                                    }
+                                                @endphp
+                                                <small class="text-muted">{{ $ordinal }} remittance uploaded this
+                                                    period</small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Alerts Section (Success, Error, Billing Period) -->
@@ -112,85 +187,354 @@
                                     <div class="col-12 col-md-6">
                                         @if (session('success'))
                                             <div class="alert alert-success alert-dismissible fade show">
-                                                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                                <strong><i class="fa fa-check-circle"></i> Success!</strong> {{ session('success') }}
+                                                <button type="button" class="close"
+                                                    data-dismiss="alert">&times;</button>
+                                                <strong><i class="fa fa-check-circle"></i> Success!</strong>
+                                                {{ session('success') }}
                                             </div>
                                         @endif
                                         @if (session('error'))
                                             <div class="alert alert-danger alert-dismissible fade show">
-                                                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                                <strong><i class="fa fa-exclamation-circle"></i> Error!</strong> {{ session('error') }}
+                                                <button type="button" class="close"
+                                                    data-dismiss="alert">&times;</button>
+                                                <strong><i class="fa fa-exclamation-circle"></i> Error!</strong>
+                                                {{ session('error') }}
                                             </div>
                                         @endif
                                     </div>
-                                    <div class="col-12 col-md-12">
-                                        <div class="alert alert-warning alert-dismissible fade show mb-0">
-                                            <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                            <h6 class="mb-1"><i class="fa fa-calendar"></i> Current Billing Period</h6>
-                                            <p class="mb-0">
-                                                <strong>Period:</strong>
-                                                @php
-                                                    $billingPeriod = auth()->user()->billing_period ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format('F Y') : 'Not Set';
-                                                @endphp
-                                                {{ $billingPeriod }}
-                                            </p>
-                                            <p class="mb-0 small text-muted">
-                                                <i class="fa fa-info-circle"></i> Remittance data will be filtered and exported only for this billing period.
-                                            </p>
+
+                                </div>
+
+                                <!-- Collection Monitoring Dashboard -->
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-header bg-gradient-primary text-white">
+                                                <h5 class="mb-0">
+                                                    <i class="fa fa-tachometer-alt"></i> Collection Monitoring Dashboard
+                                                </h5>
+                                                <small class="text-white-50">Comprehensive overview of collection generation status and data availability</small>
+                                            </div>
+                                            <div class="card-body">
+                                                <!-- Detailed Monitoring Cards -->
+                                                <div class="row">
+                                                    <!-- Loans & Savings Detailed Monitoring -->
+                                                    <div class="col-md-6 mb-4">
+                                                        <div class="card h-100 border-left" style="border-left-width: 4px;">
+                                                            <div class="card-header bg-light">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <h6 class="mb-0 text-primary">
+                                                                        <i class="fa fa-money-bill-wave"></i> Loans & Savings Collection
+                                                                    </h6>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <!-- Statistics Grid -->
+                                                                <div class="row text-center mb-3">
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-success mb-0">{{ $monitoringData['loans_savings']['total_records'] }}</h4>
+                                                                            <small class="text-muted">Total Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-info mb-0">{{ $monitoringData['loans_savings']['matched_records'] }}</h4>
+                                                                            <small class="text-muted">Matched Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-warning mb-0">{{ $collectionStatus['loans_savings']['match_rate'] }}%</h4>
+                                                                            <small class="text-muted">Match Rate</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Detailed Information -->
+                                                                @if($monitoringData['loans_savings']['latest_batch'])
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-info-circle"></i> Latest Import Details</h6>
+                                                                        <div class="row">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Date:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['loans_savings']['latest_batch']->imported_at)->format('M d, Y') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Time:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['loans_savings']['latest_batch']->imported_at)->format('g:i A') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Billing Type:</small>
+                                                                                    <div>
+                                                                                        <span class="badge badge-{{ $monitoringData['loans_savings']['latest_batch']->billing_type === 'regular' ? 'primary' : 'success' }}">
+                                                                                            {{ ucfirst($monitoringData['loans_savings']['latest_batch']->billing_type) }}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Latest Upload:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        @if($remittanceImportRegularCount > 0)
+                                                                                            {{ $remittanceImportRegularCount }}{{ $remittanceImportRegularCount == 1 ? 'st' : ($remittanceImportRegularCount == 2 ? 'nd' : ($remittanceImportRegularCount == 3 ? 'rd' : 'th')) }} Upload
+                                                                                        @else
+                                                                                            No Uploads
+                                                                                        @endif
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-12">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Time Since Import:</small>
+                                                                                    <div class="font-weight-bold text-info">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['loans_savings']['latest_batch']->imported_at)->diffForHumans() }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="mt-3 text-center">
+                                                                        <div class="alert alert-warning mb-0">
+                                                                            <i class="fa fa-exclamation-triangle"></i>
+                                                                            <strong>No Import Data Available</strong><br>
+                                                                            <small>No remittance batches found for loans & savings in this billing period.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+
+                                                                <!-- Available Types -->
+                                                                @if($monitoringData['loans_savings']['available_types']->count() > 0)
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-tags"></i> Available Billing Types</h6>
+                                                                        <div class="d-flex flex-wrap">
+                                                                            @foreach($monitoringData['loans_savings']['available_types'] as $type)
+                                                                                <span class="badge badge-{{ $type === 'regular' ? 'primary' : 'success' }} mr-2 mb-1">
+                                                                                    {{ ucfirst($type) }}
+                                                                                </span>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Shares Detailed Monitoring -->
+                                                    <div class="col-md-6 mb-4">
+                                                        <div class="card h-100 border-left" style="border-left-width: 4px;">
+                                                            <div class="card-header bg-light">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <h6 class="mb-0 text-info">
+                                                                        <i class="fa fa-chart-pie"></i> Shares Collection
+                                                                    </h6>
+                                                                </div>
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <!-- Statistics Grid -->
+                                                                <div class="row text-center mb-3">
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-success mb-0">{{ $monitoringData['shares']['total_records'] }}</h4>
+                                                                            <small class="text-muted">Total Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-info mb-0">{{ $monitoringData['shares']['matched_records'] }}</h4>
+                                                                            <small class="text-muted">Matched Records</small>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-4">
+                                                                        <div class="stat-item">
+                                                                            <h4 class="text-warning mb-0">{{ $collectionStatus['shares']['match_rate'] }}%</h4>
+                                                                            <small class="text-muted">Match Rate</small>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Detailed Information -->
+                                                                @if($monitoringData['shares']['latest_batch'])
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-info-circle"></i> Latest Import Details</h6>
+                                                                        <div class="row">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Import Date:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['shares']['latest_batch']->imported_at)->format('M d, Y') }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                                                                                                         <div class="col-6">
+                                                                                 <div class="detail-item">
+                                                                                     <small class="text-muted">Import Time:</small>
+                                                                                     <div class="font-weight-bold">
+                                                                                         {{ \Carbon\Carbon::parse($monitoringData['shares']['latest_batch']->imported_at)->format('g:i A') }}
+                                                                                     </div>
+                                                                                 </div>
+                                                                             </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Billing Type:</small>
+                                                                                    <div>
+                                                                                        <span class="badge badge-info">
+                                                                                            Shares
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="col-6">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Latest Upload:</small>
+                                                                                    <div class="font-weight-bold">
+                                                                                        @if($sharesRemittanceImportCount > 0)
+                                                                                            {{ $sharesRemittanceImportCount }}{{ $sharesRemittanceImportCount == 1 ? 'st' : ($sharesRemittanceImportCount == 2 ? 'nd' : ($sharesRemittanceImportCount == 3 ? 'rd' : 'th')) }} Upload
+                                                                                        @else
+                                                                                            No Uploads
+                                                                                        @endif
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="row mt-2">
+                                                                            <div class="col-12">
+                                                                                <div class="detail-item">
+                                                                                    <small class="text-muted">Time Since Import:</small>
+                                                                                    <div class="font-weight-bold text-info">
+                                                                                        {{ \Carbon\Carbon::parse($monitoringData['shares']['latest_batch']->imported_at)->diffForHumans() }}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="mt-3 text-center">
+                                                                        <div class="alert alert-warning mb-0">
+                                                                            <i class="fa fa-exclamation-triangle"></i>
+                                                                            <strong>No Import Data Available</strong><br>
+                                                                            <small>No remittance batches found for shares in this billing period.</small>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+
+                                                                <!-- Available Types -->
+                                                                @if($monitoringData['shares']['available_types']->count() > 0)
+                                                                    <div class="mt-3">
+                                                                        <h6 class="text-muted mb-2"><i class="fa fa-tags"></i> Available Billing Types</h6>
+                                                                        <div class="d-flex flex-wrap">
+                                                                            @foreach($monitoringData['shares']['available_types'] as $type)
+                                                                                <span class="badge badge-info mr-2 mb-1">
+                                                                                    {{ ucfirst($type) }}
+                                                                                </span>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Modernized Remittance Upload Section (Installment Forecast on top, others below) -->
+                                <!-- Modernized Remittance Upload Section (Forecast moved into forms below) -->
                                 <div class="row g-4 mb-4">
-                                    <div class="col-12 mb-3">
-                                        <div class="card shadow-sm h-100">
-                                            <div class="card-header bg-primary text-white">
-                                                <i class="fa fa-upload me-2"></i>Installment Forecast Upload
-                                            </div>
-                                            <div class="card-body">
-                                                <form action="{{ route('document.upload') }}" method="POST" enctype="multipart/form-data" id="installmentForm">
-                                                    @csrf
-                                                    <div class="mb-3">
-                                                        <label for="remit_installment_file" class="form-label">Select File</label>
-                                                        <input type="file" class="form-control" id="remit_installment_file" name="file">
-                                                    </div>
-                                                    <button type="submit" class="btn btn-primary w-100">
-                                                        <i class="fa fa-upload me-1"></i> Upload Installment File
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
+
                                     <div class="col-12 col-lg-6">
                                         <div class="card shadow-sm h-100">
                                             <div class="card-header bg-success text-white">
                                                 <i class="fa fa-upload me-2"></i>Savings & Loans Remittance Upload
                                             </div>
                                             <div class="card-body">
-                                                <form action="{{ route('remittance.upload') }}" method="POST" enctype="multipart/form-data" id="loansSavingsForm">
+                                                <form action="{{ route('remittance.upload') }}" method="POST"
+                                                    enctype="multipart/form-data" id="loansSavingsForm">
                                                     @csrf
                                                     <div class="mb-3">
-                                                        <label class="form-label">Select File</label>
-                                                        <input type="file" class="form-control" name="file" id="file" accept=".xlsx,.xls,.csv" required>
+                                                        <label class="form-label">Loans & Savings File</label>
+                                                        <input type="file" class="form-control" name="file"
+                                                            id="file" accept=".xlsx,.xls,.csv" required>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name, Loans, Savings Product Names.</small>
+                                                        <label class="form-label">Installment Forecast File</label>
+                                                        <input type="file" class="form-control" name="forecast_file" id="forecast_file" accept=".xlsx,.xls,.csv" required>
+                                                        <small class="text-muted">Required. Upload the corresponding installment forecast for this period.</small>
+                                                    </div>
+                                                    <input type="hidden" name="billing_type" id="billingTypeInput"
+                                                        value="regular">
+                                                    <div class="mb-3">
+                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv).
+                                                            Required headers: CID, Name, Loans, Savings Product
+                                                            Names.</small>
                                                     </div>
 
-                                                    <button type="submit" class="btn btn-success btn-block mt-2">
-                                                            <i class="fa fa-upload me-1"></i> Upload and Process Loans & Savings Remittance
-                                                        </button>
+                                                    <!-- Warning Message -->
+                                                    <div class="alert alert-warning alert-dismissible fade show mb-3">
+                                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                                        <strong><i class="fa fa-exclamation-triangle"></i> Important:</strong>
+                                                        <ul class="mb-0 mt-2">
+                                                            <li>Please ensure the file contents are correct before uploading</li>
+                                                            <li>This action cannot be undone once processed</li>
+                                                            <li>Double-check all data before proceeding</li>
+                                                        </ul>
+                                                    </div>
 
-                                                    <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#loansSavingsFormatModal">
-                                                            <i class="fa fa-eye me-1"></i> View Expected Format
+                                                    <button type="button" class="btn btn-success btn-block mt-2"
+                                                        id="showBillingTypeModalBtn">
+                                                        <i class="fa fa-upload me-1"></i> Upload and Process Loans &
+                                                        Savings Remittance
                                                     </button>
-
-                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('loans_savings')">
-                                                        Collection file for Loans & Savings
+                                                    <button type="button" class="btn btn-warning btn-block mt-2"
+                                                        data-toggle="modal" data-target="#loansSavingsFormatModal">
+                                                        <i class="fa fa-eye me-1"></i> View Expected Format
+                                                    </button>
+                                                    @php
+                                                        $loansSavingsEnabled = $exportStatuses->get('loans_savings')
+                                                            ? $exportStatuses->get('loans_savings')->is_enabled
+                                                            : true;
+                                                        $loansSavingsWithProductEnabled = $exportStatuses->get(
+                                                            'loans_savings_with_product',
+                                                        )
+                                                            ? $exportStatuses->get('loans_savings_with_product')
+                                                                ->is_enabled
+                                                            : true;
+                                                    @endphp
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-primary btn-block mt-2 {{ !$loansSavingsEnabled ? 'disabled' : '' }}"
+                                                        onclick="{{ $loansSavingsEnabled ? 'generateExport(\'loans_savings\')' : 'void(0)' }}">
+                                                        Generate Batch for Import
+                                                        @if (!$loansSavingsEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new
+                                                                remittance to enable)</small>
+                                                        @endif
                                                     </a>
-                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2" onclick="generateExport('loans_savings_with_product')">
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-info btn-block mt-2 {{ !$loansSavingsWithProductEnabled ? 'disabled' : '' }}"
+                                                        onclick="{{ $loansSavingsWithProductEnabled ? 'generateExport(\'loans_savings_with_product\')' : 'void(0)' }}">
                                                         Collection file for Loans & Savings (with Product Name)
+                                                        @if (!$loansSavingsWithProductEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new
+                                                                remittance to enable)</small>
+                                                        @endif
                                                     </a>
                                                 </form>
                                             </div>
@@ -202,28 +546,69 @@
                                                 <i class="fa fa-upload me-2"></i>Share Remittance Upload
                                             </div>
                                             <div class="card-body">
-                                                <form action="{{ route('remittance.upload.share') }}" method="POST" enctype="multipart/form-data" id="shareForm">
+                                                <form action="{{ route('remittance.upload.share') }}" method="POST"
+                                                    enctype="multipart/form-data" id="shareForm">
                                                     @csrf
                                                     <div class="mb-3">
-                                                        <label class="form-label">Select File</label>
-                                                        <input type="file" class="form-control" name="file" id="shareFile" accept=".xlsx,.xls,.csv" required>
+                                                        <label class="form-label">Shares File</label>
+                                                        <input type="file" class="form-control" name="file"
+                                                            id="shareFile" accept=".xlsx,.xls,.csv">
                                                     </div>
+
                                                     <div class="mb-3">
-                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv). Required headers: CID, Name (LASTNAME, FIRSTNAME), Share (amount).</small>
+                                                        <small class="text-muted">Excel format (.xlsx, .xls, .csv).
+                                                            Required headers: CID, Name (LASTNAME, FIRSTNAME), Share
+                                                            (amount).</small>
                                                     </div>
 
-                                                        <button type="submit" class="btn btn-success btn-block mt-2">
-                                                            <i class="fa fa-upload me-1"></i> Upload and Process Share Remittance
-                                                        </button>
-                                                        <button type="button" class="btn btn-warning btn-block mt-2" data-toggle="modal" data-target="#sharesFormatModal">
-                                                            <i class="fa fa-eye me-1"></i> View Expected Format
-                                                        </button>
+                                                    <!-- Warning Message -->
+                                                    <div class="alert alert-warning alert-dismissible fade show mb-3">
+                                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                                        <strong><i class="fa fa-exclamation-triangle"></i> Important:</strong>
+                                                        <ul class="mb-0 mt-2">
+                                                            <li>Please ensure the file contents are correct before uploading</li>
+                                                            <li>This action cannot be undone once processed</li>
+                                                            <li>Double-check all data before proceeding</li>
+                                                        </ul>
+                                                    </div>
 
-                                                    <a href="javascript:void(0);" class="btn btn-primary btn-block mt-2" onclick="generateExport('shares')">
-                                                        Collection file for Shares
+                                                    <button type="submit" class="btn btn-success btn-block mt-2"
+                                                        id="shareSubmitBtn">
+                                                        <i class="fa fa-upload me-1"></i> Upload and Process Share
+                                                        Remittance
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning btn-block mt-2"
+                                                        data-toggle="modal" data-target="#sharesFormatModal">
+                                                        <i class="fa fa-eye me-1"></i> View Expected Format
+                                                    </button>
+
+                                                    @php
+                                                        $sharesEnabled = $exportStatuses->get('shares')
+                                                            ? $exportStatuses->get('shares')->is_enabled
+                                                            : true;
+                                                        $sharesWithProductEnabled = $exportStatuses->get(
+                                                            'shares_with_product',
+                                                        )
+                                                            ? $exportStatuses->get('shares_with_product')->is_enabled
+                                                            : true;
+                                                    @endphp
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-primary btn-block mt-2 {{ !$sharesEnabled ? 'disabled' : '' }}"
+                                                        onclick="{{ $sharesEnabled ? 'generateExport(\'shares\')' : 'void(0)' }}">
+                                                        Generate Batch for Import
+                                                        @if (!$sharesEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new shares
+                                                                to enable)</small>
+                                                        @endif
                                                     </a>
-                                                    <a href="javascript:void(0);" class="btn btn-info btn-block mt-2" onclick="generateExport('shares_with_product')">
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-info btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}"
+                                                        onclick="{{ $sharesWithProductEnabled ? 'generateExport(\'shares_with_product\')' : 'void(0)' }}">
                                                         Collection file for Shares (with Product Name)
+                                                        @if (!$sharesWithProductEnabled)
+                                                            <br><small class="text-muted">(Disabled - Upload new shares
+                                                                to enable)</small>
+                                                        @endif
                                                     </a>
                                                 </form>
                                             </div>
@@ -231,164 +616,20 @@
                                     </div>
                                 </div>
 
-                                <!-- Remittance Preview Section (unchanged, just add card and spacing) -->
-                                <div class="card shadow-sm mb-4">
-                                    <div class="card-body">
-                                        {{-- Loans & Savings Remittance Preview --}}
-                                        <div class="mb-4">
-                                            <h5 class="text-center">Loans & Savings Remittance Preview</h5>
-                                            <div class="row mb-3 justify-content-between align-items-center">
-                                                <div class="col-12 col-md-7 mb-2 mb-md-0">
-                                                    <div class="btn-group" role="group">
-                                                        <!-- Filter buttons (unchanged) -->
-                                                        @php $filter = request('loans_filter'); @endphp
-                                                        <a href="{{ route('remittance.index') }}" class="btn {{ !$filter ? 'btn-primary' : 'btn-outline-primary' }} mr-2">All Records</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'matched'])) }}" class="btn {{ $filter === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">Matched Only</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'unmatched'])) }}" class="btn {{ $filter === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">Unmatched Only</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('loans_page'), ['loans_filter' => 'no_branch'])) }}" class="btn {{ $filter === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">No Branch</a>
-                                                    </div>
-                                                </div>
-                                                <div class="col-12 col-md-5 d-flex justify-content-md-end">
-                                                    <form method="GET" class="form-inline w-100 justify-content-end">
-                                                        @if (request()->has('loans_filter'))
-                                                            <input type="hidden" name="loans_filter" value="{{ request('loans_filter') }}">
-                                                        @endif
-                                                        <input type="text" name="loans_search" value="{{ request('loans_search') }}" class="form-control mr-2 w-auto" placeholder="Search by name or emp_id">
-                                                        <button type="submit" class="btn btn-outline-secondary btn-sm mr-2">Search</button>
-                                                        @if (request()->has('loans_search') || request()->has('loans_filter'))
-                                                            <a href="{{ route('remittance.index') }}" class="btn btn-outline-warning btn-sm">Clear</a>
-                                                        @endif
-                                                    </form>
-                                                </div>
-                                            </div>
-                                            <div class="table-responsive">
-                                                <table class="table table-bordered text-center">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Member</th>
-                                                            <th>Loans</th>
-                                                            <th>Savings</th>
-                                                            <th>Status</th>
-                                                            <th>Message</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @forelse($loansSavingsPreviewPaginated as $row)
-                                                            <tr>
-                                                                <td>{{ $row->name }}</td>
-                                                                <td>{{ $row->loans }}</td>
-                                                                <td>{{ is_array($row->savings) ? $row->savings['total'] ?? 0 : $row->savings }}</td>
-                                                                <td>{{ $row->status }}</td>
-                                                                <td>{{ $row->message }}</td>
-                                                            </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="5" class="text-center text-muted">No records found.</td>
-                                                            </tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-12 d-flex justify-content-center text-center">
-                                                    {{ $loansSavingsPreviewPaginated->appends(request()->except('loans_page'))->links() }}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {{-- Shares Remittance Preview --}}
-                                        <div class="mb-4">
-                                            <h5 class="text-center">Shares Remittance Preview</h5>
-                                            <div class="row mb-3 justify-content-between align-items-center">
-                                                <div class="col-12 col-md-7 mb-2 mb-md-0">
-                                                    <div class="btn-group" role="group">
-                                                        <!-- Filter buttons (unchanged) -->
-                                                        @php $filter = request('shares_filter'); @endphp
-                                                        <a href="{{ route('remittance.index') }}" class="btn {{ !$filter ? 'btn-primary' : 'btn-outline-primary' }} mr-2">All Records</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'matched'])) }}" class="btn {{ $filter === 'matched' ? 'btn-success' : 'btn-outline-success' }} mr-2">Matched Only</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'unmatched'])) }}" class="btn {{ $filter === 'unmatched' ? 'btn-danger' : 'btn-outline-danger' }} mr-2">Unmatched Only</a>
-                                                        <a href="{{ route('remittance.index', array_merge(request()->except('shares_page'), ['shares_filter' => 'no_branch'])) }}" class="btn {{ $filter === 'no_branch' ? 'btn-info' : 'btn-outline-info' }}">No Branch</a>
-                                                    </div>
-                                                </div>
-                                                <div class="col-12 col-md-5 d-flex justify-content-md-end">
-                                                    <form method="GET" class="form-inline w-100 justify-content-end">
-                                                        @if (request()->has('shares_filter'))
-                                                            <input type="hidden" name="shares_filter" value="{{ request('shares_filter') }}">
-                                                        @endif
-                                                        <input type="text" name="shares_search" value="{{ request('shares_search') }}" class="form-control mr-2 w-auto" placeholder="Search by name or emp_id">
-                                                        <button type="submit" class="btn btn-outline-secondary btn-sm mr-2">Search</button>
-                                                        @if (request()->has('shares_search') || request()->has('shares_filter'))
-                                                            <a href="{{ route('remittance.index') }}" class="btn btn-outline-warning btn-sm">Clear</a>
-                                                        @endif
-                                                    </form>
-                                                </div>
-                                            </div>
-                                            <div class="table-responsive">
-                                                <table class="table table-bordered text-center">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Member</th>
-                                                            <th>Shares</th>
-                                                            <th>Status</th>
-                                                            <th>Message</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @forelse($sharesPreviewPaginated as $row)
-                                                            <tr>
-                                                                <td>{{ $row->name }}</td>
-                                                                <td>{{ $row->share_amount }}</td>
-                                                                <td>{{ $row->status }}</td>
-                                                                <td>{{ $row->message }}</td>
-                                                            </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="4" class="text-center text-muted">No records found.</td>
-                                                            </tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <div class="row">
-                                                <div class="col-12 d-flex justify-content-center text-center">
-                                                    {{ $sharesPreviewPaginated->appends(request()->except('shares_page'))->links() }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
 
 
-                                </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {{-- Export Button for Regular & Special Billing Remittance --}}
-                <div class="mb-3 text-right">
-                    <a href="{{ route('remittance.exportRegularSpecial') }}" class="btn btn-success">
-                        <i class="fa fa-file-excel-o"></i> Export Regular & Special Billing Remittance
-                    </a>
-                </div>
+            {{-- Consolidated Remittance Table --}}
+            @include('components.admin.remittance.consolidated_remittance_table')
 
-            @if (isset($regularRemittances) && $regularRemittances->count() > 0)
-                @include('components.admin.remittance.billing_table', [
-                    'remittances' => $regularRemittances,
-                    'billed' => $regularBilled,
-                    'type' => 'Regular'
-                ])
-            @endif
-            @if (isset($specialRemittances) && $specialRemittances->count() > 0)
-                @include('components.admin.remittance.billing_table', [
-                    'remittances' => $specialRemittances,
-                    'billed' => $specialBilled,
-                    'type' => 'Special'
-                ])
-            @endif
-
-    </div>
         </div>
+    </div>
     </div>
 
     <style>
@@ -631,10 +872,47 @@
         </div>
     </div>
 
+    <!-- Billing Type Modal -->
+    <div class="modal fade" id="billingTypeModal" tabindex="-1" role="dialog"
+        aria-labelledby="billingTypeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="billingTypeModalLabel">Select Billing Type</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label><strong>Choose which billing type to process for this upload:</strong></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="billing_type_modal"
+                                id="billingTypeRegular" value="regular" checked>
+                            <label class="form-check-label" for="billingTypeRegular">Regular</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="billing_type_modal"
+                                id="billingTypeSpecial" value="special">
+                            <label class="form-check-label" for="billingTypeSpecial">Special</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmBillingTypeBtn">Proceed with
+                        Upload</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Forecast Upload Guide Pop-up -->
-    <div id="forecastGuidePopup" class="position-fixed" style="bottom: 24px; right: 24px; z-index: 1055; min-width: 320px; max-width: 90vw;">
+    <div id="forecastGuidePopup" class="position-fixed"
+        style="bottom: 24px; right: 24px; z-index: 1055; min-width: 320px; max-width: 90vw;">
         <div class="alert alert-info alert-dismissible fade show shadow" role="alert">
-            <strong><i class="fa fa-info-circle"></i> Reminder:</strong> Please upload the <b>Installment Forecast</b> first before uploading any remittance files.<br>
+            <strong><i class="fa fa-info-circle"></i> Reminder:</strong> Please upload the <b>Installment Forecast</b>
+            first before uploading any remittance files.<br>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
@@ -679,6 +957,55 @@
             const installmentForm = document.getElementById('installmentForm');
             if (installmentForm) {
                 installmentForm.addEventListener('submit', function(e) {
+                    // Check if a file is selected
+                    const fileInput = document.getElementById('remit_installment_file');
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No File Selected',
+                            text: 'Please select a file before proceeding with the upload.',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Check file type
+                    const file = fileInput.files[0];
+                    const allowedTypes = [
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                        'application/vnd.ms-excel', // .xls
+                        'text/csv', // .csv
+                        'application/csv' // .csv alternative
+                    ];
+
+                    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid File Type',
+                            text: 'Please select a valid Excel or CSV file (.xlsx, .xls, .csv).',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Check file size (max 10MB)
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    if (file.size > maxSize) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'Please select a file smaller than 10MB.',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
                     const submitBtn = document.getElementById('installmentSubmitBtn');
                     const originalText = submitBtn.innerHTML;
 
@@ -723,19 +1050,95 @@
             const shareForm = document.getElementById('shareForm');
             if (shareForm) {
                 shareForm.addEventListener('submit', function(e) {
-                    const submitBtn = document.getElementById('shareSubmitBtn');
-                    const originalText = submitBtn.innerHTML;
+                    // Check if a file is selected
+                    const fileInput = document.getElementById('shareFile');
+                    if (!fileInput.files || fileInput.files.length === 0) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No File Selected',
+                            text: 'Please select a file before proceeding with the upload.',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
 
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+                    // Check file type
+                    const file = fileInput.files[0];
+                    const allowedTypes = [
+                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                        'application/vnd.ms-excel', // .xls
+                        'text/csv', // .csv
+                        'application/csv' // .csv alternative
+                    ];
 
+                    if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid File Type',
+                            text: 'Please select a valid Excel or CSV file (.xlsx, .xls, .csv).',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Check file size (max 10MB)
+                    const maxSize = 10 * 1024 * 1024; // 10MB
+                    if (file.size > maxSize) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'Please select a file smaller than 10MB.',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // Show confirmation dialog
+                    e.preventDefault();
                     Swal.fire({
-                        title: 'Processing Share Remittance...',
-                        html: 'Please wait while we match and process your share remittance data. This may take a few moments.',
-                        allowOutsideClick: false,
-                        allowEscapeKey: false,
-                        didOpen: () => {
-                            Swal.showLoading();
+                        icon: 'warning',
+                        title: 'Confirm Share Upload',
+                        html: `
+                            <div class="text-center">
+                                <p><strong>Are you sure you want to proceed?</strong></p>
+                                <ul class="text-center">
+                                    <li>This action cannot be undone</li>
+                                    <li>Please ensure all data is correct</li>
+                                    <li>Double-check the file contents before proceeding</li>
+                                </ul>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, Upload Now',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const submitBtn = document.getElementById('shareSubmitBtn');
+                            const originalText = submitBtn.innerHTML;
+
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+                            Swal.fire({
+                                title: 'Processing Share Remittance...',
+                                html: 'Please wait while we match and process your share remittance data. This may take a few moments.',
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+
+                            // Submit the form
+                            document.getElementById('shareForm').submit();
                         }
                     });
                 });
@@ -763,6 +1166,110 @@
                         showConfirmButton: false
                     });
                 }
+            });
+
+            // Show modal on upload button click
+            document.getElementById('showBillingTypeModalBtn').addEventListener('click', function(e) {
+                // Check if a file is selected
+                const fileInput = document.getElementById('file');
+                if (!fileInput.files || fileInput.files.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'No File Selected',
+                        text: 'Please select a file before proceeding with the upload.',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Check file type
+                const file = fileInput.files[0];
+                const allowedTypes = [
+                    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                    'application/vnd.ms-excel', // .xls
+                    'text/csv', // .csv
+                    'application/csv' // .csv alternative
+                ];
+
+                if (!allowedTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid File Type',
+                        text: 'Please select a valid Excel or CSV file (.xlsx, .xls, .csv).',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // Check file size (max 10MB)
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                if (file.size > maxSize) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'Please select a file smaller than 10MB.',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'OK'
+                    });
+                    return;
+                }
+
+                // If all validations pass, show the modal
+                $('#billingTypeModal').modal('show');
+            });
+            // On confirm, set hidden input and submit form
+            document.getElementById('confirmBillingTypeBtn').addEventListener('click', function(e) {
+                var selectedType = document.querySelector('input[name="billing_type_modal"]:checked').value;
+                document.getElementById('billingTypeInput').value = selectedType;
+
+                // Show final confirmation dialog
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Confirm Upload',
+                    html: `
+                        <div class="text-center">
+                            <p><strong>Are you sure you want to proceed?</strong></p>
+                            <ul class="text-center">
+                                <li>This action cannot be undone</li>
+                                <li>Please ensure all data is correct</li>
+                                <li>Double-check the file contents before proceeding</li>
+                            </ul>
+                        </div>
+                    `,
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, Upload Now',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading state
+                        const confirmBtn = document.getElementById('confirmBillingTypeBtn');
+                        const originalText = confirmBtn.innerHTML;
+
+                        confirmBtn.disabled = true;
+                        confirmBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+
+                        // Close modal
+                        $('#billingTypeModal').modal('hide');
+
+                        // Show SweetAlert loading
+                        Swal.fire({
+                            title: 'Processing Remittance Upload...',
+                            html: 'Please wait while we match and process your remittance data. This may take a few moments.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Submit the form
+                        document.getElementById('loansSavingsForm').submit();
+                    }
+                });
             });
         });
     </script>

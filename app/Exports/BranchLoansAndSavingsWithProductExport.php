@@ -13,11 +13,13 @@ class BranchLoansAndSavingsWithProductExport implements FromCollection, WithHead
 {
     protected $remittanceData;
     protected $branch_id;
+    protected $billingPeriod;
 
-    public function __construct($remittanceData, $branch_id)
+    public function __construct($remittanceData, $branch_id, $billingPeriod = null)
     {
         $this->remittanceData = $remittanceData;
         $this->branch_id = $branch_id;
+        $this->billingPeriod = $billingPeriod;
     }
 
     public function headings(): array
@@ -63,10 +65,21 @@ class BranchLoansAndSavingsWithProductExport implements FromCollection, WithHead
                     return $loanProduct ? $loanProduct->prioritization : 999;
                 });
                 foreach ($loanForecasts as $forecast) {
+                    // Get the latest batch to determine billing type
+                    $latestBatch = \App\Models\RemittanceBatch::where('billing_period', $this->billingPeriod ?? \Illuminate\Support\Facades\Auth::user()->billing_period)
+                        ->whereIn('billing_type', ['regular', 'special'])
+                        ->orderBy('imported_at', 'desc')
+                        ->first();
+
                     $remittances = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
-                        ->where('member_id', $member->id)
-                        ->orderBy('remittance_date')
-                        ->get();
+                        ->where('member_id', $member->id);
+
+                    // Filter by billing type if latest batch exists
+                    if ($latestBatch) {
+                        $remittances = $remittances->where('billing_type', $latestBatch->billing_type);
+                    }
+
+                    $remittances = $remittances->orderBy('remittance_date')->get();
                     foreach ($remittances as $remit) {
                         if ($remit->remitted_amount > 0) {
                             $originalAccountNumber = $forecast->loan_acct_no;

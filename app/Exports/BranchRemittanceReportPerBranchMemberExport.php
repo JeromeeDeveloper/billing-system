@@ -47,7 +47,14 @@ class BranchRemittanceReportPerBranchMemberExport implements FromArray, WithStyl
         $rows[] = [''];
 
         // --- Determine products with remittances ---
-        // Loans
+        // Use RemittanceReport for consistent data with Consolidated report
+        $branchMembers = $branch->members()->pluck('cid')->toArray();
+        $remittanceReports = \App\Models\RemittanceReport::where('period', $this->billingPeriod)
+            ->whereIn('cid', $branchMembers)
+            ->get();
+
+        // Loans - check if branch has any loan remittances
+        $hasLoans = $remittanceReports->where('remitted_loans', '>', 0)->count() > 0;
         $loanRemits = LoanRemittance::where('billing_period', $this->billingPeriod)
             ->whereHas('member', function($q) use ($branch) {
                 $q->where('branch_id', $branch->id);
@@ -65,13 +72,11 @@ class BranchRemittanceReportPerBranchMemberExport implements FromArray, WithStyl
         })->filter()->unique()->values();
         $loanProducts = LoanProduct::whereIn('product_code', $loanProductCodes)->get();
 
-        // Shares
-        $shareRemits = Remittance::where('branch_id', $branch->id)
-            ->where('share_dep', '>', 0)
-            ->get();
-        $hasShare = $shareRemits->count() > 0;
+        // Shares - check if branch has any share remittances
+        $hasShare = $remittanceReports->where('remitted_shares', '>', 0)->count() > 0;
 
-        // Savings
+        // Savings - check if branch has any savings remittances
+        $hasSavings = $remittanceReports->where('remitted_savings', '>', 0)->count() > 0;
         $savingsRemits = Savings::whereHas('member', function($q) use ($branch) {
                 $q->where('branch_id', $branch->id);
             })
@@ -119,10 +124,7 @@ class BranchRemittanceReportPerBranchMemberExport implements FromArray, WithStyl
             }
             // Shares
             if ($hasShare) {
-                $shareAmount = Remittance::where('branch_id', $branch->id)
-                    ->where('member_id', $member->id)
-                    ->where('share_dep', '>', 0)
-                    ->sum('share_dep');
+                $shareAmount = $remittanceReports->where('cid', $member->cid)->first()->remitted_shares ?? 0;
                 if ($shareAmount > 0) $hasRemit = true;
                 $row[] = $shareAmount > 0 ? $shareAmount : '';
             }
@@ -154,10 +156,10 @@ class BranchRemittanceReportPerBranchMemberExport implements FromArray, WithStyl
             })->sum('remitted_amount');
             $totals[] = $amount > 0 ? $amount : '';
         }
-        // Shares
-        if ($hasShare) {
-            $totals[] = $shareRemits->sum('share_dep');
-        }
+                    // Shares
+            if ($hasShare) {
+                $totals[] = $remittanceReports->sum('remitted_shares');
+            }
         // Savings
         foreach ($savingsProducts as $product) {
             $amount = $savingsRemits->where('product_code', $product->product_code)->sum('remittance_amount');

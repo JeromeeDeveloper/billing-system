@@ -12,7 +12,26 @@ class LoansController extends Controller
 {
     public function index(Request $request)
     {
-        $loans = LoanProduct::all();
+        $query = LoanProduct::query();
+        
+        // Search functionality
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                $q->where('product', 'like', "%{$search}%")
+                  ->orWhere('product_code', 'like', "%{$search}%")
+                  ->orWhere('prioritization', 'like', "%{$search}%")
+                  ->orWhere('billing_type', 'like', "%{$search}%");
+            });
+        }
+        
+        // Show entries functionality
+        $perPage = $request->get('per_page', 10);
+        $loans = $query->orderBy('prioritization', 'asc')->paginate($perPage);
+        
+        // Preserve search and pagination parameters for form actions
+        $loans->appends($request->except('page'));
+        
         return view('components.admin.loans.loans_datatable', compact('loans'));
     }
 
@@ -51,14 +70,26 @@ class LoansController extends Controller
             $member->update(['loan_balance' => $loan_balance]);
         }
 
-        return redirect()->route('loans')->with('success', 'Loan updated successfully. Loan balances recalculated.');
+        // Preserve pagination and search parameters
+        $redirectParams = $request->only(['search', 'per_page']);
+        if ($request->filled('page')) {
+            $redirectParams['page'] = $request->get('page');
+        }
+
+        return redirect()->route('loans', $redirectParams)->with('success', 'Loan updated successfully. Loan balances recalculated.');
     }
 
     public function destroy(LoanProduct $loan)
     {
         $loan->delete();
 
-        return redirect()->route('loans')->with('success', 'Loan deleted successfully.');
+        // Preserve pagination and search parameters
+        $redirectParams = request()->only(['search', 'per_page']);
+        if (request()->filled('page')) {
+            $redirectParams['page'] = request()->get('page');
+        }
+
+        return redirect()->route('loans', $redirectParams)->with('success', 'Loan deleted successfully.');
     }
 
     public function store(Request $request)
@@ -72,7 +103,13 @@ class LoansController extends Controller
 
         LoanProduct::create($request->only(['product', 'prioritization', 'product_code', 'billing_type']));
 
-        return redirect()->route('loans')->with('success', 'Loan added successfully.');
+        // Preserve pagination and search parameters
+        $redirectParams = $request->only(['search', 'per_page']);
+        if ($request->filled('page')) {
+            $redirectParams['page'] = $request->get('page');
+        }
+
+        return redirect()->route('loans', $redirectParams)->with('success', 'Loan added successfully.');
     }
 
     public function export()

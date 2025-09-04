@@ -85,23 +85,13 @@
                                         </span>
                                         File Retention
                                     </a>
-                                    @if($isApproved)
-                                        <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
-                                            data-target="#exampleModalpopover">
-                                            <span class="btn-icon-left text-primary">
-                                                <i class="fa fa-upload"></i>
-                                            </span>
-                                            Upload
-                                        </button>
-                                    @else
-                                        <button type="button" class="btn btn-rounded btn-secondary" disabled
-                                            title="File upload is currently disabled because one or more branch users have been approved.">
-                                            <span class="btn-icon-left text-secondary">
-                                                <i class="fa fa-upload"></i>
-                                            </span>
-                                            Upload (Disabled)
-                                        </button>
-                                    @endif
+                                    <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
+                                        data-target="#exampleModalpopover">
+                                        <span class="btn-icon-left text-primary">
+                                            <i class="fa fa-upload"></i>
+                                        </span>
+                                        Upload
+                                    </button>
                                 </div>
                             </div>
 
@@ -131,14 +121,50 @@
 
 
                                                 <div class="form-group">
-
                                                     <label for="file" class="font-weight-bold mb-2">📁 Installment
                                                         Forecast
                                                         File
                                                     </label>
+                                                    <div class="form-check mb-2">
+                                                        @php
+                                                            $consolidatedDisabled = isset($hasApprovedBranches) && $hasApprovedBranches;
+                                                        @endphp
+                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_consolidated" value="consolidated" {{ $consolidatedDisabled ? 'disabled' : 'checked' }}>
+                                                        <label class="form-check-label" for="forecast_consolidated">
+                                                            <strong>Consolidated</strong> - Upload for all branches
+                                                            @if($consolidatedDisabled)
+                                                                <span class="badge badge-warning ml-2">Disabled: at least one branch is approved</span>
+                                                            @endif
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_branch" value="branch" {{ $consolidatedDisabled ? '' : '' }}>
+                                                        <label class="form-check-label" for="forecast_branch">
+                                                            <strong>Per Branch</strong> - Upload for specific branch only (shows as "Branch Forecast - [Branch Name]")
+                                                        </label>
+                                                    </div>
+                                                    <div class="form-group" id="branch_selection_group" style="display: none;">
+                                                        <label for="branch_id" class="font-weight-bold mb-2">Select Branch</label>
+                                                        <select class="form-control" id="branch_id" name="branch_id">
+                                                            <option value="">Select a branch...</option>
+                                                            @php $branches = \App\Models\Branch::orderBy('name')->get(); @endphp
+                                                            @foreach($branches as $branch)
+                                                                @php
+                                                                    $status = isset($branchStatuses) ? ($branchStatuses[$branch->id] ?? 'pending') : 'pending';
+                                                                    $disabled = $status === 'approved';
+                                                                @endphp
+                                                                <option value="{{ $branch->id }}" {{ $disabled ? 'disabled' : '' }}>
+                                                                    {{ $branch->name }} {{ $disabled ? '(Approved - disabled)' : '' }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        @if(isset($branchStatuses) && collect($branchStatuses)->contains('approved'))
+                                                            <small class="text-muted">Branches marked as Approved are disabled and cannot be selected.</small>
+                                                        @endif
+                                                    </div>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="file"
-                                                            name="file">
+                                                            name="file" accept=".csv" required>
                                                         <label class="custom-file-label" for="file">Choose
                                                             file...</label>
                                                     </div>
@@ -149,7 +175,7 @@
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
-                                                            id="savings_file" name="savings_file">
+                                                            id="savings_file" name="savings_file" accept=".csv" required>
                                                         <label class="custom-file-label" for="savings_file">Choose
                                                             file...</label>
                                                     </div>
@@ -160,7 +186,7 @@
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="shares_file"
-                                                            name="shares_file">
+                                                            name="shares_file" accept=".csv" required>
                                                         <label class="custom-file-label" for="shares_file">Choose
                                                             file...</label>
                                                     </div>
@@ -171,7 +197,7 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="cif_file"
-                                                            name="cif_file">
+                                                            name="cif_file" accept=".csv" required>
                                                         <label class="custom-file-label" for="cif_file">Choose
                                                             file...</label>
                                                     </div>
@@ -183,13 +209,17 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
-                                                            id="loan_file" name="loan_file">
+                                                            id="loan_file" name="loan_file" accept=".csv" required>
                                                         <label class="custom-file-label" for="loan_file">Choose
                                                             file...</label>
                                                     </div>
                                                 </div>
                                             </div>
 
+                                            <div class="alert alert-warning mb-3 mx-3">
+                                                <i class="fa fa-exclamation-triangle"></i>
+                                                <strong>Important:</strong> Please ensure all files are correct before uploading.
+                                            </div>
 
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary"
@@ -243,11 +273,11 @@
                                     To view all files and manage file retention, use the <strong>File Retention</strong> button above.
                                 </div>
 
-                                <div class="alert alert-warning mb-3">
+                                {{-- <div class="alert alert-warning mb-3">
                                     <i class="fa fa-exclamation-triangle me-2"></i>
                                     <strong>Important:</strong> If you're uploading files downloaded from websites and encounter "Invalid Spreadsheet file" errors,
                                     please open the file in Excel and save it as a new .csv file before uploading. This ensures compatibility with our system.
-                                </div>
+                                </div> --}}
                                 <div class="table-responsive">
                                     <table id="example" class="display" style="min-width: 845px">
                                         <thead>
@@ -353,6 +383,29 @@
                     }
                 });
             });
+
+            // Handle forecast type radio button selection
+            var forecastConsolidated = document.getElementById('forecast_consolidated');
+            var forecastBranch = document.getElementById('forecast_branch');
+            var branchSelectionGroup = document.getElementById('branch_selection_group');
+            var branchSelect = document.getElementById('branch_id');
+
+            function toggleBranchSelection() {
+                if (forecastBranch.checked) {
+                    branchSelectionGroup.style.display = 'block';
+                    branchSelect.required = true;
+                } else {
+                    branchSelectionGroup.style.display = 'none';
+                    branchSelect.required = false;
+                    branchSelect.value = '';
+                }
+            }
+
+            forecastConsolidated.addEventListener('change', toggleBranchSelection);
+            forecastBranch.addEventListener('change', toggleBranchSelection);
+
+            // Initial state
+            toggleBranchSelection();
         });
     </script>
 
@@ -386,20 +439,23 @@
                                 <div class="card-body">
                                     <strong>Required Columns (Row 5 as header):</strong>
                                     <ul>
-                                        <li>cid</li>
-                                        <li>branch_code</li>
-                                        <li>branch_name</li>
-                                        <li>name (Lastname, Firstname)</li>
-                                        <li>loan_account_no</li>
-                                        <li>open_date</li>
-                                        <li>maturity_date</li>
-                                        <li>amortization_due_date</li>
-                                        <li>total_due</li>
-                                        <li>principal_due</li>
-                                        <li>interest_due</li>
-                                        <li>penalty_due</li>
+                                        <li>Branch Name</li>
+                                        <li>Branch Code</li>
+                                        <li>CID</li>
+                                        <li>Name (Lastname, Firstname)</li>
+                                        <li>Loan Account No.</li>
+                                        <li>Open Date</li>
+                                        <li>Maturity Date</li>
+                                        <li>Amortization Due Date</li>
+                                        <li>Principal</li>
+                                        <li>Interest</li>
+                                        <li>Total Amort</li>
+                                        <li>Total Due</li>
+                                        <li>Principal Due</li>
+                                        <li>Interest Due</li>
+                                        <li>Penalty Due</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                 </div>
                             </div>
                         </div>
@@ -415,17 +471,17 @@
                                 <div class="card-body">
                                     <strong>Required Columns (Row 6 as header):</strong>
                                     <ul>
-                                        <li>customer_no</li>
-                                        <li>account_no</li>
-                                        <li>product_code</li>
-                                        <li>open_date</li>
-                                        <li>current_bal</li>
-                                        <li>available_bal</li>
-                                        <li>interest_due_amount</li>
-                                        <li>status</li>
-                                        <li>last_trn_date</li>
+                                        <li>Customer No.</li>
+                                        <li>Account No.</li>
+                                        <li>Product Code</li>
+                                        <li>Open Date</li>
+                                        <li>Current Balance</li>
+                                        <li>Available Balance</li>
+                                        <li>Interest Due Amount</li>
+                                        <li>Status</li>
+                                        <li>Last Transaction Date</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                 </div>
                             </div>
                         </div>
@@ -441,17 +497,17 @@
                                 <div class="card-body">
                                     <strong>Required Columns (Row 6 as header):</strong>
                                     <ul>
-                                        <li>customer_no</li>
-                                        <li>account_no</li>
-                                        <li>product_code</li>
-                                        <li>open_date</li>
-                                        <li>current_bal</li>
-                                        <li>available_bal</li>
-                                        <li>interest_due_amount</li>
-                                        <li>status</li>
-                                        <li>last_trn_date</li>
+                                        <li>Customer No.</li>
+                                        <li>Account No.</li>
+                                        <li>Product Code</li>
+                                        <li>Open Date</li>
+                                        <li>Current Balance</li>
+                                        <li>Available Balance</li>
+                                        <li>Interest Due Amount</li>
+                                        <li>Status</li>
+                                        <li>Last Transaction Date</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                 </div>
                             </div>
                         </div>
@@ -467,20 +523,20 @@
                                 <div class="card-body">
                                     <strong>Required Columns (Row 4 as header):</strong>
                                     <ul>
-                                        <li>customer_no</li>
-                                        <li>customer_name (Lastname, Firstname)</li>
-                                        <li>birth_date</li>
-                                        <li>date_registered</li>
-                                        <li>gender</li>
-                                        <li>customer_type</li>
-                                        <li>customer_classification</li>
-                                        <li>industry</li>
-                                        <li>area_officer</li>
-                                        <li>area</li>
-                                        <li>status</li>
-                                        <li>address</li>
+                                        <li>Customer No.</li>
+                                        <li>Customer Name (Lastname, Firstname)</li>
+                                        <li>Birth Date</li>
+                                        <li>Date Registered</li>
+                                        <li>Gender</li>
+                                        <li>Customer Type</li>
+                                        <li>Customer Classification</li>
+                                        <li>Industry</li>
+                                        <li>Area Officer</li>
+                                        <li>Area</li>
+                                        <li>Status</li>
+                                        <li>Address</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                 </div>
                             </div>
                         </div>
@@ -502,7 +558,7 @@
                                         <li>End Date (Column I)</li>
                                         <li>Principal (Column L)</li>
                                     </ul>
-                                    <small class="text-muted">File type: .csv or .xlsx</small>
+                                    <small class="text-muted">File type: .csv</small>
                                     <br><small class="text-muted">Note: Other columns may exist but are not required for import.</small>
                                 </div>
                             </div>

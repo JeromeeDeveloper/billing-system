@@ -55,10 +55,8 @@
                                 <div class="pulse-css" id="notification-pulse"></div>
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
-                                <ul class="list-unstyled" id="notification-list">
-                                    <!-- Notifications will be dynamically inserted here -->
-                                </ul>
-                                <a class="all-notification" href="{{ route('notifications.index') }}">See all notifications <i class="ti-arrow-right"></i></a>
+
+                                  <a class="all-notification" href="{{ route('notifications.index') }}">See all notifications <i class="bi bi-arrow-right"></i></a>
                             </div>
                         </li>
                         <li class="nav-item dropdown header-profile">
@@ -67,7 +65,7 @@
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
                                 <a href="{{ route('profile') }}" class="dropdown-item">
-                                    <i class="icon-user"></i>
+                                    <i class="bi bi-person"></i>
                                     <span class="ml-2">Profile</span>
                                 </a>
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">

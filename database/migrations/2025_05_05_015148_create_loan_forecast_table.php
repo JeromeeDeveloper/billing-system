@@ -28,6 +28,9 @@ return new class extends Migration
             $table->decimal('total_amort', 12, 2)->nullable();
             $table->decimal('loan_payment', 12, 2)->nullable();
             $table->decimal('penalty_due', 12, 2)->default(0);
+            $table->string('interest_due_status')->nullable();
+            $table->string('principal_due_status')->nullable();
+            $table->string('total_due_status')->nullable();
             $table->unsignedBigInteger('member_id');
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
             $table->string('billing_period')->nullable();

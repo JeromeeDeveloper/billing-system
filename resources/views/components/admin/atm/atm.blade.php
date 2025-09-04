@@ -56,12 +56,11 @@
                                     <ol class="mb-2">
                                         <li><strong>Account Overview:</strong> View all member account balances (savings, shares, loans) across all branches.</li>
                                         <li><strong>Post Payments:</strong> Post loan payments with automatic prioritization (highest priority loans first).</li>
-                                        <li><strong>Edit Balances:</strong> Edit account balances for corrections and adjustments.</li>
                                         <li><strong>Export Posted Payments:</strong> Export records of posted payments from this page.</li>
+                                        <li><strong>ATM Batch Report:</strong> Export records of posted payments from this page.</li>
                                     </ol>
                                     <ul class="mb-2">
                                         <li><strong>Search & Filter:</strong> Find members by name, employee ID, or CID across all branches.</li>
-                                        <li><strong>Report Generation:</strong> Access comprehensive reports from the Dashboard page.</li>
                                     </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> This is the central hub for managing member accounts and processing payments across all branches. For other reports, visit the Dashboard.</small></p>
                                 </div>
@@ -70,9 +69,9 @@
                     </div>
                 </div>
 
-                <!-- Search Section -->
-                <div class="row mb-4">
-                    <div class="col-md-12">
+                <!-- Account Balances Table -->
+                <div class="row">
+                    <div class="col-12">
                         <div class="card">
                             <div class="card-body">
                                 <form method="GET" action="{{ route('atm') }}">
@@ -99,8 +98,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3 d-flex align-items-end">
-                                            <button type="submit" class="btn btn-primary mr-2">Search</button>
-                                            <a href="{{ route('atm') }}" class="btn btn-secondary mr-2">Reset</a>
+                                            <button type="submit" class="btn btn-primary btn btn-primary w-100">Search</button>
                                             {{-- <a href="{{ route('atm.export-posted-payments') }}" class="btn btn-success">
                                                 <i class="fa fa-file-excel"></i> Export Posted Payments
                                             </a> --}}
@@ -108,38 +106,100 @@
                                     </div>
                                 </form>
                             </div>
-                        </div>
-                    </div>
-                </div>
+                            <div class="row">
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="card">
 
-                <form method="GET" action="{{ route('atm.export-posted-payments') }}" class="form-inline mb-2" id="exportPostedPaymentsForm">
-                    <div class="form-group mr-2">
-                        <label for="export_date" class="mr-2">Export Date:</label>
-                        <input type="date" id="export_date" name="date" class="form-control" value="{{ request('date', date('Y-m-d')) }}" @if(request('all_dates')) disabled @endif>
-                    </div>
-                    <div class="form-group mr-2">
-                        <input type="checkbox" id="all_dates" name="all_dates" value="1" {{ request('all_dates') ? 'checked' : '' }}>
-                        <label for="all_dates" class="ml-1">All Dates</label>
-                    </div>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fa fa-file-excel"></i> Export Posted Payments
-                    </button>
-                </form>
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        var allDatesCheckbox = document.getElementById('all_dates');
-                        var dateInput = document.getElementById('export_date');
-                        allDatesCheckbox.addEventListener('change', function() {
-                            dateInput.disabled = this.checked;
-                        });
-                    });
-                </script>
+                                            <form method="GET" action="{{ route('atm.export-posted-payments') }}" id="exportPostedPaymentsForm" class="p-4 border shadow-sm bg-light">
+                                                <div class="row">
+                                                    <!-- Export Date -->
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="export_date" class="font-weight-bold text-secondary">📅 Export Date</label>
+                                                        <input
+                                                            type="date"
+                                                            id="export_date"
+                                                            name="date"
+                                                            class="form-control border-primary"
+                                                            value="{{ request('date', date('Y-m-d')) }}"
+                                                            @if(request('all_dates')) disabled @endif>
+                                                    </div>
+
+                                                    <!-- All Dates Checkbox -->
+                                                    <div class="col-md-6 mb-3 d-flex flex-column justify-content-end">
+                                                        <div class="form-check">
+                                                            <input
+                                                                type="checkbox"
+                                                                class="form-check-input"
+                                                                id="all_dates"
+                                                                name="all_dates"
+                                                                value="1"
+                                                                {{ request('all_dates') ? 'checked' : '' }}>
+                                                            <label class="form-check-label font-weight-bold ml-2" for="all_dates">
+                                                                🗓️ Include All Dates
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Submit Button Full Width -->
+                                                <div class="row mt-3">
+                                                    <div class="col">
+                                                        <button type="submit" class="btn btn-primary btn-lg btn-block shadow">
+                                                            <i class="fa fa-file-excel mr-2"></i> Export Posted Payments
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
 
 
-                <!-- Account Balances Table -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-md-12">
+                                    <div class="card">
+
+                                            <form method="GET" action="{{ route('atm.generate-batch-report') }}" id="generateBatchReportForm" class="p-4 border shadow-sm bg-light">
+                                                <div class="row">
+                                                    <!-- Report Date -->
+                                                    <div class="col-md-6 mb-3">
+                                                        <label for="batch_report_date" class="font-weight-bold text-secondary">📆 Report Date</label>
+                                                        <input
+                                                            type="date"
+                                                            id="batch_report_date"
+                                                            name="date"
+                                                            class="form-control border-primary"
+                                                            value="{{ request('date', date('Y-m-d')) }}"
+                                                            @if(request('all_dates_batch')) disabled @endif>
+                                                    </div>
+
+                                                    <!-- All Dates Checkbox -->
+                                                    <div class="col-md-6 mb-3 d-flex flex-column justify-content-end">
+                                                        <div class="form-check">
+                                                            <input
+                                                                type="checkbox"
+                                                                class="form-check-input"
+                                                                id="all_dates_batch"
+                                                                name="all_dates_batch"
+                                                                value="1"
+                                                                {{ request('all_dates_batch') ? 'checked' : '' }}>
+                                                            <label class="form-check-label font-weight-bold ml-2" for="all_dates_batch">
+                                                                🗓️ Include All Dates
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Submit Button -->
+                                                <div class="row mt-3">
+                                                    <div class="col">
+                                                        <button type="submit" class="btn btn-primary btn-lg btn-block shadow">
+                                                            <i class="fa fa-file-pdf mr-2"></i> Generate ATM Batch Report
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="card-body">
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered">
@@ -162,20 +222,20 @@
                                                     <td>{{ $member->branch ? $member->branch->name : 'N/A' }}</td>
                                                     <td>
                                                         @foreach ($member->savings as $saving)
-                                                            <div>{{ $saving->account_number }}:
-                                                                ₱{{ number_format($saving->current_balance, 2) }}</div>
+                                                            <div>{{ $saving->account_number }},
+                                                            </div>
                                                         @endforeach
                                                     </td>
                                                     <td>
                                                         @foreach ($member->shares as $share)
-                                                            <div>{{ $share->account_number }}:
-                                                                ₱{{ number_format($share->current_balance, 2) }}</div>
+                                                            <div>{{ $share->account_number }},
+                                                            </div>
                                                         @endforeach
                                                     </td>
                                                     <td>
                                                         @foreach ($member->loanForecasts as $loan)
                                                             <div>{{ $loan->loan_acct_no }}:
-                                                                ₱{{ number_format($loan->total_due, 2) }}</div>
+                                                                ₱{{ number_format($loan->total_due, 2) }},</div>
                                                         @endforeach
                                                     </td>
                                                     <td>
@@ -439,7 +499,7 @@
                                                     <div class="modal-dialog modal-xl">
                                                         <div class="modal-content">
                                                             <div class="modal-header bg-primary text-white">
-                                                                <h5 class="modal-title">
+                                                                <h5 class="modal-title text-white">
                                                                     <i class="fa fa-money-bill me-2"></i>
                                                                     Post ATM Withdrawal - {{ $member->lname }}, {{ $member->fname }}
                                                                 </h5>
@@ -522,7 +582,7 @@
                                                                                                 <i class="fa fa-credit-card me-2 text-primary"></i>
                                                                                                 <strong>{{ $loan->loan_acct_no }}</strong>
                                                                                                 <span class="badge bg-info ms-2">
-                                                                                                    Balance: ₱ {{ number_format($loan->total_due, 2) }}
+                                                                                                    Amort Due: ₱ {{ number_format($loan->total_due, 2) }}
                                                                                                 </span>
                                                                                             </label>
                                                                                         </div>
@@ -576,7 +636,7 @@
                                                                     </div>
 
                                                                     <!-- Remaining to Regular Savings Section -->
-                                                                    @php
+                                                                    {{-- @php
                                                                         $regularSaving = $member->savings->first(function($s) {
                                                                             return $s->savingProduct && $s->savingProduct->product_type === 'regular';
                                                                         });
@@ -599,7 +659,7 @@
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                    @endif
+                                                                    @endif --}}
 
                                                                     <!-- Payment Summary -->
                                                                     <div class="row mt-4">
@@ -607,8 +667,8 @@
                                                                         <div class="col-md-12">
                                                                             <div class="card bg-light border-primary">
                                                                                 <div class="card-header bg-primary text-white">
-                                                                                    <h6 class="card-title mb-0">
-                                                                                        <i class="fa fa-file-invoice me-2"></i>Payment Details
+                                                                                    <h6 class="card-title mb-0 text-white">
+                                                                                        <i class="fa fa-file-invoice me-2"></i> Payment Details
                                                                                     </h6>
                                                                                 </div>
                                                                                 <div class="card-body">
@@ -1059,6 +1119,43 @@
             });
         </script>
     @endif
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle first export form
+            var allDatesCheckbox = document.getElementById('all_dates');
+            var dateInput = document.getElementById('export_date');
+            if (allDatesCheckbox && dateInput) {
+                allDatesCheckbox.addEventListener('change', function() {
+                    dateInput.disabled = this.checked;
+                });
+            }
+
+            // Handle second export form
+            var allDatesDetailedCheckbox = document.getElementById('all_dates_detailed');
+            var dateDetailedInput = document.getElementById('export_date_detailed');
+            if (allDatesDetailedCheckbox && dateDetailedInput) {
+                allDatesDetailedCheckbox.addEventListener('change', function() {
+                    dateDetailedInput.disabled = this.checked;
+                });
+            }
+
+            // Handle batch report form
+            var allDatesBatchCheckbox = document.getElementById('all_dates_batch');
+            var dateBatchInput = document.getElementById('batch_report_date');
+            if (allDatesBatchCheckbox && dateBatchInput) {
+                allDatesBatchCheckbox.addEventListener('change', function() {
+                    dateBatchInput.disabled = this.checked;
+                });
+            }
+            if (allDatesDetailedCheckbox && dateDetailedInput) {
+                allDatesDetailedCheckbox.addEventListener('change', function() {
+                    dateDetailedInput.disabled = this.checked;
+                });
+            }
+        });
+    </script>
+
 </body>
 
 </html>

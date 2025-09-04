@@ -13,21 +13,315 @@ class RegularSpecialRemittanceExport implements WithMultipleSheets
 {
     protected $regularRemittances;
     protected $specialRemittances;
+    protected $loansSavingsPreviewPaginated;
+    protected $sharesPreviewPaginated;
     protected $billingPeriod;
+    protected $isBranch;
+    protected $branchId;
 
-    public function __construct($regularRemittances, $specialRemittances, $billingPeriod)
+    public function __construct($regularRemittances, $specialRemittances, $billingPeriod, $loansSavingsPreviewPaginated = null, $sharesPreviewPaginated = null, $isBranch = false, $branchId = null)
     {
         $this->regularRemittances = $regularRemittances;
         $this->specialRemittances = $specialRemittances;
+        $this->loansSavingsPreviewPaginated = $loansSavingsPreviewPaginated;
+        $this->sharesPreviewPaginated = $sharesPreviewPaginated;
         $this->billingPeriod = $billingPeriod;
+        $this->isBranch = $isBranch;
+        $this->branchId = $branchId;
     }
 
     public function sheets(): array
     {
         return [
-            new RemittanceSheetExport($this->regularRemittances, $this->billingPeriod, 'Regular Billing'),
-            new RemittanceSheetExport($this->specialRemittances, $this->billingPeriod, 'Special Billing'),
+            new ConsolidatedRemittanceSheetExport(
+                $this->regularRemittances,
+                $this->specialRemittances,
+                $this->loansSavingsPreviewPaginated,
+                $this->sharesPreviewPaginated,
+                $this->billingPeriod,
+                $this->isBranch,
+                $this->branchId
+            ),
         ];
+    }
+}
+
+class ConsolidatedRemittanceSheetExport implements FromArray, WithHeadings, WithTitle
+{
+    protected $regularRemittances;
+    protected $specialRemittances;
+    protected $loansSavingsPreviewPaginated;
+    protected $sharesPreviewPaginated;
+    protected $billingPeriod;
+    protected $isBranch;
+    protected $branchId;
+
+    public function __construct($regularRemittances, $specialRemittances, $loansSavingsPreviewPaginated, $sharesPreviewPaginated, $billingPeriod, $isBranch = false, $branchId = null)
+    {
+        $this->regularRemittances = $regularRemittances;
+        $this->specialRemittances = $specialRemittances;
+        $this->loansSavingsPreviewPaginated = $loansSavingsPreviewPaginated;
+        $this->sharesPreviewPaginated = $sharesPreviewPaginated;
+        $this->billingPeriod = $billingPeriod;
+        $this->isBranch = $isBranch;
+        $this->branchId = $branchId;
+    }
+
+    public function title(): string
+    {
+        return $this->isBranch ? 'Branch Consolidated Remittance' : 'Admin Consolidated Remittance';
+    }
+
+    public function headings(): array
+    {
+        return [
+            ['Member Name', 'CID', 'Type', 'Remitted Loans', 'Remitted Savings', 'Remitted Shares', 'Total Remitted', 'Total Billed', 'Remaining Balance']
+        ];
+    }
+
+    public function array(): array
+    {
+        $consolidatedData = $this->consolidateData();
+        $rows = [];
+        $totalRemittedLoans = 0;
+        $totalRemittedSavings = 0;
+        $totalRemittedShares = 0;
+        $totalRemitted = 0;
+        $totalBilled = 0;
+        $totalRemaining = 0;
+
+        foreach ($consolidatedData as $memberId => $data) {
+            // Skip upload preview only records
+            if ($data['billing_type'] === 'preview') {
+                continue;
+            }
+
+            $totalRemittedLoans += $data['remitted_loans'];
+            $totalRemittedSavings += $data['remitted_savings'];
+            $totalRemittedShares += $data['remitted_shares'];
+            $totalRemitted += $data['total_remitted'];
+            $totalBilled += $data['total_billed'];
+            $totalRemaining += $data['remaining_balance'];
+
+            $rows[] = [
+                $data['member_name'],
+                $data['cid'] ?? '',
+                ucfirst($data['billing_type']),
+                $data['remitted_loans'],
+                $data['remitted_savings'],
+                $data['remitted_shares'],
+                $data['total_remitted'],
+                $data['total_billed'],
+                $data['remaining_balance']
+            ];
+        }
+
+        // Totals row
+        $rows[] = [
+            'Total',
+            '',
+            '',
+            $totalRemittedLoans,
+            $totalRemittedSavings,
+            $totalRemittedShares,
+            $totalRemitted,
+            $totalBilled,
+            $totalRemaining
+        ];
+
+        return $rows;
+    }
+
+    private function consolidateData()
+    {
+        $consolidatedData = [];
+
+        // Process Regular Billing data
+        if ($this->regularRemittances && $this->regularRemittances->count() > 0) {
+            foreach ($this->regularRemittances as $remit) {
+                // Handle both admin (object) and branch (model) data structures
+                $memberId = is_object($remit) ? $remit->member_id : $remit['member_id'];
+                $memberName = is_object($remit) ? ($remit->member->full_name ?? 'N/A') : ($remit['member']['full_name'] ?? 'N/A');
+                $remittedAmount = is_object($remit) ? ($remit->remitted_amount ?? 0) : ($remit['remitted_amount'] ?? 0);
+                $remittedSavings = is_object($remit) ? ($remit->remitted_savings ?? 0) : ($remit['remitted_savings'] ?? 0);
+                $remittedShares = is_object($remit) ? ($remit->remitted_shares ?? 0) : ($remit['remitted_shares'] ?? 0);
+
+                // Convert from CID to member_id for admin data
+                $actualMemberId = $memberId;
+                if (is_object($remit) && isset($remit->billing_type)) { // This condition identifies admin data
+                    $member = \App\Models\Member::where('cid', $memberId)->first();
+                    $actualMemberId = $member ? $member->id : null;
+                }
+
+                // Unified billed total calculation (admin and branch):
+                // Sum all LoanForecast records for this member and billing period that match the billing type
+                $loanForecasts = LoanForecast::where('member_id', $actualMemberId)
+                    ->where('billing_period', $this->billingPeriod)
+                    ->get();
+
+                $billedTotal = 0;
+                foreach ($loanForecasts as $forecast) {
+                    $productCode = null;
+                    if ($forecast->loan_acct_no) {
+                        $segments = explode('-', $forecast->loan_acct_no);
+                        $productCode = $segments[2] ?? null;
+                    }
+                    $product = $productCode ? LoanProduct::where('product_code', $productCode)->first() : null;
+                    if ($product && $product->billing_type === 'regular') {
+                        $billedTotal += $forecast->total_due;
+                    }
+                }
+
+                $consolidatedData[$memberId] = [
+                    'member_id' => $memberId,
+                    'member_name' => $memberName,
+                    'cid' => isset($member) && $member ? $member->cid : (is_object($remit) && isset($remit->billing_type) ? $memberId : (\App\Models\Member::find($memberId)->cid ?? '')),
+                    'billing_type' => 'regular',
+                    'remitted_loans' => $remittedAmount,
+                    'remitted_savings' => $remittedSavings,
+                    'remitted_shares' => $remittedShares,
+                    'total_remitted' => $remittedAmount + $remittedSavings + $remittedShares,
+                    'total_billed' => $billedTotal,
+                    'remaining_balance' => $billedTotal - $remittedAmount
+                ];
+            }
+        }
+
+        // Process Special Billing data
+        if ($this->specialRemittances && $this->specialRemittances->count() > 0) {
+            foreach ($this->specialRemittances as $remit) {
+                // Handle both admin (object) and branch (model) data structures
+                $memberId = is_object($remit) ? $remit->member_id : $remit['member_id'];
+                $memberName = is_object($remit) ? ($remit->member->full_name ?? 'N/A') : ($remit['member']['full_name'] ?? 'N/A');
+                $remittedAmount = is_object($remit) ? ($remit->remitted_amount ?? 0) : ($remit['remitted_amount'] ?? 0);
+                $remittedSavings = is_object($remit) ? ($remit->remitted_savings ?? 0) : ($remit['remitted_savings'] ?? 0);
+                $remittedShares = is_object($remit) ? ($remit->remitted_shares ?? 0) : ($remit['remitted_shares'] ?? 0);
+
+                // Convert from CID to member_id for admin data
+                $actualMemberId = $memberId;
+                if (is_object($remit) && isset($remit->billing_type)) { // This condition identifies admin data
+                    $member = \App\Models\Member::where('cid', $memberId)->first();
+                    $actualMemberId = $member ? $member->id : null;
+                }
+
+                // Unified billed total calculation (admin and branch):
+                // Sum all LoanForecast records for this member and billing period that match the billing type
+                $loanForecasts = LoanForecast::where('member_id', $actualMemberId)
+                    ->where('billing_period', $this->billingPeriod)
+                    ->get();
+
+                $billedTotal = 0;
+                foreach ($loanForecasts as $forecast) {
+                    $productCode = null;
+                    if ($forecast->loan_acct_no) {
+                        $segments = explode('-', $forecast->loan_acct_no);
+                        $productCode = $segments[2] ?? null;
+                    }
+                    $product = $productCode ? LoanProduct::where('product_code', $productCode)->first() : null;
+                    if ($product && $product->billing_type === 'special') {
+                        $billedTotal += $forecast->total_due;
+                    }
+                }
+
+                $consolidatedData[$memberId] = [
+                    'member_id' => $memberId,
+                    'member_name' => $memberName,
+                    'cid' => isset($member) && $member ? $member->cid : (is_object($remit) && isset($remit->billing_type) ? $memberId : (\App\Models\Member::find($memberId)->cid ?? '')),
+                    'billing_type' => 'special',
+                    'remitted_loans' => $remittedAmount,
+                    'remitted_savings' => $remittedSavings,
+                    'remitted_shares' => $remittedShares,
+                    'total_remitted' => $remittedAmount + $remittedSavings + $remittedShares,
+                    'total_billed' => $billedTotal,
+                    'remaining_balance' => $billedTotal - $remittedAmount
+                ];
+            }
+        }
+
+        // Process Loans & Savings Preview data and merge with existing records
+        if ($this->loansSavingsPreviewPaginated && $this->loansSavingsPreviewPaginated->count() > 0) {
+            foreach ($this->loansSavingsPreviewPaginated as $row) {
+                // Handle both array and object data structures
+                $memberId = is_array($row) ? ($row['member_id'] ?? null) : ($row->member_id ?? null);
+                if (!$memberId) continue;
+
+                $name = is_array($row) ? ($row['name'] ?? 'N/A') : ($row->name ?? 'N/A');
+                $loans = is_array($row) ? (is_numeric($row['loans']) ? $row['loans'] : 0) : (is_numeric($row->loans) ? $row->loans : 0);
+
+                // Handle savings as array or numeric value (same logic as admin table)
+                $savingsAmount = 0;
+                $savings = is_array($row) ? ($row['savings'] ?? 0) : ($row->savings ?? 0);
+                if (is_array($savings)) {
+                    // If savings is an array, sum all amounts
+                    foreach ($savings as $saving) {
+                        if (is_array($saving) && isset($saving['amount'])) {
+                            $savingsAmount += floatval($saving['amount']);
+                        } elseif (is_numeric($saving)) {
+                            $savingsAmount += floatval($saving);
+                        }
+                    }
+                } else {
+                    $savingsAmount = floatval($savings);
+                }
+
+                if (isset($consolidatedData[$memberId])) {
+                    // Merge with existing billing data
+                    $consolidatedData[$memberId]['remitted_loans'] += $loans;
+                    $consolidatedData[$memberId]['remitted_savings'] += $savingsAmount;
+                    $consolidatedData[$memberId]['total_remitted'] += $loans + $savingsAmount;
+                    $consolidatedData[$memberId]['remaining_balance'] -= ($loans + $savingsAmount);
+                } else {
+                    // Create new record for preview only
+                    $consolidatedData[$memberId] = [
+                        'member_id' => $memberId,
+                        'member_name' => $name,
+                        'cid' => (\App\Models\Member::find($memberId)->cid ?? ''),
+                        'billing_type' => 'preview',
+                        'remitted_loans' => $loans,
+                        'remitted_savings' => $savingsAmount,
+                        'remitted_shares' => 0,
+                        'total_remitted' => $loans + $savingsAmount,
+                        'total_billed' => 0,
+                        'remaining_balance' => 0
+                    ];
+                }
+            }
+        }
+
+        // Process Shares Preview data and merge with existing records
+        if ($this->sharesPreviewPaginated && $this->sharesPreviewPaginated->count() > 0) {
+            foreach ($this->sharesPreviewPaginated as $row) {
+                // Handle both array and object data structures
+                $memberId = is_array($row) ? ($row['member_id'] ?? null) : ($row->member_id ?? null);
+                if (!$memberId) continue;
+
+                $name = is_array($row) ? ($row['name'] ?? 'N/A') : ($row->name ?? 'N/A');
+                $shareAmount = is_array($row) ? (is_numeric($row['share_amount']) ? $row['share_amount'] : 0) : (is_numeric($row->share_amount) ? $row->share_amount : 0);
+
+                if (isset($consolidatedData[$memberId])) {
+                    // Merge with existing data - replace shares amount (same logic as admin table)
+                    $consolidatedData[$memberId]['remitted_shares'] = $shareAmount;
+                    $consolidatedData[$memberId]['total_remitted'] += $shareAmount;
+                    $consolidatedData[$memberId]['remaining_balance'] -= $shareAmount;
+                } else {
+                    // Create new record for shares preview only
+                    $consolidatedData[$memberId] = [
+                        'member_id' => $memberId,
+                        'member_name' => $name,
+                        'cid' => (\App\Models\Member::find($memberId)->cid ?? ''),
+                        'billing_type' => 'preview',
+                        'remitted_loans' => 0,
+                        'remitted_savings' => 0,
+                        'remitted_shares' => $shareAmount,
+                        'total_remitted' => $shareAmount,
+                        'total_billed' => 0,
+                        'remaining_balance' => 0
+                    ];
+                }
+            }
+        }
+
+        return $consolidatedData;
     }
 }
 

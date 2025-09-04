@@ -13,12 +13,12 @@
 
     <link href="{{ asset('vendor/datatables/css/jquery.dataTables.min.css') }}" rel="stylesheet">
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
-    <link href="{{ asset('icons/font-awesome-old/css/font-awesome.min.css') }}" rel="stylesheet">
+    {{-- <link href="{{ asset('icons/font-awesome-old/css/font-awesome.min.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/material-design-iconic-font/css/materialdesignicons.min.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/line-awesome/css/line-awesome.min.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/simple-line-icons/css/simple-line-icons.css') }}" rel="stylesheet">
     <link href="{{ asset('icons/themify-icons/css/themify-icons.css') }}" rel="stylesheet">
-    <link href="{{ asset('icons/avasta/css/style.css') }}" rel="stylesheet">
+    <link href="{{ asset('icons/avasta/css/style.css') }}" rel="stylesheet"> --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 
@@ -50,7 +50,7 @@
                     <div class="col-sm-6 p-md-0 justify-content-sm-end mt-2 mt-sm-0 d-flex">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active"><a href="{{ route('member') }}">Member</a></li>
+                            <li class="breadcrumb-item active"><a href="{{ route('master') }}">Master List</a></li>
                         </ol>
                     </div>
                 </div>
@@ -242,7 +242,7 @@
                                     </div>
                                     <div class="col-12 col-md-8 d-flex flex-column align-items-md-end align-items-center">
                                         <form method="GET" action="{{ url()->current() }}" class="d-flex flex-grow-1 flex-md-grow-0 gap-2 align-items-center mb-2 mb-md-0 justify-content-md-end w-100" style="max-width: 400px;">
-                                            <input type="text" name="search" value="{{ request('search') }}" class="form-control flex-grow-1" placeholder="Search members..." />
+                                            <input type="text" name="search" value="{{ request('search') }}" class="form-control flex-grow-1 mr-2" placeholder="Search members..." />
                                             <button type="submit" class="btn btn-primary d-flex align-items-center px-3">
                                                 <i class="fa fa-search me-2"></i> <span class="d-none d-md-inline">Search</span>
                                             </button>
@@ -272,7 +272,7 @@
                                                 <th>EMPID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-
+                                                <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -284,7 +284,7 @@
                                                     <td>{{ $item->member->lname ?? '' }},
                                                         {{ $item->member->fname ?? '' }}</td>
                                                     <td>{{ $item->member->branch ? $item->member->branch->name : 'N/A' }}</td>
-
+                                                    <td>{{ $item->member->member_tagging ?? 'N/A' }}</td>
 
 
                                                     <td>
@@ -364,7 +364,7 @@
                                                 <th>EMPID</th>
                                                 <th>Name</th>
                                                 <th>Branch</th>
-
+                                                <th>Status</th>
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
@@ -736,9 +736,7 @@
                                                                 id="view-occupation"></span></p>
                                                         <p><strong>Industry:</strong> <span id="view-industry"></span>
                                                         </p>
-                                                        <p><strong>Status:</strong> <span id="view-status"></span></p>
-                                                        <p><strong>Account Status:</strong> <span
-                                                                id="view-account_status"></span></p>
+
 
                                                     </div>
                                                 </div>
@@ -1156,6 +1154,8 @@
         // Button click handlers for loans
         $('#btnNext').click(function() {
             if (currentLoanIndex < loans.length - 1) {
+                // Save current form data before navigating
+                saveCurrentLoanData();
                 currentLoanIndex++;
                 renderLoan(currentLoanIndex);
                 updateNavButtons();
@@ -1164,6 +1164,8 @@
 
         $('#btnPrev').click(function() {
             if (currentLoanIndex > 0) {
+                // Save current form data before navigating
+                saveCurrentLoanData();
                 currentLoanIndex--;
                 renderLoan(currentLoanIndex);
                 updateNavButtons();
@@ -1173,6 +1175,8 @@
         // Button click handlers for savings
         $('#btnNextSavings').click(function() {
             if (currentSavingsIndex < savings.length - 1) {
+                // Save current form data before navigating
+                saveCurrentSavingsData();
                 currentSavingsIndex++;
                 renderSavings(currentSavingsIndex);
                 updateNavButtons();
@@ -1181,6 +1185,8 @@
 
         $('#btnPrevSavings').click(function() {
             if (currentSavingsIndex > 0) {
+                // Save current form data before navigating
+                saveCurrentSavingsData();
                 currentSavingsIndex--;
                 renderSavings(currentSavingsIndex);
                 updateNavButtons();
@@ -1190,6 +1196,8 @@
         // Button click handlers for shares
         $('#btnNextShares').click(function() {
             if (currentSharesIndex < shares.length - 1) {
+                // Save current form data before navigating
+                saveCurrentSharesData();
                 currentSharesIndex++;
                 renderShares(currentSharesIndex);
                 updateNavButtons();
@@ -1198,6 +1206,8 @@
 
         $('#btnPrevShares').click(function() {
             if (currentSharesIndex > 0) {
+                // Save current form data before navigating
+                saveCurrentSharesData();
                 currentSharesIndex--;
                 renderShares(currentSharesIndex);
                 updateNavButtons();
@@ -1230,7 +1240,7 @@
             if (!saving) return;
 
             // Debug log
-            console.log('Rendering savings data:', saving);
+            // console.log('Rendering savings data:', saving);
 
             // Count mortuary savings
             let mortuaryCount = countMortuarySavings(savings);
@@ -1293,7 +1303,7 @@
                             <strong>🏥 Mortuary Product Detected!</strong><br>
                             <strong>Product:</strong> ${mortuaryProduct.product_name} (Code: ${mortuaryProduct.product_code})<br>
                             <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
-                            <strong>Prioritization:</strong> ${mortuaryProduct.prioritization}
+
                         </div>
                     </div>
                     ` : `
@@ -1398,7 +1408,7 @@
             let loan = loans[index];
             if (!loan) return;
 
-            console.log('Rendering loan data:', loan);
+            // console.log('Rendering loan data:', loan);
 
             // Get loan product info from loan account number
             let productInfo = getLoanProductInfo(loan.loan_acct_no);
@@ -1520,6 +1530,86 @@
             updateTotalDue();
         }
 
+        // Function to save current loan data to the loans array
+        function saveCurrentLoanData() {
+            if (loans.length === 0 || currentLoanIndex >= loans.length) return;
+
+            const currentLoan = loans[currentLoanIndex];
+            if (!currentLoan) return;
+
+            // Get form values
+            const principalDue = parseFloat($(`#principal_due_${currentLoanIndex}`).val()) || 0;
+            const interestDue = parseFloat($(`#interest_due_${currentLoanIndex}`).val()) || 0;
+            const totalDue = parseFloat($(`#total_due_${currentLoanIndex}`).val()) || 0;
+            const accountStatus = $(`select[name="loan_forecasts[${currentLoanIndex}][account_status]"]`).val();
+            const startHold = $(`input[name="loan_forecasts[${currentLoanIndex}][start_hold]"]`).val();
+            const expiryDate = $(`input[name="loan_forecasts[${currentLoanIndex}][expiry_date]"]`).val();
+            const approvalNo = $(`input[name="loan_forecasts[${currentLoanIndex}][approval_no]"]`).val();
+
+            // Update the loan object in the array
+            currentLoan.principal_due = principalDue;
+            currentLoan.interest_due = interestDue;
+            currentLoan.total_due = totalDue;
+            currentLoan.account_status = accountStatus;
+            currentLoan.start_hold = startHold;
+            currentLoan.expiry_date = expiryDate;
+            currentLoan.approval_no = approvalNo;
+
+            // console.log('Saved loan data for index', currentLoanIndex, ':', currentLoan);
+        }
+
+        // Function to save current savings data to the savings array
+        function saveCurrentSavingsData() {
+            if (savings.length === 0 || currentSavingsIndex >= savings.length) return;
+
+            const currentSaving = savings[currentSavingsIndex];
+            if (!currentSaving) return;
+
+            // Get form values
+            const startHold = $(`input[name="savings[${currentSavingsIndex}][start_hold]"]`).val();
+            const expiryDate = $(`input[name="savings[${currentSavingsIndex}][expiry_date]"]`).val();
+            const accountStatus = $(`select[name="savings[${currentSavingsIndex}][account_status]"]`).val();
+            const deductionAmount = parseFloat($(`input[name="savings[${currentSavingsIndex}][deduction_amount]"]`).val()) || 0;
+            const approvalNo = $(`input[name="savings[${currentSavingsIndex}][approval_no]"]`).val();
+            const remarks = $(`textarea[name="savings[${currentSavingsIndex}][remarks]"]`).val();
+
+            // Update the saving object in the array
+            currentSaving.start_hold = startHold;
+            currentSaving.expiry_date = expiryDate;
+            currentSaving.account_status = accountStatus;
+            currentSaving.deduction_amount = deductionAmount;
+            currentSaving.approval_no = approvalNo;
+            currentSaving.remarks = remarks;
+
+            // console.log('Saved savings data for index', currentSavingsIndex, ':', currentSaving);
+        }
+
+        // Function to save current shares data to the shares array
+        function saveCurrentSharesData() {
+            if (shares.length === 0 || currentSharesIndex >= shares.length) return;
+
+            const currentShare = shares[currentSharesIndex];
+            if (!currentShare) return;
+
+            // Get form values
+            const startHold = $(`input[name="shares[${currentSharesIndex}][start_hold]"]`).val();
+            const expiryDate = $(`input[name="shares[${currentSharesIndex}][expiry_date]"]`).val();
+            const accountStatus = $(`select[name="shares[${currentSharesIndex}][account_status]"]`).val();
+            const deductionAmount = parseFloat($(`input[name="shares[${currentSharesIndex}][deduction_amount]"]`).val()) || 0;
+            const approvalNo = $(`input[name="shares[${currentSharesIndex}][approval_no]"]`).val();
+            const remarks = $(`textarea[name="shares[${currentSharesIndex}][remarks]"]`).val();
+
+            // Update the share object in the array
+            currentShare.start_hold = startHold;
+            currentShare.expiry_date = expiryDate;
+            currentShare.account_status = accountStatus;
+            currentShare.deduction_amount = deductionAmount;
+            currentShare.approval_no = approvalNo;
+            currentShare.remarks = remarks;
+
+            // console.log('Saved shares data for index', currentSharesIndex, ':', currentShare);
+        }
+
         $('#viewModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
 
@@ -1574,8 +1664,8 @@
                         <p><strong>Amortization Due Date:</strong> ${loan.amortization_due_date || 'N/A'}</p>
                         <p><strong>Total Amort Due:</strong> ${loan.total_due || '0.00'}</p>
                         <p><strong>Total Billed:</strong> ${loan.original_total_due || '0.00'}</p>
-                        <p><strong>Principal Due:</strong> ${loan.principal_due || '0.00'}</p>
-                        <p><strong>Interest Due:</strong> ${loan.interest_due || '0.00'}</p>
+                        <p><strong>Principal:</strong> ${loan.principal_due || '0.00'}</p>
+                        <p><strong>Interest:</strong> ${loan.interest_due || '0.00'}</p>
                         <p><strong>Penalty Due:</strong> ${loan.penalty_due || '0.00'}</p>
                         <p><strong>Deduction Amount:</strong> ${loan.deduction_amount || '0.00'}</p>
                         <p><strong>Approval Number:</strong> ${loan.approval_no || 'N/A'}</p>

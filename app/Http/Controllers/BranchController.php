@@ -96,17 +96,50 @@ class BranchController extends Controller
     {
         $request->validate([
             'branch_id' => 'required|exists:branches,id',
-            'member_id' => 'required|exists:members,id',
         ]);
 
         try {
-            $member = \App\Models\Member::findOrFail($request->input('member_id'));
-            $member->branch_id = $request->input('branch_id');
-            $member->save();
+            $branchId = $request->input('branch_id');
+            $memberIds = $request->input('member_ids', []);
+            $singleMemberId = $request->input('member_id');
 
-            return redirect()->route('branch')->with('success', 'Member assigned to branch successfully!');
+            // Handle single member assignment (for backward compatibility)
+            if ($singleMemberId) {
+                $memberIds[] = $singleMemberId;
+            }
+
+            // Validate that at least one member is selected
+            if (empty($memberIds)) {
+                return redirect()->back()->with('error', 'Please select at least one member to assign.');
+            }
+
+            // Validate that all member IDs exist
+            $members = \App\Models\Member::whereIn('id', $memberIds)->get();
+            if ($members->count() !== count($memberIds)) {
+                return redirect()->back()->with('error', 'One or more selected members do not exist.');
+            }
+
+            // Assign all selected members to the branch
+            $assignedCount = 0;
+            foreach ($members as $member) {
+                if ($member->branch_id === null) {
+                    $member->branch_id = $branchId;
+                    $member->save();
+                    $assignedCount++;
+                }
+            }
+
+            if ($assignedCount === 0) {
+                return redirect()->back()->with('warning', 'All selected members are already assigned to branches.');
+            }
+
+            $message = $assignedCount === 1
+                ? 'Member assigned to branch successfully!'
+                : $assignedCount . ' members assigned to branch successfully!';
+
+            return redirect()->route('branch')->with('success', $message);
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Failed to assign member: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to assign members: ' . $e->getMessage());
         }
     }
 }

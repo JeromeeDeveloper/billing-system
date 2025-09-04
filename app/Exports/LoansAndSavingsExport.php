@@ -78,20 +78,33 @@ class LoansAndSavingsExport implements FromCollection, WithHeadings
 
             // Handle loan payments (deduction logic)
             foreach ($member->loanForecasts as $forecast) {
+                // Get the latest batch to determine billing type
+                $latestBatch = \App\Models\RemittanceBatch::where('billing_period', $this->billingPeriod)
+                    ->whereIn('billing_type', ['regular', 'special'])
+                    ->orderBy('imported_at', 'desc')
+                    ->first();
+
+
+
                 // Find the highest remittance_tag for this loan and billing period
                 $latestTag = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
-
                     ->max('remittance_tag');
                 if (!$latestTag) {
                     continue;
                 }
                 $remittances = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
                     ->where('member_id', $member->id)
+                    ->where('remittance_tag', $latestTag);
 
-                    ->where('remittance_tag', $latestTag)
+                // Filter by billing type if latest batch exists
+                if ($latestBatch) {
+                    $remittances = $remittances->where('billing_type', $latestBatch->billing_type);
+                } else {
+                    // If no latest batch found, exclude records with billing_type to be safe
+                    $remittances = $remittances->whereNotNull('billing_type');
+                }
 
-
-                    ->get();
+                $remittances = $remittances->get();
                 foreach ($remittances as $remit) {
                     if ($remit->remitted_amount > 0) {
                         $branchTotals[$branchCode]['loans_total'] += $remit->remitted_amount;
@@ -291,13 +304,31 @@ class LoansAndSavingsWithProductExport implements FromCollection, WithHeadings
             }
             // Loans
             foreach ($member->loanForecasts as $forecast) {
+                // Get the latest batch to determine billing type
+                $latestBatch = \App\Models\RemittanceBatch::where('billing_period', $this->billingPeriod)
+                    ->whereIn('billing_type', ['regular', 'special'])
+                    ->orderBy('imported_at', 'desc')
+                    ->first();
+
+                // Find the highest remittance_tag for this loan and billing period
+                $latestTag = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
+                    ->max('remittance_tag');
+                if (!$latestTag) {
+                    continue;
+                }
                 $remittances = \App\Models\LoanRemittance::where('loan_forecast_id', $forecast->id)
                     ->where('member_id', $member->id)
-                    ->where('billing_period', $this->billingPeriod)
-                    ->where('remittance_tag', $latestTag)
-                    ->where('remitted_amount', '>', 0)
-                    ->orderBy('remittance_date')
-                    ->get();
+                    ->where('remittance_tag', $latestTag);
+
+                // Filter by billing type if latest batch exists
+                if ($latestBatch) {
+                    $remittances = $remittances->where('billing_type', $latestBatch->billing_type);
+                } else {
+                    // If no latest batch found, exclude records with billing_type to be safe
+                    $remittances = $remittances->whereNotNull('billing_type');
+                }
+
+                $remittances = $remittances->get();
                 foreach ($remittances as $remit) {
                     if ($remit->remitted_amount > 0) {
                         $originalAccountNumber = $forecast->loan_acct_no;

@@ -118,9 +118,9 @@
                                         </form>
                                     @endif
                                     @if(Auth::user()->status === 'approved')
-                                        <form action="{{ route('billing.cancel-approval') }}" method="POST" class="m-0">
+                                        <form action="{{ route('billing.cancel-approval') }}" method="POST" class="m-0" id="cancelApprovalForm">
                                             @csrf
-                                            <button type="submit" class="btn btn-rounded btn-warning text-white {{ $alreadyExported ? 'disabled' : '' }}" @if($alreadyExported) disabled @endif>
+                                            <button type="submit" class="btn btn-rounded btn-warning text-white {{ $hasBillingExportForPeriod ? 'disabled' : '' }}" @if($hasBillingExportForPeriod) disabled @endif>
                                                 <span class="btn-icon-left text-warning"><i class="fa fa-times"></i></span>
                                                 Cancel Approval
                                             </button>
@@ -132,9 +132,9 @@
                                     @endif
                                 </div>
                             </div>
-                            @if($alreadyExported)
+                            @if($hasBillingExportForPeriod)
                                 <div class="alert alert-danger text-center small mb-0 mt-2">
-                                    You have already generated billing for this month. Cancel approval is disabled until next month.
+                                    Billing has been generated for this period. Cancel approval is disabled.
                                 </div>
                             @endif
                             @if (!$allBranchApproved)
@@ -151,16 +151,11 @@
                                     </h5>
                                     <div class="collapse show" id="infoNoteContent">
                                         <ol class="mb-2">
-                                            <li><strong>Review & Edit:</strong> Branch users can view and edit billing records for their branch only.</li>
+                                            <li><strong>Review:</strong> Branch users can view billing records for their branch only.</li>
                                             <li><strong>Amortization:</strong> Only regular loans are included in the amortization column. Members with zero amortization are hidden.</li>
                                             <li><strong>Approval:</strong> Once all records are correct, approve your branch's billing. Admin cannot generate the consolidated export until all branches approve.</li>
                                             <li><strong>Export:</strong> Export your branch's billing data (if allowed) and view export history.</li>
-                                            <li><strong>Loan Reports:</strong> Generate detailed loan reports showing total billed vs remitted amounts for your branch members.</li>
                                         </ol>
-                                        <ul class="mb-2">
-                                            <li><strong>Search & Filter:</strong> Use the search bar and filters to quickly find members or billing records within your branch.</li>
-                                            <li><strong>Record Management:</strong> Edit or delete billing records as needed using the Actions column.</li>
-                                        </ul>
                                         <p class="mb-0"><small><strong>Note:</strong> Only regular loans are included in amortization calculations. Approval is required before admin can generate the final report.</small></p>
                                     </div>
                                 </div>
@@ -382,6 +377,69 @@
         $('.delete-btn').on('click', function() {
             const id = $(this).data('id');
             $('#deleteForm').attr('action', `/billing/${id}`);
+        });
+
+        // Handle Cancel Approval button click
+        document.getElementById('cancelApprovalForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Show loading state
+            Swal.fire({
+                title: 'Checking Billing Status...',
+                text: 'Please wait while we check if billing has been generated.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Check database for billing exports
+            fetch('{{ route("billing.check-export-status") }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.hasExport) {
+                    // Billing has been generated, show error message
+                    Swal.fire({
+                        title: 'Cannot Cancel Approval',
+                        text: 'Billing export has already been generated for this period. Cancel approval is not allowed.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    // No billing export found, proceed with cancellation
+                    Swal.fire({
+                        title: 'Cancel Approval?',
+                        text: 'Are you sure you want to cancel the approval? This action cannot be undone.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, Cancel Approval',
+                        cancelButtonText: 'No, Keep Approval'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Submit the form
+                            this.submit();
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'An error occurred while checking billing status.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+                console.error('Error:', error);
+            });
         });
     </script>
 </body>

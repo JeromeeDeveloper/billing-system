@@ -85,6 +85,7 @@ Route::post('/loans', [LoansController::class, 'store'])->name('loans.store');
 Route::put('/loans/{loan}', [LoansController::class, 'update'])->name('loans.update');
 Route::delete('/loans/{loan}', [LoansController::class, 'destroy'])->name('loans.destroy');
 Route::get('/Loans/export', [LoansController::class, 'export'])->name('loans.export');
+
 //Document
 Route::post('/upload', [DocumentUploadController::class, 'store'])->name('document.upload');
 Route::get('/Documents', [DocumentUploadController::class, 'index'])->name('documents');
@@ -111,6 +112,8 @@ Route::get('/atm', [AtmController::class, 'index'])->name('atm');
     Route::get('/atm/export-remittance-report-per-branch-member', [AtmController::class, 'exportRemittanceReportPerBranchMember'])->name('atm.export.remittance-report-per-branch-member');
     Route::post('/atm/post-payment', [AtmController::class, 'postPayment'])->name('atm.post-payment');
     Route::get('/atm/export-posted-payments', [AtmController::class, 'exportPostedPayments'])->name('atm.export-posted-payments');
+    Route::get('/atm/export-posted-payments-detailed', [AtmController::class, 'exportPostedPaymentsDetailed'])->name('atm.export-posted-payments-detailed');
+Route::get('/atm/generate-batch-report', [AtmController::class, 'generateAtmBatchReport'])->name('atm.generate-batch-report');
 
 //Branch
 Route::get('/Branch', [BranchController::class, 'index'])->name('branch');
@@ -177,6 +180,9 @@ Route::get('/special-billing/export', [SpecialBillingController::class, 'export'
 Route::get('admin/remittance/export-preview', [\App\Http\Controllers\RemittanceController::class, 'exportPreview'])->name('remittance.exportPreview');
 Route::get('admin/remittance/export-comparison', [\App\Http\Controllers\RemittanceController::class, 'exportComparison'])->name('remittance.exportComparison');
 Route::get('admin/remittance/export-regular-special', [App\Http\Controllers\RemittanceController::class, 'exportRegularSpecial'])->name('remittance.exportRegularSpecial');
+Route::get('admin/remittance/export-consolidated', [App\Http\Controllers\RemittanceController::class, 'exportConsolidated'])->name('remittance.exportConsolidated');
+Route::get('admin/remittance/export-per-remittance', [App\Http\Controllers\RemittanceController::class, 'exportPerRemittance'])->name('remittance.exportPerRemittance');
+
 
 Route::get('/admin/contra', [App\Http\Controllers\ContraController::class, 'showAdmin'])->name('admin.contra');
 Route::post('/admin/contra', [App\Http\Controllers\ContraController::class, 'storeAdmin']);
@@ -208,6 +214,7 @@ Route::get('/Branch/billing/exports/{id}/download', [BillingController::class, '
 Route::put('/Branch/billing/{member}', [BillingController::class, 'update_branch'])->name('billing.update.branch');
 Route::delete('/Branch/billing/{member}', [BillingController::class, 'destroy_branch'])->name('billing.destroy.branch');
 Route::post('/Branch/billing/approve', [BillingController::class, 'approve'])->name('billing.approve');
+Route::post('/Branch/billing/check-export-status', [BillingController::class, 'checkExportStatus'])->name('billing.check-export-status');
 Route::post('/Branch/billing/cancel-approval', [BillingController::class, 'cancelApproval'])->name('billing.cancel-approval');
 
 
@@ -225,6 +232,8 @@ Route::get('/Branch/shares', [SharesController::class, 'index_branch'])->name('s
     Route::post('/branch/atm/update-balance', [BranchAtmController::class, 'updateBalance'])->name('branch.atm.update-balance');
     Route::post('/branch/atm/post-payment', [BranchAtmController::class, 'postPayment'])->name('branch.atm.post-payment');
     Route::get('/branch/atm/export-posted-payments', [BranchAtmController::class, 'exportPostedPayments'])->name('branch.atm.export-posted-payments');
+    Route::get('/branch/atm/export-posted-payments-detailed', [BranchAtmController::class, 'exportPostedPaymentsDetailed'])->name('branch.atm.export-posted-payments-detailed');
+Route::get('/branch/atm/generate-batch-report', [BranchAtmController::class, 'generateAtmBatchReport'])->name('branch.atm.generate-batch-report');
     Route::get('/branch/atm/export-remittance-report-per-branch', [BranchAtmController::class, 'exportBranchRemittanceReportPerBranch'])->name('branch.atm.export.remittance-report-per-branch');
     Route::get('/branch/atm/export-remittance-report-per-branch-member', [BranchAtmController::class, 'exportBranchRemittanceReportPerBranchMember'])->name('branch.atm.export.remittance-report-per-branch-member');
     Route::get('/branch/atm/export-remittance-report-consolidated', [BranchAtmController::class, 'exportBranchRemittanceReportConsolidated'])->name('branch.atm.export.remittance-report-consolidated');
@@ -238,6 +247,8 @@ Route::get('/branch/special-billing/export', [BranchSpecialBillingController::cl
 Route::get('/branch/remittance', [BranchRemittanceController::class, 'index'])->name('branch.remittance.index');
 Route::get('/branch/remittance/generate-export', [BranchRemittanceController::class, 'generateExport'])->name('branch.remittance.generateExport');
 Route::get('/branch/remittance/export-regular-special', [App\Http\Controllers\BranchRemittanceController::class, 'exportRegularSpecial'])->name('branchRemittance.exportRegularSpecial');
+Route::get('/branch/remittance/export-consolidated', [App\Http\Controllers\BranchRemittanceController::class, 'exportConsolidated'])->name('branchRemittance.exportConsolidated');
+
 
 Route::get('/master/export-member-details-branch', [MasterController::class, 'exportMemberDetailsBranch'])->name('master.exportMemberDetailsBranch');
 Route::get('/master/export-members-no-regular-savings-branch', [MasterController::class, 'exportMembersNoRegularSavingsBranch'])->name('master.exportMembersNoRegularSavingsBranch');

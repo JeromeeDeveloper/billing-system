@@ -44,15 +44,21 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 continue;
             }
 
-            // Cache branch - update or create
+            // Find existing branch by code (no creation/updating)
             $branchCode = $row['branch_code'];
             $branch = $this->branchCache[$branchCode] ?? null;
             if (!$branch) {
-                $branch = Branch::updateOrCreate(
-                    ['code' => $branchCode],
-                    ['name' => $row['branch_name']]
-                );
-                $this->branchCache[$branchCode] = $branch;
+                $branch = Branch::where('code', $branchCode)->first();
+                if ($branch) {
+                    $this->branchCache[$branchCode] = $branch;
+                }
+            }
+
+            // Skip if branch doesn't exist (branches must be manually created first)
+            if (!$branch) {
+                Log::info("LoanForecast Import - Skipped CID {$row['cid']}: Branch with code '{$branchCode}' not found. Please create branch manually first.");
+                $this->stats['not_found']++;
+                continue;
             }
 
             // Parse name - Format as "Lastname, Firstname"
@@ -99,49 +105,75 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 }
             }
 
-            // Prepare total_due value
-            $newTotalDue = $this->cleanNumber($row['total_amort'] ?? $row['k5'] ?? 0);
+            // Prepare values from Excel
+            $newPrincipalDue = $this->cleanNumber($row['principal'] ?? $row['i5'] ?? 0);
+            $newInterestDue = $this->cleanNumber($row['interest'] ?? $row['j5'] ?? 0);
+            // Calculate total_due based on principal_due + interest_due
+            $newTotalDue = $newPrincipalDue + $newInterestDue;
 
             // Update or create loan forecast with billing period (without total_due)
-            $loanForecast = LoanForecast::updateOrCreate(
-                ['loan_acct_no' => $row['loan_account_no']],
-                [
+            $existingForecast = LoanForecast::where('loan_acct_no', $row['loan_account_no'])->first();
+            if ($existingForecast) {
+                $existingForecast->refresh(); // Always get the latest from DB
+                $existingForecast->open_date = $this->parseDate($row['open_date']);
+                $existingForecast->maturity_date = $this->parseDate($row['maturity_date']);
+                $existingForecast->amortization_due_date = $this->parseDate($row['amortization_due_date']);
+                $existingForecast->billing_period = $this->billingPeriod;
+                $existingForecast->updated_at = $now;
+                // Only update if status is not 'paid' (check before assignment!)
+                if ($existingForecast->principal_due_status !== 'paid') {
+                    $originalPrincipal = $existingForecast->original_principal_due ?? $existingForecast->principal_due;
+                    // If billing period was reset (original values are 0), use new values
+                    if ($originalPrincipal == 0 && $newPrincipalDue > 0) {
+                        $existingForecast->principal_due = $newPrincipalDue;
+                    } else if ($newPrincipalDue > $originalPrincipal) {
+                        $existingForecast->principal_due = $originalPrincipal;
+                    } else {
+                        $existingForecast->principal_due = $newPrincipalDue;
+                    }
+                }
+                if ($existingForecast->interest_due_status !== 'paid') {
+                    $originalInterest = $existingForecast->original_interest_due ?? $existingForecast->interest_due;
+                    // If billing period was reset (original values are 0), use new values
+                    if ($originalInterest == 0 && $newInterestDue > 0) {
+                        $existingForecast->interest_due = $newInterestDue;
+                    } else if ($newInterestDue > $originalInterest) {
+                        $existingForecast->interest_due = $originalInterest;
+                    } else {
+                        $existingForecast->interest_due = $newInterestDue;
+                    }
+                }
+                // Auto-calculate total_due based on principal_due + interest_due
+                $existingForecast->total_due = $existingForecast->principal_due + $existingForecast->interest_due;
+
+                // Do not update statuses here - they will be updated by RemittanceImport
+                $existingForecast->save();
+                $loanForecast = $existingForecast;
+            } else {
+                $loanForecast = LoanForecast::create([
+                    'loan_acct_no' => $row['loan_account_no'],
                     'open_date' => $this->parseDate($row['open_date']),
                     'maturity_date' => $this->parseDate($row['maturity_date']),
                     'amortization_due_date' => $this->parseDate($row['amortization_due_date']),
-                    'principal_due' => $this->cleanNumber($row['principal'] ?? $row['i5'] ?? null),
-                    'interest_due' => $this->cleanNumber($row['interest'] ?? $row['j5'] ?? null),
-                    // total_due will be updated below if not zero
-                    'member_id' => $loanProductMemberId ?? $member->id, // use product match or fallback
+                    'principal_due' => $newPrincipalDue,
+                    'interest_due' => $newInterestDue,
+                    'member_id' => $member->id,
                     'billing_period' => $this->billingPeriod,
                     'updated_at' => $now,
-                ]
-            );
-
-            // Only update total_due if new value is not zero
-            if ($newTotalDue != 0) {
-                $loanForecast->update(['total_due' => $newTotalDue]);
+                    'interest_due_status' => 'unpaid', // Default status, will be updated by RemittanceImport
+                    'principal_due_status' => 'unpaid', // Default status, will be updated by RemittanceImport
+                    'total_due_status' => 'unpaid', // Default status, will be updated by RemittanceImport
+                    'original_principal_due' => $newPrincipalDue,
+                    'original_interest_due' => $newInterestDue,
+                ]);
             }
 
-            // Only update principal_due and interest_due if they are not zero
-            $newPrincipalDue = $this->cleanNumber($row['principal'] ?? $row['i5'] ?? 0);
-            $newInterestDue = $this->cleanNumber($row['interest'] ?? $row['j5'] ?? 0);
-            $shouldUpdate = false;
-            $updateFields = [];
-            if ($newPrincipalDue != 0) {
-                $updateFields['principal_due'] = $newPrincipalDue;
-                $shouldUpdate = true;
-            }
-            if ($newInterestDue != 0) {
-                $updateFields['interest_due'] = $newInterestDue;
-                $shouldUpdate = true;
-            }
-            if ($shouldUpdate) {
-                $loanForecast->update($updateFields);
-            }
+            // total_due will be auto-calculated by the model based on principal_due + interest_due
 
-            // Set original_total_due if null or if billing_period is different
-            if (is_null($loanForecast->original_total_due) || $loanForecast->billing_period !== $this->billingPeriod) {
+            // Set original_total_due if null or if billing_period is different or if original values are 0 (reset)
+            if (is_null($loanForecast->original_total_due) ||
+                $loanForecast->billing_period !== $this->billingPeriod ||
+                $loanForecast->original_total_due == 0) {
                 $loanForecast->original_total_due = $loanForecast->total_due;
                 // Set original_principal_due and original_interest_due as well
                 $loanForecast->original_principal_due = $loanForecast->principal_due;

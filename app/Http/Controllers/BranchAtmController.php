@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PostedPaymentsExport;
+use App\Models\SavingsPayment;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BranchAtmController extends Controller
 {
@@ -25,8 +27,14 @@ class BranchAtmController extends Controller
             ->where('branch_id', Auth::user()->branch_id)
             ->when($billingPeriod, function ($query, $billingPeriod) {
                 $query->where('billing_period', 'like', $billingPeriod . '%');
-            })
-            ->whereHas('atmPayments');
+            });
+
+        $isSearching = $request->filled('name') || $request->filled('emp_id') || $request->filled('cid');
+
+        // Only require ATM payments if not searching
+        if (!$isSearching) {
+            $query->whereHas('atmPayments');
+        }
 
         if ($request->filled('name')) {
             $query->where(function ($q) use ($request) {
@@ -172,9 +180,9 @@ class BranchAtmController extends Controller
             $validated = $request->validate([
                 'member_id' => 'required|exists:members,id',
                 'withdrawal_amount' => 'required|numeric|min:0',
-                'selected_loans' => 'required|array|min:1',
+                'selected_loans' => 'nullable|array',
                 'selected_loans.*' => 'string',
-                'loan_amounts' => 'required|array',
+                'loan_amounts' => 'nullable|array',
                 'payment_date' => 'required|date',
                 'payment_reference' => 'required|string',
                 'notes' => 'nullable|string'
@@ -188,9 +196,21 @@ class BranchAtmController extends Controller
             }
 
             $withdrawalAmount = $validated['withdrawal_amount'];
-            $selectedLoans = $validated['selected_loans'];
-            $loanAmounts = $validated['loan_amounts'];
+            $selectedLoans = $validated['selected_loans'] ?? [];
+            $loanAmounts = $validated['loan_amounts'] ?? [];
             $savingsAmounts = $request->input('savings_amounts', []); // New: get savings payments from modal
+
+            // Require at least one of: a selected loan OR a positive savings amount
+            $hasPositiveSavings = false;
+            foreach ($savingsAmounts as $amount) {
+                if (is_numeric($amount) && $amount > 0) {
+                    $hasPositiveSavings = true;
+                    break;
+                }
+            }
+            if ((empty($selectedLoans) || count($selectedLoans) === 0) && !$hasPositiveSavings) {
+                return redirect()->back()->with('error', 'Please select at least one loan or enter a positive savings amount.');
+            }
 
             // Validate loan amounts for selected loans only
             foreach ($selectedLoans as $loanAcctNo) {
@@ -229,7 +249,7 @@ class BranchAtmController extends Controller
 
             DB::beginTransaction();
 
-            // Process loan payments
+            // Process loan payments with distribution logic (interest first, then principal, then penalty)
             foreach ($selectedLoans as $loanAcctNo) {
                 if (!isset($loanAmounts[$loanAcctNo]) || $loanAmounts[$loanAcctNo] <= 0) {
                     continue;
@@ -251,22 +271,54 @@ class BranchAtmController extends Controller
                     return redirect()->back()->with('error', "Payment amount for loan {$loanAcctNo} cannot exceed total due");
                 }
 
-                // Update the total_due in LoanForecast
-                $newTotalDue = $forecast->total_due - $paymentAmount;
+                // Distribute payment: interest first, then principal (penalty is static/blank)
+                $remainingPayment = $paymentAmount;
+                $appliedToInterest = 0;
+                $appliedToPrincipal = 0;
+                $appliedToPenalty = 0; // Static/blank
+
+                // Get current due amounts
+                $interestDue = $forecast->interest_due ?? 0;
+                $principalDue = $forecast->principal_due ?? 0;
+
+                // Apply to interest first
+                if ($interestDue > 0 && $remainingPayment > 0) {
+                    $deduct = min($remainingPayment, $interestDue);
+                    $appliedToInterest = $deduct;
+                    $interestDue -= $deduct;
+                    $remainingPayment -= $deduct;
+                }
+
+                // Then apply to principal
+                if ($principalDue > 0 && $remainingPayment > 0) {
+                    $deduct = min($remainingPayment, $principalDue);
+                    $appliedToPrincipal = $deduct;
+                    $principalDue -= $deduct;
+                    $remainingPayment -= $deduct;
+                }
+
+                // Update the forecast with new due amounts (penalty remains unchanged)
                 $forecast->update([
-                    'total_due' => max(0, $newTotalDue)
+                    'interest_due' => max(0, $interestDue),
+                    'principal_due' => max(0, $principalDue),
+                    'total_due' => max(0, $interestDue + $principalDue)
                 ]);
 
-                // Create loan payment record
+                // Create loan payment record with distribution details
                 LoanPayment::create([
                     'member_id' => $member->id,
                     'loan_forecast_id' => $forecast->id,
                     'withdrawal_amount' => $withdrawalAmount,
                     'amount' => $paymentAmount,
+                    'applied_to_interest' => $appliedToInterest,
+                    'applied_to_principal' => $appliedToPrincipal,
+                    'penalty' => $appliedToPenalty, // Static/blank
                     'payment_date' => $validated['payment_date'],
                     'reference_number' => $validated['payment_reference'],
                     'notes' => $validated['notes']
                 ]);
+
+                Log::info("Created loan payment with distribution: Interest: {$appliedToInterest}, Principal: {$appliedToPrincipal}, Penalty: {$appliedToPenalty} (static)");
             }
 
             // Find regular savings account
@@ -392,6 +444,44 @@ class BranchAtmController extends Controller
         }
     }
 
+    public function exportPostedPaymentsDetailed(Request $request)
+    {
+        try {
+            $allDates = $request->input('all_dates');
+            $date = $request->input('date', now()->toDateString());
+            $branch_id = Auth::user()->branch_id;
+
+            $atmPaymentsQuery = AtmPayment::with(['member.branch'])
+                ->whereHas('member', function($query) use ($branch_id) {
+                    $query->where('branch_id', $branch_id);
+                });
+            if (!$allDates) {
+                $atmPaymentsQuery->whereDate('payment_date', $date);
+            }
+            $atmPayments = $atmPaymentsQuery->get();
+
+            $logDate = $allDates ? 'ALL DATES' : $date;
+            Log::info("Found {$atmPayments->count()} ATM payments for detailed export on {$logDate} from branch {$branch_id}");
+
+            if ($atmPayments->isEmpty()) {
+                return redirect()->back()->with('error', 'No posted payments found for the selected date(s).');
+            }
+
+            $filename = 'branch_posted_payments_detailed_' . ($allDates ? 'all' : $date) . '.csv';
+
+            Excel::store(
+                new PostedPaymentsExport($atmPayments),
+                $filename,
+                'public'
+            );
+
+            return response()->download(storage_path('app/public/' . $filename))->deleteFileAfterSend();
+        } catch (\Exception $e) {
+            Log::error('Error in exportPostedPaymentsDetailed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error generating detailed export: ' . $e->getMessage());
+        }
+    }
+
     public function exportBranchRemittanceReportPerBranch()
     {
         $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
@@ -429,5 +519,147 @@ class BranchAtmController extends Controller
             new \App\Exports\BranchListOfProfileExport($branchId),
             'Branch_List_of_Profile_' . now()->format('Y-m-d') . '.xlsx'
         );
+    }
+
+        public function generateAtmBatchReport(Request $request)
+    {
+        $branchId = Auth::user()->branch_id;
+        $date = $request->input('date', date('Y-m-d'));
+        $allDates = $request->input('all_dates', false);
+
+        // Get ATM payments based on date filter and branch
+        $query = AtmPayment::with(['member.branch'])
+            ->whereHas('member', function ($query) use ($branchId) {
+                $query->where('branch_id', $branchId);
+            })
+            ->when(!$allDates, function ($query) use ($date) {
+                $query->whereDate('payment_date', $date);
+            });
+
+        $atmPayments = $query->get();
+
+        // Check if any ATM payments found
+        if ($atmPayments->isEmpty()) {
+            return redirect()->back()->with('error', 'No ATM payments found for the selected criteria. Please create some ATM payments first.');
+        }
+
+        // Prepare data for the report
+        $reportData = [];
+        foreach ($atmPayments as $payment) {
+            $member = $payment->member;
+
+            // Get loan payments for this ATM payment
+            $loanPayments = LoanPayment::where('member_id', $member->id)
+                ->where('payment_date', $payment->payment_date)
+                ->where('withdrawal_amount', $payment->withdrawal_amount)
+                ->get();
+
+            // Get savings payments for this ATM payment
+            $savingsPayments = SavingsPayment::where('atm_payment_id', $payment->id)->get();
+
+            // Calculate components based on your criteria
+            $totalAmount = $payment->withdrawal_amount;
+            $posCharge = 0; // Empty as requested
+            $caAmount = 0; // CA (Pinoy Coop) - ATM savings
+            $loansAmount = 0; // LOANS - total loan payments
+            $othersAmount = 0; // Others - regular savings remaining
+            $remarks = '';
+
+            // Calculate LOANS (total_due from loan forecasts)
+            $loansAmount = $member->loanForecasts->sum('total_due');
+
+            // Get remarks from loan payments
+            foreach ($loanPayments as $loanPayment) {
+                $remarks .= $loanPayment->notes ? $loanPayment->notes . '; ' : '';
+            }
+
+            // Calculate remaining amount (same logic as postPayment)
+            $totalSavingsPayment = $savingsPayments->sum('amount');
+            $remainingToSavings = $totalAmount - ($loansAmount + $totalSavingsPayment);
+
+            // Calculate CA (Pinoy Coop) - ATM savings (priority)
+            foreach ($savingsPayments as $savingsPayment) {
+                $saving = $member->savings()->where('account_number', $savingsPayment->account_number)->first();
+                if ($saving && $saving->savingProduct && $saving->savingProduct->product_type === 'atm') {
+                    $caAmount += $savingsPayment->amount;
+                }
+            }
+
+            // Calculate Others (regular savings remaining)
+            foreach ($savingsPayments as $savingsPayment) {
+                $saving = $member->savings()->where('account_number', $savingsPayment->account_number)->first();
+                if ($saving && $saving->savingProduct && $saving->savingProduct->product_type === 'regular') {
+                    $othersAmount += $savingsPayment->amount;
+                }
+            }
+
+            // If no specific savings payments, use the remaining amount logic
+            if ($totalSavingsPayment == 0 && $remainingToSavings > 0) {
+                // Check for ATM savings first, then regular savings (same as postPayment logic)
+                $atmSavings = $member->savings()
+                    ->whereHas('savingProduct', function ($q) {
+                        $q->where('product_type', 'atm');
+                    })
+                    ->first();
+
+                if ($atmSavings) {
+                    $caAmount = $remainingToSavings;
+                } else {
+                    $regularSavings = $member->savings()
+                        ->whereHas('savingProduct', function ($q) {
+                            $q->where('product_type', 'regular');
+                        })
+                        ->first();
+                    if ($regularSavings) {
+                        $othersAmount = $remainingToSavings;
+                    }
+                }
+            }
+
+            // Calculate net amount due
+            $netAmountDue = $totalAmount - $loansAmount;
+
+            $reportData[] = [
+                'member' => $member->fname . ' ' . $member->lname,
+                'amount' => $totalAmount,
+                'pos_charge' => $posCharge,
+                'ca_amount' => $caAmount,
+                'loans' => $loansAmount,
+                'others' => $othersAmount,
+                'net_amount_due' => $netAmountDue,
+                'remarks' => trim($remarks, '; ')
+            ];
+        }
+
+        // Get branch name for header
+        $branchName = Auth::user()->branch->name;
+
+        // Prepare images for PDF
+        $picture1Path = public_path('images/Picture1.png');
+        $picture2Path = public_path('images/Picture2.png');
+
+        $picture1Base64 = '';
+        $picture2Base64 = '';
+
+        if (file_exists($picture1Path)) {
+            $picture1Base64 = 'data:image/png;base64,' . base64_encode(file_get_contents($picture1Path));
+        }
+
+        if (file_exists($picture2Path)) {
+            $picture2Base64 = 'data:image/png;base64,' . base64_encode(file_get_contents($picture2Path));
+        }
+
+        // Generate PDF
+        $pdf = Pdf::loadView('reports.atm-batch', [
+            'reportData' => $reportData,
+            'branchName' => $branchName,
+            'date' => $date,
+            'allDates' => $allDates,
+            'picture1Base64' => $picture1Base64,
+            'picture2Base64' => $picture2Base64
+        ]);
+
+        $filename = 'ATM_Batch_Report_' . $branchName . '_' . $date . '.pdf';
+        return $pdf->download($filename);
     }
 }

@@ -17,16 +17,6 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
-
-    <script>
-        // Setup AJAX CSRF token
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-    </script>
-
 </head>
 
 <body>
@@ -192,13 +182,10 @@
                                     <p class="mb-2"><strong>What this page does:</strong></p>
                                     <ul class="mb-2">
                                         <li><strong>Billing Overview:</strong> View all member billing records with amortization, and payment schedules</li>
-                                        <li><strong>Data Management:</strong> Edit member billing information including amounts and dates</li>
                                         <li><strong>Billing Generation:</strong> Generate monthly billing reports for all branches (requires branch approval)</li>
-                                        <li><strong>Loan Reports:</strong> Generate detailed loan reports showing total billed vs remitted amounts per member</li>
                                         <li><strong>Members No Branch:</strong> Export a report of all members who have not been assigned to any branch</li>
                                         <li><strong>Export History:</strong> Track and download previously generated billing reports</li>
-                                        <li><strong>Search & Filter:</strong> Find specific members or billing records quickly</li>
-                                        <li><strong>Record Management:</strong>edit, or delete billing records as needed</li>
+                                        <li><strong>Search:</strong> Find specific members or billing records quickly</li>
                                     </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> This page manages the billing cycle and ensures all branches have approved their data before generating final billing reports.</small></p>
                                 </div>
@@ -468,6 +455,15 @@
         $('.delete-btn').on('click', function() {
             const id = $(this).data('id');
             $('#deleteForm').attr('action', `/billing/${id}`);
+        });
+    </script>
+
+      <script>
+        // Setup AJAX CSRF token
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
         });
     </script>
 

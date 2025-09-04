@@ -40,7 +40,25 @@ class SpecialBillingController extends Controller
         // Pagination
         $specialBillings = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        return view('components.admin.special_billing', compact('specialBillings'));
+        $exportStatuses = \App\Models\ExportStatus::getStatuses($billingPeriod, Auth::id());
+        $specialBillingCids = $query->pluck('cid');
+        $members = \App\Models\Member::whereIn('cid', $specialBillingCids)->get();
+
+        // Check conditions for disabling export
+        $noBranch = $members->contains(function($m) { return !$m->branch_id || $m->branch_id == 0; });
+        $noRegularSavings = $members->contains(function($m) {
+            return !$m->savings->contains(function($s) {
+                return $s->savingProduct && $s->savingProduct->product_type === 'regular';
+            });
+        });
+
+        // Check if any branch users have pending status
+        $anyBranchUsersPending = \App\Models\User::where('role', 'branch')->where('status', 'pending')->count() > 0;
+
+        $hasSpecialBillingData = $specialBillings->count() > 0;
+        $allBranchUsersApproved = \App\Models\User::where('role', 'branch')->where('status', '!=', 'approved')->count() === 0;
+
+        return view('components.admin.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'hasSpecialBillingData', 'allBranchUsersApproved', 'anyBranchUsersPending'));
     }
 
     public function import(Request $request)
@@ -322,6 +340,11 @@ class SpecialBillingController extends Controller
 
     public function export()
     {
+        $billingPeriod = Auth::user()->billing_period;
+
+        // Mark as exported for this user
+        \App\Models\ExportStatus::markExported($billingPeriod, 'special_billing', Auth::id());
+
         return Excel::download(new SpecialBillingExport, 'special_billing_export_' . now()->format('Y-m-d') . '.csv');
     }
 }

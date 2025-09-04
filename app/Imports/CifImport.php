@@ -62,6 +62,12 @@ class CifImport implements ToCollection, WithChunkReading, WithBatchInserts, Wit
                 continue;
             }
 
+            // Check if member has a branch assignment
+            if (!$member->branch_id) {
+                Log::info("CIF Import - Skipped CID {$cid}: Member has no branch assignment");
+                continue;
+            }
+
             // Remove prefixes and split name
             $name = trim($row['customer_name']);
             $name = preg_replace('/^(Mr\.|Mrs\.|Ms\.|Miss\.|Dr\.|MR\.|MRS\.|MS\.|MISS\.|DR\.)\s*/i', '', $name);

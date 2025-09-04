@@ -76,8 +76,8 @@
                         <div class="card">
                             <div class="stat-widget-two card-body">
                                 <div class="stat-content">
-                                    <div class="stat-text">Total Savings</div>
-                                    <div class="stat-digit">₱{{ number_format($totalSavings, 2) }}</div>
+                                    <div class="stat-text">Special Products</div>
+                                    <div class="stat-digit">{{ number_format($specialProductTypeCount ?? 0) }}</div>
                                 </div>
                                 <div class="progress">
                                     <div class="progress-bar progress-bar-danger w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
@@ -90,50 +90,35 @@
                     <div class="col-xl-8 col-lg-8 col-md-8">
                         <div class="card">
                             <div class="card-header">
-                                <h4 class="card-title">Members Overview</h4>
+                                <h4 class="card-title">Branch Billing Status</h4>
+                                <a href="{{ route('billing.branch') }}" class="btn btn-success btn-block w-40 mb-2">
+                                    <i class="fas fa-file-excel me-2"></i> View and Approve billing
+                                  </a>
                             </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-xl-12 col-lg-8">
-                                        <div id="branch-members-chart" style="height: auto;">
+                                        <div id="branch-status-chart" style="height: auto;">
                                             <div class="row">
-                                                @foreach($branches as $index => $branch)
+                                                @foreach($allBranches as $branch)
                                                     @php
-                                                        $memberCount = $memberCounts[$index];
-                                                        $percentage = $totalMembers > 0 ? round(($memberCount / $totalMembers) * 100, 1) : 0;
-                                                        $colors = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#20c997'];
-                                                        $color = $colors[$index % count($colors)];
+                                                        $isApproved = in_array($branch->name, $approvedBranches);
+                                                        $statusColor = $isApproved ? '#28a745' : '#dc3545';
+                                                        $statusText = $isApproved ? 'Approved' : 'Pending';
                                                     @endphp
                                                     <div class="col-lg-6 col-md-6 mb-4">
-                                                        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid {{ $color }} !important;">
+                                                        <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid {{ $statusColor }} !important;">
                                                             <div class="card-body p-4">
                                                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                                                     <div>
-                                                                        <h6 class="card-title mb-1 text-dark font-weight-bold">{{ $branch }}</h6>
+                                                                        <h6 class="card-title mb-1 text-dark font-weight-bold">{{ $branch->name }}</h6>
                                                                         <small class="text-muted">Branch</small>
                                                                     </div>
                                                                     <div class="text-right">
-                                                                        <h3 class="mb-0 font-weight-bold" style="color: {{ $color }}">{{ number_format($memberCount) }}</h3>
-                                                                        <small class="text-muted">Members</small>
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="progress mb-2" style="height: 8px; background-color: #f8f9fa;">
-                                                                    <div class="progress-bar" role="progressbar"
-                                                                         style="width: {{ $percentage }}%; background-color: {{ $color }};"
-                                                                         aria-valuenow="{{ $percentage }}" aria-valuemin="0" aria-valuemax="100">
-                                                                    </div>
-                                                                </div>
-
-                                                                <div class="d-flex justify-content-between align-items-center">
-                                                                    <small class="text-muted">{{ $percentage }}% of total</small>
-                                                                    @if($memberCount > 0)
-                                                                        <span class="badge badge-pill" style="background-color: {{ $color }}; color: white;">
-                                                                            {{ $memberCount > 1000 ? 'Large' : ($memberCount > 100 ? 'Medium' : 'Small') }}
+                                                                        <span class="badge badge-pill px-3 py-2" style="background-color: {{ $statusColor }}; color: white;">
+                                                                            {{ $statusText }}
                                                                         </span>
-                                                                    @else
-                                                                        <span class="badge badge-pill badge-secondary">No Members</span>
-                                                                    @endif
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -167,24 +152,6 @@
                         </div>
                     </div>
                     <div class="col-xl-4 col-lg-4 col-md-4">
-                        <div class="card">
-                            <div class="card-body text-center">
-                                <div class="m-t-10">
-                                    <h4 class="card-title">Member Status Distribution</h4>
-                                    <h2 class="mt-3">{{ number_format($totalMembers) }}</h2>
-                                </div>
-                                <div class="widget-card-circle mt-5 mb-5" id="info-circle-card">
-                                    <i class="ti-control-shuffle pa"></i>
-                                </div>
-                                <ul class="widget-line-list m-b-15">
-                                    <li class="border-right">{{ $pgbPercentage }}% <br><span class="text-success"><i
-                                                class="ti-hand-point-up"></i> PGB</span></li>
-                                    <li>{{ $newPercentage }}% <br><span class="text-danger"><i
-                                                class="ti-hand-point-down"></i>New</span></li>
-                                </ul>
-                            </div>
-                        </div>
-
                         <div class="card">
                             <div class="card-header">
                                 <h4 class="card-title">Generate Branch Remittance Reports</h4>

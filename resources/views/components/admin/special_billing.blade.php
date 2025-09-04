@@ -35,8 +35,30 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h4 class="card-title mb-0">Upload Special Billing Excel File</h4>
-                                <a href="{{ route('special-billing.export') }}" class="btn btn-success">
+                                @php
+                                    $specialBillingEnabled = $exportStatuses->get('special_billing') ? $exportStatuses->get('special_billing')->is_enabled : true;
+                                    $userHasExported = $exportStatuses->get('special_billing') && !$exportStatuses->get('special_billing')->is_enabled;
+                                    $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && $allBranchUsersApproved && !$anyBranchUsersPending && !$userHasExported;
+                                @endphp
+                                <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export') : 'javascript:void(0);' }}"
+                                   class="btn btn-success {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
+                                   onclick="{{ $canExport && $hasSpecialBillingData ? '' : 'void(0)' }}">
                                     <i class="fa fa-file-excel"></i> Export Special Billing
+                                    @if(!$hasSpecialBillingData)
+                                        <br><small class="text-muted">(Disabled - No special billing data for this period)</small>
+                                    @elseif($userHasExported)
+                                        <br><small class="text-muted">(Disabled - You have already exported for this billing period)</small>
+                                    @elseif(!$specialBillingEnabled)
+                                        <br><small class="text-muted">(Disabled - Already exported. Wait for next period to enable)</small>
+                                    @elseif($anyBranchUsersPending)
+                                        <br><small class="text-muted">(Disabled - Some branch users have pending status)</small>
+                                    @elseif($noBranch)
+                                        <br><small class="text-muted">(Disabled - Some members have no branch)</small>
+                                    @elseif($noRegularSavings)
+                                        <br><small class="text-muted">(Disabled - Some members have no regular savings)</small>
+                                    @elseif(!$allBranchUsersApproved)
+                                        <br><small class="text-muted">(Disabled - Not all branch users are approved)</small>
+                                    @endif
                                 </a>
                             </div>
                             <div class="card-body">
@@ -118,6 +140,7 @@
                                     <table class="table table-striped table-bordered">
                                         <thead>
                                             <tr>
+                                                <th>CID</th>
                                                 <th>Employee ID</th>
                                                 <th>Name</th>
                                                 <th>Amortization</th>
@@ -130,6 +153,7 @@
                                         <tbody>
                                             @forelse ($specialBillings as $billing)
                                             <tr>
+                                                <td>{{ $billing->cid }}</td>
                                                 <td>{{ $billing->employee_id }}</td>
                                                 <td>{{ $billing->name }}</td>
                                                 <td>{{ number_format($billing->amortization, 2) }}</td>
@@ -140,7 +164,7 @@
                                             </tr>
                                             @empty
                                             <tr>
-                                                <td colspan="7" class="text-center">No special billing records found.</td>
+                                                <td colspan="8" class="text-center">No special billing records found.</td>
                                             </tr>
                                             @endforelse
                                         </tbody>

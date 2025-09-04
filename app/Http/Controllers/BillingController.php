@@ -7,11 +7,23 @@ use App\Models\Member;
 use App\Models\User;
 use App\Models\BillingExport;
 use App\Models\Notification;
+use App\Models\RemittanceBatch;
+use App\Models\RemittanceReport;
+use App\Models\RemittancePreview;
+use App\Models\RemittanceUploadCount;
+use App\Models\LoanPayment;
+use App\Models\SpecialBilling;
+use App\Models\LoanRemittance;
+use App\Models\AtmPayment;
+use App\Models\LoanForecast;
+use App\Models\Saving;
+use App\Models\Shares;
 use Illuminate\Http\Request;
 use App\Exports\BillingExport as BillingExcelExport;
 use App\Exports\MembersNoBranchExport;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -133,7 +145,10 @@ class BillingController extends Controller
             ->where('generated_by', $userId)
             ->exists();
 
-        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'alreadyExported'));
+        // Check if there's any billing export record for this billing period (to disable cancel approval)
+        $hasBillingExportForPeriod = \App\Models\BillingExport::where('billing_period', $billingPeriod)->exists();
+
+        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'alreadyExported', 'hasBillingExportForPeriod'));
     }
 
     public function export(Request $request)
@@ -175,20 +190,120 @@ class BillingController extends Controller
 
     public function viewExports(Request $request)
     {
-        $query = BillingExport::with('user')
-            ->orderBy('billing_period', 'desc')
-            ->orderBy('created_at', 'desc');
+        try {
+            // Test database connection
+            try {
+                \DB::connection()->getPdo();
+                Log::info('Database connection successful');
+            } catch (\Exception $e) {
+                throw new \Exception('Database connection failed: ' . $e->getMessage());
+            }
 
-        if ($request->has('billing_period')) {
-            $billingPeriod = $request->billing_period;
-            // Convert YYYY-MM to YYYY-MM-01 format
-            $formattedPeriod = $billingPeriod . '-01';
-            $query->where('billing_period', $formattedPeriod);
+            // Check if BillingExport model exists and is accessible
+            if (!class_exists('App\Models\BillingExport')) {
+                throw new \Exception('BillingExport model not found');
+            }
+
+            // Check if User model exists and is accessible
+            if (!class_exists('App\Models\User')) {
+                throw new \Exception('User model not found');
+            }
+
+            // Test if billing_exports table exists
+            try {
+                $tableExists = \Schema::hasTable('billing_exports');
+                Log::info('Billing exports table exists: ' . ($tableExists ? 'yes' : 'no'));
+                if (!$tableExists) {
+                    throw new \Exception('Billing exports table does not exist');
+                }
+            } catch (\Exception $e) {
+                throw new \Exception('Error checking table: ' . $e->getMessage());
+            }
+
+            // Test basic query without relationships
+            try {
+                $basicQuery = BillingExport::query();
+                $count = $basicQuery->count();
+                Log::info('Basic BillingExport count: ' . $count);
+            } catch (\Exception $e) {
+                throw new \Exception('Error in basic query: ' . $e->getMessage());
+            }
+
+            // Simple query without any Excel processing
+            $query = BillingExport::select('id', 'billing_period', 'filename', 'filepath', 'generated_by', 'created_at')
+                ->orderBy('billing_period', 'desc')
+                ->orderBy('created_at', 'desc');
+
+            if ($request->has('billing_period')) {
+                $billingPeriod = $request->billing_period;
+                // Convert YYYY-MM to YYYY-MM-01 format
+                $formattedPeriod = $billingPeriod . '-01';
+                $query->where('billing_period', $formattedPeriod);
+            }
+
+            // Get all exports first
+            $allExports = $query->get();
+
+            // Filter out invalid files
+            $validExports = $allExports->filter(function ($export) {
+                $filePath = $export->filepath;
+
+                // Check if file exists
+                if (!Storage::disk('public')->exists($filePath)) {
+                    Log::info('Filtering out non-existent file: ' . $filePath);
+                    return false;
+                }
+
+                // Check if file is not empty
+                $fileSize = Storage::disk('public')->size($filePath);
+                if ($fileSize === 0) {
+                    Log::info('Filtering out empty file: ' . $filePath . ' (size: ' . $fileSize . ' bytes)');
+                    return false;
+                }
+
+                // Check if file has minimum size (Excel files should be at least 1KB)
+                if ($fileSize < 1024) {
+                    Log::info('Filtering out suspiciously small file: ' . $filePath . ' (size: ' . $fileSize . ' bytes)');
+                    return false;
+                }
+
+                return true;
+            });
+
+            Log::info('Filtered exports: ' . $validExports->count() . ' valid out of ' . $allExports->count() . ' total');
+
+            // Create pagination manually for filtered results
+            $page = $request->get('page', 1);
+            $perPage = 10;
+            $offset = ($page - 1) * $perPage;
+
+            $exports = new \Illuminate\Pagination\LengthAwarePaginator(
+                $validExports->slice($offset, $perPage),
+                $validExports->count(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            // Log the results for debugging
+            Log::info('BillingExport results:', [
+                'count' => $exports->count(),
+                'total' => $exports->total(),
+                'first_item' => $exports->firstItem(),
+                'last_item' => $exports->lastItem()
+            ]);
+
+            return view('components.admin.billing.exports', compact('exports'));
+        } catch (\Exception $e) {
+            Log::error('Error in viewExports: ' . $e->getMessage());
+            Log::error('Error trace: ' . $e->getTraceAsString());
+            Log::error('Error file: ' . $e->getFile() . ':' . $e->getLine());
+
+            // Return empty exports with error message
+            $exports = collect([])->paginate(10);
+            return view('components.admin.billing.exports', compact('exports'))
+                ->with('error', 'Unable to load export history. Error: ' . $e->getMessage());
         }
-
-        $exports = $query->paginate(10)->withQueryString();
-
-        return view('components.admin.billing.exports', compact('exports'));
     }
 
 
@@ -211,11 +326,30 @@ class BillingController extends Controller
 
             if (Storage::disk('public')->exists($filePath)) {
                 Log::info('File exists, downloading...');
-                return Storage::disk('public')->download($filePath, $fileName);
+
+                // Check file size to ensure it's not empty
+                $fileSize = Storage::disk('public')->size($filePath);
+                Log::info('File size: ' . $fileSize . ' bytes');
+
+                if ($fileSize === 0) {
+                    Log::error('Export file is empty: ' . $filePath);
+                    return back()->with('error', 'Export file is empty or corrupted. Please regenerate the export.');
+                }
+
+                // Try to download the file
+                try {
+                    return Storage::disk('public')->download($filePath, $fileName);
+                } catch (\PhpOffice\PhpSpreadsheet\Exception\InvalidFormatException $e) {
+                    Log::error('Excel format error: ' . $e->getMessage());
+                    return back()->with('error', 'The export file is corrupted or has invalid format. Please regenerate the export.');
+                } catch (\Exception $e) {
+                    Log::error('Download error: ' . $e->getMessage());
+                    return back()->with('error', 'Failed to download file: ' . $e->getMessage());
+                }
             }
 
             Log::error('Export file not found at path: ' . $filePath);
-            return back()->with('error', 'Export file not found.');
+            return back()->with('error', 'Export file not found. Please regenerate the export.');
         } catch (\Exception $e) {
             Log::error('Error downloading export: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
@@ -352,20 +486,98 @@ class BillingController extends Controller
 
     public function viewExports_branch(Request $request)
     {
-        $query = BillingExport::with('user')
-            ->orderBy('billing_period', 'desc')
-            ->orderBy('created_at', 'desc');
+        try {
+            // Check if BillingExport model exists and is accessible
+            if (!class_exists('App\Models\BillingExport')) {
+                throw new \Exception('BillingExport model not found');
+            }
 
-        if ($request->has('billing_period')) {
-            $billingPeriod = $request->billing_period;
-            // Convert YYYY-MM to YYYY-MM-01 format
-            $formattedPeriod = $billingPeriod . '-01';
-            $query->where('billing_period', $formattedPeriod);
+            // Check if User model exists and is accessible
+            if (!class_exists('App\Models\User')) {
+                throw new \Exception('User model not found');
+            }
+
+            // Get the current user's branch ID
+            $userBranchId = Auth::user()->branch_id;
+
+            // Simple query without any Excel processing - filter by branch
+            $query = BillingExport::select('id', 'billing_period', 'filename', 'filepath', 'generated_by', 'created_at')
+                ->whereHas('user', function($query) use ($userBranchId) {
+                    $query->where('branch_id', $userBranchId);
+                })
+                ->orderBy('billing_period', 'desc')
+                ->orderBy('created_at', 'desc');
+
+            if ($request->has('billing_period')) {
+                $billingPeriod = $request->billing_period;
+                // Convert YYYY-MM to YYYY-MM-01 format
+                $formattedPeriod = $billingPeriod . '-01';
+                $query->where('billing_period', $formattedPeriod);
+            }
+
+            // Get all exports for this branch first
+            $allExports = $query->get();
+
+            // Filter out invalid files
+            $validExports = $allExports->filter(function ($export) {
+                $filePath = $export->filepath;
+
+                // Check if file exists
+                if (!Storage::disk('public')->exists($filePath)) {
+                    Log::info('Filtering out non-existent file: ' . $filePath);
+                    return false;
+                }
+
+                // Check if file is not empty
+                $fileSize = Storage::disk('public')->size($filePath);
+                if ($fileSize === 0) {
+                    Log::info('Filtering out empty file: ' . $filePath . ' (size: ' . $fileSize . ' bytes)');
+                    return false;
+                }
+
+                // Check if file has minimum size (Excel files should be at least 1KB)
+                if ($fileSize < 1024) {
+                    Log::info('Filtering out suspiciously small file: ' . $filePath . ' (size: ' . $fileSize . ' bytes)');
+                    return false;
+                }
+
+                return true;
+            });
+
+            Log::info('Filtered exports (branch): ' . $validExports->count() . ' valid out of ' . $allExports->count() . ' total');
+
+            // Create pagination manually for filtered results
+            $page = $request->get('page', 1);
+            $perPage = 10;
+            $offset = ($page - 1) * $perPage;
+
+            $exports = new \Illuminate\Pagination\LengthAwarePaginator(
+                $validExports->slice($offset, $perPage),
+                $validExports->count(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            // Log the results for debugging
+            Log::info('BillingExport branch results:', [
+                'count' => $exports->count(),
+                'total' => $exports->total(),
+                'first_item' => $exports->firstItem(),
+                'last_item' => $exports->lastItem()
+            ]);
+
+            return view('components.branch.billing.exports', compact('exports'));
+        } catch (\Exception $e) {
+            Log::error('Error in viewExports_branch: ' . $e->getMessage());
+            Log::error('Error trace: ' . $e->getTraceAsString());
+            Log::error('Error file: ' . $e->getFile() . ':' . $e->getLine());
+
+            // Return empty exports with error message
+            $exports = collect([])->paginate(10);
+            return view('components.branch.billing.exports', compact('exports'))
+                ->with('error', 'Unable to load export history. Error: ' . $e->getMessage());
         }
-
-        $exports = $query->paginate(10)->withQueryString();
-
-        return view('components.branch.billing.exports', compact('exports'));
     }
 
     public function downloadExport_branch($id)
@@ -373,7 +585,13 @@ class BillingController extends Controller
         try {
             Log::info('Downloading export with ID: ' . $id);
 
-            $export = BillingExport::findOrFail($id);
+            // Get the current user's branch ID
+            $userBranchId = Auth::user()->branch_id;
+
+            // Find export and ensure it belongs to the user's branch
+            $export = BillingExport::whereHas('user', function($query) use ($userBranchId) {
+                $query->where('branch_id', $userBranchId);
+            })->findOrFail($id);
 
             Log::info('Found export:', $export->toArray());
 
@@ -388,11 +606,30 @@ class BillingController extends Controller
 
             if (Storage::disk('public')->exists($filePath)) {
                 Log::info('File exists, downloading...');
-                return Storage::disk('public')->download($filePath, $fileName);
+
+                // Check file size to ensure it's not empty
+                $fileSize = Storage::disk('public')->size($filePath);
+                Log::info('File size: ' . $fileSize . ' bytes');
+
+                if ($fileSize === 0) {
+                    Log::error('Export file is empty: ' . $filePath);
+                    return back()->with('error', 'Export file is empty or corrupted. Please regenerate the export.');
+                }
+
+                // Try to download the file
+                try {
+                    return Storage::disk('public')->download($filePath, $fileName);
+                } catch (\PhpOffice\PhpSpreadsheet\Exception\InvalidFormatException $e) {
+                    Log::error('Excel format error: ' . $e->getMessage());
+                    return back()->with('error', 'The export file is corrupted or has invalid format. Please regenerate the export.');
+                } catch (\Exception $e) {
+                    Log::error('Download error: ' . $e->getMessage());
+                    return back()->with('error', 'Failed to download file: ' . $e->getMessage());
+                }
             }
 
             Log::error('Export file not found at path: ' . $filePath);
-            return back()->with('error', 'Export file not found.');
+            return back()->with('error', 'Export file not found. Please regenerate the export.');
         } catch (\Exception $e) {
             Log::error('Error downloading export: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
@@ -575,10 +812,108 @@ class BillingController extends Controller
 
     public function closeBillingPeriod(Request $request)
     {
-        // Only allow admin
-        if (!Auth::user() || Auth::user()->role !== 'admin') {
-            abort(403);
+        try {
+            // Only allow admin
+            if (!Auth::user() || Auth::user()->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied. Only administrators can close billing periods.'
+                ], 403);
+            }
+
+        $billingPeriod = Auth::user()->billing_period;
+
+        // LoanForecast reset
+        \App\Models\LoanForecast::where('billing_period', $billingPeriod)
+            ->update([
+                'amount_due' => 0,
+                'open_date' => null,
+                'maturity_date' => null,
+                'amortization_due_date' => null,
+                'total_due' => 0,
+                'original_total_due' => 0,
+                'principal_due' => 0,
+                'interest_due' => 0,
+                'original_principal_due' => 0,
+                'original_interest_due' => 0,
+                'principal' => null,
+                'interest' => null,
+                'principal_due_status' => 'unpaid',
+                'interest_due_status' => 'unpaid',
+                'total_due_status' => 'unpaid',
+                'total_due_after_remittance' => 0,
+                'total_billed' => null,
+            ]);
+
+        // Savings reset (keep only specified fields)
+        \App\Models\Saving::query()->update([
+            'open_date' => null,
+            'current_balance' => null,
+            'available_balance' => null,
+            'interest' => null,
+            'remittance_amount' => null,
+        ]);
+
+        // Shares reset (keep only specified fields)
+        \App\Models\Shares::query()->update([
+            'open_date' => null,
+            'current_balance' => null,
+            'available_balance' => null,
+            'interest' => null,
+        ]);
+
+        // Clear remittance batches for the new billing period
+        \App\Models\RemittanceBatch::where('billing_period', $billingPeriod)->delete();
+        \App\Models\RemittanceReport::where('period', $billingPeriod)->delete();
+        \App\Models\RemittancePreview::where('billing_period', $billingPeriod)->delete();
+        \App\Models\RemittanceUploadCount::where('billing_period', $billingPeriod)->delete();
+        \App\Models\LoanPayment::truncate();
+
+        // Clear special billings for the new billing period
+        try {
+            \App\Models\SpecialBilling::query()->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear SpecialBilling table: ' . $e->getMessage());
         }
+
+        try {
+            \App\Models\LoanRemittance::query()->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear LoanRemittance table: ' . $e->getMessage());
+        }
+
+        try {
+            \App\Models\AtmPayment::query()->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear AtmPayment table: ' . $e->getMessage());
+        }
+
+        try {
+            \App\Models\Remittance::query()->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear AtmPayment table: ' . $e->getMessage());
+        }
+
+
+        // Members reset (keep only cid and member_tagging)
+        \App\Models\Member::query()->update([
+            'savings_balance' => 0,
+            'share_balance' => 0,
+            'loan_balance' => 0,
+            'principal' => 0,
+            'regular_principal' => 0,
+            'special_principal' => 0,
+            'start_date' => null,
+            'end_date' => null,
+            'status' => 'active',
+            'approval_no' => null,
+            'start_hold' => null,
+            'expiry_date' => null,
+            'account_status' => 'deduction',
+        ]);
+
+        // Update member_tagging from "New" to "PGB" for all members
+        \App\Models\Member::where('member_tagging', 'New')->update(['member_tagging' => 'PGB']);
 
         // Get the current max billing period among users
         $currentPeriod = \App\Models\User::max('billing_period');
@@ -597,11 +932,44 @@ class BillingController extends Controller
                 'type' => 'billing_period_closed',
                 'user_id' => $id,
                 'related_id' => $id,
-                'message' => 'Billing period has been closed. New billing period: ' . \Carbon\Carbon::parse($next)->format('F Y'),
+                'message' => 'The billing period has been closed. Please check your records for the new period.',
                 'billing_period' => $next
             ]);
         }
 
-        return back()->with('success', 'Billing period closed. All users moved to next period: ' . \Carbon\Carbon::parse($next)->format('F Y'));
+        // Logout the current user
+        Auth::logout();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Billing period closed and records reset for new period. You will be logged out.',
+            'logout' => true
+        ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error closing billing period: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'billing_period' => Auth::user()->billing_period ?? 'unknown',
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while closing the billing period. Please try again or contact support.'
+            ], 500);
+        }
+    }
+
+    public function checkExportStatus(Request $request)
+    {
+        $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m-01');
+
+        // Check if there's any billing export record for this billing period
+        $hasExport = \App\Models\BillingExport::where('billing_period', $billingPeriod)->exists();
+
+        return response()->json([
+            'hasExport' => $hasExport,
+            'billingPeriod' => $billingPeriod
+        ]);
     }
 }
