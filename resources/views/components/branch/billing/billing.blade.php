@@ -111,8 +111,8 @@
                                     @if(Auth::user()->status === 'pending')
                                         <form action="{{ route('billing.approve') }}" method="POST" class="m-0">
                                             @csrf
-                                            <button type="submit" class="btn btn-rounded btn-success text-white">
-                                                <span class="btn-icon-left text-success"><i class="fa fa-check"></i></span>
+                                            <button type="submit" class="btn btn-rounded btn-primary text-white">
+                                                <span class="btn-icon-left text-primary"><i class="fa fa-check"></i></span>
                                                 Approve Billing
                                             </button>
                                         </form>

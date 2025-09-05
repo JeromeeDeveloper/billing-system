@@ -41,26 +41,43 @@
                                     $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && $allBranchUsersApproved && !$anyBranchUsersPending && !$userHasExported;
                                 @endphp
                                 <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export') : 'javascript:void(0);' }}"
-                                   class="btn btn-success {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
+                                   class="btn btn-rounded btn-primary text-white {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
                                    onclick="{{ $canExport && $hasSpecialBillingData ? '' : 'void(0)' }}">
-                                    <i class="fa fa-file-excel"></i> Export Special Billing
-                                    @if(!$hasSpecialBillingData)
-                                        <br><small class="text-muted">(Disabled - No special billing data for this period)</small>
-                                    @elseif($userHasExported)
-                                        <br><small class="text-muted">(Disabled - You have already exported for this billing period)</small>
-                                    @elseif(!$specialBillingEnabled)
-                                        <br><small class="text-muted">(Disabled - Already exported. Wait for next period to enable)</small>
-                                    @elseif($anyBranchUsersPending)
-                                        <br><small class="text-muted">(Disabled - Some branch users have pending status)</small>
-                                    @elseif($noBranch)
-                                        <br><small class="text-muted">(Disabled - Some members have no branch)</small>
-                                    @elseif($noRegularSavings)
-                                        <br><small class="text-muted">(Disabled - Some members have no regular savings)</small>
-                                    @elseif(!$allBranchUsersApproved)
-                                        <br><small class="text-muted">(Disabled - Not all branch users are approved)</small>
-                                    @endif
+                                    <span class="btn-icon-left text-primary"><i class="fa fa-file"></i></span>
+                                    Generate Special Billing
                                 </a>
                             </div>
+
+                            <!-- Disabled Messages -->
+                            @if(!$hasSpecialBillingData)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * No special billing data available for this period.
+                                </div>
+                            @elseif($userHasExported)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * You have already exported for this billing period.
+                                </div>
+                            @elseif(!$specialBillingEnabled)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Already exported. Wait for next period to enable.
+                                </div>
+                            @elseif($anyBranchUsersPending)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Some branch users have pending status.
+                                </div>
+                            @elseif($noBranch)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Some members have no branch assigned.
+                                </div>
+                            @elseif($noRegularSavings)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Some members have no regular savings.
+                                </div>
+                            @elseif(!$allBranchUsersApproved)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Not all branch users are approved.
+                                </div>
+                            @endif
                             <div class="card-body">
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">

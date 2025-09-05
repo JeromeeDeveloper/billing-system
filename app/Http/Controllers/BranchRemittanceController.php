@@ -7,6 +7,7 @@ use App\Models\Remittance;
 use App\Models\Savings;
 use App\Models\Member;
 use App\Models\LoanForecast;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
@@ -623,5 +624,98 @@ class BranchRemittanceController extends Controller
         }
         unset($row);
         return array_values($memberTotals);
+    }
+
+    /**
+     * Approve special billing for the current branch user
+     */
+    public function approveSpecialBilling(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->status !== 'pending') {
+                return redirect()->back()->with('error', 'Only users with pending status can approve special billing.');
+            }
+
+            // Update user status to approved
+            User::where('id', $user->id)->update(['status' => 'approved']);
+
+            Log::info("Special billing approved by branch user", [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'branch_id' => $user->branch_id
+            ]);
+
+            return redirect()->back()->with('special_billing_approval_success', 'Special billing has been approved successfully.');
+
+        } catch (\Exception $e) {
+            Log::error("Error approving special billing: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to approve special billing. Please try again.');
+        }
+    }
+
+    /**
+     * Cancel special billing approval for the current branch user
+     */
+    public function cancelSpecialBillingApproval(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->status !== 'approved') {
+                return redirect()->back()->with('error', 'Only approved users can cancel special billing approval.');
+            }
+
+            // Check if special billing export has been generated
+            $hasSpecialBillingExport = $this->checkSpecialBillingExportStatus($request);
+            if ($hasSpecialBillingExport->getData()->hasExport) {
+                return redirect()->back()->with('error', 'Cannot cancel approval. Special billing export has already been generated for this period.');
+            }
+
+            // Update user status to pending
+            User::where('id', $user->id)->update(['status' => 'pending']);
+
+            Log::info("Special billing approval cancelled by branch user", [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'branch_id' => $user->branch_id
+            ]);
+
+            return redirect()->back()->with('special_billing_approval_success', 'Special billing approval has been cancelled successfully.');
+
+        } catch (\Exception $e) {
+            Log::error("Error cancelling special billing approval: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to cancel special billing approval. Please try again.');
+        }
+    }
+
+    /**
+     * Check if special billing export has been generated for the current period
+     */
+    public function checkSpecialBillingExportStatus(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $billingPeriod = $user->billing_period;
+
+            // Check if special billing export exists for this period
+            $hasExport = ExportStatus::where('export_type', 'special_billing')
+                ->where('billing_period', $billingPeriod)
+                ->where('is_enabled', false) // Export has been generated
+                ->exists();
+
+            return response()->json([
+                'hasExport' => $hasExport,
+                'billingPeriod' => $billingPeriod
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Error checking special billing export status: " . $e->getMessage());
+            return response()->json([
+                'hasExport' => false,
+                'error' => 'Failed to check export status'
+            ], 500);
+        }
     }
 }

@@ -225,8 +225,9 @@
                                     </div>
                                 @endif
 
+
                                 <!-- Current Billing Period Display -->
-                                <div class="alert alert-warning alert-dismissible show mb-4">
+                                <div class="alert alert-info alert-dismissible show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h6><i class="fa fa-calendar"></i> Current Billing Period</h6>
                                     <p class="mb-0">
@@ -284,7 +285,7 @@
                                                     <div class="col-md-4">
                                                         <div class="card stats-card bg-light border-warning">
                                                             <div class="card-body text-center">
-                                                                <h5 class="card-title text-warning mb-2">
+                                                                <h5 class="card-title text-primary mb-2">
                                                                     <i class="fa fa-upload"></i> Remittance (Special)
                                                                 </h5>
                                                                 <h2 class="mb-0">{{ $remittanceImportSpecialCount }}</h2>
@@ -308,7 +309,7 @@
                                                     <div class="col-md-4">
                                                         <div class="card stats-card bg-light border-info">
                                                             <div class="card-body text-center">
-                                                                <h5 class="card-title text-info mb-2">
+                                                                <h5 class="card-title text-primary mb-2">
                                                                     <i class="fa fa-upload"></i> Remittance (Shares)
                                                                 </h5>
                                                                 <h2 class="mb-0">{{ $sharesRemittanceImportCount }}</h2>
@@ -425,7 +426,7 @@
                                                                     </div>
                                                                 @else
                                                                     <div class="mt-3 text-center">
-                                                                        <div class="alert alert-warning mb-0">
+                                                                        <div class="alert alert-info mb-0">
                                                                             <i class="fa fa-exclamation-triangle"></i>
                                                                             <strong>No Import Data Available</strong><br>
                                                                             <small>No remittance batches found for loans & savings in this billing period.</small>
@@ -496,7 +497,7 @@
                                                         <div class="card h-100 border-left" style="border-left-width: 4px;">
                                                             <div class="card-header bg-light">
                                                                 <div class="d-flex justify-content-between align-items-center">
-                                                                    <h6 class="mb-0 text-success">
+                                                                    <h6 class="mb-0 text-primary">
                                                                         <i class="fa fa-chart-pie"></i> Shares Collection
                                                                     </h6>
                                                                 </div>
@@ -583,7 +584,7 @@
                                                                     </div>
                                                                 @else
                                                                     <div class="mt-3 text-center">
-                                                                        <div class="alert alert-warning mb-0">
+                                                                        <div class="alert alert-info mb-0">
                                                                             <i class="fa fa-exclamation-triangle"></i>
                                                                             <strong>No Import Data Available</strong><br>
                                                                             <small>No remittance batches found for shares in this billing period.</small>
@@ -669,7 +670,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="card border-success">
-                                            <div class="card-header bg-success text-white">
+                                            <div class="card-header bg-primary text-white">
                                                 <h6 class="mb-0 text-white"><i class="fa fa-file-excel"></i> Shares Collection</h6>
                                             </div>
                                             <div class="card-body">
@@ -678,13 +679,13 @@
                                                     $sharesWithProductEnabled = $exportStatuses->get('shares_with_product') ? $exportStatuses->get('shares_with_product')->is_enabled : true;
                                                 @endphp
                                                 <p class="text-muted small">Generate collection file for shares remittance data.</p>
-                                                <a href="{{ $sharesEnabled ? route('branch.remittance.generateExport', ['type' => 'shares']) : 'javascript:void(0)' }}" class="btn btn-success btn-block text-white {{ !$sharesEnabled ? 'disabled' : '' }}">
+                                                <a href="{{ $sharesEnabled ? route('branch.remittance.generateExport', ['type' => 'shares']) : 'javascript:void(0)' }}" class="btn btn-primary btn-block text-white {{ !$sharesEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Shares
                                                     @if(!$sharesEnabled)
                                                         <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
                                                     @endif
                                                 </a>
-                                                <a href="{{ $sharesWithProductEnabled ? route('branch.remittance.generateExport', ['type' => 'shares_with_product']) : 'javascript:void(0)' }}" class="btn btn-outline-success btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}">
+                                                <a href="{{ $sharesWithProductEnabled ? route('branch.remittance.generateExport', ['type' => 'shares_with_product']) : 'javascript:void(0)' }}" class="btn btn-outline-primary btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}">
                                                     <i class="fa fa-download"></i> Collection File for Shares (with Product Name)
                                                     @if(!$sharesWithProductEnabled)
                                                         <br><small class="text-muted">(Disabled - Upload new shares to enable)</small>
@@ -710,8 +711,8 @@
 
                                                     <div class="col-md-4 mb-3">
                                                         <div class="card border-success h-100">
-                                                            <div class="card-header bg-success text-white">
-                                                                <h6 class="mb-0">
+                                                            <div class="card-header bg-primary text-white">
+                                                                <h6 class="mb-0 text-white">
                                                                     <i class="fa fa-file-excel"></i> Members not processed
                                                                 </h6>
                                                             </div>
@@ -719,7 +720,7 @@
                                                                 <p class="text-muted mb-3">
                                                                     Generate a report showing unmatched remittance records.
                                                                 </p>
-                                                                <a href="{{ route('branchRemittance.exportConsolidated') }}" class="btn btn-success btn-lg">
+                                                                <a href="{{ route('branchRemittance.exportConsolidated') }}" class="btn btn-primary btn-lg">
                                                                     <i class="fa fa-download"></i> Export Unmatched
                                                                 </a>
                                                             </div>
@@ -727,8 +728,8 @@
                                                     </div>
                                                     <div class="col-md-4 mb-3">
                                                         <div class="card border-info h-100">
-                                                            <div class="card-header bg-info text-white">
-                                                                <h6 class="mb-0">
+                                                            <div class="card-header bg-primary text-white">
+                                                                <h6 class="mb-0 text-white">
                                                                     <i class="fa fa-file-excel"></i> Summary (Regular)
                                                                 </h6>
                                                             </div>
@@ -736,7 +737,7 @@
                                                                 <p class="text-muted mb-3">
                                                                     Export summary report for regular billing type members only.
                                                                 </p>
-                                                                <a href="{{ route('branch.remittance.exportPerRemittanceSummaryRegular') }}" class="btn btn-info btn-lg">
+                                                                <a href="{{ route('branch.remittance.exportPerRemittanceSummaryRegular') }}" class="btn btn-primary btn-lg">
                                                                     <i class="fa fa-download"></i> Export Summary (Regular)
                                                                 </a>
                                                             </div>
@@ -744,8 +745,8 @@
                                                     </div>
                                                     <div class="col-md-4 mb-3">
                                                         <div class="card border-warning h-100">
-                                                            <div class="card-header bg-warning text-white">
-                                                                <h6 class="mb-0">
+                                                            <div class="card-header bg-primary text-white">
+                                                                <h6 class="mb-0 text-white">
                                                                     <i class="fa fa-file-excel"></i> Summary (Special)
                                                                 </h6>
                                                             </div>
@@ -753,7 +754,7 @@
                                                                 <p class="text-muted mb-3">
                                                                     Export summary report for special billing type members only.
                                                                 </p>
-                                                                <a href="{{ route('branch.remittance.exportPerRemittanceSummarySpecial') }}" class="btn btn-warning btn-lg">
+                                                                <a href="{{ route('branch.remittance.exportPerRemittanceSummarySpecial') }}" class="btn btn-primary btn-lg">
                                                                     <i class="fa fa-download"></i> Export Summary (Special)
                                                                 </a>
                                                             </div>
@@ -835,6 +836,7 @@
                 console.log('Monitoring data can be refreshed via AJAX');
             }, 30000);
         });
+
     </script>
 </body>
 

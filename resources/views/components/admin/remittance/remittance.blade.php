@@ -133,7 +133,7 @@
                                     <div class="col-md-4">
                                         <div class="card stats-card bg-light border-warning">
                                             <div class="card-body text-center">
-                                                <h5 class="card-title text-warning mb-2">
+                                                <h5 class="card-title text-primary mb-2">
                                                     <i class="fa fa-upload"></i> Remittance (Special)
                                                 </h5>
                                                 <h2 class="mb-0">{{ $remittanceImportSpecialCount }}</h2>
@@ -158,7 +158,7 @@
                                     <div class="col-md-4">
                                         <div class="card stats-card bg-light border-info">
                                             <div class="card-body text-center">
-                                                <h5 class="card-title text-info mb-2">
+                                                <h5 class="card-title text-primary mb-2">
                                                     <i class="fa fa-upload"></i> Remittance (Shares)
                                                 </h5>
                                                 <h2 class="mb-0">{{ $sharesRemittanceImportCount }}</h2>
@@ -233,19 +233,19 @@
                                                                 <div class="row text-center mb-3">
                                                                     <div class="col-4">
                                                                         <div class="stat-item">
-                                                                            <h4 class="text-success mb-0">{{ $monitoringData['loans_savings']['total_records'] }}</h4>
+                                                                            <h4 class="text-primary mb-0">{{ $monitoringData['loans_savings']['total_records'] }}</h4>
                                                                             <small class="text-muted">Total Records</small>
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-4">
                                                                         <div class="stat-item">
-                                                                            <h4 class="text-info mb-0">{{ $monitoringData['loans_savings']['matched_records'] }}</h4>
+                                                                            <h4 class="text-primary mb-0">{{ $monitoringData['loans_savings']['matched_records'] }}</h4>
                                                                             <small class="text-muted">Matched Records</small>
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-4">
                                                                         <div class="stat-item">
-                                                                            <h4 class="text-warning mb-0">{{ $collectionStatus['loans_savings']['match_rate'] }}%</h4>
+                                                                            <h4 class="text-primary mb-0">{{ $collectionStatus['loans_savings']['match_rate'] }}%</h4>
                                                                             <small class="text-muted">Match Rate</small>
                                                                         </div>
                                                                     </div>
@@ -310,7 +310,7 @@
                                                                     </div>
                                                                 @else
                                                                     <div class="mt-3 text-center">
-                                                                        <div class="alert alert-warning mb-0">
+                                                                        <div class="alert alert-info mb-0">
                                                                             <i class="fa fa-exclamation-triangle"></i>
                                                                             <strong>No Import Data Available</strong><br>
                                                                             <small>No remittance batches found for loans & savings in this billing period.</small>
@@ -340,7 +340,7 @@
                                                         <div class="card h-100 border-left" style="border-left-width: 4px;">
                                                             <div class="card-header bg-light">
                                                                 <div class="d-flex justify-content-between align-items-center">
-                                                                    <h6 class="mb-0 text-info">
+                                                                    <h6 class="mb-0 text-primary">
                                                                         <i class="fa fa-chart-pie"></i> Shares Collection
                                                                     </h6>
                                                                 </div>
@@ -350,19 +350,19 @@
                                                                 <div class="row text-center mb-3">
                                                                     <div class="col-4">
                                                                         <div class="stat-item">
-                                                                            <h4 class="text-success mb-0">{{ $monitoringData['shares']['total_records'] }}</h4>
+                                                                            <h4 class="text-primary mb-0">{{ $monitoringData['shares']['total_records'] }}</h4>
                                                                             <small class="text-muted">Total Records</small>
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-4">
                                                                         <div class="stat-item">
-                                                                            <h4 class="text-info mb-0">{{ $monitoringData['shares']['matched_records'] }}</h4>
+                                                                            <h4 class="text-primary mb-0">{{ $monitoringData['shares']['matched_records'] }}</h4>
                                                                             <small class="text-muted">Matched Records</small>
                                                                         </div>
                                                                     </div>
                                                                     <div class="col-4">
                                                                         <div class="stat-item">
-                                                                            <h4 class="text-warning mb-0">{{ $collectionStatus['shares']['match_rate'] }}%</h4>
+                                                                            <h4 class="text-primary mb-0">{{ $collectionStatus['shares']['match_rate'] }}%</h4>
                                                                             <small class="text-muted">Match Rate</small>
                                                                         </div>
                                                                     </div>
@@ -427,7 +427,7 @@
                                                                     </div>
                                                                 @else
                                                                     <div class="mt-3 text-center">
-                                                                        <div class="alert alert-warning mb-0">
+                                                                        <div class="alert alert-info mb-0">
                                                                             <i class="fa fa-exclamation-triangle"></i>
                                                                             <strong>No Import Data Available</strong><br>
                                                                             <small>No remittance batches found for shares in this billing period.</small>
@@ -462,7 +462,7 @@
 
                                     <div class="col-12 col-lg-6">
                                         <div class="card shadow-sm h-100">
-                                            <div class="card-header bg-success text-white">
+                                            <div class="card-header bg-primary text-white">
                                                 <i class="fa fa-upload me-2"></i>Savings & Loans Remittance Upload
                                             </div>
                                             <div class="card-body">
@@ -488,7 +488,7 @@
                                                     </div>
 
                                                     <!-- Warning Message -->
-                                                    <div class="alert alert-warning alert-dismissible fade show mb-3">
+                                                    <div class="alert alert-info alert-dismissible fade show mb-3">
                                                         <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                         <strong><i class="fa fa-exclamation-triangle"></i> Important:</strong>
                                                         <ul class="mb-0 mt-2">
@@ -498,12 +498,12 @@
                                                         </ul>
                                                     </div>
 
-                                                    <button type="button" class="btn btn-success btn-block mt-2"
+                                                    <button type="button" class="btn btn-primary btn-block mt-2"
                                                         id="showBillingTypeModalBtn">
                                                         <i class="fa fa-upload me-1"></i> Upload and Process Loans &
                                                         Savings Remittance
                                                     </button>
-                                                    <button type="button" class="btn btn-warning btn-block mt-2"
+                                                    <button type="button" class="btn btn-primary btn-block mt-2"
                                                         data-toggle="modal" data-target="#loansSavingsFormatModal">
                                                         <i class="fa fa-eye me-1"></i> View Expected Format
                                                     </button>
@@ -528,7 +528,7 @@
                                                         @endif
                                                     </a>
                                                     <a href="javascript:void(0);"
-                                                        class="btn btn-info btn-block mt-2 {{ !$loansSavingsWithProductEnabled ? 'disabled' : '' }}"
+                                                        class="btn btn-primary btn-block mt-2 {{ !$loansSavingsWithProductEnabled ? 'disabled' : '' }}"
                                                         onclick="{{ $loansSavingsWithProductEnabled ? 'generateExport(\'loans_savings_with_product\')' : 'void(0)' }}">
                                                         Collection file for Loans & Savings (with Product Name)
                                                         @if (!$loansSavingsWithProductEnabled)
@@ -542,7 +542,7 @@
                                     </div>
                                     <div class="col-12 col-lg-6">
                                         <div class="card shadow-sm h-100">
-                                            <div class="card-header bg-info text-white">
+                                            <div class="card-header bg-primary text-white">
                                                 <i class="fa fa-upload me-2"></i>Share Remittance Upload
                                             </div>
                                             <div class="card-body">
@@ -562,7 +562,7 @@
                                                     </div>
 
                                                     <!-- Warning Message -->
-                                                    <div class="alert alert-warning alert-dismissible fade show mb-3">
+                                                    <div class="alert alert-info alert-dismissible fade show mb-3">
                                                         <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                         <strong><i class="fa fa-exclamation-triangle"></i> Important:</strong>
                                                         <ul class="mb-0 mt-2">
@@ -572,12 +572,12 @@
                                                         </ul>
                                                     </div>
 
-                                                    <button type="submit" class="btn btn-success btn-block mt-2"
+                                                    <button type="submit" class="btn btn-primary btn-block mt-2"
                                                         id="shareSubmitBtn">
                                                         <i class="fa fa-upload me-1"></i> Upload and Process Share
                                                         Remittance
                                                     </button>
-                                                    <button type="button" class="btn btn-warning btn-block mt-2"
+                                                    <button type="button" class="btn btn-primary btn-block mt-2"
                                                         data-toggle="modal" data-target="#sharesFormatModal">
                                                         <i class="fa fa-eye me-1"></i> View Expected Format
                                                     </button>
@@ -602,7 +602,7 @@
                                                         @endif
                                                     </a>
                                                     <a href="javascript:void(0);"
-                                                        class="btn btn-info btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}"
+                                                        class="btn btn-primary btn-block mt-2 {{ !$sharesWithProductEnabled ? 'disabled' : '' }}"
                                                         onclick="{{ $sharesWithProductEnabled ? 'generateExport(\'shares_with_product\')' : 'void(0)' }}">
                                                         Collection file for Shares (with Product Name)
                                                         @if (!$sharesWithProductEnabled)

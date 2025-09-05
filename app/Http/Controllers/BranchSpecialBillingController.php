@@ -58,7 +58,15 @@ class BranchSpecialBillingController extends Controller
         $userIsApproved = Auth::user()->status === 'approved';
         $allBranchUsersApproved = \App\Models\User::where('role', 'branch')->where('status', '!=', 'approved')->count() === 0;
 
-        return view('components.branch.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'notAllApproved', 'hasSpecialBillingData', 'userIsApproved', 'allBranchUsersApproved', 'anyBranchUsersPending'));
+        // Special Billing Approval Status
+        $user = Auth::user();
+        $specialBillingApprovalStatus = $user->status; // 'pending' or 'approved'
+        $hasSpecialBillingExportForPeriod = \App\Models\ExportStatus::where('export_type', 'special_billing')
+            ->where('billing_period', $billingPeriod)
+            ->where('is_enabled', false)
+            ->exists();
+
+        return view('components.branch.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'notAllApproved', 'hasSpecialBillingData', 'userIsApproved', 'allBranchUsersApproved', 'anyBranchUsersPending', 'specialBillingApprovalStatus', 'hasSpecialBillingExportForPeriod'));
     }
 
     public function export()

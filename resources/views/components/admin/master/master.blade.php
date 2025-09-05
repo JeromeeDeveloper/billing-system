@@ -250,15 +250,10 @@
 
                                     </div>
                                     <div class="action-bar d-flex flex-wrap flex-md-nowrap gap-2 justify-content-center align-items-center p-2 rounded shadow-sm mt-2 w-100" style="background: #f8f9fa;">
-                                        <a href="#" class="btn btn-success d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
-                                            <i class="fa fa-plus-circle me-2"></i> <span class="d-none d-md-inline">Add New Member</span>
+                                        <a href="#" class="btn btn-primary d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
+                                            <i class="fa fa-plus-circle me-2"></i><span class="d-none d-md-inline"> Add New Member</span>
                                         </a>
-                                        <a href="{{ route('master.exportMemberDetails') }}" class="btn btn-outline-success mr-2 d-flex align-items-center px-3">
-                                            <i class="fa fa-download me-2"></i> <span class="d-none d-md-inline">Export Details</span>
-                                        </a>
-                                        <a href="{{ route('master.exportMembersNoRegularSavings') }}" class="btn btn-outline-warning d-flex align-items-center px-3">
-                                            <i class="fa fa-exclamation-triangle me-2"></i> <span class="d-none d-md-inline">No Regular Savings</span>
-                                        </a>
+
                                     </div>
                                 </div>
                             </div>
@@ -326,7 +321,7 @@
                                                         </button>
 
 
-                                                        <button type="button" class="btn btn-rounded btn-info"
+                                                        <button type="button" class="btn btn-rounded btn-primary"
                                                             data-toggle="modal" data-target="#viewModal"
                                                             data-fname="{{ $item->member->fname }}"
                                                             data-lname="{{ $item->member->lname }}"

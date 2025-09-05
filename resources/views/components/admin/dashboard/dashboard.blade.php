@@ -204,16 +204,16 @@
 
                                 <div class="row">
                                     <div class="col-md-12">
-                                      <a href="{{ route('atm.export.list-of-profile') }}" class="btn btn-success btn-block w-100 mb-2">
+                                      <a href="{{ route('atm.export.list-of-profile') }}" class="btn btn-primary btn-primary w-100 mb-2">
                                         <i class="fas fa-file-excel me-2"></i> Export List of Profile
                                       </a>
                                       <a href="{{ route('atm.export.remittance-report-consolidated') }}" class="btn btn-primary btn-block w-100 mb-2">
                                         <i class="fas fa-file-excel me-2"></i> Export Remittance Report Consolidated
                                       </a>
-                                      <a href="{{ route('atm.export.remittance-report-per-branch') }}" class="btn btn-info btn-block w-100 mb-2">
+                                      <a href="{{ route('atm.export.remittance-report-per-branch') }}" class="btn btn-primary btn-primary w-100 mb-2">
                                         <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch
                                       </a>
-                                      <a href="{{ route('atm.export.remittance-report-per-branch-member') }}" class="btn btn-warning btn-block w-100">
+                                      <a href="{{ route('atm.export.remittance-report-per-branch-member') }}" class="btn btn-primary btn-block w-100">
                                         <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch Member
                                       </a>
                                     </div>

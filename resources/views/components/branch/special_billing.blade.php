@@ -33,49 +33,119 @@
                 <div class="row">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4 class="card-title mb-0">Special Billing Data (Branch)</h4>
-                                @php
-                                    $specialBillingEnabled = $exportStatuses->get('special_billing') ? $exportStatuses->get('special_billing')->is_enabled : true;
-                                    $userHasExported = $exportStatuses->get('special_billing') && !$exportStatuses->get('special_billing')->is_enabled;
-                                    $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && !$notAllApproved && $userIsApproved && $allBranchUsersApproved && !$anyBranchUsersPending && !$userHasExported;
-                                @endphp
-                                <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export.branch') : 'javascript:void(0);' }}"
-                                   class="btn btn-success {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
-                                   onclick="{{ $canExport && $hasSpecialBillingData ? '' : 'void(0)' }}">
-                                    <i class="fa fa-file-excel"></i> Export Special Billing (Branch)
-                                    @if(!$hasSpecialBillingData)
-                                        <br><small class="text-muted">(Disabled - No special billing data for this period)</small>
-                                    @elseif($userHasExported)
-                                        <br><small class="text-muted">(Disabled - You have already exported for this billing period)</small>
-                                    @elseif(!$specialBillingEnabled)
-                                        <br><small class="text-muted">(Disabled - Already exported. Wait for next period to enable)</small>
-                                    @elseif($anyBranchUsersPending)
-                                        <br><small class="text-muted">(Disabled - Some branch users have pending status)</small>
-                                    @elseif($noBranch)
-                                        <br><small class="text-muted">(Disabled - Some members have no branch)</small>
-                                    @elseif($noRegularSavings)
-                                        <br><small class="text-muted">(Disabled - Some members have no regular savings)</small>
-                                    @elseif($notAllApproved)
-                                        <br><small class="text-muted">(Disabled - Some members are not approved)</small>
-                                    @elseif(!$userIsApproved)
-                                        <br><small class="text-muted">(Disabled - Your account is not approved)</small>
-                                    @elseif(!$allBranchUsersApproved)
-                                        <br><small class="text-muted">(Disabled - Not all branch users are approved)</small>
+                            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-2">
+                                <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
+                                    <h4 class="card-title mb-0 me-3">Special Billing Data (Branch)</h4>
+                                    <span class="badge badge-{{ $specialBillingApprovalStatus === 'approved' ? 'success' : 'warning' }}">
+                                        <i class="fa fa-{{ $specialBillingApprovalStatus === 'approved' ? 'check-circle' : 'clock' }}"></i>
+                                        Status: {{ ucfirst($specialBillingApprovalStatus) }}
+                                    </span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    @php
+                                        $specialBillingEnabled = $exportStatuses->get('special_billing') ? $exportStatuses->get('special_billing')->is_enabled : true;
+                                        $userHasExported = $exportStatuses->get('special_billing') && !$exportStatuses->get('special_billing')->is_enabled;
+                                        $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && !$notAllApproved && $userIsApproved && $allBranchUsersApproved && !$anyBranchUsersPending && !$userHasExported && $specialBillingApprovalStatus === 'approved';
+                                    @endphp
+
+                                    <!-- Export Button -->
+                                    <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export.branch') : 'javascript:void(0);' }}"
+                                       class="btn btn-rounded btn-primary text-white {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
+                                       onclick="{{ $canExport && $hasSpecialBillingData ? '' : 'void(0)' }}">
+                                        <span class="btn-icon-left text-primary"><i class="fa fa-file"></i></span>
+                                        Generate Special Billing
+                                    </a>
+
+
+                                    <!-- Approval Buttons -->
+                                    @if($specialBillingApprovalStatus === 'pending' && !$hasSpecialBillingExportForPeriod)
+                                        <form action="{{ route('branch.remittance.special-billing.approve') }}" method="POST" class="m-0">
+                                            @csrf
+                                            <button type="submit" class="btn btn-rounded btn-success text-white">
+                                                <span class="btn-icon-left text-success"><i class="fa fa-check"></i></span>
+                                                Approve Special Billing
+                                            </button>
+                                        </form>
+                                    @elseif($specialBillingApprovalStatus === 'approved')
+                                        <form action="{{ route('branch.remittance.special-billing.cancel-approval') }}" method="POST" class="m-0" id="cancelSpecialBillingApprovalForm">
+                                            @csrf
+                                            <button type="submit" class="btn btn-rounded btn-warning text-white {{ $hasSpecialBillingExportForPeriod ? 'disabled' : '' }}"
+                                                    @if($hasSpecialBillingExportForPeriod) disabled @endif>
+                                                <span class="btn-icon-left text-warning"><i class="fa fa-times"></i></span>
+                                                Cancel Approval
+                                            </button>
+                                        </form>
                                     @endif
-                                </a>
+
+                                    <!-- Show message when special billing is already generated -->
+                                    @if($hasSpecialBillingExportForPeriod)
+                                        <span class="badge badge-info">
+                                            <i class="fa fa-info-circle"></i> Special billing already generated
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
+
+                            <!-- Disabled Messages -->
+                            @if($hasSpecialBillingExportForPeriod)
+                                <div class="alert alert-danger text-center small mb-0 mt-2">
+                                    Special billing has been generated for this period. Cancel approval is disabled.
+                                </div>
+                            @endif
+                            @if(!$hasSpecialBillingData)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * No special billing data available for this period.
+                                </div>
+                            @elseif($userHasExported)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * You have already exported for this billing period.
+                                </div>
+                            @elseif(!$specialBillingEnabled)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Already exported. Wait for next period to enable.
+                                </div>
+                            @elseif($anyBranchUsersPending)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Some branch users have pending status.
+                                </div>
+                            @elseif($noBranch)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Some members have no branch assigned.
+                                </div>
+                            @elseif($noRegularSavings)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Some members have no regular savings.
+                                </div>
+                            @elseif($notAllApproved)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Some members are not approved.
+                                </div>
+                            @elseif(!$userIsApproved)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Your account is not approved.
+                                </div>
+                            @elseif(!$allBranchUsersApproved)
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Not all branch users are approved.
+                                </div>
+                            @elseif($specialBillingApprovalStatus !== 'approved')
+                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                    * Special billing must be approved first.
+                                </div>
+                            @endif
+
                             <div class="card-body">
                                 <!-- Information Note -->
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> Branch Special Billing Flow & User Guide</h5>
                                     <ol class="mb-2">
-                                        <li><strong>View Only:</strong> Branch users can only view and export special billing data for their branch.</li>
-                                        <li><strong>Export:</strong> Export special billing data for your branch as needed.</li>
+                                        <li><strong>View:</strong> Branch users can view special billing data for their branch only.</li>
+                                        <li><strong>Approve:</strong> Review the data and approve special billing when ready.</li>
+                                        <li><strong>Export:</strong> Export special billing data only after approval.</li>
                                         <li><strong>Filtered Data:</strong> All data and exports are limited to your branch's members.</li>
                                     </ol>
-                                    <p class="mb-0"><small><strong>Note:</strong> Branch users cannot upload special billing data. All exports are restricted to your branch's members only.</small></p>
+                                    <p class="mb-0"><small><strong>Note:</strong> Approval is required before exporting. Once exported, approval cannot be cancelled.</small></p>
                                 </div>
 
                                 @if (session('success'))
@@ -90,6 +160,14 @@
                                         <button type="button" class="close" data-dismiss="alert">&times;</button>
                                         <strong><i class="fa fa-exclamation-circle"></i> Error!</strong>
                                         {{ session('error') }}
+                                    </div>
+                                @endif
+
+                                @if (session('special_billing_approval_success'))
+                                    <div class="alert alert-success alert-dismissible fade show">
+                                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                        <strong><i class="fa fa-check-circle"></i> Success!</strong>
+                                        {{ session('special_billing_approval_success') }}
                                     </div>
                                 @endif
 
@@ -195,5 +273,73 @@
             });
         </script>
     @endif
+
+    <script>
+        // Handle Cancel Special Billing Approval button click
+        const cancelSpecialBillingForm = document.getElementById('cancelSpecialBillingApprovalForm');
+        if (cancelSpecialBillingForm) {
+            cancelSpecialBillingForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Show loading state
+                Swal.fire({
+                    title: 'Checking Special Billing Status...',
+                    text: 'Please wait while we check if special billing export has been generated.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Check database for special billing exports
+                fetch('{{ route("branch.remittance.special-billing.check-export-status") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.hasExport) {
+                        // Special billing export has been generated, show error message
+                        Swal.fire({
+                            title: 'Cannot Cancel Approval',
+                            text: 'Special billing export has already been generated for this period. Cancel approval is not allowed.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    } else {
+                        // No special billing export found, proceed with cancellation
+                        Swal.fire({
+                            title: 'Cancel Special Billing Approval?',
+                            text: 'Are you sure you want to cancel the special billing approval? This action cannot be undone.',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Yes, Cancel Approval',
+                            cancelButtonText: 'No, Keep Approval'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Submit the form
+                                this.submit();
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'An error occurred while checking special billing status.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                    console.error('Error:', error);
+                });
+            });
+        }
+    </script>
 </body>
 </html>

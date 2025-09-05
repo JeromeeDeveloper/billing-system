@@ -262,6 +262,11 @@ Route::get('/branch/remittance/export-consolidated', [App\Http\Controllers\Branc
 Route::get('/branch/remittance/export-per-remittance-summary-regular', [App\Http\Controllers\BranchRemittanceController::class, 'exportPerRemittanceSummaryRegular'])->name('branch.remittance.exportPerRemittanceSummaryRegular');
 Route::get('/branch/remittance/export-per-remittance-summary-special', [App\Http\Controllers\BranchRemittanceController::class, 'exportPerRemittanceSummarySpecial'])->name('branch.remittance.exportPerRemittanceSummarySpecial');
 
+// Special Billing Approval Routes
+Route::post('/branch/remittance/special-billing/approve', [App\Http\Controllers\BranchRemittanceController::class, 'approveSpecialBilling'])->name('branch.remittance.special-billing.approve');
+Route::post('/branch/remittance/special-billing/cancel-approval', [App\Http\Controllers\BranchRemittanceController::class, 'cancelSpecialBillingApproval'])->name('branch.remittance.special-billing.cancel-approval');
+Route::post('/branch/remittance/special-billing/check-export-status', [App\Http\Controllers\BranchRemittanceController::class, 'checkSpecialBillingExportStatus'])->name('branch.remittance.special-billing.check-export-status');
+
 
 Route::get('/master/export-member-details-branch', [MasterController::class, 'exportMemberDetailsBranch'])->name('master.exportMemberDetailsBranch');
 Route::get('/master/export-members-no-regular-savings-branch', [MasterController::class, 'exportMembersNoRegularSavingsBranch'])->name('master.exportMembersNoRegularSavingsBranch');

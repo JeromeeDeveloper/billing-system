@@ -41,7 +41,7 @@
                                     <div class="stat-digit">{{ number_format($totalMembers) }}</div>
                                 </div>
                                 <div class="progress">
-                                    <div class="progress-bar progress-bar-success w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar progress-bar-primary w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
@@ -67,7 +67,7 @@
                                     <div class="stat-digit">{{ number_format($totalActiveLoans ?? 0) }}</div>
                                 </div>
                                 <div class="progress">
-                                    <div class="progress-bar progress-bar-warning w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar progress-bar-primary w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
@@ -80,7 +80,7 @@
                                     <div class="stat-digit">{{ number_format($specialProductTypeCount ?? 0) }}</div>
                                 </div>
                                 <div class="progress">
-                                    <div class="progress-bar progress-bar-danger w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar progress-bar-primary w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
@@ -91,7 +91,7 @@
                         <div class="card">
                             <div class="card-header">
                                 <h4 class="card-title">Branch Billing Status</h4>
-                                <a href="{{ route('billing.branch') }}" class="btn btn-success btn-block w-40 mb-2">
+                                <a href="{{ route('billing.branch') }}" class="btn btn-primary btn-block w-40 mb-2">
                                     <i class="fas fa-file-excel me-2"></i> View and Approve billing
                                   </a>
                             </div>
@@ -169,16 +169,16 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-12">
-                                      <a href="{{ route('branch.atm.export.list-of-profile') }}" class="btn btn-success btn-block w-100 mb-2">
+                                      <a href="{{ route('branch.atm.export.list-of-profile') }}" class="btn btn-primary btn-block w-100 mb-2">
                                         <i class="fas fa-file-excel me-2"></i> Export List of Profile
                                       </a>
                                       <a href="{{ route('branch.atm.export.remittance-report-consolidated') }}" class="btn btn-primary btn-block w-100 mb-2">
                                         <i class="fas fa-file-excel me-2"></i> Export Remittance Report Consolidated
                                       </a>
-                                      <a href="{{ route('branch.atm.export.remittance-report-per-branch') }}" class="btn btn-info btn-block w-100 mb-2">
+                                      <a href="{{ route('branch.atm.export.remittance-report-per-branch') }}" class="btn btn-primary btn-block w-100 mb-2">
                                         <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch
                                       </a>
-                                      <a href="{{ route('branch.atm.export.remittance-report-per-branch-member') }}" class="btn btn-warning btn-block w-100">
+                                      <a href="{{ route('branch.atm.export.remittance-report-per-branch-member') }}" class="btn btn-primary btn-block w-100">
                                         <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch Member
                                       </a>
                                     </div>
