@@ -25,6 +25,7 @@ use App\Http\Controllers\SpecialBillingController;
 use App\Http\Controllers\BranchSpecialBillingController;
 use App\Http\Controllers\FileRetentionController;
 
+
 //Login
 Route::get('/', [LoginController::class, 'showLoginForm'])->name('login.form');
 Route::post('/login', [LoginController::class, 'login'])->name('login');
@@ -63,6 +64,9 @@ Route::get('/billing/test-period', [BillingController::class, 'testBillingPeriod
 
 // Close Billing Period (manual trigger)
 Route::post('/billing/close-period', [BillingController::class, 'closeBillingPeriod'])->name('billing.close-period');
+
+// Toggle retain dues setting
+Route::post('/billing/toggle-retain-dues', [BillingController::class, 'toggleRetainDues'])->name('billing.toggle-retain-dues');
 
 //Billing Export History
 Route::get('/billing/exports', [BillingController::class, 'viewExports'])->name('billing.exports');
@@ -235,8 +239,8 @@ Route::get('/Branch/shares', [SharesController::class, 'index_branch'])->name('s
     Route::get('/branch/atm/export-posted-payments-detailed', [BranchAtmController::class, 'exportPostedPaymentsDetailed'])->name('branch.atm.export-posted-payments-detailed');
 Route::get('/branch/atm/generate-batch-report', [BranchAtmController::class, 'generateAtmBatchReport'])->name('branch.atm.generate-batch-report');
     Route::get('/branch/atm/export-remittance-report-per-branch', [BranchAtmController::class, 'exportBranchRemittanceReportPerBranch'])->name('branch.atm.export.remittance-report-per-branch');
-    Route::get('/branch/atm/export-remittance-report-per-branch-member', [BranchAtmController::class, 'exportBranchRemittanceReportPerBranchMember'])->name('branch.atm.export.remittance-report-per-branch-member');
-    Route::get('/branch/atm/export-remittance-report-consolidated', [BranchAtmController::class, 'exportBranchRemittanceReportConsolidated'])->name('branch.atm.export.remittance-report-consolidated');
+    Route::get('/branch/atm/export-remittance-report-per-branch-member', [BranchAtmController::class, 'exportBranchRemittanceReportPerBranchMember'])->name('branch.atm.export-remittance-report-per-branch-member');
+    Route::get('/branch/atm/export-remittance-report-consolidated', [BranchAtmController::class, 'exportBranchRemittanceReportConsolidated'])->name('branch.atm.export-remittance-report-consolidated');
     Route::get('/branch/atm/export-list-of-profile', [BranchAtmController::class, 'exportBranchListOfProfile'])->name('branch.atm.export.list-of-profile');
 
 // Branch Special Billing

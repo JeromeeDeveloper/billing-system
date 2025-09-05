@@ -112,6 +112,7 @@
                                                 <select name="role" id="edit-role" class="form-control">
                                                     <option value="admin">Admin</option>
                                                     <option value="branch">Branch</option>
+                                                    <option value="admin-msp">Admin-MSP</option>
                                                 </select>
                                             </div>
                                             <div class="form-group">
@@ -203,6 +204,7 @@
                                                     <option value="">Select Role</option>
                                                     <option value="admin">Admin</option>
                                                     <option value="branch">Branch</option>
+                                                    <option value="admin-msp">Admin-MSP</option>
                                                 </select>
                                             </div>
                                             <div class="form-group">
@@ -264,8 +266,8 @@
                                                     <td>{{ $user->name }}</td>
                                                     <td>{{ $user->email }}</td>
                                                     <td>
-                                                        <span class="badge badge-{{ $user->role === 'admin' ? 'primary' : 'info' }}">
-                                                            {{ ucfirst($user->role) }}
+                                                        <span class="badge badge-{{ $user->role === 'admin' ? 'primary' : ($user->role === 'admin-msp' ? 'dark' : 'info') }}">
+                                                            {{ $user->role === 'admin-msp' ? 'Admin-MSP' : ucfirst($user->role) }}
                                                         </span>
                                                     </td>
                                                     <td>

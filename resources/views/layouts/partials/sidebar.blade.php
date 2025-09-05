@@ -1,11 +1,76 @@
+@php
+use App\Models\BillingSetting;
+@endphp
+
 <div class="quixnav">
     <div class="quixnav-scroll">
         <ul class="metismenu" id="menu">
             <li class="nav-label first">Main Menu</li>
 
-            {{-- Admin-only --}}
+            {{-- Admin only (limited access) --}}
             @if (Auth::user()->role === 'admin')
                 <li><a href="{{ route('dashboard') }}"><i class="bi bi-house"></i><span class="nav-text">Admin Dashboard</span></a></li>
+
+                <li class="nav-label">Transactions</li>
+
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="bi bi-upload"></i><span class="nav-text">File Uploads</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('documents') }}">File Datatable</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="bi bi-list"></i><span class="nav-text">Master List</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('master') }}">Master List Datatable</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="bi bi-credit-card"></i><span class="nav-text">Billing</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('billing') }}">Billing Datatable</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="bi bi-wallet2"></i><span class="nav-text">Remittance</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('remittance') }}">Remittance Datatable</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="bi bi-cash"></i><span class="nav-text">ATM</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('atm') }}">ATM Module</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="bi bi-wallet2"></i><span class="nav-text">Special Billing</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li><a href="{{ route('special-billing.index') }}">Special Billing Datatable</a></li>
+                    </ul>
+                </li>
+            @endif
+
+            {{-- Admin-MSP only (full access) --}}
+            @if (Auth::user()->role === 'admin-msp')
+                <li><a href="{{ route('dashboard') }}"><i class="bi bi-house"></i><span class="nav-text">Admin-MSP Dashboard</span></a></li>
 
                 <li class="nav-label">Transactions</li>
 
@@ -77,19 +142,6 @@
                     </ul>
                 </li>
 
-                {{-- <li>
-                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-wallet-90"></i><span class="nav-text">Accounts</span>
-                    </a>
-                    <ul aria-expanded="false">
-                        <li><a href="{{ route('savings') }}">Savings Accounts</a></li>
-                        <li><a href="{{ route('shares') }}">Share Accounts</a></li>
-                        <li><a href="{{ route('list') }}">Loan Accounts</a></li>
-                    </ul>
-                </li> --}}
-
-
-
                 <li class="nav-label">Groups</li>
 
                 <li>
@@ -101,18 +153,11 @@
                     </ul>
                 </li>
 
-                {{-- <li>
-                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
-                        <i class="icon icon-users-mm"></i><span class="nav-text">Members</span>
-                    </a>
-                    <ul aria-expanded="false">
-                        <li><a href="{{ route('member') }}">Members Datatable</a></li>
-                    </ul>
-                </li> --}}
-
                 <li>
                     <a href="{{ route('users') }}" aria-expanded="false"><i class="bi bi-people"></i><span class="nav-text">Users</span></a>
                 </li>
+
+               
             @endif
 
             {{-- Branch-only --}}
@@ -177,6 +222,21 @@
                     </ul>
                 </li>
 
+            @endif
+
+
+            {{-- Settings Section (Admin-MSP only) --}}
+            @if (Auth::user()->role === 'admin-msp')
+                <li class="nav-label">Settings</li>
+                <li>
+                    <a href="javascript:void()" onclick="toggleRetainDues()">
+                        <i class="bi bi-gear"></i>
+                        <span class="nav-text">Retain Dues on Billing Close</span>
+                        <span class="badge badge-{{ BillingSetting::getBoolean('retain_dues_on_billing_close') ? 'success' : 'secondary' }} ml-2" id="retainDuesBadge">
+                            {{ BillingSetting::getBoolean('retain_dues_on_billing_close') ? 'ON' : 'OFF' }}
+                        </span>
+                    </a>
+                </li>
             @endif
         </ul>
     </div>
@@ -275,4 +335,42 @@ document.addEventListener('DOMContentLoaded', function () {
         Swal.fire('Error', @json(session('error')), 'error');
     @endif
 });
+
+// Toggle retain dues setting
+function toggleRetainDues() {
+    fetch('{{ route("billing.toggle-retain-dues") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const badge = document.getElementById('retainDuesBadge');
+            if (data.retain_dues) {
+                badge.textContent = 'ON';
+                badge.className = 'badge badge-success ml-2';
+            } else {
+                badge.textContent = 'OFF';
+                badge.className = 'badge badge-secondary ml-2';
+            }
+
+            Swal.fire({
+                title: 'Setting Updated',
+                text: data.message,
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            Swal.fire('Error', data.message || 'Failed to update setting', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Failed to update setting', 'error');
+    });
+}
 </script>

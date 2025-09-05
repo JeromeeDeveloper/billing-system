@@ -362,8 +362,8 @@ class BranchRemittanceController extends Controller
                     return redirect()->back()->with('error', 'No shares remittance data to export for the latest upload. Please upload a shares file first.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id());
+                // Mark export as generated (branch export)
+                ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id(), $branch_id, false);
 
                 $export = new \App\Exports\BranchSharesExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
@@ -396,8 +396,8 @@ class BranchRemittanceController extends Controller
                     return redirect()->back()->with('error', 'No shares remittance data to export for the latest upload. Please upload a shares file first.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product', Auth::id());
+                // Mark export as generated (branch export)
+                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product', Auth::id(), $branch_id, false);
 
                 $export = new \App\Exports\BranchSharesWithProductExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
@@ -407,8 +407,8 @@ class BranchRemittanceController extends Controller
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id());
+                // Mark export as generated (branch export)
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id(), $branch_id, false);
 
                 $export = new \App\Exports\BranchLoansAndSavingsWithProductExport($remittanceData, $branch_id, $currentBillingPeriod);
                 $filename = 'branch_loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
@@ -418,8 +418,8 @@ class BranchRemittanceController extends Controller
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id());
+                // Mark export as generated (branch export)
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id(), $branch_id, false);
 
                 $export = new \App\Exports\BranchLoansAndSavingsExport($remittanceData, $branch_id, $currentBillingPeriod);
                 $filename = 'branch_loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';

@@ -823,27 +823,42 @@ class BillingController extends Controller
 
         $billingPeriod = Auth::user()->billing_period;
 
+        // Check if we should retain dues
+        $retainDues = \App\Models\BillingSetting::getBoolean('retain_dues_on_billing_close', false);
+
+        Log::info('Closing billing period', [
+            'billing_period' => $billingPeriod,
+            'retain_dues' => $retainDues,
+            'user_id' => Auth::id()
+        ]);
+
         // LoanForecast reset
+        $updateData = [
+            'amount_due' => 0,
+            'open_date' => null,
+            'maturity_date' => null,
+            'amortization_due_date' => null,
+            'principal_due' => 0,
+            'interest_due' => 0,
+            'original_principal_due' => 0,
+            'original_interest_due' => 0,
+            'principal' => null,
+            'interest' => null,
+            'principal_due_status' => 'unpaid',
+            'interest_due_status' => 'unpaid',
+            'total_due_status' => 'unpaid',
+            'total_due_after_remittance' => 0,
+            'total_billed' => null,
+        ];
+
+        // Only reset total_due and original_total_due if retain_dues is false
+        if (!$retainDues) {
+            $updateData['total_due'] = 0;
+            $updateData['original_total_due'] = 0;
+        }
+
         \App\Models\LoanForecast::where('billing_period', $billingPeriod)
-            ->update([
-                'amount_due' => 0,
-                'open_date' => null,
-                'maturity_date' => null,
-                'amortization_due_date' => null,
-                'total_due' => 0,
-                'original_total_due' => 0,
-                'principal_due' => 0,
-                'interest_due' => 0,
-                'original_principal_due' => 0,
-                'original_interest_due' => 0,
-                'principal' => null,
-                'interest' => null,
-                'principal_due_status' => 'unpaid',
-                'interest_due_status' => 'unpaid',
-                'total_due_status' => 'unpaid',
-                'total_due_after_remittance' => 0,
-                'total_billed' => null,
-            ]);
+            ->update($updateData);
 
         // Savings reset (keep only specified fields)
         \App\Models\Saving::query()->update([
@@ -937,6 +952,9 @@ class BillingController extends Controller
             ]);
         }
 
+        // Re-enable all edit buttons for the closed billing period
+        \App\Models\ExportStatus::reEnableAllEdits($billingPeriod);
+
         // Logout the current user
         Auth::logout();
 
@@ -971,5 +989,48 @@ class BillingController extends Controller
             'hasExport' => $hasExport,
             'billingPeriod' => $billingPeriod
         ]);
+    }
+
+    public function toggleRetainDues(Request $request)
+    {
+        try {
+            // Only allow admin users to toggle this setting
+            if (!Auth::user() || Auth::user()->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied. Only administrators can modify this setting.'
+                ], 403);
+            }
+
+            // Get current setting
+            $currentValue = \App\Models\BillingSetting::getBoolean('retain_dues_on_billing_close', false);
+
+            // Toggle the setting
+            $newValue = !$currentValue;
+            \App\Models\BillingSetting::setBoolean(
+                'retain_dues_on_billing_close',
+                $newValue,
+                'Whether to retain total_due and original_total_due values when closing billing period'
+            );
+
+            return response()->json([
+                'success' => true,
+                'retain_dues' => $newValue,
+                'message' => $newValue ?
+                    'Dues will be retained when closing billing period' :
+                    'Dues will be reset when closing billing period'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error toggling retain dues setting: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating the setting. Please try again.'
+            ], 500);
+        }
     }
 }

@@ -289,6 +289,9 @@
                                                     <td>
 
 
+                                                        @php
+                                                            $isEditDisabled = $isEditDisabledForAll || $isEditDisabledForBranch;
+                                                        @endphp
                                                         <button type="button" class="btn btn-rounded btn-primary"
                                                             data-toggle="modal" data-target="#editModal"
                                                             data-id="{{ $item->member->id }}"
@@ -315,7 +318,8 @@
                                                             data-additional_address="{{ $item->member->additional_address }}"
                                                             data-loans='{!! json_encode($item->member->loan_forecasts_data) !!}'
                                                             data-savings='{!! json_encode($item->member->savings) !!}'
-                                                            data-shares='{!! json_encode($item->member->shares) !!}'>
+                                                            data-shares='{!! json_encode($item->member->shares) !!}'
+                                                            @if($isEditDisabled) disabled title="Edit disabled - Export has been generated" @endif>
                                                             Edit
                                                         </button>
 

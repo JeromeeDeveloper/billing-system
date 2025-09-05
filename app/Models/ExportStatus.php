@@ -13,21 +13,24 @@ class ExportStatus extends Model
         'billing_period',
         'export_type',
         'user_id',
+        'branch_id',
         'last_export_at',
         'last_upload_at',
-        'is_enabled'
+        'is_enabled',
+        'is_admin_export'
     ];
 
     protected $casts = [
         'last_export_at' => 'datetime',
         'last_upload_at' => 'datetime',
-        'is_enabled' => 'boolean'
+        'is_enabled' => 'boolean',
+        'is_admin_export' => 'boolean'
     ];
 
     /**
      * Mark export as generated
      */
-    public static function markExported($billingPeriod, $exportType, $userId = null)
+    public static function markExported($billingPeriod, $exportType, $userId = null, $branchId = null, $isAdminExport = false)
     {
         return static::updateOrCreate(
             [
@@ -36,8 +39,10 @@ class ExportStatus extends Model
                 'user_id' => $userId
             ],
             [
+                'branch_id' => $branchId,
                 'last_export_at' => now(),
-                'is_enabled' => false
+                'is_enabled' => false,
+                'is_admin_export' => $isAdminExport
             ]
         );
     }
@@ -159,10 +164,62 @@ class ExportStatus extends Model
     }
 
     /**
+     * Check if edit buttons should be disabled for a specific branch
+     */
+    public static function isEditDisabledForBranch($billingPeriod, $branchId)
+    {
+        // Check if there's an admin export (disables all branches)
+        $adminExport = static::where('billing_period', $billingPeriod)
+            ->where('is_admin_export', true)
+            ->where('is_enabled', false)
+            ->exists();
+
+        if ($adminExport) {
+            return true; // Admin export disables all branches
+        }
+
+        // Check if this specific branch has been exported
+        $branchExport = static::where('billing_period', $billingPeriod)
+            ->where('branch_id', $branchId)
+            ->where('is_enabled', false)
+            ->exists();
+
+        return $branchExport;
+    }
+
+    /**
+     * Check if edit buttons should be disabled for all branches (admin export)
+     */
+    public static function isEditDisabledForAll($billingPeriod)
+    {
+        return static::where('billing_period', $billingPeriod)
+            ->where('is_admin_export', true)
+            ->where('is_enabled', false)
+            ->exists();
+    }
+
+    /**
+     * Re-enable all edit buttons for a billing period (called when closing billing period)
+     */
+    public static function reEnableAllEdits($billingPeriod)
+    {
+        return static::where('billing_period', $billingPeriod)
+            ->update(['is_enabled' => true]);
+    }
+
+    /**
      * Relationship to User model
      */
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class);
+    }
+
+    /**
+     * Relationship to Branch model
+     */
+    public function branch()
+    {
+        return $this->belongsTo(\App\Models\Branch::class);
     }
 }

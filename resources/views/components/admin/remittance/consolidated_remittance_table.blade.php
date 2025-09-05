@@ -22,7 +22,7 @@
                     </a>
 					<a href="{{ route('remittance.exportPerRemittance') }}" class="btn btn-light btn-sm shadow-sm">
 						<i class="fa fa-file-excel-o text-warning me-1"></i> Per-Remittance Report
-					</a>
+                    </a>
                 </div>
             </div>
         </div>

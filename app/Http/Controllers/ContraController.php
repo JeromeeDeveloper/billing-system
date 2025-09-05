@@ -84,7 +84,7 @@ class ContraController extends Controller
             'type' => 'required|in:shares,savings,loans',
             'account_number' => 'required|string',
         ]);
-        
+
         // Check if the type is being changed and if the new type already exists
         $currentContra = DB::table('contra_acc')->where('id', $id)->first();
         if ($currentContra && $currentContra->type !== $request->type) {
@@ -94,7 +94,7 @@ class ContraController extends Controller
                 return back()->with('error', "A contra account for {$request->type} already exists. Only one contra account is allowed per type.");
             }
         }
-        
+
         DB::table('contra_acc')->where('id', $id)->update([
             'type' => $request->type,
             'account_number' => $request->account_number,
