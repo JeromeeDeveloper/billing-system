@@ -233,7 +233,42 @@ use App\Models\BillingSetting;
 
             @endif
 
+            {{-- Reports Section (Admin and Admin-MSP) --}}
+            @if (Auth::user()->role === 'admin' || Auth::user()->role === 'admin-msp')
+                <li>
+                    <a class="has-arrow" href="javascript:void()" aria-expanded="false">
+                        <i class="bi bi-file-earmark-text"></i><span class="nav-text">Reports</span>
+                    </a>
+                    <ul aria-expanded="false">
+                        <li class="nav-label">Masterlist</li>
+                        <li><a href="{{ route('master.exportMembersNoRegularSavings') }}">
+                         <span class="d-none d-md-inline">No Regular Savings</span>
+                        </a></li>
+                        <li> <a href="{{ route('billing.members-no-branch') }}">
+                            Members No Branch
+                        </a></li>
+                        <li> <a href="{{ route('master.exportMemberDetails') }}">
+                            <span class="d-none d-md-inline">Member Details</span>
+                        </a></li>
 
+                        <li class="nav-label">Billing</li>
+                        <li><a href="#" onclick="alert('Member Deduction Details - Coming Soon')">Member Deduction Details</a></li>
+
+                        <li class="nav-label">Remittance</li>
+                        <li><a href="#" onclick="alert('Per Remittance Report - Coming Soon')">Per Remittance Report</a></li>
+                        <li><a href="#" onclick="alert('Summary-Regular - Coming Soon')">Summary-Regular</a></li>
+                        <li><a href="#" onclick="alert('Summary-Special - Coming Soon')">Summary-Special</a></li>
+                        <li><a href="#" onclick="alert('Loan List - Coming Soon')">Loan List</a></li>
+                        <li><a href="#" onclick="alert('Savings List - Coming Soon')">Savings List</a></li>
+                        <li><a href="#" onclick="alert('Share List - Coming Soon')">Share List</a></li>
+
+                        <li class="nav-label">Archives</li>
+                        <li> <a href="{{ route('billing.exports') }}">
+                            Previous Billing Reports
+                        </a></li>
+                    </ul>
+                </li>
+            @endif
 
         </ul>
     </div>
