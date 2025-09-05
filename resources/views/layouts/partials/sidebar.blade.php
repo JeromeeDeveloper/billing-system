@@ -138,8 +138,17 @@ use App\Models\BillingSetting;
                         <li><a href="{{ route('share-products.index') }}">Share Products</a></li>
                         <li><a href="{{ route('admin.contra') }}">Contra Account</a></li>
                         <li><a href="#" data-toggle="modal" data-target="#pgbMembersUploadModal"></i>PGB Members File Upload</a></li>
-                        <li><a href="#" data-toggle="modal" data-target="#savingsSharesUploadModal"></i>Savings & Shares Deduction File Upload</a></li>
+                        <li><a href="#" data-toggle="modal" data-target="#savingsSharesUploadModal"></i>Deduction Amount File Upload</a></li>
+                        <li>
+                            <a href="javascript:void()" onclick="toggleRetainDues()">
+                                <span class="nav-text">Retain Dues on Billing Close</span>
+                                <span class="badge badge-{{ BillingSetting::getBoolean('retain_dues_on_billing_close') ? 'success' : 'secondary' }} ml-2" id="retainDuesBadge">
+                                    {{ BillingSetting::getBoolean('retain_dues_on_billing_close') ? 'ON' : 'OFF' }}
+                                </span>
+                            </a>
+                        </li>
                     </ul>
+
                 </li>
 
                 <li class="nav-label">Groups</li>
@@ -157,7 +166,7 @@ use App\Models\BillingSetting;
                     <a href="{{ route('users') }}" aria-expanded="false"><i class="bi bi-people"></i><span class="nav-text">Users</span></a>
                 </li>
 
-               
+
             @endif
 
             {{-- Branch-only --}}
@@ -225,19 +234,7 @@ use App\Models\BillingSetting;
             @endif
 
 
-            {{-- Settings Section (Admin-MSP only) --}}
-            @if (Auth::user()->role === 'admin-msp')
-                <li class="nav-label">Settings</li>
-                <li>
-                    <a href="javascript:void()" onclick="toggleRetainDues()">
-                        <i class="bi bi-gear"></i>
-                        <span class="nav-text">Retain Dues on Billing Close</span>
-                        <span class="badge badge-{{ BillingSetting::getBoolean('retain_dues_on_billing_close') ? 'success' : 'secondary' }} ml-2" id="retainDuesBadge">
-                            {{ BillingSetting::getBoolean('retain_dues_on_billing_close') ? 'ON' : 'OFF' }}
-                        </span>
-                    </a>
-                </li>
-            @endif
+
         </ul>
     </div>
 </div>
