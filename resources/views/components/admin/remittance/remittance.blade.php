@@ -616,8 +616,51 @@
                                     </div>
                                 </div>
 
+                                {{-- Per Remittance Report Section --}}
+                                {{-- <div class="col-lg-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h4 class="card-title">Per Remittance Report</h4>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <p class="text-muted mb-3">Export individual sections of the Per Remittance Report:</p>
 
+                                                    <a href="{{ route('remittance.exportPerRemittance') }}"
+                                                        class="btn btn-primary btn-block mt-2">
+                                                        <i class="fa fa-file-excel me-1"></i> Full Per Remittance Report
+                                                    </a>
 
+                                                                                                                                                            <a href="{{ route('remittance.exportPerRemittanceSummaryRegular') }}"
+                                                        class="btn btn-success btn-block mt-2">
+                                                        <i class="fa fa-list me-1"></i> Summary (Regular)
+                                                    </a>
+
+                                                    <a href="{{ route('remittance.exportPerRemittanceSummarySpecial') }}"
+                                                        class="btn btn-success btn-block mt-2">
+                                                        <i class="fa fa-list me-1"></i> Summary (Special)
+                                                    </a>
+
+                                                    <a href="{{ route('remittance.exportPerRemittanceLoans') }}"
+                                                        class="btn btn-warning btn-block mt-2">
+                                                        <i class="fa fa-money-bill me-1"></i> Loans Breakdown
+                                                    </a>
+
+                                                    <a href="{{ route('remittance.exportPerRemittanceSavings') }}"
+                                                        class="btn btn-info btn-block mt-2">
+                                                        <i class="fa fa-piggy-bank me-1"></i> Savings Breakdown
+                                                    </a>
+
+                                                    <a href="{{ route('remittance.exportPerRemittanceShares') }}"
+                                                        class="btn btn-secondary btn-block mt-2">
+                                                        <i class="fa fa-chart-pie me-1"></i> Shares Breakdown
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> --}}
 
                             </div>
                         </div>

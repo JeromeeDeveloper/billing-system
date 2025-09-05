@@ -255,12 +255,12 @@ use App\Models\BillingSetting;
                         <li><a href="#" onclick="alert('Member Deduction Details - Coming Soon')">Member Deduction Details</a></li>
 
                         <li class="nav-label">Remittance</li>
-                        <li><a href="#" onclick="alert('Per Remittance Report - Coming Soon')">Per Remittance Report</a></li>
-                        <li><a href="#" onclick="alert('Summary-Regular - Coming Soon')">Summary-Regular</a></li>
-                        <li><a href="#" onclick="alert('Summary-Special - Coming Soon')">Summary-Special</a></li>
-                        <li><a href="#" onclick="alert('Loan List - Coming Soon')">Loan List</a></li>
-                        <li><a href="#" onclick="alert('Savings List - Coming Soon')">Savings List</a></li>
-                        <li><a href="#" onclick="alert('Share List - Coming Soon')">Share List</a></li>
+                        <li><a href="{{ route('remittance.exportPerRemittance') }}">Full Per Remittance Report</a></li>
+                        <li><a href="{{ route('remittance.exportPerRemittanceSummaryRegular') }}">Summary (Regular)</a></li>
+                        <li><a href="{{ route('remittance.exportPerRemittanceSummarySpecial') }}">Summary (Special)</a></li>
+                        <li><a href="{{ route('remittance.exportPerRemittanceLoans') }}">Loans Breakdown</a></li>
+                        <li><a href="{{ route('remittance.exportPerRemittanceSavings') }}">Savings Breakdown</a></li>
+                        <li><a href="{{ route('remittance.exportPerRemittanceShares') }}">Shares Breakdown</a></li>
 
                         <li class="nav-label">Archives</li>
                         <li> <a href="{{ route('billing.exports') }}">

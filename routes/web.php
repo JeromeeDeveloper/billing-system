@@ -185,7 +185,13 @@ Route::get('admin/remittance/export-preview', [\App\Http\Controllers\RemittanceC
 Route::get('admin/remittance/export-comparison', [\App\Http\Controllers\RemittanceController::class, 'exportComparison'])->name('remittance.exportComparison');
 Route::get('admin/remittance/export-regular-special', [App\Http\Controllers\RemittanceController::class, 'exportRegularSpecial'])->name('remittance.exportRegularSpecial');
 Route::get('admin/remittance/export-consolidated', [App\Http\Controllers\RemittanceController::class, 'exportConsolidated'])->name('remittance.exportConsolidated');
+Route::get('admin/remittance/export-unmatched-members', [App\Http\Controllers\RemittanceController::class, 'exportUnmatchedMembers'])->name('remittance.exportUnmatchedMembers');
 Route::get('admin/remittance/export-per-remittance', [App\Http\Controllers\RemittanceController::class, 'exportPerRemittance'])->name('remittance.exportPerRemittance');
+Route::get('admin/remittance/export-per-remittance-summary-regular', [App\Http\Controllers\RemittanceController::class, 'exportPerRemittanceSummaryRegular'])->name('remittance.exportPerRemittanceSummaryRegular');
+Route::get('admin/remittance/export-per-remittance-summary-special', [App\Http\Controllers\RemittanceController::class, 'exportPerRemittanceSummarySpecial'])->name('remittance.exportPerRemittanceSummarySpecial');
+Route::get('admin/remittance/export-per-remittance-loans', [App\Http\Controllers\RemittanceController::class, 'exportPerRemittanceLoans'])->name('remittance.exportPerRemittanceLoans');
+Route::get('admin/remittance/export-per-remittance-savings', [App\Http\Controllers\RemittanceController::class, 'exportPerRemittanceSavings'])->name('remittance.exportPerRemittanceSavings');
+Route::get('admin/remittance/export-per-remittance-shares', [App\Http\Controllers\RemittanceController::class, 'exportPerRemittanceShares'])->name('remittance.exportPerRemittanceShares');
 
 
 Route::get('/admin/contra', [App\Http\Controllers\ContraController::class, 'showAdmin'])->name('admin.contra');

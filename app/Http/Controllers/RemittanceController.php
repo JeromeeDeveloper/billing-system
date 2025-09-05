@@ -967,6 +967,17 @@ class RemittanceController extends Controller
         );
     }
 
+    public function exportUnmatchedMembers()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+        $userId = Auth::id();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\UnmatchedMembersExport($billingPeriod, $userId),
+            'Unmatched_Members_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
     public function exportPerRemittance()
     {
         $billingPeriod = Auth::user()->billing_period;
@@ -974,6 +985,56 @@ class RemittanceController extends Controller
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\PerRemittanceReportExport($billingPeriod, false, null),
             'Per_Remittance_Report_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceSummaryRegular()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSummaryExport($billingPeriod, false, null, 'regular'),
+            'Per_Remittance_Summary_Regular_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceSummarySpecial()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSummaryExport($billingPeriod, false, null, 'special'),
+            'Per_Remittance_Summary_Special_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceLoans()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceLoansExport($billingPeriod, false, null),
+            'Per_Remittance_Loans_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceSavings()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSavingsExport($billingPeriod, false, null),
+            'Per_Remittance_Savings_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceShares()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSharesExport($billingPeriod, false, null),
+            'Per_Remittance_Shares_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
         );
     }
 

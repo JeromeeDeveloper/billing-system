@@ -7,22 +7,22 @@
             </div>
             <div class="d-flex gap-3 align-items-center">
                 <div class="d-flex gap-2">
-					<select id="sectionFilter" class="form-select form-select-sm border-0 bg-white bg-opacity-90" style="width: 160px;">
+					<select id="sectionFilter" class="form-select form-select-sm border-0 bg-white bg-opacity-90" style="width: 160px; display: none;">
 
 						<option value="summary">Summary</option>
-						<option value="loans">Loans</option>
+						{{-- <option value="loans">Loans</option>
 						<option value="savings">Savings</option>
-						<option value="shares">Shares</option>
+						<option value="shares">Shares</option> --}}
                     </select>
                     <input type="text" id="searchFilter" class="form-control form-control-sm border-0 bg-white bg-opacity-90" placeholder="Search members..." style="width: 180px;">
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('remittance.exportConsolidated') }}" class="btn btn-light btn-sm shadow-sm">
-                        <i class="fa fa-file-excel-o text-info me-1"></i> Matched / Unmatched Remittance
+                    <a href="{{ route('remittance.exportUnmatchedMembers') }}" class="btn btn-light btn-sm shadow-sm">
+                        <i class="fa fa-file-excel-o text-info me-1"></i> Members not processed
                     </a>
-					<a href="{{ route('remittance.exportPerRemittance') }}" class="btn btn-light btn-sm shadow-sm">
+					{{-- <a href="{{ route('remittance.exportPerRemittance') }}" class="btn btn-light btn-sm shadow-sm">
 						<i class="fa fa-file-excel-o text-warning me-1"></i> Per-Remittance Report
-                    </a>
+                    </a> --}}
                 </div>
             </div>
         </div>
