@@ -121,7 +121,7 @@ class MatchedSheet implements FromArray, WithHeadings, WithStyles, WithColumnWid
     }
 
     public function array(): array
-    
+
     {
         $rows = [];
 
@@ -272,14 +272,28 @@ class UnmatchedSheet implements FromArray, WithHeadings, WithStyles, WithColumnW
             $isNoBranch = str_contains(strtolower($message), 'no branch');
 
             if ($status === 'error' && !$isNoBranch) {
+                $cid = is_array($row) ? ($row['cid'] ?? 'N/A') : ($row->cid ?? 'N/A');
                 $name = is_array($row) ? ($row['name'] ?? 'N/A') : ($row->name ?? 'N/A');
-                $key = $name;
+                $loans = (float)(is_array($row) ? ($row['loans'] ?? 0) : ($row->loans ?? 0));
+                $savings = (float)(is_array($row) ? ($row['savings'] ?? 0) : ($row->savings ?? 0));
+                $totalAmount = $loans + $savings;
+
+                $key = $cid;
 
                 if (!isset($rows[$key])) {
                     $rows[$key] = [
-                        'name' => $name
+                        'cid' => $cid,
+                        'name' => $name,
+                        'loans' => 0,
+                        'savings' => 0,
+                        'shares' => 0,
+                        'total' => 0
                     ];
                 }
+
+                $rows[$key]['loans'] += $loans;
+                $rows[$key]['savings'] += $savings;
+                $rows[$key]['total'] += $totalAmount;
             }
         }
 
@@ -290,14 +304,25 @@ class UnmatchedSheet implements FromArray, WithHeadings, WithStyles, WithColumnW
             $isNoBranch = str_contains(strtolower($message), 'no branch');
 
             if ($status === 'error' && !$isNoBranch) {
+                $cid = is_array($row) ? ($row['cid'] ?? 'N/A') : ($row->cid ?? 'N/A');
                 $name = is_array($row) ? ($row['name'] ?? 'N/A') : ($row->name ?? 'N/A');
-                $key = $name;
+                $shareAmount = (float)(is_array($row) ? ($row['share_amount'] ?? 0) : ($row->share_amount ?? 0));
+
+                $key = $cid;
 
                 if (!isset($rows[$key])) {
                     $rows[$key] = [
-                        'name' => $name
+                        'cid' => $cid,
+                        'name' => $name,
+                        'loans' => 0,
+                        'savings' => 0,
+                        'shares' => 0,
+                        'total' => 0
                     ];
                 }
+
+                $rows[$key]['shares'] += $shareAmount;
+                $rows[$key]['total'] += $shareAmount;
             }
         }
 
@@ -305,8 +330,9 @@ class UnmatchedSheet implements FromArray, WithHeadings, WithStyles, WithColumnW
         $finalRows = [];
         foreach ($rows as $row) {
             $finalRows[] = [
+                $row['cid'],
                 $row['name'],
-                'Unmatched'
+                $row['loans'] + $row['savings'] + $row['shares'] // Total amount remitted
             ];
         }
 
@@ -316,10 +342,10 @@ class UnmatchedSheet implements FromArray, WithHeadings, WithStyles, WithColumnW
     public function headings(): array
     {
         return [
-            ['Consolidated Remittance Report - Unmatched Records'],
+            ['Unmatched Members Report'],
             ['Generated on', now()->format('F d, Y H:i:s')],
             [''],
-            ['Member', 'Status']
+            ['CID', 'Member Name', 'Amount Remitted']
         ];
     }
 
@@ -330,14 +356,16 @@ class UnmatchedSheet implements FromArray, WithHeadings, WithStyles, WithColumnW
             1 => ['font' => ['bold' => true, 'size' => 14], 'alignment' => ['horizontal' => 'center']],
             2 => ['font' => ['bold' => true]],
             4 => ['font' => ['bold' => true]],
-            'A1:B' . $lastRow => ['borders' => ['allBorders' => ['borderStyle' => 'thin']]],
+            'A1:C' . $lastRow => ['borders' => ['allBorders' => ['borderStyle' => 'thin']]],
         ];
     }
 
     public function columnWidths(): array
     {
         return [
-            'A' => 25, 'B' => 20
+            'A' => 15, // CID
+            'B' => 30, // Member Name
+            'C' => 20  // Amount Remitted
         ];
     }
 

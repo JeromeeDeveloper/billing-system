@@ -707,36 +707,54 @@
                                             </div>
                                             <div class="card-body">
                                                 <div class="row">
-                                                    <div class="col-md-6 mb-3">
-                                                        <div class="card border-primary h-100">
-                                                            <div class="card-header bg-primary text-white">
+
+                                                    <div class="col-md-4 mb-3">
+                                                        <div class="card border-success h-100">
+                                                            <div class="card-header bg-success text-white">
                                                                 <h6 class="mb-0">
-                                                                    <i class="fa fa-file-excel"></i> Regular & Special Billing Report
+                                                                    <i class="fa fa-file-excel"></i> Members not processed
                                                                 </h6>
                                                             </div>
                                                             <div class="card-body text-center">
                                                                 <p class="text-muted mb-3">
-                                                                    Generate a comprehensive report showing regular and special billing remittances with detailed breakdowns.
+                                                                    Generate a report showing unmatched remittance records.
                                                                 </p>
-                                                                <a href="{{ route('branchRemittance.exportRegularSpecial') }}" class="btn btn-primary btn-lg">
-                                                                    <i class="fa fa-download"></i> Export Regular & Special
+                                                                <a href="{{ route('branchRemittance.exportConsolidated') }}" class="btn btn-success btn-lg">
+                                                                    <i class="fa fa-download"></i> Export Unmatched
                                                                 </a>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-md-6 mb-3">
-                                                        <div class="card border-success h-100">
-                                                            <div class="card-header bg-success text-white">
+                                                    <div class="col-md-4 mb-3">
+                                                        <div class="card border-info h-100">
+                                                            <div class="card-header bg-info text-white">
                                                                 <h6 class="mb-0">
-                                                                    <i class="fa fa-file-excel"></i> Matched/Unmatched Report
+                                                                    <i class="fa fa-file-excel"></i> Summary (Regular)
                                                                 </h6>
                                                             </div>
                                                             <div class="card-body text-center">
                                                                 <p class="text-muted mb-3">
-                                                                    Generate a report showing matched and unmatched remittance records with status indicators.
+                                                                    Export summary report for regular billing type members only.
                                                                 </p>
-                                                                <a href="{{ route('branchRemittance.exportConsolidated') }}" class="btn btn-success btn-lg">
-                                                                    <i class="fa fa-download"></i> Export Matched/Unmatched
+                                                                <a href="{{ route('branch.remittance.exportPerRemittanceSummaryRegular') }}" class="btn btn-info btn-lg">
+                                                                    <i class="fa fa-download"></i> Export Summary (Regular)
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4 mb-3">
+                                                        <div class="card border-warning h-100">
+                                                            <div class="card-header bg-warning text-white">
+                                                                <h6 class="mb-0">
+                                                                    <i class="fa fa-file-excel"></i> Summary (Special)
+                                                                </h6>
+                                                            </div>
+                                                            <div class="card-body text-center">
+                                                                <p class="text-muted mb-3">
+                                                                    Export summary report for special billing type members only.
+                                                                </p>
+                                                                <a href="{{ route('branch.remittance.exportPerRemittanceSummarySpecial') }}" class="btn btn-warning btn-lg">
+                                                                    <i class="fa fa-download"></i> Export Summary (Special)
                                                                 </a>
                                                             </div>
                                                         </div>

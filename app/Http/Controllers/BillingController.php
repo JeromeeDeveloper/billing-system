@@ -994,8 +994,8 @@ class BillingController extends Controller
     public function toggleRetainDues(Request $request)
     {
         try {
-            // Only allow admin users to toggle this setting
-            if (!Auth::user() || Auth::user()->role !== 'admin') {
+            // Only allow admin and admin-msp users to toggle this setting
+            if (!Auth::user() || !in_array(Auth::user()->role, ['admin', 'admin-msp'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Access denied. Only administrators can modify this setting.'
@@ -1032,5 +1032,15 @@ class BillingController extends Controller
                 'message' => 'An error occurred while updating the setting. Please try again.'
             ], 500);
         }
+    }
+
+    public function exportMemberDeductionDetails()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\MemberDeductionDetailsExport($billingPeriod),
+            'Member_Deduction_Details_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 }

@@ -140,10 +140,10 @@ use App\Models\BillingSetting;
                         <li><a href="#" data-toggle="modal" data-target="#pgbMembersUploadModal"></i>PGB Members File Upload</a></li>
                         <li><a href="#" data-toggle="modal" data-target="#savingsSharesUploadModal"></i>Deduction Amount File Upload</a></li>
                         <li>
-                            <a href="javascript:void()" onclick="toggleRetainDues()">
-                                <span class="nav-text">Retain Dues on Billing Close</span>
+                            <a href="javascript:void()" onclick="showRetainDuesModal()">
+                                <span class="nav-text">Retain Dues</span>
                                 <span class="badge badge-{{ BillingSetting::getBoolean('retain_dues_on_billing_close') ? 'success' : 'secondary' }} ml-2" id="retainDuesBadge">
-                                    {{ BillingSetting::getBoolean('retain_dues_on_billing_close') ? 'ON' : 'OFF' }}
+                                    {{ BillingSetting::getBoolean('retain_dues_on_billing_close') ? 'Retained' : 'Not Retained' }}
                                 </span>
                             </a>
                         </li>
@@ -252,7 +252,7 @@ use App\Models\BillingSetting;
                         </a></li>
 
                         <li class="nav-label">Billing</li>
-                        <li><a href="#" onclick="alert('Member Deduction Details - Coming Soon')">Member Deduction Details</a></li>
+                        <li><a href="{{ route('billing.exportMemberDeductionDetails') }}">Member Deduction Details</a></li>
 
                         <li class="nav-label">Remittance</li>
                         <li><a href="{{ route('remittance.exportPerRemittance') }}">Full Per Remittance Report</a></li>
@@ -310,14 +310,14 @@ use App\Models\BillingSetting;
             @csrf
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fa fa-upload me-2"></i>Savings & Shares Deduction File Upload</h5>
+                    <h5 class="modal-title"><i class="fa fa-upload me-2"></i>Savings, Shares & Loans Deduction File Upload</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
                     <p class="text-muted mb-3">
-                        Upload file with savings and shares product codes to set deduction amounts.<br>
+                        Upload file with savings, shares, and loan product codes to set deduction amounts.<br>
                         File should have "CoreID" header in A1, product codes in row 1 (columns B onwards),<br>
                         and deduction amounts below. CIDs will be padded to 9 digits.
                     </p>
@@ -368,6 +368,37 @@ document.addEventListener('DOMContentLoaded', function () {
     @endif
 });
 
+// Show retain dues confirmation modal
+function showRetainDuesModal() {
+    const currentStatus = document.getElementById('retainDuesBadge').textContent.trim();
+    const isCurrentlyRetained = currentStatus === 'Retained';
+
+    const newStatus = isCurrentlyRetained ? 'Not Retained' : 'Retained';
+    const actionText = isCurrentlyRetained ? 'disable' : 'enable';
+
+    Swal.fire({
+        title: 'Retain Dues Setting',
+        html: `
+            <div class="text-center">
+                <p>Current Status: <strong>${currentStatus}</strong></p>
+                <p>Do you want to <strong>${actionText}</strong> retaining dues on billing close?</p>
+                <p class="text-muted small">New Status: <strong>${newStatus}</strong></p>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, Confirm',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            toggleRetainDues();
+        }
+    });
+}
+
 // Toggle retain dues setting
 function toggleRetainDues() {
     fetch('{{ route("billing.toggle-retain-dues") }}', {
@@ -382,10 +413,10 @@ function toggleRetainDues() {
         if (data.success) {
             const badge = document.getElementById('retainDuesBadge');
             if (data.retain_dues) {
-                badge.textContent = 'ON';
+                badge.textContent = 'Retained';
                 badge.className = 'badge badge-success ml-2';
             } else {
-                badge.textContent = 'OFF';
+                badge.textContent = 'Not Retained';
                 badge.className = 'badge badge-secondary ml-2';
             }
 

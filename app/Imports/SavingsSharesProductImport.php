@@ -5,6 +5,7 @@ namespace App\Imports;
 use App\Models\Member;
 use App\Models\SavingProduct;
 use App\Models\ShareProduct;
+use App\Models\LoanProduct;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Illuminate\Support\Facades\Log;
@@ -16,6 +17,7 @@ class SavingsSharesProductImport implements ToCollection
         'processed' => 0,
         'savings_updated' => 0,
         'shares_updated' => 0,
+        'loans_updated' => 0,
         'skipped' => 0
     ];
 
@@ -99,7 +101,14 @@ class SavingsSharesProductImport implements ToCollection
                     continue;
                 }
 
-                Log::warning("Product code {$productCode} not found in savings or shares products");
+                // Check if this is a loan product
+                $loanProduct = LoanProduct::where('product_code', $productCode)->first();
+                if ($loanProduct) {
+                    $this->updateLoanProduct($member, $loanProduct, $value);
+                    continue;
+                }
+
+                Log::warning("Product code {$productCode} not found in savings, shares, or loan products");
             }
         }
 
@@ -171,6 +180,40 @@ class SavingsSharesProductImport implements ToCollection
             $this->stats['shares_updated']++;
         } catch (\Exception $e) {
             Log::error("Error updating share product for member {$member->cid}: " . $e->getMessage());
+        }
+    }
+
+    private function updateLoanProduct($member, $loanProduct, $value)
+    {
+        try {
+            // Find existing loan record for this member and product
+            $loan = $member->loans()
+                          ->where('product_code', $loanProduct->product_code)
+                          ->first();
+
+            if ($loan) {
+                // Update existing loan record
+                $loan->update([
+                    'deduction_amount' => floatval($value),
+                    'account_status' => 'deduction'
+                ]);
+                Log::info("Updated loan product {$loanProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+            } else {
+                // Create new loan record
+                $member->loans()->create([
+                    'product_code' => $loanProduct->product_code,
+                    'account_number' => $loanProduct->product_code . '-' . $member->cid,
+                    'current_balance' => 0,
+                    'deduction_amount' => floatval($value),
+                    'account_status' => 'deduction',
+                    'billing_period' => Auth::user()->billing_period ?? null
+                ]);
+                Log::info("Created new loan product {$loanProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+            }
+
+            $this->stats['loans_updated']++;
+        } catch (\Exception $e) {
+            Log::error("Error updating loan product for member {$member->cid}: " . $e->getMessage());
         }
     }
 

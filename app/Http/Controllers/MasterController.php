@@ -1097,10 +1097,11 @@ class MasterController extends Controller
 
             $stats = $import->getStats();
 
-            $message = "Savings & Shares Product import completed successfully. ";
+            $message = "Savings, Shares & Loans Product import completed successfully. ";
             $message .= "Processed: {$stats['processed']}, ";
             $message .= "Savings Updated: {$stats['savings_updated']}, ";
             $message .= "Shares Updated: {$stats['shares_updated']}, ";
+            $message .= "Loans Updated: {$stats['loans_updated']}, ";
             $message .= "Skipped: {$stats['skipped']}";
 
             return redirect()->back()->with('success', $message);

@@ -553,6 +553,28 @@ class BranchRemittanceController extends Controller
         );
     }
 
+    public function exportPerRemittanceSummaryRegular()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+        $branchId = Auth::user()->branch_id;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSummaryExport($billingPeriod, true, $branchId, 'regular'),
+            'Branch_Per_Remittance_Summary_Regular_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceSummarySpecial()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+        $branchId = Auth::user()->branch_id;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSummaryExport($billingPeriod, true, $branchId, 'special'),
+            'Branch_Per_Remittance_Summary_Special_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
 
 
     // Add a branch-specific comparison report method
