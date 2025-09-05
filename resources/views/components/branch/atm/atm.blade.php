@@ -179,7 +179,7 @@
                                 <div class="row">
                                     <!-- Export Posted Payments Filter Form -->
                                     <div class="col-lg-6 col-md-12 mb-3">
-                                        <form method="GET" action="{{ route('branch.atm.export-posted-payments') }}" id="exportPostedPaymentsForm" class="p-4 border rounded shadow-sm bg-light">
+                                        <form method="GET" action="{{ route('branch.atm.export.posted-payments') }}" id="exportPostedPaymentsForm" class="p-4 border rounded shadow-sm bg-light">
                                             <h6 class="font-weight-bold text-primary mb-3">
                                                 <i class="fa fa-file-excel mr-2"></i>Export Posted Payments
                                             </h6>
