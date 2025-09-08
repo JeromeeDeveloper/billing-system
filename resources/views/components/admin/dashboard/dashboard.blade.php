@@ -45,7 +45,7 @@
                                     <div class="stat-digit">{{ number_format($totalMembers) }}</div>
                                 </div>
                                 <div class="progress">
-                                    <div class="progress-bar progress-bar-success w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar progress-bar-primary w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
@@ -71,7 +71,7 @@
                                     <div class="stat-digit">{{ number_format($totalActiveLoans ?? 0) }}</div>
                                 </div>
                                 <div class="progress">
-                                    <div class="progress-bar progress-bar-warning w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar progress-bar-primary w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
@@ -84,7 +84,7 @@
                                     <div class="stat-digit">{{ number_format($totalLoanProducts) }}</div>
                                 </div>
                                 <div class="progress">
-                                    <div class="progress-bar progress-bar-danger w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar progress-bar-primary w-100" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
@@ -105,7 +105,7 @@
                                                     @php
                                                         $memberCount = $memberCounts[$index];
                                                         $percentage = $totalMembers > 0 ? round(($memberCount / $totalMembers) * 100, 1) : 0;
-                                                        $colors = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1', '#fd7e14', '#20c997'];
+                                                        $colors = ['#593bdb'];
                                                         $color = $colors[$index % count($colors)];
                                                     @endphp
                                                     <div class="col-lg-6 col-md-6 mb-4">

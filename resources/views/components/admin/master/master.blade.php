@@ -289,7 +289,7 @@
                                                             $isEditDisabled = $isEditDisabledForAll ||
                                                                 (!$isEditDisabledForAll && in_array($item->member->branch_id, $editDisabledBranches));
                                                         @endphp
-                                                        <button type="button" class="btn btn-rounded btn-primary"
+                                                        <button type="button" class="btn btn-rounded btn-info"
                                                             data-toggle="modal" data-target="#editModal"
                                                             data-id="{{ $item->member->id }}"
                                                             data-cid="{{ $item->member->cid }}"
