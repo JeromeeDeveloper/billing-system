@@ -909,6 +909,13 @@ class BillingController extends Controller
             Log::warning('Could not clear AtmPayment table: ' . $e->getMessage());
         }
 
+        // Clear billing exports for the closed billing period
+        try {
+            \App\Models\BillingExport::where('billing_period', $billingPeriod)->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear BillingExport table: ' . $e->getMessage());
+        }
+
 
         // Members reset (keep only cid and member_tagging)
         \App\Models\Member::query()->update([

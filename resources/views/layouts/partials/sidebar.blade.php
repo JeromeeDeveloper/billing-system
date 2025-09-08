@@ -261,6 +261,10 @@ use App\Models\BillingSetting;
                         <li><a href="{{ route('remittance.exportPerRemittanceLoans') }}">Loans Breakdown</a></li>
                         <li><a href="{{ route('remittance.exportPerRemittanceSavings') }}">Savings Breakdown</a></li>
                         <li><a href="{{ route('remittance.exportPerRemittanceShares') }}">Shares Breakdown</a></li>
+                        <li><a href="{{ route('atm.export.list-of-profile') }}">List of Profile</a></li>
+                        <li><a href="{{ route('atm.export.remittance-report-consolidated') }}">Remittance Report Consolidated</a></li>
+                        <li><a href="{{ route('atm.export.remittance-report-per-branch') }}">Remittance Report Per Branch</a></li>
+                        <li><a href="{{ route('atm.export.remittance-report-per-branch-member') }}">Remittance Report Per Branch Member</a></li>
 
                         <li class="nav-label">Archives</li>
                         <li> <a href="{{ route('billing.exports') }}">

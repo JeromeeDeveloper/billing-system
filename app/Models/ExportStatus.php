@@ -168,14 +168,15 @@ class ExportStatus extends Model
      */
     public static function isEditDisabledForBranch($billingPeriod, $branchId)
     {
-        // Check if there's an admin export (disables all branches)
-        $adminExport = static::where('billing_period', $billingPeriod)
-            ->where('is_admin_export', true)
-            ->where('is_enabled', false)
+        // Check if there's an admin or admin-msp billing export (disables all branches)
+        $adminBillingExport = \App\Models\BillingExport::where('billing_period', $billingPeriod)
+            ->whereHas('user', function($query) {
+                $query->whereIn('role', ['admin', 'admin-msp']);
+            })
             ->exists();
 
-        if ($adminExport) {
-            return true; // Admin export disables all branches
+        if ($adminBillingExport) {
+            return true; // Admin/Admin-MSP billing export disables all branches
         }
 
         // Check if this specific branch has been exported
@@ -184,7 +185,15 @@ class ExportStatus extends Model
             ->where('is_enabled', false)
             ->exists();
 
-        return $branchExport;
+        // Also check if this branch has generated billing
+        $branchBillingExport = \App\Models\BillingExport::where('billing_period', $billingPeriod)
+            ->whereHas('user', function($query) use ($branchId) {
+                $query->where('role', 'branch')
+                      ->where('branch_id', $branchId);
+            })
+            ->exists();
+
+        return $branchExport || $branchBillingExport;
     }
 
     /**
@@ -192,10 +201,20 @@ class ExportStatus extends Model
      */
     public static function isEditDisabledForAll($billingPeriod)
     {
-        return static::where('billing_period', $billingPeriod)
+        // Check if there's an admin or admin-msp billing export
+        $adminBillingExport = \App\Models\BillingExport::where('billing_period', $billingPeriod)
+            ->whereHas('user', function($query) {
+                $query->whereIn('role', ['admin', 'admin-msp']);
+            })
+            ->exists();
+
+        // Also check the old export_statuses logic for backward compatibility
+        $oldAdminExport = static::where('billing_period', $billingPeriod)
             ->where('is_admin_export', true)
             ->where('is_enabled', false)
             ->exists();
+
+        return $adminBillingExport || $oldAdminExport;
     }
 
     /**
@@ -203,6 +222,10 @@ class ExportStatus extends Model
      */
     public static function reEnableAllEdits($billingPeriod)
     {
+        // Clear billing exports for the closed period
+        \App\Models\BillingExport::where('billing_period', $billingPeriod)->delete();
+
+        // Re-enable all export statuses
         return static::where('billing_period', $billingPeriod)
             ->update(['is_enabled' => true]);
     }

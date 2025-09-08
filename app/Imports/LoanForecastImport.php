@@ -22,7 +22,9 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
     protected $stats = [
         'processed' => 0,
         'skipped' => 0,
-        'not_found' => 0
+        'not_found' => 0,
+        'skipped_no_product' => 0,
+        'skipped_no_product_code' => 0
     ];
 
     public function __construct(string $billingPeriod)
@@ -86,23 +88,40 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
 
             $loanProductMemberIds = [];  // Array of member ids linked to loan products
 
+            $shouldProcessLoanForecast = false;
+
             if ($productCodePart) {
                 // Get all loan products with this product code
                 $loanProducts = LoanProduct::where('product_code', $productCodePart)
                     ->orderBy('prioritization', 'asc')
                     ->get();
 
-                foreach ($loanProducts as $loanProduct) {
-                    // Attach the member to the loan product pivot if not already attached
-                    if (!$loanProduct->members()->where('member_id', $member->id)->exists()) {
-                        $loanProduct->members()->attach($member->id);
-                    }
-                }
+                // Only proceed if loan products exist in the loans_product table
+                if ($loanProducts->count() > 0) {
+                    $shouldProcessLoanForecast = true;
 
-                // Collect all member IDs linked to these loan products (optional)
-                foreach ($loanProducts as $loanProduct) {
-                    $loanProductMemberIds = array_merge($loanProductMemberIds, $loanProduct->members()->pluck('members.id')->toArray());
+                    foreach ($loanProducts as $loanProduct) {
+                        // Attach the member to the loan product pivot if not already attached
+                        if (!$loanProduct->members()->where('member_id', $member->id)->exists()) {
+                            $loanProduct->members()->attach($member->id);
+                        }
+                    }
+
+                    // Collect all member IDs linked to these loan products (optional)
+                    foreach ($loanProducts as $loanProduct) {
+                        $loanProductMemberIds = array_merge($loanProductMemberIds, $loanProduct->members()->pluck('members.id')->toArray());
+                    }
+                } else {
+                    // Log that no loan product exists for this product code and skip processing
+                    Log::info("LoanForecast Import - No loan product found for product code: {$productCodePart}, skipping loan forecast creation/update for CID: {$cid}");
+                    $this->stats['skipped_no_product']++;
+                    continue; // Skip this row entirely
                 }
+            } else {
+                // If no product code, skip processing
+                Log::info("LoanForecast Import - No product code found in loan account: {$row['loan_account_no']}, skipping for CID: {$cid}");
+                $this->stats['skipped_no_product_code']++;
+                continue; // Skip this row entirely
             }
 
             // Prepare values from Excel

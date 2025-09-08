@@ -186,32 +186,42 @@ class SavingsSharesProductImport implements ToCollection
     private function updateLoanProduct($member, $loanProduct, $value)
     {
         try {
-            // Find existing loan record for this member and product
-            $loan = $member->loans()
-                          ->where('product_code', $loanProduct->product_code)
-                          ->first();
+            $uploadedTotalDue = floatval($value);
 
-            if ($loan) {
-                // Update existing loan record
-                $loan->update([
-                    'deduction_amount' => floatval($value),
-                    'account_status' => 'deduction'
-                ]);
-                Log::info("Updated loan product {$loanProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+            // Find existing loan forecasts for this member that match the product code
+            $loanForecasts = $member->loanForecasts()
+                ->where('loan_acct_no', 'like', '%-' . $loanProduct->product_code . '-%')
+                ->get();
+
+            if ($loanForecasts->count() > 0) {
+                foreach ($loanForecasts as $loanForecast) {
+                    // Store the current interest_due to preserve it
+                    $currentInterestDue = $loanForecast->interest_due ?? 0;
+
+                    // Calculate new principal_due to match the uploaded total_due
+                    $newPrincipalDue = $uploadedTotalDue - $currentInterestDue;
+
+                    // Ensure principal_due is not negative
+                    if ($newPrincipalDue < 0) {
+                        $newPrincipalDue = 0;
+                        Log::warning("Adjusted principal_due to 0 for member {$member->cid}, loan {$loanForecast->loan_acct_no} - uploaded total_due ({$uploadedTotalDue}) is less than interest_due ({$currentInterestDue})");
+                    }
+
+                    // Update the loan forecast with new values
+                    $loanForecast->update([
+                        'principal_due' => $newPrincipalDue,
+                        'total_due' => $uploadedTotalDue,
+                        'billing_period' => Auth::user()->billing_period ?? null
+                    ]);
+
+                    Log::info("Updated loan forecast {$loanForecast->loan_acct_no} for member {$member->cid} with total_due: {$uploadedTotalDue}, principal_due: {$newPrincipalDue}, interest_due: {$currentInterestDue}");
+                }
+
+                $this->stats['loans_updated'] += $loanForecasts->count();
             } else {
-                // Create new loan record
-                $member->loans()->create([
-                    'product_code' => $loanProduct->product_code,
-                    'account_number' => $loanProduct->product_code . '-' . $member->cid,
-                    'current_balance' => 0,
-                    'deduction_amount' => floatval($value),
-                    'account_status' => 'deduction',
-                    'billing_period' => Auth::user()->billing_period ?? null
-                ]);
-                Log::info("Created new loan product {$loanProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+                Log::warning("No loan forecasts found for member {$member->cid} with product code {$loanProduct->product_code}");
             }
 
-            $this->stats['loans_updated']++;
         } catch (\Exception $e) {
             Log::error("Error updating loan product for member {$member->cid}: " . $e->getMessage());
         }

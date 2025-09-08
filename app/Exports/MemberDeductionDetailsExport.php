@@ -30,9 +30,9 @@ class MemberDeductionDetailsExport implements FromArray, WithHeadings, WithStyle
     {
         $rows = [];
 
-        // Get all PGB members
+        // Get all PGB members with their branch information
         $members = Member::where('member_tagging', 'PGB')
-            ->with(['savings', 'shares', 'loanForecasts'])
+            ->with(['savings', 'shares', 'loanForecasts', 'branch'])
             ->get();
 
         // Get all product codes with their names
@@ -58,10 +58,14 @@ class MemberDeductionDetailsExport implements FromArray, WithHeadings, WithStyle
                 }
             }
 
-            // Check loan forecasts with deduction amounts (if they have product_code)
+            // Check loan forecasts with deduction amounts (extract product_code from loan_acct_no)
             foreach ($member->loanForecasts as $loan) {
-                if (isset($loan->product_code) && $loan->product_code) {
-                    $allProductCodes->push($loan->product_code);
+                if ($loan->loan_acct_no) {
+                    $segments = explode('-', $loan->loan_acct_no);
+                    $productCode = $segments[2] ?? null;
+                    if ($productCode && $loan->total_due > 0) {
+                        $allProductCodes->push($productCode);
+                    }
                 }
             }
         }
@@ -70,7 +74,11 @@ class MemberDeductionDetailsExport implements FromArray, WithHeadings, WithStyle
 
         // Process each member
         foreach ($members as $member) {
-            $row = [$member->cid];
+            $row = [
+                $member->cid,
+                $member->getFullNameAttribute(),
+                $member->branch ? $member->branch->name : 'No Branch'
+            ];
 
             $hasDeductions = false;
 
@@ -92,14 +100,16 @@ class MemberDeductionDetailsExport implements FromArray, WithHeadings, WithStyle
                     $hasDeductions = true;
                 }
 
-                // Check loans (if they have product_code)
-                $loan = $member->loanForecasts->where('product_code', $productCode)->first();
-                if ($loan && isset($loan->product_code) && $loan->product_code) {
-                    // For loans, we might use total_due or another field as deduction amount
-                    // Adjust this based on your business logic
-                    if (isset($loan->total_due) && $loan->total_due > 0) {
-                        $deductionAmount = $loan->total_due;
-                        $hasDeductions = true;
+                // Check loans (extract product_code from loan_acct_no and use total_due)
+                foreach ($member->loanForecasts as $loan) {
+                    if ($loan->loan_acct_no) {
+                        $segments = explode('-', $loan->loan_acct_no);
+                        $loanProductCode = $segments[2] ?? null;
+                        if ($loanProductCode === $productCode && $loan->total_due > 0) {
+                            $deductionAmount = $loan->total_due;
+                            $hasDeductions = true;
+                            break; // Found the matching loan, no need to continue
+                        }
                     }
                 }
 
@@ -117,7 +127,7 @@ class MemberDeductionDetailsExport implements FromArray, WithHeadings, WithStyle
 
     public function headings(): array
     {
-        $headings = ['CoreID'];
+        $headings = ['CoreID', 'Name', 'Branch'];
 
         // Get all unique product codes that have deduction amounts
         $members = Member::where('member_tagging', 'PGB')
@@ -141,10 +151,14 @@ class MemberDeductionDetailsExport implements FromArray, WithHeadings, WithStyle
                 }
             }
 
-            // Check loan forecasts with product codes
+            // Check loan forecasts with deduction amounts (extract product_code from loan_acct_no)
             foreach ($member->loanForecasts as $loan) {
-                if (isset($loan->product_code) && $loan->product_code) {
-                    $allProductCodes->push($loan->product_code);
+                if ($loan->loan_acct_no) {
+                    $segments = explode('-', $loan->loan_acct_no);
+                    $productCode = $segments[2] ?? null;
+                    if ($productCode && $loan->total_due > 0) {
+                        $allProductCodes->push($productCode);
+                    }
                 }
             }
         }
@@ -200,7 +214,11 @@ class MemberDeductionDetailsExport implements FromArray, WithHeadings, WithStyle
 
     public function columnWidths(): array
     {
-        $widths = ['A' => 15]; // CoreID column
+        $widths = [
+            'A' => 15, // CoreID column
+            'B' => 25, // Name column
+            'C' => 20  // Branch column
+        ];
 
         // Get all unique product codes to set column widths
         $members = Member::where('member_tagging', 'PGB')
@@ -221,16 +239,20 @@ class MemberDeductionDetailsExport implements FromArray, WithHeadings, WithStyle
                 }
             }
             foreach ($member->loanForecasts as $loan) {
-                if (isset($loan->product_code) && $loan->product_code) {
-                    $allProductCodes->push($loan->product_code);
+                if ($loan->loan_acct_no) {
+                    $segments = explode('-', $loan->loan_acct_no);
+                    $productCode = $segments[2] ?? null;
+                    if ($productCode && $loan->total_due > 0) {
+                        $allProductCodes->push($productCode);
+                    }
                 }
             }
         }
 
         $uniqueProductCodes = $allProductCodes->unique()->sort()->values();
 
-        // Set column widths for product columns
-        $col = 'B';
+        // Set column widths for product columns (starting from column D)
+        $col = 'D';
         foreach ($uniqueProductCodes as $index => $productCode) {
             $widths[$col] = 20;
             $col++;

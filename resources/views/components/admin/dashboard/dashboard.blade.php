@@ -190,35 +190,6 @@
                                     </form>
                                 </div>
 
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Available Reports</h5>
-                                    <ul class="mb-2">
-                                        <li><strong>List of Profile:</strong> Export comprehensive member profile data</li>
-                                        <li><strong>Remittance Report Consolidated:</strong> Consolidated remittance data across all branches</li>
-                                        <li><strong>Remittance Report Per Branch:</strong> Branch-specific remittance reports</li>
-                                        <li><strong>Remittance Report Per Branch Member:</strong> Export records of all members per branch</li>
-                                    </ul>
-
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-12">
-                                      <a href="{{ route('atm.export.list-of-profile') }}" class="btn btn-primary btn-primary w-100 mb-2">
-                                        <i class="fas fa-file-excel me-2"></i> Export List of Profile
-                                      </a>
-                                      <a href="{{ route('atm.export.remittance-report-consolidated') }}" class="btn btn-primary btn-block w-100 mb-2">
-                                        <i class="fas fa-file-excel me-2"></i> Export Remittance Report Consolidated
-                                      </a>
-                                      <a href="{{ route('atm.export.remittance-report-per-branch') }}" class="btn btn-primary btn-primary w-100 mb-2">
-                                        <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch
-                                      </a>
-                                      <a href="{{ route('atm.export.remittance-report-per-branch-member') }}" class="btn btn-primary btn-block w-100">
-                                        <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch Member
-                                      </a>
-                                    </div>
-                                  </div>
-
                             </div>
                         </div>
 
@@ -378,8 +349,8 @@
     <div class="modal fade" id="closePeriodModal" tabindex="-1" role="dialog" aria-labelledby="closePeriodModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-          <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title" id="closePeriodModalLabel"><i class="fa fa-exclamation-triangle"></i> Close Billing Period Confirmation</h5>
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title text-white" id="closePeriodModalLabel"><i class="fa fa-exclamation-triangle"></i> Close Billing Period Confirmation</h5>
             <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -387,31 +358,31 @@
           <div class="modal-body">
             <div class="text-center">
               <!-- Current Billing Period Display -->
-              <div class="alert alert-info mb-4">
+              <div class="alert alert-primary mb-4">
                 <h6 class="alert-heading"><i class="fa fa-calendar"></i> Current Billing Period</h6>
-                <h4 class="text-primary mb-0">
+                <h4 class="text-white mb-0">
                   {{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->format('F Y') : 'Not Set' }}
                 </h4>
                 {{-- <small class="text-muted">{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->format('Y-m-01') : '' }}</small> --}}
               </div>
 
               <!-- Next Billing Period Display -->
-              <div class="alert alert-warning mb-4">
+              <div class="alert alert-primary mb-4">
                 <h6 class="alert-heading"><i class="fa fa-calendar-plus"></i> Next Billing Period</h6>
-                <h4 class="text-warning mb-0">
+                <h4 class="text-white mb-0">
                   {{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->addMonth()->format('F Y') : 'Not Set' }}
                 </h4>
                 {{-- <small class="text-muted">{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->addMonth()->format('Y-m-01') : '' }}</small> --}}
               </div>
 
               <!-- Warning Messages -->
-              <div class="alert alert-danger">
-                <h6 class="alert-heading"><i class="fa fa-exclamation-triangle"></i> Important Warnings</h6>
-                <ul class="text-left mb-0">
-                  <li><strong>This will close the current billing period for <span class="text-danger">ALL users</span></strong></li>
+              <div class="alert alert-primary">
+                <h6 class="alert-heading text-primary"><i class="fa fa-exclamation-triangle"></i> Important Warnings</h6>
+                <ul class="text-center mb-0 text-white">
+                  <li><strong>This will close the current billing period for <span class="text-danger">ALL USERS</span></strong></li>
                   <li><strong>All users will be moved to the next billing period</strong></li>
                   <li><strong>This action cannot be undone</strong></li>
-                  <li><strong>Late remittances or unfinished tasks will be <span class="text-danger">locked out</span></strong></li>
+                  <li><strong>Late remittances or unfinished tasks will be <span class="text-danger">LOCKED OUT</span></strong></li>
                 </ul>
               </div>
 
