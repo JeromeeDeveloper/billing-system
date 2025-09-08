@@ -26,12 +26,11 @@ class RemittanceController extends Controller
 {
     public function index(Request $request)
     {
-        $userId = Auth::id();
         $billingPeriod = Auth::user()->billing_period;
         $perPage = 10;
 
         // Get all remittance preview data and group by member
-        $allRemittanceData = \App\Models\RemittancePreview::where('user_id', $userId)
+        $allRemittanceData = \App\Models\RemittancePreview::query()
             ->where('type', 'admin')
             ->where('billing_period', $billingPeriod)
             ->whereNotNull('name')
@@ -150,7 +149,7 @@ class RemittanceController extends Controller
 
         // Get billing type information from RemittancePreview to determine which members belong to which billing type
         $userId = Auth::id();
-        $billingTypeMap = RemittancePreview::where('user_id', $userId)
+        $billingTypeMap = RemittancePreview::query()
             ->where('type', 'admin')
             ->where('billing_period', $billingPeriod)
             ->where('remittance_type', 'loans_savings')
@@ -283,12 +282,12 @@ class RemittanceController extends Controller
         // Get data counts for monitoring
         $monitoringData = [
             'loans_savings' => [
-                'total_records' => RemittancePreview::where('user_id', Auth::id())
+                'total_records' => RemittancePreview::query()
                     ->where('type', 'admin')
                     ->where('billing_period', $billingPeriod)
                     ->where('remittance_type', 'loans_savings')
                     ->count(),
-                'matched_records' => RemittancePreview::where('user_id', Auth::id())
+                'matched_records' => RemittancePreview::query()
                     ->where('type', 'admin')
                     ->where('billing_period', $billingPeriod)
                     ->where('remittance_type', 'loans_savings')
@@ -300,12 +299,12 @@ class RemittanceController extends Controller
                 })->values()
             ],
             'shares' => [
-                'total_records' => RemittancePreview::where('user_id', Auth::id())
+                'total_records' => RemittancePreview::query()
                     ->where('type', 'admin')
                     ->where('billing_period', $billingPeriod)
                     ->where('remittance_type', 'shares')
                     ->count(),
-                'matched_records' => RemittancePreview::where('user_id', Auth::id())
+                'matched_records' => RemittancePreview::query()
                     ->where('type', 'admin')
                     ->where('billing_period', $billingPeriod)
                     ->where('remittance_type', 'shares')
@@ -351,7 +350,7 @@ class RemittanceController extends Controller
 
         // If no data in RemittanceReport, try to get from RemittancePreview as fallback
         if ($remittanceData->isEmpty()) {
-            $previewData = \App\Models\RemittancePreview::where('user_id', $userId)
+            $previewData = \App\Models\RemittancePreview::query()
                 ->where('type', 'admin')
                 ->where('billing_period', $billingPeriod)
                 ->whereNotNull('name')

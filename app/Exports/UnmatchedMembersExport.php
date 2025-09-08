@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\RemittancePreview;
 use App\Models\RemittanceReport;
+use App\Models\Member;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
@@ -32,13 +33,11 @@ class UnmatchedMembersExport implements FromArray, WithHeadings, WithStyles, Wit
     protected function loadData()
     {
         // Load preview data from RemittancePreview
-        $this->loansSavingsPreviewPaginated = RemittancePreview::where('user_id', $this->userId)
-            ->where('remittance_type', 'loans_savings')
+        $this->loansSavingsPreviewPaginated = RemittancePreview::where('remittance_type', 'loans_savings')
             ->where('billing_period', $this->billingPeriod)
             ->get();
 
-        $this->sharesPreviewPaginated = RemittancePreview::where('user_id', $this->userId)
-            ->where('remittance_type', 'shares')
+        $this->sharesPreviewPaginated = RemittancePreview::where('remittance_type', 'shares')
             ->where('billing_period', $this->billingPeriod)
             ->get();
     }
@@ -54,8 +53,51 @@ class UnmatchedMembersExport implements FromArray, WithHeadings, WithStyles, Wit
             $isNoBranch = str_contains(strtolower($message), 'no branch');
 
             if ($status === 'error' && !$isNoBranch) {
-                $cid = is_array($row) ? ($row['cid'] ?? 'N/A') : ($row->cid ?? 'N/A');
-                $name = is_array($row) ? ($row['name'] ?? 'N/A') : ($row->name ?? 'N/A');
+                $cid = is_array($row) ? ($row['cid'] ?? null) : ($row->cid ?? null);
+                $name = is_array($row) ? ($row['name'] ?? null) : ($row->name ?? null);
+
+                // If CID is missing attempt to resolve via member_id, then emp_id, then name
+                if (!$cid) {
+                    $member = null;
+
+                    // 1) member_id
+                    $memberId = is_array($row) ? ($row['member_id'] ?? null) : ($row->member_id ?? null);
+                    if ($memberId) {
+                        $member = Member::find($memberId);
+                    }
+
+                    // 2) emp_id fallback
+                    if (!$member) {
+                        $empId = is_array($row) ? ($row['emp_id'] ?? null) : ($row->emp_id ?? null);
+                        if ($empId) {
+                            $member = Member::where('emp_id', $empId)->first();
+                        }
+                    }
+
+                    // 3) name fallback (basic split: last token = lname, rest = fname)
+                    if (!$member && $name) {
+                        $parts = preg_split('/\s+/', trim($name));
+                        if ($parts && count($parts) >= 2) {
+                            $last = array_pop($parts);
+                            $first = implode(' ', $parts);
+                            $member = Member::where('fname', $first)->where('lname', $last)->first();
+                            if (!$member) {
+                                // Try reversed (common data entry variance)
+                                $member = Member::where('fname', $last)->where('lname', $first)->first();
+                            }
+                        }
+                    }
+
+                    if ($member) {
+                        $cid = $member->cid ?? null;
+                        if (!$name) {
+                            $name = trim(($member->fname ?? '') . ' ' . ($member->lname ?? '')) ?: null;
+                        }
+                    }
+                }
+
+                $cid = $cid ?: 'N/A';
+                $name = $name ?: 'N/A';
                 $loans = (float)(is_array($row) ? ($row['loans'] ?? 0) : ($row->loans ?? 0));
                 $savings = (float)(is_array($row) ? ($row['savings'] ?? 0) : ($row->savings ?? 0));
                 $totalAmount = $loans + $savings;

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\RemittanceBatch;
 use Illuminate\Support\Facades\Auth;
+use App\Models\RemittanceReport;
 
 class RemittanceImport implements ToCollection, WithHeadingRow
 {
@@ -397,6 +398,28 @@ class RemittanceImport implements ToCollection, WithHeadingRow
 
                 // Always include distributionDetails in the result for export
                 $result['savings_distribution'] = $distributionDetails;
+
+                // Update aggregated RemittanceReport to include savings excess
+                if ($member) {
+                    $cidValue = $member->cid;
+                    $remittedLoans = (float)($actualLoansPaid ?? 0);
+                    $remittedSavings = (float)($savingsTotal ?? 0) + (float)($remainingPayment ?? 0);
+
+                    $report = RemittanceReport::firstOrNew([
+                        'cid' => $cidValue,
+                        'period' => $this->billingPeriod,
+                        'remittance_type' => 'loans_savings',
+                    ]);
+                    $report->member_name = $report->member_name ?: trim(($member->fname ?? '') . ' ' . ($member->lname ?? ''));
+                    $report->remitted_loans = (float)($report->remitted_loans ?? 0) + $remittedLoans;
+                    $report->remitted_savings = (float)($report->remitted_savings ?? 0) + $remittedSavings;
+                    $report->remitted_shares = (float)($report->remitted_shares ?? 0);
+                    $report->billed_amount = (float)($report->billed_amount ?? 0) + (float)($billedAmount ?? 0);
+                    if ($this->remittance_tag) {
+                        $report->remittance_tag = $this->remittance_tag;
+                    }
+                    $report->save();
+                }
 
                 DB::commit();
             } catch (\Exception $e) {
