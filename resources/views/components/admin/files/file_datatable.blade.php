@@ -85,8 +85,11 @@
                                         </span>
                                         File Retention
                                     </a>
-                                    <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
-                                        data-target="#exampleModalpopover">
+                                    @php
+                                        // Determine if any branch users are already approved
+                                        $hasApprovedBranches = isset($hasApprovedBranches) ? $hasApprovedBranches : \App\Models\User::where('role', 'branch')->where('status', 'approved')->exists();
+                                    @endphp
+                                    <button type="button" class="btn btn-rounded btn-primary" @if($hasApprovedBranches) disabled title="Upload disabled: at least one branch is approved" style="pointer-events: none; opacity: 0.6; cursor: not-allowed;" @else data-toggle="modal" data-target="#exampleModalpopover" @endif>
                                         <span class="btn-icon-left text-primary">
                                             <i class="fa fa-upload"></i>
                                         </span>
@@ -107,10 +110,10 @@
 
                                                 @php
                                                     $billingPeriod = auth()->user()->billing_period
-                                                        ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format(
-                                                            'F Y',
-                                                        )
+                                                        ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format('F Y')
                                                         : 'N/A';
+                                                    // Ensure hasApprovedBranches is defined
+                                                    $hasApprovedBranches = isset($hasApprovedBranches) ? $hasApprovedBranches : \App\Models\User::where('role', 'branch')->where('status', 'approved')->exists();
                                                 @endphp
 
                                                 <div class="form-group">
@@ -127,7 +130,7 @@
                                                     </label>
                                                     <div class="form-check mb-2">
                                                         @php
-                                                            $consolidatedDisabled = isset($hasApprovedBranches) && $hasApprovedBranches;
+                                                            $consolidatedDisabled = $hasApprovedBranches;
                                                         @endphp
                                                         <input class="form-check-input" type="radio" name="forecast_type" id="forecast_consolidated" value="consolidated" {{ $consolidatedDisabled ? 'disabled' : 'checked' }}>
                                                         <label class="form-check-label" for="forecast_consolidated">
@@ -138,7 +141,7 @@
                                                         </label>
                                                     </div>
                                                     <div class="form-check mb-2">
-                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_branch" value="branch" {{ $consolidatedDisabled ? '' : '' }}>
+                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_branch" value="branch">
                                                         <label class="form-check-label" for="forecast_branch">
                                                             <strong>Per Branch</strong> - Upload for specific branch only (shows as "Branch Forecast - [Branch Name]")
                                                         </label>
@@ -164,7 +167,7 @@
                                                     </div>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="file"
-                                                            name="file" accept=".csv" required>
+                                                            name="file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
                                                         <label class="custom-file-label" for="file">Choose
                                                             file...</label>
                                                     </div>
@@ -175,7 +178,7 @@
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
-                                                            id="savings_file" name="savings_file" accept=".csv" required>
+                                                            id="savings_file" name="savings_file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
                                                         <label class="custom-file-label" for="savings_file">Choose
                                                             file...</label>
                                                     </div>
@@ -186,7 +189,7 @@
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="shares_file"
-                                                            name="shares_file" accept=".csv" required>
+                                                            name="shares_file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
                                                         <label class="custom-file-label" for="shares_file">Choose
                                                             file...</label>
                                                     </div>
@@ -197,7 +200,7 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="cif_file"
-                                                            name="cif_file" accept=".csv" required>
+                                                            name="cif_file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
                                                         <label class="custom-file-label" for="cif_file">Choose
                                                             file...</label>
                                                     </div>
@@ -209,7 +212,7 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
-                                                            id="loan_file" name="loan_file" accept=".csv" required>
+                                                            id="loan_file" name="loan_file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
                                                         <label class="custom-file-label" for="loan_file">Choose
                                                             file...</label>
                                                     </div>
@@ -222,9 +225,8 @@
                                             </div>
 
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Upload</button>
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-primary" {{ $hasApprovedBranches ? 'disabled' : '' }}>Upload</button>
                                             </div>
                                         </form>
                                     </div>
@@ -256,12 +258,11 @@
                                 </div>
                             @endif
 
-                                                                                                                @if(!$isApproved)
+                            @if($hasApprovedBranches)
                                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                                     <i class="fa fa-exclamation-triangle me-2"></i>
-                                    <strong>Upload Disabled:</strong> File upload is currently disabled because one or more branch users have been approved.
-                                    Upload is only enabled when all branch users are still in pending status.
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <strong>Upload Disabled:</strong> File upload is currently disabled because one or more branch users have been approved. Upload is only enabled when all branch users are still in pending status.
+                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                                 </div>
                             @endif
 

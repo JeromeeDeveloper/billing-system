@@ -70,7 +70,18 @@ class UnmatchedMembersExport implements FromArray, WithHeadings, WithStyles, Wit
                     if (!$member) {
                         $empId = is_array($row) ? ($row['emp_id'] ?? null) : ($row->emp_id ?? null);
                         if ($empId) {
-                            $member = Member::where('emp_id', $empId)->first();
+                            // Preview stores CID into emp_id for unmatched; try CID match first
+                            $member = Member::where('cid', $empId)->first();
+                            if (!$member) {
+                                $member = Member::where('emp_id', $empId)->first();
+                            }
+                            // If still no member, but empId looks like a CID, use it directly
+                            if (!$member) {
+                                $clean = preg_replace('/\D+/', '', (string) $empId);
+                                if ($clean && strlen($clean) >= 6) {
+                                    $cid = str_pad($clean, 9, '0', STR_PAD_LEFT);
+                                }
+                            }
                         }
                     }
 

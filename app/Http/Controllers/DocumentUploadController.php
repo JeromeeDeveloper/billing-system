@@ -458,7 +458,7 @@ class DocumentUploadController extends Controller
         // but compute branch approval statuses to drive per-option disabling in the modal
         $hasApprovedBranches = false;
         $branchStatuses = collect();
-        if ($user->role === 'admin') {
+        if (in_array($user->role, ['admin', 'admin-msp'])) {
             $hasApprovedBranches = User::where('role', 'branch')
                 ->where('status', 'approved')
                 ->exists();
