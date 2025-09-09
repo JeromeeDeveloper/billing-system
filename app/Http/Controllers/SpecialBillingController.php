@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SpecialBilling;
 use App\Models\Member;
 use App\Models\LoanProduct;
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Imports\SpecialBillingImport;
 use App\Exports\SpecialBillingExport;
@@ -53,12 +54,73 @@ class SpecialBillingController extends Controller
         });
 
         // Check if any branch users have pending status
-        $anyBranchUsersPending = \App\Models\User::where('role', 'branch')->where('status', 'pending')->count() > 0;
+        $anyBranchUsersPending = \App\Models\User::where('role', 'branch')->where('special_billing_approval_status', 'pending')->count() > 0;
 
         $hasSpecialBillingData = $specialBillings->count() > 0;
-        $allBranchUsersApproved = \App\Models\User::where('role', 'branch')->where('status', '!=', 'approved')->count() === 0;
+        $allBranchUsersApproved = \App\Models\User::where('role', 'branch')->where('special_billing_approval_status', '!=', 'approved')->count() === 0;
 
-        return view('components.admin.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'hasSpecialBillingData', 'allBranchUsersApproved', 'anyBranchUsersPending'));
+        // Check if there's any special billing export record for this billing period (to disable cancel approval)
+        $hasSpecialBillingExportForPeriod = \App\Models\ExportStatus::where('billing_period', $billingPeriod)
+            ->where('export_type', 'special_billing')
+            ->where('is_enabled', false)
+            ->exists();
+
+        return view('components.admin.special_billing', compact('specialBillings', 'exportStatuses', 'noBranch', 'noRegularSavings', 'hasSpecialBillingData', 'allBranchUsersApproved', 'anyBranchUsersPending', 'hasSpecialBillingExportForPeriod'));
+    }
+
+    public function approve()
+    {
+        $user = Auth::user();
+
+        if ($user->special_billing_approval_status === 'approved') {
+            return back()->with('info', 'You are already approved.');
+        }
+
+        User::where('id', $user->id)->update(['special_billing_approval_status' => 'approved']);
+
+        // Create notification about approval
+        \App\Models\Notification::create([
+            'type' => 'special_billing_approval',
+            'user_id' => $user->id,
+            'related_id' => $user->id,
+            'message' => 'You have approved special billing for ' . \Carbon\Carbon::parse($user->billing_period)->format('F Y'),
+            'billing_period' => $user->billing_period
+        ]);
+
+        return back()->with('success', 'Special billing approved successfully.');
+    }
+
+    public function cancelApproval()
+    {
+        $user = Auth::user();
+        $billingPeriod = $user->billing_period;
+
+        if ($user->special_billing_approval_status === 'pending') {
+            return back()->with('info', 'You are already in pending status.');
+        }
+
+        // Check if special billing has been exported for this period
+        $hasSpecialBillingExportForPeriod = \App\Models\ExportStatus::where('billing_period', $billingPeriod)
+            ->where('export_type', 'special_billing')
+            ->where('is_enabled', false)
+            ->exists();
+
+        if ($hasSpecialBillingExportForPeriod) {
+            return back()->with('error', 'Special billing has been generated for this period. Cancel approval is disabled.');
+        }
+
+        User::where('id', $user->id)->update(['special_billing_approval_status' => 'pending']);
+
+        // Create notification about approval cancellation
+        \App\Models\Notification::create([
+            'type' => 'special_billing_approval_cancelled',
+            'user_id' => $user->id,
+            'related_id' => $user->id,
+            'message' => 'You have cancelled your special billing approval for ' . \Carbon\Carbon::parse($user->billing_period)->format('F Y'),
+            'billing_period' => $user->billing_period
+        ]);
+
+        return back()->with('success', 'Special billing approval cancelled successfully.');
     }
 
     public function import(Request $request)

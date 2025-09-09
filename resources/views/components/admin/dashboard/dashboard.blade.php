@@ -181,7 +181,7 @@
                                 <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> Billing Period Management</h5>
-                                    <p class="mb-2">You can manually close the current billing period and move all users to the next period. This is useful if remittances are late or you want to control the period closing date.</p>
+                                    <p class="mb-2 text-dark">You can manually close the current billing period and move all users to the next period. This is useful if remittances are late or you want to control the period closing date.</p>
                                     <form method="POST" action="{{ route('billing.close-period') }}" id="closePeriodForm">
                                         @csrf
                                         <button type="button" class="btn btn-danger mt-2" data-toggle="modal" data-target="#closePeriodModal">

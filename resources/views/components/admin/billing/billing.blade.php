@@ -79,10 +79,10 @@
                                     <div class="d-flex mb-3 gap-btn">
                                         {{-- main function --}}
 
-                                        <a href="{{ $allBranchApproved && !$hasAnyMemberNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
-                                            class="btn btn-rounded btn-primary text-white me-4 {{ !$allBranchApproved || $hasAnyMemberNoBranch ? 'disabled' : '' }}"
-                                            @if (!$allBranchApproved)
-                                                onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;"
+                                        <a href="{{ $allUsersApproved && !$hasAnyMemberNoBranch ? route('billing.export', ['billing_period' => now()->format('Y-m')]) : '#' }}"
+                                            class="btn btn-rounded btn-primary text-white me-4 {{ !$allUsersApproved || $hasAnyMemberNoBranch ? 'disabled' : '' }}"
+                                            @if (!$allUsersApproved)
+                                                onclick="Swal.fire('Action Blocked', 'All admin and branch users must be approved before generating billing.', 'warning'); return false;"
                                             @elseif ($hasAnyMemberNoBranch)
                                                 onclick="Swal.fire('Action Blocked', 'Some members have no branch assigned. Please assign branches before generating billing.', 'warning'); return false;"
                                             @endif>
@@ -111,7 +111,7 @@
                                             Loan Report
                                         </a> --}}
 
-                                      
+
 
                                         <a href="{{ route('billing.exports') }}" class="btn btn-rounded btn-info text-white ms-2">
                                             <span class="btn-icon-left text-info">
@@ -119,16 +119,42 @@
                                             </span>
                                             View Export History
                                         </a>
+
+                                        @if(Auth::user()->role === 'admin')
+                                            @if(Auth::user()->billing_approval_status === 'pending')
+                                                <form action="{{ route('admin.billing.approve') }}" method="POST" class="m-0">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-rounded btn-primary text-white">
+                                                        <span class="btn-icon-left text-primary"><i class="fa fa-check"></i></span>
+                                                        Approve Billing
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            @if(Auth::user()->billing_approval_status === 'approved')
+                                                <form action="{{ route('admin.billing.cancel-approval') }}" method="POST" class="m-0" id="cancelApprovalForm">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-rounded btn-warning text-white {{ $hasBillingExportForPeriod ? 'disabled' : '' }}" @if($hasBillingExportForPeriod) disabled @endif>
+                                                        <span class="btn-icon-left text-warning"><i class="fa fa-times"></i></span>
+                                                        Cancel Approval
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @endif
                                     </div>
 
-                                    @if (!$allBranchApproved)
+                                    @if (!$allUsersApproved)
                                         <div class="text-danger small">
-                                            * Not all branch users has approved yet.
+                                            * Not all admin and branch users have approved yet.
                                         </div>
                                     @endif
                                     @if ($hasAnyMemberNoBranch)
                                         <div class="text-danger small">
                                             * Some members have no branch assigned. Please assign branches before generating billing.
+                                        </div>
+                                    @endif
+                                    @if($hasBillingExportForPeriod)
+                                        <div class="alert alert text-danger small mb-0 mt-2">
+                                            *Billing has been generated for this period. Cancel approval is disabled.
                                         </div>
                                     @endif
                                 </div>
@@ -171,7 +197,7 @@
 
                             <div class="card-body">
                                 <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                {{-- <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> Billing Management Information</h5>
                                     <p class="mb-2"><strong>What this page does:</strong></p>
@@ -183,7 +209,7 @@
                                         <li><strong>Search:</strong> Find specific members or billing records quickly</li>
                                     </ul>
                                     <p class="mb-0"><small><strong>Note:</strong> This page manages the billing cycle and ensures all branches have approved their data before generating final billing reports.</small></p>
-                                </div>
+                                </div> --}}
 
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered display">
@@ -453,14 +479,6 @@
         });
     </script>
 
-      <script>
-        // Setup AJAX CSRF token
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-    </script>
 
 </body>
 

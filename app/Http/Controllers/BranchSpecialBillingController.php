@@ -52,15 +52,15 @@ class BranchSpecialBillingController extends Controller
         $notAllApproved = $members->contains(function($m) { return $m->status !== 'active'; });
 
         // Check if any branch users have pending status
-        $anyBranchUsersPending = \App\Models\User::where('role', 'branch')->where('status', 'pending')->count() > 0;
+        $anyBranchUsersPending = \App\Models\User::where('role', 'branch')->where('special_billing_approval_status', 'pending')->count() > 0;
 
         $hasSpecialBillingData = $specialBillings->count() > 0;
-        $userIsApproved = Auth::user()->status === 'approved';
-        $allBranchUsersApproved = \App\Models\User::where('role', 'branch')->where('status', '!=', 'approved')->count() === 0;
+        $userIsApproved = Auth::user()->special_billing_approval_status === 'approved';
+        $allBranchUsersApproved = \App\Models\User::where('role', 'branch')->where('special_billing_approval_status', '!=', 'approved')->count() === 0;
 
         // Special Billing Approval Status
         $user = Auth::user();
-        $specialBillingApprovalStatus = $user->status; // 'pending' or 'approved'
+        $specialBillingApprovalStatus = $user->special_billing_approval_status; // 'pending' or 'approved'
         $hasSpecialBillingExportForPeriod = \App\Models\ExportStatus::where('export_type', 'special_billing')
             ->where('billing_period', $billingPeriod)
             ->where('is_enabled', false)

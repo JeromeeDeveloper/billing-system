@@ -43,8 +43,8 @@ class BillingController extends Controller
             $perPage = 10;
         }
 
-         $allBranchApproved = User::where('role', 'branch')
-        ->where('status', '!=', 'approved')
+         $allUsersApproved = User::whereIn('role', ['admin', 'branch'])
+        ->where('billing_approval_status', '!=', 'approved')
         ->doesntExist(); // true if all are approved
 
         // Query with eager loading branch to avoid N+1 query problem
@@ -87,7 +87,10 @@ class BillingController extends Controller
 
         $hasAnyMemberNoBranch = Member::whereNull('branch_id')->exists();
 
-        return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'hasAnyMemberNoBranch'));
+        // Check if there's any billing export record for this billing period (to disable cancel approval)
+        $hasBillingExportForPeriod = \App\Models\BillingExport::where('billing_period', $billingPeriod)->exists();
+
+        return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allUsersApproved', 'hasAnyMemberNoBranch', 'hasBillingExportForPeriod'));
     }
 
     public function index_branch(Request $request)
@@ -102,8 +105,8 @@ class BillingController extends Controller
             $perPage = 10;
         }
 
-        $allBranchApproved = User::where('role', 'branch')
-            ->where('status', '!=', 'approved')
+        $allUsersApproved = User::whereIn('role', ['admin', 'branch'])
+            ->where('billing_approval_status', '!=', 'approved')
             ->doesntExist(); // true if all are approved
 
         // Query with eager loading branch to avoid N+1 query problem
@@ -148,7 +151,7 @@ class BillingController extends Controller
         // Check if there's any billing export record for this billing period (to disable cancel approval)
         $hasBillingExportForPeriod = \App\Models\BillingExport::where('billing_period', $billingPeriod)->exists();
 
-        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'alreadyExported', 'hasBillingExportForPeriod'));
+        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allUsersApproved', 'alreadyExported', 'hasBillingExportForPeriod'));
     }
 
     public function export(Request $request)
@@ -403,11 +406,11 @@ class BillingController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->status === 'approved') {
+        if ($user->billing_approval_status === 'approved') {
             return back()->with('info', 'You are already approved.');
         }
 
-        User::where('id', $user->id)->update(['status' => 'approved']);
+        User::where('id', $user->id)->update(['billing_approval_status' => 'approved']);
 
         // Create notification about approval
         \App\Models\Notification::create([
@@ -425,11 +428,11 @@ class BillingController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->status === 'pending') {
+        if ($user->billing_approval_status === 'pending') {
             return back()->with('info', 'You are already in pending status.');
         }
 
-        User::where('id', $user->id)->update(['status' => 'pending']);
+        User::where('id', $user->id)->update(['billing_approval_status' => 'pending']);
 
         // Create notification about approval cancellation
         \App\Models\Notification::create([
@@ -944,8 +947,11 @@ class BillingController extends Controller
 
         // Update all users' billing_period
         \App\Models\User::query()->update(['billing_period' => $next]);
-        // Set all branch users' status to pending
-        \App\Models\User::where('role', 'branch')->update(['status' => 'pending']);
+        // Set all branch and admin users' approval statuses to pending
+        \App\Models\User::whereIn('role', ['branch', 'admin'])->update([
+            'billing_approval_status' => 'pending',
+            'special_billing_approval_status' => 'pending'
+        ]);
 
         // Notify all users
         $userIds = \App\Models\User::pluck('id');

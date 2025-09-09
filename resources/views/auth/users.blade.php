@@ -64,8 +64,9 @@
                                 <p><strong>Name:</strong> <span id="view-name"></span></p>
                                 <p><strong>Email:</strong> <span id="view-email"></span></p>
                                 <p><strong>Role:</strong> <span id="view-role"></span></p>
-                                <p><strong>Status:</strong> <span id="view-status"></span></p>
-                                <p><strong>Branch:</strong> <span id="view-branch"></span></p>
+                                <p id="view-billing-approval-p"><strong>Billing Approval:</strong> <span id="view-billing-approval"></span></p>
+                                <p id="view-special-billing-approval-p"><strong>Special Billing Approval:</strong> <span id="view-special-billing-approval"></span></p>
+                                <p id="view-branch-p"><strong>Branch:</strong> <span id="view-branch"></span></p>
                                 <p><strong>Created At:</strong> <span id="view-created"></span></p>
                             </div>
                             <div class="modal-footer">
@@ -115,14 +116,21 @@
                                                     <option value="admin-msp">Admin-MSP</option>
                                                 </select>
                                             </div>
-                                            <div class="form-group">
-                                                <label>Status</label>
-                                                <select name="status" id="edit-status" class="form-control">
+                                            <div class="form-group" id="billing-approval-group">
+                                                <label>Billing Approval Status</label>
+                                                <select name="billing_approval_status" id="edit-billing-approval-status" class="form-control">
                                                     <option value="pending">Pending</option>
                                                     <option value="approved">Approved</option>
                                                 </select>
                                             </div>
-                                            <div class="form-group">
+                                            <div class="form-group" id="special-billing-approval-group">
+                                                <label>Special Billing Approval Status</label>
+                                                <select name="special_billing_approval_status" id="edit-special-billing-approval-status" class="form-control">
+                                                    <option value="pending">Pending</option>
+                                                    <option value="approved">Approved</option>
+                                                </select>
+                                            </div>
+                                            <div class="form-group" id="branch-group">
                                                 <label>Branch</label>
                                                 <select name="branch_id" id="edit-branch" class="form-control">
                                                     <option value="">No Branch</option>
@@ -208,14 +216,6 @@
                                                 </select>
                                             </div>
                                             <div class="form-group">
-                                                <label>Status</label>
-                                                <select name="status" class="form-control" required>
-                                                    <option value="" disabled>Select Status</option>
-                                                    <option value="pending">Pending</option>
-                                                    <option value="approved">Approved</option>
-                                                </select>
-                                            </div>
-                                            <div class="form-group">
                                                 <label>Branch</label>
                                                 <select name="branch_id" class="form-control">
                                                     <option value="">No Branch</option>
@@ -254,7 +254,8 @@
                                                 <th>Name</th>
                                                 <th>Email</th>
                                                 <th>Role</th>
-                                                <th>Status</th>
+                                                <th>Billing Approval</th>
+                                                <th>Special Billing Approval</th>
                                                 <th>Branch</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -270,12 +271,30 @@
                                                             {{ $user->role === 'admin-msp' ? 'Admin-MSP' : ucfirst($user->role) }}
                                                         </span>
                                                     </td>
-                                                    <td>
-                                                        <span class="badge badge-{{ $user->status === 'approved' ? 'success' : 'warning' }}">
-                                                            {{ ucfirst($user->status) }}
-                                                        </span>
-                                                    </td>
-                                                    <td>{{ $user->branch ? $user->branch->name : 'No Branch' }}</td>
+                                                    @if($user->role !== 'admin-msp')
+                                                        <td>
+                                                            <span class="badge badge-{{ $user->billing_approval_status === 'approved' ? 'success' : 'warning' }}">
+                                                                {{ ucfirst($user->billing_approval_status) }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge badge-{{ $user->special_billing_approval_status === 'approved' ? 'success' : 'warning' }}">
+                                                                {{ ucfirst($user->special_billing_approval_status) }}
+                                                            </span>
+                                                        </td>
+                                                    @else
+                                                        <td>
+                                                            <span class="badge badge-info">N/A</span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge badge-info">N/A</span>
+                                                        </td>
+                                                    @endif
+                                                    @if($user->role === 'branch')
+                                                        <td>{{ $user->branch ? $user->branch->name : 'No Branch' }}</td>
+                                                    @else
+                                                        <td><span class="badge badge-info">N/A</span></td>
+                                                    @endif
                                                     <td>
                                                         <!-- Edit Button -->
                                                         <button type="button" class="btn btn-primary btn-rounded"
@@ -284,7 +303,8 @@
                                                             data-name="{{ $user->name }}"
                                                             data-email="{{ $user->email }}"
                                                             data-role="{{ $user->role }}"
-                                                            data-status="{{ $user->status }}"
+                                                            data-billing-approval-status="{{ $user->billing_approval_status }}"
+                                                            data-special-billing-approval-status="{{ $user->special_billing_approval_status }}"
                                                             data-branch-id="{{ $user->branch_id }}">
                                                             <i class="fa fa-pencil"></i> Edit
                                                         </button>
@@ -296,7 +316,8 @@
                                                             data-name="{{ $user->name }}"
                                                             data-email="{{ $user->email }}"
                                                             data-role="{{ $user->role }}"
-                                                            data-status="{{ $user->status }}"
+                                                            data-billing-approval-status="{{ $user->billing_approval_status }}"
+                                                            data-special-billing-approval-status="{{ $user->special_billing_approval_status }}"
                                                             data-branch="{{ $user->branch ? $user->branch->name : 'No Branch' }}"
                                                             data-created="{{ $user->created_at->format('M d, Y H:i:s') }}">
                                                             <i class="fa fa-eye"></i> View
@@ -319,7 +340,8 @@
                                                 <th>Name</th>
                                                 <th>Email</th>
                                                 <th>Role</th>
-                                                <th>Status</th>
+                                                <th>Billing Approval</th>
+                                                <th>Special Billing Approval</th>
                                                 <th>Branch</th>
                                                 <th>Actions</th>
                                             </tr>
@@ -358,7 +380,8 @@
                 name: button.data('name'),
                 email: button.data('email'),
                 role: button.data('role'),
-                status: button.data('status'),
+                billing_approval_status: button.data('billing-approval-status'),
+                special_billing_approval_status: button.data('special-billing-approval-status'),
                 branch_id: button.data('branch-id')
             };
 
@@ -367,19 +390,59 @@
             modal.find('#edit-name').val(user.name);
             modal.find('#edit-email').val(user.email);
             modal.find('#edit-role').val(user.role);
-            modal.find('#edit-status').val(user.status);
             modal.find('#edit-branch').val(user.branch_id);
+
+            // Show/hide fields based on role
+            if (user.role === 'admin-msp') {
+                $('#billing-approval-group').hide();
+                $('#special-billing-approval-group').hide();
+                $('#branch-group').hide();
+            } else if (user.role === 'admin') {
+                $('#billing-approval-group').show();
+                $('#special-billing-approval-group').show();
+                $('#branch-group').hide();
+                modal.find('#edit-billing-approval-status').val(user.billing_approval_status);
+                modal.find('#edit-special-billing-approval-status').val(user.special_billing_approval_status);
+            } else {
+                // Branch role - show all fields
+                $('#billing-approval-group').show();
+                $('#special-billing-approval-group').show();
+                $('#branch-group').show();
+                modal.find('#edit-billing-approval-status').val(user.billing_approval_status);
+                modal.find('#edit-special-billing-approval-status').val(user.special_billing_approval_status);
+            }
         });
 
         $('#viewModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget)
+            var role = button.data('role');
+
             $('#view-id').text(button.data('id'));
             $('#view-name').text(button.data('name'));
             $('#view-email').text(button.data('email'));
-            $('#view-role').text(button.data('role'));
-            $('#view-status').text(button.data('status'));
+            $('#view-role').text(role);
             $('#view-branch').text(button.data('branch'));
             $('#view-created').text(button.data('created'));
+
+            // Show/hide fields based on role
+            if (role === 'admin-msp') {
+                $('#view-billing-approval-p').hide();
+                $('#view-special-billing-approval-p').hide();
+                $('#view-branch-p').hide();
+            } else if (role === 'admin') {
+                $('#view-billing-approval-p').show();
+                $('#view-special-billing-approval-p').show();
+                $('#view-branch-p').hide();
+                $('#view-billing-approval').text(button.data('billing-approval-status'));
+                $('#view-special-billing-approval').text(button.data('special-billing-approval-status'));
+            } else {
+                // Branch role - show all fields
+                $('#view-billing-approval-p').show();
+                $('#view-special-billing-approval-p').show();
+                $('#view-branch-p').show();
+                $('#view-billing-approval').text(button.data('billing-approval-status'));
+                $('#view-special-billing-approval').text(button.data('special-billing-approval-status'));
+            }
         });
         $('#deleteModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget)

@@ -86,10 +86,10 @@
                                         File Retention
                                     </a>
                                     @php
-                                        // Determine if any branch users are already approved
-                                        $hasApprovedBranches = isset($hasApprovedBranches) ? $hasApprovedBranches : \App\Models\User::where('role', 'branch')->where('status', 'approved')->exists();
+                                        // Determine if any admin or branch users are already approved
+                                        $hasApprovedBranches = isset($hasApprovedBranches) ? $hasApprovedBranches : \App\Models\User::whereIn('role', ['admin', 'branch'])->where('billing_approval_status', 'approved')->exists();
                                     @endphp
-                                    <button type="button" class="btn btn-rounded btn-primary" @if($hasApprovedBranches) disabled title="Upload disabled: at least one branch is approved" style="pointer-events: none; opacity: 0.6; cursor: not-allowed;" @else data-toggle="modal" data-target="#exampleModalpopover" @endif>
+                                    <button type="button" class="btn btn-rounded btn-primary" @if($hasApprovedBranches) disabled title="Upload disabled: at least one admin or branch user is approved" style="pointer-events: none; opacity: 0.6; cursor: not-allowed;" @else data-toggle="modal" data-target="#exampleModalpopover" @endif>
                                         <span class="btn-icon-left text-primary">
                                             <i class="fa fa-upload"></i>
                                         </span>
@@ -113,18 +113,18 @@
                                                         ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format('F Y')
                                                         : 'N/A';
                                                     // Ensure hasApprovedBranches is defined
-                                                    $hasApprovedBranches = isset($hasApprovedBranches) ? $hasApprovedBranches : \App\Models\User::where('role', 'branch')->where('status', 'approved')->exists();
+                                                    $hasApprovedBranches = isset($hasApprovedBranches) ? $hasApprovedBranches : \App\Models\User::whereIn('role', ['admin', 'branch'])->where('billing_approval_status', 'approved')->exists();
                                                 @endphp
 
                                                 <div class="form-group">
-                                                    <label class="font-weight-bold mb-2">Billing Period</label>
+                                                    <label class="font-weight-bold text-dark mb-2">Billing Period</label>
                                                     <input type="text" class="form-control"
                                                         value="{{ $billingPeriod }}" readonly>
                                                 </div>
 
 
                                                 <div class="form-group">
-                                                    <label for="file" class="font-weight-bold mb-2">📁 Installment
+                                                    <label for="file" class="font-weight-bold text-dark mb-2">📁 Installment
                                                         Forecast
                                                         File
                                                     </label>
@@ -133,35 +133,41 @@
                                                             $consolidatedDisabled = $hasApprovedBranches;
                                                         @endphp
                                                         <input class="form-check-input" type="radio" name="forecast_type" id="forecast_consolidated" value="consolidated" {{ $consolidatedDisabled ? 'disabled' : 'checked' }}>
-                                                        <label class="form-check-label" for="forecast_consolidated">
-                                                            <strong>Consolidated</strong> - Upload for all branches
+                                                        <label class="form-check-label text-dark" for="forecast_consolidated">
+                                                            <strong class="text-dark">Consolidated</strong> - Upload for all branches
                                                             @if($consolidatedDisabled)
-                                                                <span class="badge badge-warning ml-2">Disabled: at least one branch is approved</span>
+                                                                <span class="badge badge-warning ml-2">Disabled: at least one admin or branch user is approved</span>
                                                             @endif
                                                         </label>
                                                     </div>
                                                     <div class="form-check mb-2">
-                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_branch" value="branch">
-                                                        <label class="form-check-label" for="forecast_branch">
-                                                            <strong>Per Branch</strong> - Upload for specific branch only (shows as "Branch Forecast - [Branch Name]")
+                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_branch" value="branch" {{ $hasApprovedBranches ? 'disabled' : '' }}>
+                                                        <label class="form-check-label text-dark" for="forecast_branch">
+                                                            <strong class="text-dark">Per Branch</strong> - Upload for specific branch only (shows as "Branch Forecast - [Branch Name]")
+                                                            @if($hasApprovedBranches)
+                                                                <span class="badge badge-warning ml-2">Disabled: at least one admin or branch user is approved</span>
+                                                            @endif
                                                         </label>
                                                     </div>
                                                     <div class="form-group" id="branch_selection_group" style="display: none;">
-                                                        <label for="branch_id" class="font-weight-bold mb-2">Select Branch</label>
-                                                        <select class="form-control" id="branch_id" name="branch_id">
+                                                        <label for="branch_id" class="font-weight-bold text-dark mb-2">Select Branch</label>
+                                                        <select class="form-control" id="branch_id" name="branch_id" {{ $hasApprovedBranches ? 'disabled' : '' }}>
                                                             <option value="">Select a branch...</option>
                                                             @php $branches = \App\Models\Branch::orderBy('name')->get(); @endphp
                                                             @foreach($branches as $branch)
                                                                 @php
-                                                                    $status = isset($branchStatuses) ? ($branchStatuses[$branch->id] ?? 'pending') : 'pending';
-                                                                    $disabled = $status === 'approved';
+                                                                    $branchUser = \App\Models\User::where('role', 'branch')->where('branch_id', $branch->id)->first();
+                                                                    $branchApproved = $branchUser && $branchUser->billing_approval_status === 'approved';
+                                                                    $disabled = $hasApprovedBranches || $branchApproved;
                                                                 @endphp
                                                                 <option value="{{ $branch->id }}" {{ $disabled ? 'disabled' : '' }}>
-                                                                    {{ $branch->name }} {{ $disabled ? '(Approved - disabled)' : '' }}
+                                                                    {{ $branch->name }} {{ $branchApproved ? '(Approved - disabled)' : ($hasApprovedBranches ? '(Disabled - someone approved)' : '') }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
-                                                        @if(isset($branchStatuses) && collect($branchStatuses)->contains('approved'))
+                                                        @if($hasApprovedBranches)
+                                                            <small class="text-muted">Branch selection is disabled because one or more admin or branch users have been approved.</small>
+                                                        @else
                                                             <small class="text-muted">Branches marked as Approved are disabled and cannot be selected.</small>
                                                         @endif
                                                     </div>
@@ -174,7 +180,7 @@
                                                 </div>
 
                                                 <div class="form-group">
-                                                    <label for="savings_file" class="font-weight-bold mb-2">💰 Savings
+                                                    <label for="savings_file" class="font-weight-bold text-dark mb-2">💰 Savings
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
@@ -185,7 +191,7 @@
                                                 </div>
 
                                                 <div class="form-group">
-                                                    <label for="shares_file" class="font-weight-bold mb-2">📊 Shares
+                                                    <label for="shares_file" class="font-weight-bold text-dark mb-2">📊 Shares
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="shares_file"
@@ -196,7 +202,7 @@
                                                 </div>
 
                                                 <div class="form-group">
-                                                    <label for="cif_file" class="font-weight-bold mb-2">👤 CIF File
+                                                    <label for="cif_file" class="font-weight-bold text-dark mb-2">👤 CIF File
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="cif_file"
@@ -207,7 +213,7 @@
                                                 </div>
 
                                                 <div class="form-group">
-                                                    <label for="loan_file" class="font-weight-bold mb-2">🏛️ Loans
+                                                    <label for="loan_file" class="font-weight-bold text-dark mb-2">🏛️ Loans
                                                         File
                                                     </label>
                                                     <div class="custom-file">
@@ -219,9 +225,9 @@
                                                 </div>
                                             </div>
 
-                                            <div class="alert alert-warning mb-3 mx-3">
+                                            <div class="alert alert mb-3 mx-3 text-danger">
                                                 <i class="fa fa-exclamation-triangle"></i>
-                                                <strong>Important:</strong> Please ensure all files are correct before uploading.
+                                                <strong class="text-danger">Important:</strong> Please ensure all files are correct before uploading.
                                             </div>
 
                                             <div class="modal-footer">
@@ -261,7 +267,7 @@
                             @if($hasApprovedBranches)
                                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                                     <i class="fa fa-exclamation-triangle me-2"></i>
-                                    <strong>Upload Disabled:</strong> File upload is currently disabled because one or more branch users have been approved. Upload is only enabled when all branch users are still in pending status.
+                                    <strong>Upload Disabled:</strong> File upload is currently disabled because one or more admin or branch users have been approved. Upload is only enabled when all admin and branch users are still in pending status.
                                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                                 </div>
                             @endif
@@ -392,8 +398,25 @@
                 }
             }
 
-            forecastConsolidated.addEventListener('change', toggleBranchSelection);
-            forecastBranch.addEventListener('change', toggleBranchSelection);
+            // Check if both radio buttons are disabled
+            var bothDisabled = forecastConsolidated.disabled && forecastBranch.disabled;
+
+            if (bothDisabled) {
+                // If both are disabled, show a message and hide branch selection
+                branchSelectionGroup.style.display = 'none';
+                branchSelect.required = false;
+                branchSelect.value = '';
+
+                // Add a disabled message
+                var disabledMessage = document.createElement('div');
+                disabledMessage.className = 'alert alert-warning text-center small mb-2';
+                disabledMessage.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Both upload options are disabled because one or more admin or branch users have been approved.';
+                branchSelectionGroup.parentNode.insertBefore(disabledMessage, branchSelectionGroup);
+            } else {
+                // Only add event listeners if not both disabled
+                forecastConsolidated.addEventListener('change', toggleBranchSelection);
+                forecastBranch.addEventListener('change', toggleBranchSelection);
+            }
 
             // Initial state
             toggleBranchSelection();
@@ -416,7 +439,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-3">Below are the required formats for each file type. Please ensure your files match these formats before uploading.</p>
+                    <p class="mb-3 text-dark">Below are the required formats for each file type. Please ensure your files match these formats before uploading.</p>
                     <div class="accordion" id="formatAccordion">
                         <div class="card">
                             <div class="card-header" id="headingForecast">
@@ -428,8 +451,8 @@
                             </div>
                             <div id="collapseForecast" class="collapse show" aria-labelledby="headingForecast" data-parent="#formatAccordion">
                                 <div class="card-body">
-                                    <strong>Required Columns (Row 5 as header):</strong>
-                                    <ul>
+                                    <strong class="text-dark">Required Columns (Row 5 as header):</strong>
+                                    <ul class="text-dark">
                                         <li>Branch Name</li>
                                         <li>Branch Code</li>
                                         <li>CID</li>
@@ -460,8 +483,8 @@
                             </div>
                             <div id="collapseSavings" class="collapse" aria-labelledby="headingSavings" data-parent="#formatAccordion">
                                 <div class="card-body">
-                                    <strong>Required Columns (Row 6 as header):</strong>
-                                    <ul>
+                                    <strong class="text-dark">Required Columns (Row 6 as header):</strong>
+                                    <ul class="text-dark">
                                         <li>Customer No.</li>
                                         <li>Account No.</li>
                                         <li>Product Code</li>
@@ -486,8 +509,8 @@
                             </div>
                             <div id="collapseShares" class="collapse" aria-labelledby="headingShares" data-parent="#formatAccordion">
                                 <div class="card-body">
-                                    <strong>Required Columns (Row 6 as header):</strong>
-                                    <ul>
+                                    <strong class="text-dark">Required Columns (Row 6 as header):</strong>
+                                    <ul class="text-dark">
                                         <li>Customer No.</li>
                                         <li>Account No.</li>
                                         <li>Product Code</li>
@@ -512,8 +535,8 @@
                             </div>
                             <div id="collapseCIF" class="collapse" aria-labelledby="headingCIF" data-parent="#formatAccordion">
                                 <div class="card-body">
-                                    <strong>Required Columns (Row 4 as header):</strong>
-                                    <ul>
+                                    <strong class="text-dark">Required Columns (Row 4 as header):</strong>
+                                    <ul class="text-dark">
                                         <li>Customer No.</li>
                                         <li>Customer Name (Lastname, Firstname)</li>
                                         <li>Birth Date</li>
@@ -541,8 +564,8 @@
                             </div>
                             <div id="collapseLoans" class="collapse" aria-labelledby="headingLoans" data-parent="#formatAccordion">
                                 <div class="card-body">
-                                    <strong>Required Columns (Row 1 as header):</strong>
-                                    <ul>
+                                    <strong class="text-dark">Required Columns (Row 1 as header):</strong>
+                                    <ul class="text-dark">
                                         <li>CID (Column A)</li>
                                         <li>Account No. (Column B)</li>
                                         <li>Start Date (Column H)</li>
@@ -556,7 +579,7 @@
                         </div>
                     </div>
                     <hr>
-                    <p class="mb-0"><strong>Note:</strong> For best results, always use the provided template or sample file if available. If you have questions, contact your system administrator.</p>
+                    <p class="mb-0 text-dark"><strong class="text-dark">Note:</strong> For best results, always use the provided template or sample file if available. If you have questions, contact your system administrator.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

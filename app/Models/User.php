@@ -26,7 +26,8 @@ class User extends Authenticatable
         'password',
         'role',
         'branch_id',
-        'status',
+        'billing_approval_status',
+        'special_billing_approval_status',
         'billing_period',
         'remittance_exported'
     ];

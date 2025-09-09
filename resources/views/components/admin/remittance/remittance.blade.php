@@ -96,7 +96,7 @@
                                 <!-- Information Note -->
                                 <div class="row mb-4">
                                     <div class="col-12 mb-3">
-                                        <div class="alert alert-info">
+                                        <div class="alert alert-info text-dark">
                                             <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Remittance
                                                 Upload Information</h6>
                                             <p class="mb-2"><strong>Current Billing Period:</strong>
@@ -310,7 +310,7 @@
                                                                     </div>
                                                                 @else
                                                                     <div class="mt-3 text-center">
-                                                                        <div class="alert alert-info mb-0">
+                                                                        <div class="alert alert-info mb-0 text-dark">
                                                                             <i class="fa fa-exclamation-triangle"></i>
                                                                             <strong>No Import Data Available</strong><br>
                                                                             <small>No remittance batches found for loans & savings in this billing period.</small>
@@ -427,7 +427,7 @@
                                                                     </div>
                                                                 @else
                                                                     <div class="mt-3 text-center">
-                                                                        <div class="alert alert-info mb-0">
+                                                                        <div class="alert alert-info mb-0 text-dark">
                                                                             <i class="fa fa-exclamation-triangle"></i>
                                                                             <strong>No Import Data Available</strong><br>
                                                                             <small>No remittance batches found for shares in this billing period.</small>
@@ -488,7 +488,7 @@
                                                     </div>
 
                                                     <!-- Warning Message -->
-                                                    <div class="alert alert-info alert-dismissible fade show mb-3">
+                                                    <div class="alert alert-info alert-dismissible fade show mb-3 text-dark">
                                                         <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                         <strong><i class="fa fa-exclamation-triangle"></i> Important:</strong>
                                                         <ul class="mb-0 mt-2">
@@ -562,7 +562,7 @@
                                                     </div>
 
                                                     <!-- Warning Message -->
-                                                    <div class="alert alert-info alert-dismissible fade show mb-3">
+                                                    <div class="alert alert-info alert-dismissible fade show mb-3 text-dark">
                                                         <button type="button" class="close" data-dismiss="alert">&times;</button>
                                                         <strong><i class="fa fa-exclamation-triangle"></i> Important:</strong>
                                                         <ul class="mb-0 mt-2">
@@ -953,7 +953,7 @@
     <!-- Forecast Upload Guide Pop-up -->
     <div id="forecastGuidePopup" class="position-fixed"
         style="bottom: 24px; right: 24px; z-index: 1055; min-width: 320px; max-width: 90vw;">
-        <div class="alert alert-info alert-dismissible fade show shadow" role="alert">
+        <div class="alert alert-info alert-dismissible fade show shadow text-dark" role="alert">
             <strong><i class="fa fa-info-circle"></i> Reminder:</strong> Please upload the <b>Installment Forecast</b>
             first before uploading any remittance files.<br>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">

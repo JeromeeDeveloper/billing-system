@@ -634,12 +634,12 @@ class BranchRemittanceController extends Controller
         try {
             $user = Auth::user();
 
-            if ($user->status !== 'pending') {
-                return redirect()->back()->with('error', 'Only users with pending status can approve special billing.');
+            if ($user->special_billing_approval_status !== 'pending') {
+                return redirect()->back()->with('error', 'Only users with pending special billing status can approve special billing.');
             }
 
-            // Update user status to approved
-            User::where('id', $user->id)->update(['status' => 'approved']);
+            // Update user special billing approval status to approved
+            User::where('id', $user->id)->update(['special_billing_approval_status' => 'approved']);
 
             Log::info("Special billing approved by branch user", [
                 'user_id' => $user->id,
@@ -663,8 +663,8 @@ class BranchRemittanceController extends Controller
         try {
             $user = Auth::user();
 
-            if ($user->status !== 'approved') {
-                return redirect()->back()->with('error', 'Only approved users can cancel special billing approval.');
+            if ($user->special_billing_approval_status !== 'approved') {
+                return redirect()->back()->with('error', 'Only users with approved special billing status can cancel special billing approval.');
             }
 
             // Check if special billing export has been generated
@@ -673,8 +673,8 @@ class BranchRemittanceController extends Controller
                 return redirect()->back()->with('error', 'Cannot cancel approval. Special billing export has already been generated for this period.');
             }
 
-            // Update user status to pending
-            User::where('id', $user->id)->update(['status' => 'pending']);
+            // Update user special billing approval status to pending
+            User::where('id', $user->id)->update(['special_billing_approval_status' => 'pending']);
 
             Log::info("Special billing approval cancelled by branch user", [
                 'user_id' => $user->id,

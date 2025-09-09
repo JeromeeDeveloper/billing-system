@@ -180,6 +180,12 @@ Route::get('/remittance/generate-export', [RemittanceController::class, 'generat
 Route::get('/special-billing', [SpecialBillingController::class, 'index'])->name('special-billing.index');
 Route::post('/special-billing/import', [SpecialBillingController::class, 'import'])->name('special-billing.import');
 Route::get('/special-billing/export', [SpecialBillingController::class, 'export'])->name('special-billing.export');
+Route::post('/special-billing/approve', [SpecialBillingController::class, 'approve'])->name('special-billing.approve');
+Route::post('/special-billing/cancel-approval', [SpecialBillingController::class, 'cancelApproval'])->name('special-billing.cancel-approval');
+
+// Admin billing approval routes
+Route::post('/admin/billing/approve', [BillingController::class, 'approve'])->name('admin.billing.approve');
+Route::post('/admin/billing/cancel-approval', [BillingController::class, 'cancelApproval'])->name('admin.billing.cancel-approval');
 
 Route::get('admin/remittance/export-preview', [\App\Http\Controllers\RemittanceController::class, 'exportPreview'])->name('remittance.exportPreview');
 Route::get('admin/remittance/export-comparison', [\App\Http\Controllers\RemittanceController::class, 'exportComparison'])->name('remittance.exportComparison');

@@ -85,11 +85,18 @@ class LoginController extends Controller
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|min:8',
             'role' => 'nullable|in:admin,branch,admin-msp',
-            'status' => 'nullable|in:pending,approved',
+            'billing_approval_status' => 'nullable|in:pending,approved',
+            'special_billing_approval_status' => 'nullable|in:pending,approved',
             'branch_id' => 'nullable|exists:branches,id'
         ]);
 
-        $data = $request->only(['name', 'email', 'role', 'status', 'branch_id']);
+        $data = $request->only(['name', 'email', 'role', 'branch_id']);
+
+        // Only set approval statuses for admin and branch roles
+        if (in_array($request->role, ['admin', 'branch'])) {
+            $data['billing_approval_status'] = $request->billing_approval_status;
+            $data['special_billing_approval_status'] = $request->special_billing_approval_status;
+        }
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
@@ -113,11 +120,10 @@ class LoginController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
             'role' => 'required|in:admin,branch,admin-msp',
-            'status' => 'required|in:pending,approved',
             'branch_id' => 'nullable|exists:branches,id'
         ]);
 
-        $data = $request->only(['name', 'email', 'role', 'status', 'branch_id']);
+        $data = $request->only(['name', 'email', 'role', 'branch_id']);
         $data['password'] = Hash::make($request->password);
 
         // Set billing period based on admin's current billing period
@@ -127,6 +133,12 @@ class LoginController extends Controller
             $adminBillingPeriod = Carbon::now()->format('Y-m-01');
         }
         $data['billing_period'] = $adminBillingPeriod;
+
+        // Set default approval statuses for admin and branch roles
+        if (in_array($request->role, ['admin', 'branch'])) {
+            $data['billing_approval_status'] = 'pending';
+            $data['special_billing_approval_status'] = 'pending';
+        }
 
         User::create($data);
 

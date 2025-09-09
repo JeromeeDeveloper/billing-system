@@ -102,13 +102,13 @@
                                     </span>
                                 </div>
                                 <div class="card-header-actions">
-                                    <a href="{{ $allBranchApproved ? route('billing.export.branch', ['billing_period' => now()->format('Y-m')]) : '#' }}"
-                                        class="btn btn-rounded btn-primary text-white {{ !$allBranchApproved ? 'disabled' : '' }}"
-                                        @if (!$allBranchApproved) onclick="Swal.fire('Action Blocked', 'All branch users must be approved before generating billing.', 'warning'); return false;" @endif>
+                                    <a href="{{ $allUsersApproved ? route('billing.export.branch', ['billing_period' => now()->format('Y-m')]) : '#' }}"
+                                        class="btn btn-rounded btn-primary text-white {{ !$allUsersApproved ? 'disabled' : '' }}"
+                                        @if (!$allUsersApproved) onclick="Swal.fire('Action Blocked', 'All admin and branch users must be approved before generating billing.', 'warning'); return false;" @endif>
                                         <span class="btn-icon-left text-primary"><i class="fa fa-file"></i></span>
                                         Generate Billing
                                     </a>
-                                    @if(Auth::user()->status === 'pending')
+                                    @if(Auth::user()->billing_approval_status === 'pending')
                                         <form action="{{ route('billing.approve') }}" method="POST" class="m-0">
                                             @csrf
                                             <button type="submit" class="btn btn-rounded btn-primary text-white">
@@ -117,7 +117,7 @@
                                             </button>
                                         </form>
                                     @endif
-                                    @if(Auth::user()->status === 'approved')
+                                    @if(Auth::user()->billing_approval_status === 'approved')
                                         <form action="{{ route('billing.cancel-approval') }}" method="POST" class="m-0" id="cancelApprovalForm">
                                             @csrf
                                             <button type="submit" class="btn btn-rounded btn-warning text-white {{ $hasBillingExportForPeriod ? 'disabled' : '' }}" @if($hasBillingExportForPeriod) disabled @endif>
@@ -137,9 +137,9 @@
                                     Billing has been generated for this period. Cancel approval is disabled.
                                 </div>
                             @endif
-                            @if (!$allBranchApproved)
+                            @if (!$allUsersApproved)
                                 <div class="alert alert-danger text-center small mb-0 mt-2">
-                                    * Not all branch users have approved yet.
+                                    * Not all admin and branch users have approved yet.
                                 </div>
                             @endif
                             <!-- Collapsible Information Note -->
