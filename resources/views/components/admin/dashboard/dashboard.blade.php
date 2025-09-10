@@ -358,27 +358,27 @@
           <div class="modal-body">
             <div class="text-center">
               <!-- Current Billing Period Display -->
-              <div class="alert alert-primary mb-4">
-                <h6 class="alert-heading"><i class="fa fa-calendar"></i> Current Billing Period</h6>
-                <h4 class="text-white mb-0">
+              <div class="alert text-dark mb-4">
+                <h6 class="alert-heading text-dark"><i class="fa fa-calendar"></i> Current Billing Period</h6>
+                <h4 class="text-dark mb-0">
                   {{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->format('F Y') : 'Not Set' }}
                 </h4>
                 {{-- <small class="text-muted">{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->format('Y-m-01') : '' }}</small> --}}
               </div>
 
               <!-- Next Billing Period Display -->
-              <div class="alert alert-primary mb-4">
-                <h6 class="alert-heading"><i class="fa fa-calendar-plus"></i> Next Billing Period</h6>
-                <h4 class="text-white mb-0">
+              <div class="alert text-dark mb-4">
+                <h6 class="alert-heading text-dark"><i class="fa fa-calendar-plus"></i> Next Billing Period</h6>
+                <h4 class="text-dark mb-0">
                   {{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->addMonth()->format('F Y') : 'Not Set' }}
                 </h4>
                 {{-- <small class="text-muted">{{ Auth::user()->billing_period ? \Carbon\Carbon::parse(Auth::user()->billing_period)->addMonth()->format('Y-m-01') : '' }}</small> --}}
               </div>
 
               <!-- Warning Messages -->
-              <div class="alert alert-primary">
-                <h6 class="alert-heading text-primary"><i class="fa fa-exclamation-triangle"></i> Important Warnings</h6>
-                <ul class="text-center mb-0 text-white">
+              <div class="alert text-dark">
+                <h6 class="alert-heading text-danger"><i class="fa fa-exclamation-triangle"></i> Important Warnings</h6>
+                <ul class="text-center mb-0 text-dark">
                   <li><strong>This will close the current billing period for <span class="text-danger">ALL USERS</span></strong></li>
                   <li><strong>All users will be moved to the next billing period</strong></li>
                   <li><strong>This action cannot be undone</strong></li>

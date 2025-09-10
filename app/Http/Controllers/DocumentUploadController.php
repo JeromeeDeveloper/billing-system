@@ -479,7 +479,7 @@ class DocumentUploadController extends Controller
             $isApproved = !$hasApprovedUsers; // Disabled if any admin/branch approved
         } elseif ($user->role === 'admin') {
             // Admin needs billing approval status to be pending to upload
-            $hasApprovedBranches = User::where('role', 'branch')
+            $hasApprovedBranches = User::whereIn('role', ['admin', 'branch'])
                 ->where('billing_approval_status', 'approved')
                 ->exists();
             $branchStatuses = User::where('role', 'branch')
@@ -490,7 +490,12 @@ class DocumentUploadController extends Controller
                     // If any user for the branch is approved, treat branch as approved
                     return $rows->contains(function ($r) { return $r->billing_approval_status === 'approved'; }) ? 'approved' : 'pending';
                 });
-            $isApproved = $user->billing_approval_status === 'pending' && !$hasApprovedUsers;
+            // Admin can upload if they are pending OR if they are the only approved user
+            $otherApprovedUsers = User::whereIn('role', ['admin', 'branch'])
+                ->where('billing_approval_status', 'approved')
+                ->where('id', '!=', $user->id)
+                ->exists();
+            $isApproved = !$otherApprovedUsers;
         } else {
             // For branch users, check their own billing approval status
             $isApproved = $user->billing_approval_status === 'pending' && !$hasApprovedUsers;

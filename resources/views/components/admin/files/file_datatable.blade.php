@@ -89,7 +89,7 @@
                                         // Determine if any admin or branch users are already approved
                                         $hasApprovedBranches = isset($hasApprovedBranches) ? $hasApprovedBranches : \App\Models\User::whereIn('role', ['admin', 'branch'])->where('billing_approval_status', 'approved')->exists();
                                     @endphp
-                                    <button type="button" class="btn btn-rounded btn-primary" @if($hasApprovedBranches) disabled title="Upload disabled: at least one admin or branch user is approved" style="pointer-events: none; opacity: 0.6; cursor: not-allowed;" @else data-toggle="modal" data-target="#exampleModalpopover" @endif>
+                                    <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal" data-target="#exampleModalpopover">
                                         <span class="btn-icon-left text-primary">
                                             <i class="fa fa-upload"></i>
                                         </span>
@@ -132,7 +132,7 @@
                                                         @php
                                                             $consolidatedDisabled = $hasApprovedBranches;
                                                         @endphp
-                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_consolidated" value="consolidated" {{ $consolidatedDisabled ? 'disabled' : 'checked' }}>
+                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_consolidated" value="consolidated" {{ $consolidatedDisabled ? 'disabled checked' : 'checked' }}>
                                                         <label class="form-check-label text-dark" for="forecast_consolidated">
                                                             <strong class="text-dark">Consolidated</strong> - Upload for all branches
                                                             @if($consolidatedDisabled)
@@ -141,39 +141,32 @@
                                                         </label>
                                                     </div>
                                                     <div class="form-check mb-2">
-                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_branch" value="branch" {{ $hasApprovedBranches ? 'disabled' : '' }}>
+                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_branch" value="branch">
                                                         <label class="form-check-label text-dark" for="forecast_branch">
                                                             <strong class="text-dark">Per Branch</strong> - Upload for specific branch only (shows as "Branch Forecast - [Branch Name]")
-                                                            @if($hasApprovedBranches)
-                                                                <span class="badge badge-warning ml-2">Disabled: at least one admin or branch user is approved</span>
-                                                            @endif
                                                         </label>
                                                     </div>
                                                     <div class="form-group" id="branch_selection_group" style="display: none;">
                                                         <label for="branch_id" class="font-weight-bold text-dark mb-2">Select Branch</label>
-                                                        <select class="form-control" id="branch_id" name="branch_id" {{ $hasApprovedBranches ? 'disabled' : '' }}>
+                                                        <select class="form-control" id="branch_id" name="branch_id">
                                                             <option value="">Select a branch...</option>
                                                             @php $branches = \App\Models\Branch::orderBy('name')->get(); @endphp
                                                             @foreach($branches as $branch)
                                                                 @php
                                                                     $branchUser = \App\Models\User::where('role', 'branch')->where('branch_id', $branch->id)->first();
                                                                     $branchApproved = $branchUser && $branchUser->billing_approval_status === 'approved';
-                                                                    $disabled = $hasApprovedBranches || $branchApproved;
+                                                                    $disabled = $branchApproved;
                                                                 @endphp
                                                                 <option value="{{ $branch->id }}" {{ $disabled ? 'disabled' : '' }}>
-                                                                    {{ $branch->name }} {{ $branchApproved ? '(Approved - disabled)' : ($hasApprovedBranches ? '(Disabled - someone approved)' : '') }}
+                                                                    {{ $branch->name }} {{ $branchApproved ? '(Approved - disabled)' : '' }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
-                                                        @if($hasApprovedBranches)
-                                                            <small class="text-muted">Branch selection is disabled because one or more admin or branch users have been approved.</small>
-                                                        @else
-                                                            <small class="text-muted">Branches marked as Approved are disabled and cannot be selected.</small>
-                                                        @endif
+                                                        <small class="text-muted">Branches marked as Approved are disabled and cannot be selected.</small>
                                                     </div>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="file"
-                                                            name="file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
+                                                            name="file" accept=".csv" required>
                                                         <label class="custom-file-label" for="file">Choose
                                                             file...</label>
                                                     </div>
@@ -184,7 +177,7 @@
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
-                                                            id="savings_file" name="savings_file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
+                                                            id="savings_file" name="savings_file" accept=".csv" required>
                                                         <label class="custom-file-label" for="savings_file">Choose
                                                             file...</label>
                                                     </div>
@@ -195,7 +188,7 @@
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="shares_file"
-                                                            name="shares_file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
+                                                            name="shares_file" accept=".csv" required>
                                                         <label class="custom-file-label" for="shares_file">Choose
                                                             file...</label>
                                                     </div>
@@ -206,7 +199,7 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input" id="cif_file"
-                                                            name="cif_file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
+                                                            name="cif_file" accept=".csv" required>
                                                         <label class="custom-file-label" for="cif_file">Choose
                                                             file...</label>
                                                     </div>
@@ -218,7 +211,7 @@
                                                     </label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
-                                                            id="loan_file" name="loan_file" accept=".csv" required {{ $hasApprovedBranches ? 'disabled' : '' }}>
+                                                            id="loan_file" name="loan_file" accept=".csv" required>
                                                         <label class="custom-file-label" for="loan_file">Choose
                                                             file...</label>
                                                     </div>
@@ -232,7 +225,7 @@
 
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary" {{ $hasApprovedBranches ? 'disabled' : '' }}>Upload</button>
+                                                <button type="submit" class="btn btn-primary">Upload</button>
                                             </div>
                                         </form>
                                     </div>
@@ -264,13 +257,7 @@
                                 </div>
                             @endif
 
-                            @if($hasApprovedBranches)
-                                <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                                    <i class="fa fa-exclamation-triangle me-2"></i>
-                                    <strong>Upload Disabled:</strong> File upload is currently disabled because one or more admin or branch users have been approved. Upload is only enabled when all admin and branch users are still in pending status.
-                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                </div>
-                            @endif
+
 
 
                             <div class="card-body">
@@ -390,7 +377,8 @@
             function toggleBranchSelection() {
                 if (forecastBranch.checked) {
                     branchSelectionGroup.style.display = 'block';
-                    branchSelect.required = true;
+                    // Only require selection if dropdown is enabled
+                    branchSelect.required = !branchSelect.disabled;
                 } else {
                     branchSelectionGroup.style.display = 'none';
                     branchSelect.required = false;
@@ -407,11 +395,13 @@
                 branchSelect.required = false;
                 branchSelect.value = '';
 
-                // Add a disabled message
-                var disabledMessage = document.createElement('div');
-                disabledMessage.className = 'alert alert-warning text-center small mb-2';
-                disabledMessage.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Both upload options are disabled because one or more admin or branch users have been approved.';
-                branchSelectionGroup.parentNode.insertBefore(disabledMessage, branchSelectionGroup);
+                // Add a disabled message if it doesn't already exist
+                if (!document.querySelector('.upload-disabled-message')) {
+                    var disabledMessage = document.createElement('div');
+                    disabledMessage.className = 'alert alert-warning text-center small mb-2 upload-disabled-message';
+                    disabledMessage.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Both upload options are disabled because one or more admin or branch users have been approved.';
+                    branchSelectionGroup.parentNode.insertBefore(disabledMessage, branchSelectionGroup);
+                }
             } else {
                 // Only add event listeners if not both disabled
                 forecastConsolidated.addEventListener('change', toggleBranchSelection);
