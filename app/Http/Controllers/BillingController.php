@@ -860,8 +860,31 @@ class BillingController extends Controller
             $updateData['original_interest_due'] = 0;
         }
 
-        \App\Models\LoanForecast::where('billing_period', $billingPeriod)
-            ->update($updateData);
+        $loanForecastQuery = \App\Models\LoanForecast::where('billing_period', $billingPeriod);
+        $affectedLoanForecasts = $loanForecastQuery->update($updateData);
+        Log::info('Close billing period - LoanForecasts updated (primary period)', [
+            'billing_period' => $billingPeriod,
+            'retain_dues' => $retainDues,
+            'affected' => $affectedLoanForecasts,
+        ]);
+
+        // Fallback: if retain dues is OFF and no rows updated for user's period,
+        // attempt to reset the most recent LoanForecast billing period (in case of period mismatch)
+        $fallbackBillingPeriod = null;
+        $fallbackAffected = 0;
+        if (!$retainDues && $affectedLoanForecasts === 0) {
+            $fallbackBillingPeriod = \App\Models\LoanForecast::max('billing_period');
+            if ($fallbackBillingPeriod && $fallbackBillingPeriod !== $billingPeriod) {
+                $fallbackAffected = \App\Models\LoanForecast::where('billing_period', $fallbackBillingPeriod)->update($updateData);
+                Log::warning('Close billing period - Fallback reset applied', [
+                    'fallback_billing_period' => $fallbackBillingPeriod,
+                    'retain_dues' => $retainDues,
+                    'affected' => $fallbackAffected,
+                ]);
+                // Reflect fallback in the main counter for response visibility
+                $affectedLoanForecasts = $fallbackAffected;
+            }
+        }
 
         // Savings reset (keep only specified fields)
         \App\Models\Saving::query()->update([
@@ -974,7 +997,9 @@ class BillingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Billing period closed and records reset for new period. You will be logged out.',
-            'logout' => true
+            'logout' => true,
+            'affectedLoanForecasts' => $affectedLoanForecasts,
+            'fallbackBillingPeriod' => $fallbackBillingPeriod,
         ]);
 
         } catch (\Exception $e) {

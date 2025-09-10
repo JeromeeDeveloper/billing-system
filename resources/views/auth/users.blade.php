@@ -267,33 +267,35 @@
                                                     <td>{{ $user->name }}</td>
                                                     <td>{{ $user->email }}</td>
                                                     <td>
-                                                        <span class="badge badge-{{ $user->role === 'admin' ? 'primary' : ($user->role === 'admin-msp' ? 'dark' : 'info') }}">
+                                                        <span class="text-black">
                                                             {{ $user->role === 'admin-msp' ? 'Admin-MSP' : ucfirst($user->role) }}
                                                         </span>
+
                                                     </td>
                                                     @if($user->role !== 'admin-msp')
-                                                        <td>
-                                                            <span class="badge badge-{{ $user->billing_approval_status === 'approved' ? 'success' : 'warning' }}">
-                                                                {{ ucfirst($user->billing_approval_status) }}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge badge-{{ $user->special_billing_approval_status === 'approved' ? 'success' : 'warning' }}">
-                                                                {{ ucfirst($user->special_billing_approval_status) }}
-                                                            </span>
-                                                        </td>
+                                                    <td>
+                                                        <span class="text-black">
+                                                            {{ ucfirst($user->billing_approval_status) }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="text-black">
+                                                            {{ ucfirst($user->special_billing_approval_status) }}
+                                                        </span>
+                                                    </td>
+
                                                     @else
                                                         <td>
-                                                            <span class="badge badge-info">N/A</span>
+                                                            <span class="badge">N/A</span>
                                                         </td>
                                                         <td>
-                                                            <span class="badge badge-info">N/A</span>
+                                                            <span class="badge">N/A</span>
                                                         </td>
                                                     @endif
                                                     @if($user->role === 'branch')
                                                         <td>{{ $user->branch ? $user->branch->name : 'No Branch' }}</td>
                                                     @else
-                                                        <td><span class="badge badge-info">N/A</span></td>
+                                                        <td><span class="badge">N/A</span></td>
                                                     @endif
                                                     <td>
                                                         <!-- Edit Button -->
