@@ -336,11 +336,21 @@ class RemittanceController extends Controller
             ->where('period', $billingPeriod)
             ->get()
             ->map(function ($report) {
+                // Get billing type from RemittanceBatch
+                $billingType = 'Regular'; // Default
+                $batch = RemittanceBatch::where('billing_period', $report->period)
+                    ->where('remittance_tag', $report->remittance_tag)
+                    ->first();
+                if ($batch) {
+                    $billingType = ucfirst($batch->billing_type);
+                }
+
                 return [
                     'cid' => $report->cid,
                     'member_name' => $report->member_name,
                     'remittance_type' => $report->remittance_type,
                     'remittance_tag' => $report->remittance_tag,
+                    'billing_type' => $billingType,
                     'remitted_loans' => $report->remitted_loans ?? 0,
                     'remitted_savings' => $report->remitted_savings ?? 0,
                     'remitted_shares' => $report->remitted_shares ?? 0,
@@ -362,6 +372,7 @@ class RemittanceController extends Controller
                         'member_name' => $preview->name,
                         'remittance_type' => $preview->remittance_type,
                         'remittance_tag' => 1, // Default to 1 for preview data
+                        'billing_type' => ucfirst($preview->billing_type ?? 'regular'), // Add billing type
                         'remitted_loans' => $preview->loans ?? 0,
                         'remitted_savings' => is_array($preview->savings) ? ($preview->savings['total'] ?? 0) : ($preview->savings ?? 0),
                         'remitted_shares' => $preview->share_amount ?? 0,
@@ -449,7 +460,7 @@ class RemittanceController extends Controller
 
             // Log the remittance tag for debugging
             $remittanceTag = $import->getRemittanceTag();
-            \Log::info("Processing remittance upload with tag: {$remittanceTag} for period: {$currentBillingPeriod}");
+            Log::info("Processing remittance upload with tag: {$remittanceTag} for period: {$currentBillingPeriod}");
 
             foreach ($results as $result) {
                 // Always store in preview (both matched and unmatched)
@@ -494,7 +505,7 @@ class RemittanceController extends Controller
 
                 if ($existingReport) {
                     // Log warning and skip if record already exists
-                    \Log::warning("Record already exists for CID: {$result['cid']}, Tag: {$remittanceTag} - skipping to prevent overwrite");
+                    Log::warning("Record already exists for CID: {$result['cid']}, Tag: {$remittanceTag} - skipping to prevent overwrite");
                     continue;
                 }
 
@@ -513,11 +524,11 @@ class RemittanceController extends Controller
             }
 
             // Log the results for debugging
-            \Log::info("Remittance upload completed - Tag: {$remittanceTag}, Matched: {$matchedCount}, Unmatched: {$unmatchedCount}");
+            Log::info("Remittance upload completed - Tag: {$remittanceTag}, Matched: {$matchedCount}, Unmatched: {$unmatchedCount}");
 
             // Warn if no members were matched
             if ($matchedCount == 0) {
-                \Log::warning("No members were matched in remittance upload - Tag: {$remittanceTag}. This will result in empty remittance data.");
+                Log::warning("No members were matched in remittance upload - Tag: {$remittanceTag}. This will result in empty remittance data.");
             }
 
             // Don't rollback - allow import to complete with both matched and unmatched

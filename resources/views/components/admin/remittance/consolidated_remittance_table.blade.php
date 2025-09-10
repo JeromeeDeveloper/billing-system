@@ -8,11 +8,7 @@
             <div class="d-flex gap-3 align-items-center">
                 <div class="d-flex gap-2">
 					<select id="sectionFilter" class="form-select form-select-sm border-0 bg-white bg-opacity-90" style="width: 160px; display: none;">
-
 						<option value="summary">Summary</option>
-						{{-- <option value="loans">Loans</option>
-						<option value="savings">Savings</option>
-						<option value="shares">Shares</option> --}}
                     </select>
                     <input type="text" id="searchFilter" class="form-control form-control-sm border-0 bg-white bg-opacity-90" placeholder="Search members..." style="width: 180px;">
                 </div>
@@ -123,10 +119,13 @@ document.addEventListener('DOMContentLoaded', function() {
 					const totalShares = memberReports.filter(r => r.remittance_type === 'shares').reduce((sum, r) => sum + parseFloat(r.remitted_shares || 0), 0);
 					const totalRemitted = totalLoans + totalSavings + totalShares;
 
-					console.log(`Member ${cid}: loans=${totalLoans}, savings=${totalSavings}, shares=${totalShares}, total=${totalRemitted}`);
+					// Get billing type from the first report (they should all be the same for a member)
+					const billingType = memberReports.length > 0 ? (memberReports[0].billing_type || 'Regular') : 'Regular';
+
+					console.log(`Member ${cid}: loans=${totalLoans}, savings=${totalSavings}, shares=${totalShares}, total=${totalRemitted}, type=${billingType}`);
 
 					if (totalRemitted > 0) {
-						rows.push([cid, memberName, 'Total', totalLoans, totalSavings, totalShares, totalRemitted]);
+						rows.push([cid, memberName, billingType, totalLoans, totalSavings, totalShares, totalRemitted]);
 					}
 					break;
 
