@@ -116,7 +116,7 @@
                                                 <th>Name</th>
                                                 <th>Code</th>
                                                 <th>Members</th>
-                                                <th>Status</th>
+                                                {{-- <th>Status</th> --}}
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -129,11 +129,11 @@
                                                     <td>{{ $branch->name }}</td>
                                                     <td>{{ $branch->code }}</td>
                                                     <td>{{ $branch->members->count() }}</td>
-                                                    <td>
+                                                    {{-- <td>
                                                         <span class="badge badge-{{ $branch->status === 'approved' ? 'success' : ($branch->status === 'N/A' ? 'secondary' : 'warning') }}">
                                                             {{ $branch->status }}
                                                         </span>
-                                                    </td>
+                                                    </td> --}}
                                                     <td>
                                                         <div class="action-buttons">
 
@@ -165,7 +165,7 @@
                                                 <th>Name</th>
                                                 <th>Code</th>
                                                 <th>Members</th>
-                                                <th>Status</th>
+                                               
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

@@ -816,8 +816,8 @@ class BillingController extends Controller
     public function closeBillingPeriod(Request $request)
     {
         try {
-            // Only allow admin
-            if (!Auth::user() || Auth::user()->role !== 'admin') {
+            // Only allow admin and admin-msp
+            if (!Auth::user() || !in_array(Auth::user()->role, ['admin', 'admin-msp'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Access denied. Only administrators can close billing periods.'
@@ -841,10 +841,6 @@ class BillingController extends Controller
             'open_date' => null,
             'maturity_date' => null,
             'amortization_due_date' => null,
-            'principal_due' => 0,
-            'interest_due' => 0,
-            'original_principal_due' => 0,
-            'original_interest_due' => 0,
             'principal' => null,
             'interest' => null,
             'principal_due_status' => 'unpaid',
@@ -854,10 +850,14 @@ class BillingController extends Controller
             'total_billed' => null,
         ];
 
-        // Only reset total_due and original_total_due if retain_dues is false
+        // Only reset dues if retain_dues is false
         if (!$retainDues) {
             $updateData['total_due'] = 0;
             $updateData['original_total_due'] = 0;
+            $updateData['principal_due'] = 0;
+            $updateData['interest_due'] = 0;
+            $updateData['original_principal_due'] = 0;
+            $updateData['original_interest_due'] = 0;
         }
 
         \App\Models\LoanForecast::where('billing_period', $billingPeriod)
@@ -1023,15 +1023,15 @@ class BillingController extends Controller
             \App\Models\BillingSetting::setBoolean(
                 'retain_dues_on_billing_close',
                 $newValue,
-                'Whether to retain total_due and original_total_due values when closing billing period'
+                'Whether to retain total_due, principal_due, interest_due and their original values when closing billing period'
             );
 
             return response()->json([
                 'success' => true,
                 'retain_dues' => $newValue,
                 'message' => $newValue ?
-                    'Dues will be retained when closing billing period' :
-                    'Dues will be reset when closing billing period'
+                    'All dues (total, principal, interest) will be retained when closing billing period' :
+                    'All dues (total, principal, interest) will be reset when closing billing period'
             ]);
 
         } catch (\Exception $e) {

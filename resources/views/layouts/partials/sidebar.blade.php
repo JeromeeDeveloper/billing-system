@@ -282,7 +282,7 @@ use App\Models\BillingSetting;
                         <li><a href="{{ route('billing.exportMemberDeductionDetails') }}">Member Deduction Details</a></li>
 
                         <li class="nav-label">Remittance</li>
-                        <li><a href="{{ route('remittance.exportPerRemittance') }}">Full Per Remittance Report</a></li>
+                        {{-- <li><a href="{{ route('remittance.exportPerRemittance') }}">Full Per Remittance Report</a></li> --}}
                         <li><a href="{{ route('remittance.exportPerRemittanceSummaryRegular') }}">Summary (Regular)</a></li>
                         <li><a href="{{ route('remittance.exportPerRemittanceSummarySpecial') }}">Summary (Special)</a></li>
                         <li><a href="{{ route('remittance.exportPerRemittanceLoans') }}">Loans Breakdown</a></li>

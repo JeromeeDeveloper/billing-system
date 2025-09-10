@@ -69,8 +69,14 @@ class PerRemittanceSummaryExport implements FromArray, WithHeadings, WithTitle, 
 		}
 
 		// Filter by remittance tags if billing type is specified
-		if ($this->billingType && !empty($remittanceTags)) {
-			$query->whereIn('remittance_tag', $remittanceTags);
+		if ($this->billingType) {
+			if (!empty($remittanceTags)) {
+				$query->whereIn('remittance_tag', $remittanceTags);
+			} else {
+				// If billing type is specified but no remittance tags exist for that type,
+				// return empty results (no data for this billing type)
+				$query->where('remittance_tag', -1); // This will return no results
+			}
 		}
 
 		$reports = $query->get();
