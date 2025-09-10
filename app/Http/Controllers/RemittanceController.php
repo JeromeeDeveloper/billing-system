@@ -447,6 +447,10 @@ class RemittanceController extends Controller
             $matchedCount = 0;
             $unmatchedCount = 0;
 
+            // Log the remittance tag for debugging
+            $remittanceTag = $import->getRemittanceTag();
+            \Log::info("Processing remittance upload with tag: {$remittanceTag} for period: {$currentBillingPeriod}");
+
             foreach ($results as $result) {
                 // Always store in preview (both matched and unmatched)
                 RemittancePreview::create([
@@ -480,22 +484,40 @@ class RemittanceController extends Controller
                 // Get the remittance tag from the import
                 $remittanceTag = $import->getRemittanceTag();
 
-                // Create or update remittance report with per-remittance tracking
-                $report = RemittanceReport::firstOrNew([
+                // Check if record already exists for this specific combination
+                $existingReport = RemittanceReport::where([
                     'cid' => $result['cid'],
                     'period' => $currentBillingPeriod,
                     'remittance_tag' => $remittanceTag,
                     'remittance_type' => 'loans_savings',
-                ]);
+                ])->first();
+
+                if ($existingReport) {
+                    // Log warning and skip if record already exists
+                    \Log::warning("Record already exists for CID: {$result['cid']}, Tag: {$remittanceTag} - skipping to prevent overwrite");
+                    continue;
+                }
+
+                // Create new remittance report record
+                $report = new RemittanceReport();
+                $report->cid = $result['cid'];
+                $report->period = $currentBillingPeriod;
+                $report->remittance_tag = $remittanceTag;
+                $report->remittance_type = 'loans_savings';
                 $report->member_name = $result['name'];
-                $report->remitted_loans = $result['loans']; // Use actual amount, don't accumulate
-                $report->remitted_savings = $result['savings_total'] ?? 0; // Use actual amount, don't accumulate
+                $report->remitted_loans = $result['loans'];
+                $report->remitted_savings = $result['savings_total'] ?? 0;
                 $report->remitted_shares = 0; // Shares are handled separately
-
-                // Use billed amount from import result
                 $report->billed_amount = $result['billed_amount'] ?? 0;
-
                 $report->save();
+            }
+
+            // Log the results for debugging
+            \Log::info("Remittance upload completed - Tag: {$remittanceTag}, Matched: {$matchedCount}, Unmatched: {$unmatchedCount}");
+
+            // Warn if no members were matched
+            if ($matchedCount == 0) {
+                \Log::warning("No members were matched in remittance upload - Tag: {$remittanceTag}. This will result in empty remittance data.");
             }
 
             // Don't rollback - allow import to complete with both matched and unmatched

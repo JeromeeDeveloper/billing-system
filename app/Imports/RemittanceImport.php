@@ -399,6 +399,9 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                 // Always include distributionDetails in the result for export
                 $result['savings_distribution'] = $distributionDetails;
 
+                // Update the result to include excess loan payment in savings_total
+                $result['savings_total'] = (float)($savingsTotal ?? 0) + (float)($remainingPayment ?? 0);
+
                 // Update aggregated RemittanceReport to include savings excess
                 if ($member) {
                     $cidValue = $member->cid;
@@ -408,17 +411,22 @@ class RemittanceImport implements ToCollection, WithHeadingRow
                     $report = RemittanceReport::firstOrNew([
                         'cid' => $cidValue,
                         'period' => $this->billingPeriod,
+                        'remittance_tag' => $this->remittance_tag,
                         'remittance_type' => 'loans_savings',
                     ]);
-                    $report->member_name = $report->member_name ?: trim(($member->fname ?? '') . ' ' . ($member->lname ?? ''));
-                    $report->remitted_loans = (float)($report->remitted_loans ?? 0) + $remittedLoans;
-                    $report->remitted_savings = (float)($report->remitted_savings ?? 0) + $remittedSavings;
-                    $report->remitted_shares = (float)($report->remitted_shares ?? 0);
-                    $report->billed_amount = (float)($report->billed_amount ?? 0) + (float)($billedAmount ?? 0);
-                    if ($this->remittance_tag) {
+                    // Only update if this is a new record (not existing)
+                    if (!$report->exists) {
+                        $report->member_name = trim(($member->fname ?? '') . ' ' . ($member->lname ?? ''));
+                        $report->remitted_loans = $remittedLoans;
+                        $report->remitted_savings = $remittedSavings;
+                        $report->remitted_shares = 0;
+                        $report->billed_amount = $billedAmount ?? 0;
                         $report->remittance_tag = $this->remittance_tag;
+                        $report->save();
+                    } else {
+                        // Log if we're trying to overwrite existing data
+                        \Log::warning("Attempted to overwrite existing remittance data in RemittanceImport for CID: {$cidValue}, Tag: {$this->remittance_tag}");
                     }
-                    $report->save();
                 }
 
                 DB::commit();
