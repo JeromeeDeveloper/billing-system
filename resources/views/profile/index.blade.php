@@ -131,12 +131,7 @@
                                                 {{ ucfirst($user->role) }}
                                             </span>
                                         </li>
-                                        <li class="list-group-item">
-                                            <strong>Status:</strong>
-                                            <span class="badge badge-{{ $user->status === 'approved' ? 'success' : 'warning' }}">
-                                                {{ ucfirst($user->status) }}
-                                            </span>
-                                        </li>
+                                        
                                         @if($user->branch)
                                             <li class="list-group-item">
                                                 <strong>Branch:</strong> {{ $user->branch->name }}

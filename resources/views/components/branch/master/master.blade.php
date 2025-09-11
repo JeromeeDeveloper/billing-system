@@ -247,12 +247,12 @@
                                         <a href="#" class="btn btn-primary d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
                                             <i class="fa fa-plus-circle me-2 mr-2"></i> <span class="d-none d-md-inline">Add New Member</span>
                                         </a>
-                                        <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-outline-primary d-flex align-items-center px-3 mr-2">
+                                        {{-- <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-outline-primary d-flex align-items-center px-3 mr-2">
                                             <i class="fa fa-download me-2 mr-2"></i> <span class="d-none d-md-inline">Export Details (CSV)</span>
                                         </a>
                                         <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-outline-primary d-flex align-items-center px-3 mr-2">
                                             <i class="fa fa-exclamation-triangle me-2"></i> <span class="d-none d-md-inline">No Regular Savings (Excel)</span>
-                                        </a>
+                                        </a> --}}
                                     </div>
                                 </div>
                             </div>

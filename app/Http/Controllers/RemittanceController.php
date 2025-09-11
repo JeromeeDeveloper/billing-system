@@ -436,9 +436,35 @@ class RemittanceController extends Controller
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;
 
-            // Process forecast file first
+            // Ensure tmp_uploads directory exists for forecast file
+            $tmpUploadsDir = storage_path('app/tmp_uploads');
+            if (!file_exists($tmpUploadsDir)) {
+                mkdir($tmpUploadsDir, 0777, true);
+            }
+
+            // Process forecast file first - save before processing (same logic as file datatable)
+            $forecastFile = $request->file('forecast_file');
+            $forecastTempPath = $forecastFile->storeAs('tmp_uploads', uniqid() . '-' . $forecastFile->getClientOriginalName(), 'local');
+            $forecastFullTempPath = storage_path('app/' . $forecastTempPath);
+
+            // Debug: Check if forecast file was actually saved
+            if (!file_exists($forecastFullTempPath)) {
+                throw new \Exception("Forecast file was not saved to expected location: {$forecastFullTempPath}. Temp path: {$forecastTempPath}");
+            }
+
+            $forecastImportFilePath = $forecastFullTempPath;
+            // If CSV, clean and re-save as UTF-8 CSV
+            $forecastExtension = strtolower($forecastFile->getClientOriginalExtension());
+            if ($forecastExtension === 'csv') {
+                $forecastImportFilePath = $this->cleanCsvFile($forecastFullTempPath);
+            }
+
+            // Process forecast file from saved location
             $forecastImport = new \App\Imports\LoanForecastImport($currentBillingPeriod);
-            Excel::import($forecastImport, $request->file('forecast_file'));
+            Excel::import($forecastImport, $forecastImportFilePath);
+
+            // Clean up forecast temporary files
+            $this->cleanupTempFiles($forecastFullTempPath, $forecastImportFilePath);
 
             // Then process the remittance file
             $import = new RemittanceImport($currentBillingPeriod, $billingType);
@@ -563,8 +589,50 @@ class RemittanceController extends Controller
                 ->with('success', $successMessage);
         } catch (\Exception $e) {
             DB::rollBack();
+            // Clean up forecast temporary files even if import fails
+            if (isset($forecastFullTempPath) && isset($forecastImportFilePath)) {
+                $this->cleanupTempFiles($forecastFullTempPath, $forecastImportFilePath);
+            }
             return redirect()->back()
                 ->with('error', 'Error processing file: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Clean CSV file and re-save as UTF-8 CSV
+     */
+    private function cleanCsvFile($filePath)
+    {
+        $content = file_get_contents($filePath);
+
+        // Detect encoding
+        $encoding = mb_detect_encoding($content, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
+
+        if ($encoding && $encoding !== 'UTF-8') {
+            $content = mb_convert_encoding($content, 'UTF-8', $encoding);
+        }
+
+        // Clean up any BOM or special characters
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+
+        // Re-save as clean UTF-8 CSV
+        $cleanPath = str_replace('.csv', '_clean.csv', $filePath);
+        file_put_contents($cleanPath, $content);
+
+        return $cleanPath;
+    }
+
+    /**
+     * Clean up temporary files
+     */
+    private function cleanupTempFiles($originalPath, $processedPath = null)
+    {
+        if (file_exists($originalPath)) {
+            unlink($originalPath);
+        }
+
+        if ($processedPath && $processedPath !== $originalPath && file_exists($processedPath)) {
+            unlink($processedPath);
         }
     }
 
@@ -584,6 +652,30 @@ class RemittanceController extends Controller
 
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;
+
+            // Process forecast file first - save before processing (same logic as file datatable)
+            $forecastFile = $request->file('forecast_file');
+            $forecastTempPath = $forecastFile->storeAs('tmp_uploads', uniqid() . '-' . $forecastFile->getClientOriginalName(), 'local');
+            $forecastFullTempPath = storage_path('app/' . $forecastTempPath);
+
+            // Debug: Check if forecast file was actually saved
+            if (!file_exists($forecastFullTempPath)) {
+                throw new \Exception("Forecast file was not saved to expected location: {$forecastFullTempPath}. Temp path: {$forecastTempPath}");
+            }
+
+            $forecastImportFilePath = $forecastFullTempPath;
+            // If CSV, clean and re-save as UTF-8 CSV
+            $forecastExtension = strtolower($forecastFile->getClientOriginalExtension());
+            if ($forecastExtension === 'csv') {
+                $forecastImportFilePath = $this->cleanCsvFile($forecastFullTempPath);
+            }
+
+            // Process forecast file from saved location
+            $forecastImport = new \App\Imports\LoanForecastImport($currentBillingPeriod);
+            Excel::import($forecastImport, $forecastImportFilePath);
+
+            // Clean up forecast temporary files
+            $this->cleanupTempFiles($forecastFullTempPath, $forecastImportFilePath);
 
             $import = new ShareRemittanceImport($currentBillingPeriod);
             Excel::import($import, $request->file('file'));
@@ -674,6 +766,10 @@ class RemittanceController extends Controller
                 ->with('success', $successMessage);
         } catch (\Exception $e) {
             DB::rollBack();
+            // Clean up forecast temporary files even if import fails
+            if (isset($forecastFullTempPath) && isset($forecastImportFilePath)) {
+                $this->cleanupTempFiles($forecastFullTempPath, $forecastImportFilePath);
+            }
             return redirect()->back()
                 ->with('error', 'Error processing share remittance file: ' . $e->getMessage());
         }

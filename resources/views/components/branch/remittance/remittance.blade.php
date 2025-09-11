@@ -415,8 +415,8 @@
                                                                     <div class="mt-3 text-center">
                                                                         <div class="alert alert-info mb-0">
                                                                             <i class="fa fa-exclamation-triangle"></i>
-                                                                            <strong>No Import Data Available</strong><br>
-                                                                            <small>No remittance batches found for loans & savings in this billing period.</small>
+                                                                            <strong class="text-dark">No Import Data Available</strong><br>
+                                                                            <small class="text-dark">No remittance batches found for loans & savings in this billing period.</small>
                                                                         </div>
                                                                     </div>
                                                                 @endif
@@ -573,8 +573,8 @@
                                                                     <div class="mt-3 text-center">
                                                                         <div class="alert alert-info mb-0">
                                                                             <i class="fa fa-exclamation-triangle"></i>
-                                                                            <strong>No Import Data Available</strong><br>
-                                                                            <small>No remittance batches found for shares in this billing period.</small>
+                                                                            <strong class="text-dark">No Import Data Available</strong><br>
+                                                                            <small class="text-dark">No remittance batches found for shares in this billing period.</small>
                                                                         </div>
                                                                     </div>
                                                                 @endif
@@ -684,7 +684,7 @@
                                 </div>
 
                                 <!-- Reports Section -->
-                                <div class="row mt-4">
+                                {{-- <div class="row mt-4">
                                     <div class="col-12">
                                         <div class="card border-0 shadow-sm">
                                             <div class="card-header bg-gradient-info text-white">
@@ -751,7 +751,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> --}}
                                     </div>
                                 </div>
                             </div>

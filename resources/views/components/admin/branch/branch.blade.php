@@ -138,13 +138,13 @@
                                                         <div class="action-buttons">
 
                                                                <!-- Edit Button -->
-                                                            <button class="btn btn-rounded btn-primary" data-toggle="modal"
+                                                            <button class="btn btn-rounded btn-info" data-toggle="modal"
                                                                 data-target="#editModal" data-id="{{ $branch->id }}"
                                                                 data-name="{{ $branch->name }}"
                                                                 data-code="{{ $branch->code }}">Edit</button>
 
                                                             <!-- View Button -->
-                                                            <button class="btn btn-rounded btn-info" data-toggle="modal"
+                                                            <button class="btn btn-rounded btn-primary" data-toggle="modal"
                                                                 data-target="#viewModal" data-id="{{ $branch->id }}"
                                                                 data-name="{{ $branch->name }}"
                                                                 data-code="{{ $branch->code }}"
@@ -165,7 +165,7 @@
                                                 <th>Name</th>
                                                 <th>Code</th>
                                                 <th>Members</th>
-                                               
+
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>
