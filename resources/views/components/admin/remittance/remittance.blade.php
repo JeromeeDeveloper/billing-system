@@ -951,7 +951,7 @@
     </div>
 
     <!-- Forecast Upload Guide Pop-up -->
-    <div id="forecastGuidePopup" class="position-fixed"
+    {{-- <div id="forecastGuidePopup" class="position-fixed"
         style="bottom: 24px; right: 24px; z-index: 1055; min-width: 320px; max-width: 90vw;">
         <div class="alert alert-info alert-dismissible fade show shadow text-dark" role="alert">
             <strong><i class="fa fa-info-circle"></i> Reminder:</strong> Please upload the <b>Installment Forecast</b>
@@ -960,7 +960,7 @@
                 <span aria-hidden="true">&times;</span>
             </button>
         </div>
-    </div>
+    </div> --}}
 
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
