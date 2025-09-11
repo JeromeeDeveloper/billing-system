@@ -202,12 +202,13 @@
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">Member Tagging</label>
-                                                    <select class="form-control" name="member_tagging">
+                                                    <select class="form-control" name="member_tagging" disabled>
                                                         <option value="New" selected>New</option>
-                                                        <option value="PGB">PGB</option>
                                                     </select>
                                                 </div>
                                             </div>
+                                            <input type="hidden" name="member_tagging" value="New">
+
 
                                             <div class="col-md-12">
                                                 <div class="form-group">
@@ -251,7 +252,7 @@
                                     </div>
                                     <div class="action-bar d-flex flex-wrap flex-md-nowrap gap-2 justify-content-center align-items-center p-2 rounded shadow-sm mt-2 w-100" style="background: #f8f9fa;">
                                         <a href="#" class="btn btn-primary d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
-                                            <i class="fa fa-plus-circle me-2"></i><span class="d-none d-md-inline"> Add New Member</span>
+                                            <i class="fa fa-plus-circle p-1"></i><span class="d-none d-md-inline"> Add New Member</span>
                                         </a>
 
                                     </div>
