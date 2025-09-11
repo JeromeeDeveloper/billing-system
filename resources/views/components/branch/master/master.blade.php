@@ -324,7 +324,7 @@
                                                         </button>
 
 
-                                                        <button type="button" class="btn btn-rounded btn-primary"
+                                                        <button type="button" class="btn btn-rounded btn-info"
                                                             data-toggle="modal" data-target="#viewModal"
                                                             data-fname="{{ $item->member->fname }}"
                                                             data-lname="{{ $item->member->lname }}"
@@ -672,15 +672,7 @@
                                     border-radius: 0.375rem;
                                 }
 
-                                .btn-primary {
-                                    background-color: #3498db;
-                                    border-color: #3498db;
-                                }
 
-                                .btn-primary:hover {
-                                    background-color: #2980b9;
-                                    border-color: #2980b9;
-                                }
 
                                 .modal-content {
                                     border-radius: 0.5rem;

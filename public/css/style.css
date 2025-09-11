@@ -2013,8 +2013,8 @@ fieldset:disabled a.btn {
 
 .btn-primary {
   color: #fff;
-  background-color: #593bdb;
-  border-color: #593bdb; }
+  background-color: #673BB7;
+  border-color: #673BB7; }
   .btn-primary:hover {
     color: #fff;
     background-color: #4425cb;
@@ -16706,7 +16706,7 @@ button {
   border-top: none; }
 
 .table .thead-primary th {
-  background-color: #593bdb;
+  background-color: #673bb7;
   color: #fff; }
 
 .table.primary-table-bordered {
@@ -19482,4 +19482,7 @@ h5.member-profile {
     justify-content: space-between;
     align-items: center;
     padding: 0 15px;
+}
+a.brand-logo {
+    background: white;
 }

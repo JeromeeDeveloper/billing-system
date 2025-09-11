@@ -665,17 +665,6 @@
                                     padding: 0.5rem 1rem;
                                     border-radius: 0.375rem;
                                 }
-
-                                .btn-primary {
-                                    background-color: #3498db;
-                                    border-color: #3498db;
-                                }
-
-                                .btn-primary:hover {
-                                    background-color: #2980b9;
-                                    border-color: #2980b9;
-                                }
-
                                 .modal-content {
                                     border-radius: 0.5rem;
                                     overflow: hidden;

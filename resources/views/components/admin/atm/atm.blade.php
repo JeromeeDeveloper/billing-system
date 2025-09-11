@@ -1005,15 +1005,8 @@
                                         font-weight: 500;
                                     }
 
-                                    .btn-primary {
-                                        background: linear-gradient(45deg, #007bff, #0056b3);
-                                        border: none;
-                                    }
 
-                                    .btn-primary:hover {
-                                        background: linear-gradient(45deg, #0056b3, #004085);
-                                        transform: translateY(-1px);
-                                    }
+
 
                                     .btn-secondary {
                                         background: linear-gradient(45deg, #6c757d, #545b62);

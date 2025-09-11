@@ -194,20 +194,7 @@
                             </div> --}}
                             <div class="card-body">
                                 <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible show mb-4">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Branch Remittance Flow & User Guide</h5>
-                                    <ol class="mb-2">
-                                        <li><strong>Export Only:</strong> Branch users can only export collection files for loans/savings and shares for their branch.</li>
-                                        <li><strong>Preview:</strong> Preview remittance data filtered to your branch before exporting.</li>
-                                        <li><strong>Format:</strong> Collection files use the same format and logic as admin exports.</li>
-                                    </ol>
-                                    <ul class="mb-2">
-                                        <li><strong>Branch-Specific:</strong> All data and exports are limited to your branch's members.</li>
-                                        <li><strong>History:</strong> View and download previous remittance exports for your branch.</li>
-                                    </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> Branch users cannot upload remittance data. All exports are restricted to your branch's members only.</small></p>
-                                </div>
+
 
                                 @if (session('success'))
                                     <div class="alert alert-success alert-dismissible fade show">
@@ -227,7 +214,7 @@
 
 
                                 <!-- Current Billing Period Display -->
-                                <div class="alert alert-info alert-dismissible show mb-4">
+                                {{-- <div class="alert alert-info alert-dismissible show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h6><i class="fa fa-calendar"></i> Current Billing Period</h6>
                                     <p class="mb-0">
@@ -243,7 +230,7 @@
                                         <i class="fa fa-info-circle"></i>
                                         Remittance data will be filtered and exported only for this billing period.
                                     </p>
-                                </div>
+                                </div> --}}
 
                                                                 <!-- Collection Monitoring Dashboard -->
                                 <div class="row mb-4">

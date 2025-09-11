@@ -40,6 +40,8 @@
                                     $userHasExported = $exportStatuses->get('special_billing') && !$exportStatuses->get('special_billing')->is_enabled;
                                     $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && $allBranchUsersApproved && !$anyBranchUsersPending && !$userHasExported;
                                 @endphp
+
+                                <div class="d-flex gap-2">
                                 <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export') : 'javascript:void(0);' }}"
                                    class="btn btn-rounded btn-primary text-white {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
                                    onclick="{{ $canExport && $hasSpecialBillingData ? '' : 'void(0)' }}">
@@ -67,6 +69,7 @@
                                         </form>
                                     @endif
                                 @endif
+                            </div>
                             </div>
 
                             <!-- Disabled Messages -->
@@ -107,7 +110,7 @@
                             @endif
                             <div class="card-body">
                                 <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                {{-- <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle text-dark"></i> Special Billing Flow & User Guide (Admin)</h5>
                                     <ol class="mb-2 text-dark">
@@ -120,7 +123,7 @@
                                         <li><strong>File Requirements:</strong> Ensure files meet the required format and headers before uploading.</li>
 
                                     </ul>
-                                </div>
+                                </div> --}}
 
                                 @if (session('success'))
                                     <div class="alert alert-success alert-dismissible fade show">

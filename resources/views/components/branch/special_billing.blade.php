@@ -19,7 +19,7 @@
                 <div class="row page-titles mx-0 mb-3">
                     <div class="col-sm-6 p-md-0">
                         <div class="welcome-text">
-                            <h4>Special Billing (Branch)</h4>
+                            <h4>Special Billing</h4>
                             <span class="ml-1">View and Export Special Billing Data for Your Branch</span>
                         </div>
                     </div>
@@ -35,7 +35,7 @@
                         <div class="card">
                             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-2">
                                 <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
-                                    <h4 class="card-title mb-0 me-3">Special Billing Data (Branch)</h4>
+                                    <h4 class="card-title mb-0 me-3">Special Billing Data</h4>
                                     <span class="badge badge-{{ $specialBillingApprovalStatus === 'approved' ? 'success' : 'warning' }}">
                                         <i class="fa fa-{{ $specialBillingApprovalStatus === 'approved' ? 'check-circle' : 'clock' }}"></i>
                                         Status: {{ ucfirst($specialBillingApprovalStatus) }}
@@ -93,50 +93,50 @@
                                 </div>
                             @endif
                             @if(!$hasSpecialBillingData)
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * No special billing data available for this period.
                                 </div>
                             @elseif($userHasExported)
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * You have already exported for this billing period.
                                 </div>
                             @elseif(!$specialBillingEnabled)
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * Already exported. Wait for next period to enable.
                                 </div>
                             @elseif($anyBranchUsersPending)
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * Some branch users have pending status.
                                 </div>
                             @elseif($noBranch)
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * Some members have no branch assigned.
                                 </div>
                             @elseif($noRegularSavings)
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * Some members have no regular savings.
                                 </div>
                             @elseif($notAllApproved)
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * Some members are not approved.
                                 </div>
                             @elseif(!$userIsApproved)
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * Your account is not approved.
                                 </div>
                             @elseif(!$allBranchUsersApproved)
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * Not all branch users are approved.
                                 </div>
                             @elseif($specialBillingApprovalStatus !== 'approved')
-                                <div class="alert alert-warning text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * Special billing must be approved first.
                                 </div>
                             @endif
 
                             <div class="card-body">
                                 <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                {{-- <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                     <h5><i class="fa fa-info-circle"></i> Branch Special Billing Flow & User Guide</h5>
                                     <ol class="mb-2">
@@ -146,7 +146,7 @@
                                         <li><strong>Filtered Data:</strong> All data and exports are limited to your branch's members.</li>
                                     </ol>
                                     <p class="mb-0"><small><strong>Note:</strong> Approval is required before exporting. Once exported, approval cannot be cancelled.</small></p>
-                                </div>
+                                </div> --}}
 
                                 @if (session('success'))
                                     <div class="alert alert-success alert-dismissible fade show">

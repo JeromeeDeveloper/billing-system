@@ -291,6 +291,10 @@ use App\Models\BillingSetting;
                         <li><a href="{{ route('branchRemittance.exportConsolidated') }}">Member Not Processed</a></li>
                         <li><a href="{{ route('branch.remittance.exportPerRemittanceSummaryRegular') }}">Summary (Regular)</a></li>
                         <li><a href="{{ route('branch.remittance.exportPerRemittanceSummarySpecial') }}">Summary (Special)</a></li>
+                        <li><a href="{{ route('branch.atm.export.list-of-profile') }}">List of Profile</a></li>
+                        <li><a href="{{ route('branch.atm.export.remittance-report-consolidated') }}">Remittance Report Consolidated</a></li>
+                        <li><a href="{{ route('branch.atm.export.remittance-report-per-branch') }}">Remittance Report Per Branch</a></li>
+                        <li><a href="{{ route('branch.atm.export.remittance-report-per-branch-member') }}">Remittance Report Per Branch Member</a></li>
 
 
                         <li class="nav-label">Archives</li>

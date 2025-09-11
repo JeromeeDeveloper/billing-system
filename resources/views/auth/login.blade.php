@@ -28,6 +28,9 @@
         img {
             height: auto;
             width: 255px;
+            background: white;
+    padding: 10px;
+    border-radius: 40px;
         }
     </style>
 </head>

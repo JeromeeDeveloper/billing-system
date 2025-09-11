@@ -87,17 +87,15 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-xl-8 col-lg-8 col-md-8">
+                    <div class="col-xl-12 col-lg-12 col-md-12">
                         <div class="card">
                             <div class="card-header">
                                 <h4 class="card-title">Branch Billing Status</h4>
-                                <a href="{{ route('billing.branch') }}" class="btn btn-primary btn-block w-40 mb-2">
-                                    <i class="fas fa-file-excel me-2"></i> View and Approve billing
-                                  </a>
+
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-xl-12 col-lg-8">
+                                    <div class="col-xl-12 col-lg-12">
                                         <div id="branch-status-chart" style="height: auto;">
                                             <div class="row">
                                                 @foreach($allBranches as $branch)
@@ -106,7 +104,7 @@
                                                         $statusColor = $isApproved ? '#28a745' : '#dc3545';
                                                         $statusText = $isApproved ? 'Approved' : 'Pending';
                                                     @endphp
-                                                    <div class="col-lg-6 col-md-6 mb-4">
+                                                    <div class="col-lg-12 col-md-12 mb-12">
                                                         <div class="card border-0 shadow-sm h-100" style="border-left: 4px solid {{ $statusColor }} !important;">
                                                             <div class="card-body p-4">
                                                                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -151,43 +149,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-4 col-lg-4 col-md-4">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="card-title">Generate Branch Remittance Reports</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Branch Remittance Reports</h5>
-                                    <ul class="mb-2">
-                                        <li><strong>Export List of Profile:</strong> Export comprehensive member profile data for your branch</li>
-                                        <li><strong>Remittance Report Consolidated:</strong> Consolidated remittance data across all branches</li>
-                                        <li><strong>Remittance Report Per Branch:</strong> Product totals and member counts for your branch</li>
-                                        <li><strong>Remittance Report Per Branch Member:</strong> Member-level breakdown of loans, shares, and savings for your branch</li>
-                                    </ul>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                      <a href="{{ route('branch.atm.export.list-of-profile') }}" class="btn btn-primary btn-block w-100 mb-2">
-                                        <i class="fas fa-file-excel me-2"></i> Export List of Profile
-                                      </a>
-                                      <a href="{{ route('branch.atm.export.remittance-report-consolidated') }}" class="btn btn-primary btn-block w-100 mb-2">
-                                        <i class="fas fa-file-excel me-2"></i> Export Remittance Report Consolidated
-                                      </a>
-                                      <a href="{{ route('branch.atm.export.remittance-report-per-branch') }}" class="btn btn-primary btn-block w-100 mb-2">
-                                        <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch
-                                      </a>
-                                      <a href="{{ route('branch.atm.export.remittance-report-per-branch-member') }}" class="btn btn-primary btn-block w-100">
-                                        <i class="fas fa-file-excel me-2"></i> Remittance Report Per Branch Member
-                                      </a>
-                                    </div>
-                                  </div>
 
-                            </div>
-                        </div>
-
-                    </div>
                 </div>
                 <!-- Branch Report Generation Section -->
                 <div class="row">

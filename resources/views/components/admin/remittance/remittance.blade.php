@@ -95,7 +95,7 @@
                             <div class="card-body">
                                 <!-- Information Note -->
                                 <div class="row mb-4">
-                                    <div class="col-12 mb-3">
+                                    {{-- <div class="col-12 mb-3">
                                         <div class="alert alert-info text-dark">
                                             <h6 class="alert-heading"><i class="fa fa-info-circle"></i> Remittance
                                                 Upload Information</h6>
@@ -104,7 +104,7 @@
                                             </p>
 
                                         </div>
-                                    </div>
+                                    </div> --}}
                                     <div class="col-md-4">
                                         <div class="card stats-card bg-light border-primary">
                                             <div class="card-body text-center">
@@ -759,7 +759,7 @@
                     <h6 class="font-weight-bold mb-3 mt-4">Sample Data:</h6>
                     <div class="table-responsive">
                         <table class="table table-bordered table-sm">
-                            <thead class="thead-dark">
+                            <thead class="thead-primary">
                                 <tr>
                                     <th>cid</th>
                                     <th>name</th>

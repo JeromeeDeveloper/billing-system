@@ -92,38 +92,6 @@
                     </div>
                 </div>
 
-                <!-- Search Section -->
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-body">
-                                <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Branch ATM Management Flow & User Guide</h5>
-                                    <ol class="mb-2">
-                                        <li><strong>Account Overview:</strong> View account for members in your branch
-                                            only.</li>
-                                        <li><strong>Post Payments:</strong> Post loan payments with automatic
-                                            prioritization (highest priority loans first).</li>
-                                        <li><strong>Export Reports:</strong> Export posted payment records for your
-                                            branch.</li>
-                                    </ol>
-                                    <ul class="mb-2">
-                                        <li><strong>Search:</strong> Find members by name, employee ID, or CID within
-                                            your branch.</li>
-                                        <li><strong>Branch-Specific:</strong> All operations and reports are limited to
-                                            your branch's member data.</li>
-                                    </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> This page allows you to manage
-                                            member accounts and process payments specifically for your branch.</small>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Account Balances Table -->
                 <div class="row">
                     <div class="col-12">

@@ -133,32 +133,17 @@
                                 </div>
                             </div>
                             @if($hasBillingExportForPeriod)
-                                <div class="alert alert-danger text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     Billing has been generated for this period. Cancel approval is disabled.
                                 </div>
                             @endif
                             @if (!$allUsersApproved)
-                                <div class="alert alert-danger text-center small mb-0 mt-2">
+                                <div class="alert text-center text-danger small mb-0 mt-2">
                                     * Not all admin and branch users have approved yet.
                                 </div>
                             @endif
                             <!-- Collapsible Information Note -->
-                            <div class="card-body">
-                                <div class="alert alert-info alert-dismissible fade show mb-4" id="infoNote">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5 class="info-note-toggle" data-bs-toggle="collapse" data-bs-target="#infoNoteContent" aria-expanded="true" aria-controls="infoNoteContent" style="user-select:none;">
-                                        <i class="fa fa-info-circle"></i> Branch Billing Flow & User Guide <i class="fa fa-chevron-down ms-2"></i>
-                                    </h5>
-                                    <div class="collapse show" id="infoNoteContent">
-                                        <ol class="mb-2">
-                                            <li><strong>Review:</strong> Branch users can view billing records for their branch only.</li>
-                                            <li><strong>Amortization:</strong> Only regular loans are included in the amortization column. Members with zero amortization are hidden.</li>
-                                            <li><strong>Approval:</strong> Once all records are correct, approve your branch's billing. Admin cannot generate the consolidated export until all branches approve.</li>
-                                            <li><strong>Export:</strong> Export your branch's billing data (if allowed) and view export history.</li>
-                                        </ol>
-                                        <p class="mb-0"><small><strong>Note:</strong> Only regular loans are included in amortization calculations. Approval is required before admin can generate the final report.</small></p>
-                                    </div>
-                                </div>
+                            
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered display">
                                         <thead>
