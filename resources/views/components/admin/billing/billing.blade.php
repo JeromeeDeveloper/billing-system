@@ -19,6 +19,12 @@
 
 </head>
 
+<style>
+    p.small.text-muted {
+        display: none;
+    }
+</style>
+
 <body>
 
     <div id="preloader">
@@ -160,12 +166,7 @@
                                 </div>
                             </div>
 
-                            <style>
-                                .card-header {
-                                    padding-top: 1.5rem !important;
-                                    padding-bottom: 1.5rem !important;
-                                }
-                            </style>
+
 
                             <form method="GET" action="{{ url()->current() }}"
                                 class="card-header d-flex justify-content-between align-items-center">
@@ -403,12 +404,6 @@
                                 </div>
                             </div>
 
-                            <style>
-                                p.small.text-muted {
-                                    display: none;
-                                }
-                            </style>
-
                             <div class="d-flex flex-column align-items-center my-4">
                                 <div>
                                     Showing {{ $billing->firstItem() }} to {{ $billing->lastItem() }} of
@@ -435,8 +430,6 @@
         </div>
 
     </div>
-
-
 
     <script src="{{ asset('vendor/global/global.min.js') }}"></script>
     <script src="{{ asset('js/quixnav-init.js') }}"></script>

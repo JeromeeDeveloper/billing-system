@@ -14,25 +14,6 @@
 
     <link href="{{ asset('css/style.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <style>
-        /* Floating button styles */
-        #floatingFormatBtn {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 1050;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        #floatingFormatBtn .fa-eye {
-            font-size: 1.5rem;
-        }
-    </style>
 
 </head>
 
@@ -76,7 +57,8 @@
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div>
                                     <h4 class="card-title mb-0">File Datatable</h4>
-                                    <small class="text-muted">Showing latest 5 files total for current billing period</small>
+                                    <small class="text-muted">Showing latest 5 files total for current billing
+                                        period</small>
                                 </div>
                                 <div class="d-flex align-items-center" style="gap: 10px;">
                                     <a href="{{ route('file.retention.dashboard') }}" class="btn btn-rounded btn-info">
@@ -87,9 +69,14 @@
                                     </a>
                                     @php
                                         // Determine if any admin or branch users are already approved
-                                        $hasApprovedBranches = isset($hasApprovedBranches) ? $hasApprovedBranches : \App\Models\User::whereIn('role', ['admin', 'branch'])->where('billing_approval_status', 'approved')->exists();
+                                        $hasApprovedBranches = isset($hasApprovedBranches)
+                                            ? $hasApprovedBranches
+                                            : \App\Models\User::whereIn('role', ['admin', 'branch'])
+                                                ->where('billing_approval_status', 'approved')
+                                                ->exists();
                                     @endphp
-                                    <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal" data-target="#exampleModalpopover">
+                                    <button type="button" class="btn btn-rounded btn-primary" data-toggle="modal"
+                                        data-target="#exampleModalpopover">
                                         <span class="btn-icon-left text-primary">
                                             <i class="fa fa-upload"></i>
                                         </span>
@@ -110,21 +97,29 @@
 
                                                 @php
                                                     $billingPeriod = auth()->user()->billing_period
-                                                        ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format('F Y')
+                                                        ? \Carbon\Carbon::parse(auth()->user()->billing_period)->format(
+                                                            'F Y',
+                                                        )
                                                         : 'N/A';
                                                     // Ensure hasApprovedBranches is defined
-                                                    $hasApprovedBranches = isset($hasApprovedBranches) ? $hasApprovedBranches : \App\Models\User::whereIn('role', ['admin', 'branch'])->where('billing_approval_status', 'approved')->exists();
+                                                    $hasApprovedBranches = isset($hasApprovedBranches)
+                                                        ? $hasApprovedBranches
+                                                        : \App\Models\User::whereIn('role', ['admin', 'branch'])
+                                                            ->where('billing_approval_status', 'approved')
+                                                            ->exists();
                                                 @endphp
 
                                                 <div class="form-group">
-                                                    <label class="font-weight-bold text-dark mb-2">Billing Period</label>
+                                                    <label class="font-weight-bold text-dark mb-2">Billing
+                                                        Period</label>
                                                     <input type="text" class="form-control"
                                                         value="{{ $billingPeriod }}" readonly>
                                                 </div>
 
 
                                                 <div class="form-group">
-                                                    <label for="file" class="font-weight-bold text-dark mb-2">📁 Installment
+                                                    <label for="file" class="font-weight-bold text-dark mb-2">📁
+                                                        Installment
                                                         Forecast
                                                         File
                                                     </label>
@@ -132,81 +127,110 @@
                                                         @php
                                                             $consolidatedDisabled = $hasApprovedBranches;
                                                         @endphp
-                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_consolidated" value="consolidated" {{ $consolidatedDisabled ? 'disabled checked' : 'checked' }}>
-                                                        <label class="form-check-label text-dark" for="forecast_consolidated">
-                                                            <strong class="text-dark">Consolidated</strong> - Upload for all branches
-                                                            @if($consolidatedDisabled)
-                                                                <span class="badge badge-warning ml-2">Disabled: at least one admin or branch user is approved</span>
+                                                        <input class="form-check-input" type="radio"
+                                                            name="forecast_type" id="forecast_consolidated"
+                                                            value="consolidated"
+                                                            {{ $consolidatedDisabled ? 'disabled checked' : 'checked' }}>
+                                                        <label class="form-check-label text-dark"
+                                                            for="forecast_consolidated">
+                                                            <strong class="text-dark">Consolidated</strong> - Upload for
+                                                            all branches
+                                                            @if ($consolidatedDisabled)
+                                                                <span class="badge badge-warning ml-2">Disabled: at
+                                                                    least one admin or branch user is approved</span>
                                                             @endif
                                                         </label>
                                                     </div>
                                                     <div class="form-check mb-2">
-                                                        <input class="form-check-input" type="radio" name="forecast_type" id="forecast_branch" value="branch">
+                                                        <input class="form-check-input" type="radio"
+                                                            name="forecast_type" id="forecast_branch" value="branch">
                                                         <label class="form-check-label text-dark" for="forecast_branch">
-                                                            <strong class="text-dark">Per Branch</strong> - Upload for specific branch only (shows as "Branch Forecast - [Branch Name]")
+                                                            <strong class="text-dark">Per Branch</strong> - Upload for
+                                                            specific branch only (shows as "Branch Forecast - [Branch
+                                                            Name]")
                                                         </label>
                                                     </div>
-                                                    <div class="form-group" id="branch_selection_group" style="display: none;">
-                                                        <label for="branch_id" class="font-weight-bold text-dark mb-2">Select Branch</label>
+                                                    <div class="form-group" id="branch_selection_group"
+                                                        style="display: none;">
+                                                        <label for="branch_id"
+                                                            class="font-weight-bold text-dark mb-2">Select
+                                                            Branch</label>
                                                         <select class="form-control" id="branch_id" name="branch_id">
                                                             <option value="">Select a branch...</option>
                                                             @php $branches = \App\Models\Branch::orderBy('name')->get(); @endphp
-                                                            @foreach($branches as $branch)
+                                                            @foreach ($branches as $branch)
                                                                 @php
-                                                                    $branchUser = \App\Models\User::where('role', 'branch')->where('branch_id', $branch->id)->first();
-                                                                    $branchApproved = $branchUser && $branchUser->billing_approval_status === 'approved';
+                                                                    $branchUser = \App\Models\User::where(
+                                                                        'role',
+                                                                        'branch',
+                                                                    )
+                                                                        ->where('branch_id', $branch->id)
+                                                                        ->first();
+                                                                    $branchApproved =
+                                                                        $branchUser &&
+                                                                        $branchUser->billing_approval_status ===
+                                                                            'approved';
                                                                     $disabled = $branchApproved;
                                                                 @endphp
-                                                                <option value="{{ $branch->id }}" {{ $disabled ? 'disabled' : '' }}>
-                                                                    {{ $branch->name }} {{ $branchApproved ? '(Approved - disabled)' : '' }}
+                                                                <option value="{{ $branch->id }}"
+                                                                    {{ $disabled ? 'disabled' : '' }}>
+                                                                    {{ $branch->name }}
+                                                                    {{ $branchApproved ? '(Approved - disabled)' : '' }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
-                                                        <small class="text-muted">Branches marked as Approved are disabled and cannot be selected.</small>
+                                                        <small class="text-muted">Branches marked as Approved are
+                                                            disabled and cannot be selected.</small>
                                                     </div>
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" id="file"
-                                                            name="file" accept=".csv" required>
+                                                        <input type="file" class="custom-file-input"
+                                                            id="file" name="file" accept=".csv" required>
                                                         <label class="custom-file-label" for="file">Choose
                                                             file...</label>
                                                     </div>
                                                 </div>
 
                                                 <div class="form-group">
-                                                    <label for="savings_file" class="font-weight-bold text-dark mb-2">💰 Savings
+                                                    <label for="savings_file"
+                                                        class="font-weight-bold text-dark mb-2">💰 Savings
                                                         File</label>
                                                     <div class="custom-file">
                                                         <input type="file" class="custom-file-input"
-                                                            id="savings_file" name="savings_file" accept=".csv" required>
+                                                            id="savings_file" name="savings_file" accept=".csv"
+                                                            required>
                                                         <label class="custom-file-label" for="savings_file">Choose
                                                             file...</label>
                                                     </div>
                                                 </div>
 
                                                 <div class="form-group">
-                                                    <label for="shares_file" class="font-weight-bold text-dark mb-2">📊 Shares
+                                                    <label for="shares_file"
+                                                        class="font-weight-bold text-dark mb-2">📊 Shares
                                                         File</label>
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" id="shares_file"
-                                                            name="shares_file" accept=".csv" required>
+                                                        <input type="file" class="custom-file-input"
+                                                            id="shares_file" name="shares_file" accept=".csv"
+                                                            required>
                                                         <label class="custom-file-label" for="shares_file">Choose
                                                             file...</label>
                                                     </div>
                                                 </div>
 
                                                 <div class="form-group">
-                                                    <label for="cif_file" class="font-weight-bold text-dark mb-2">👤 CIF File
+                                                    <label for="cif_file" class="font-weight-bold text-dark mb-2">👤
+                                                        CIF File
                                                     </label>
                                                     <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" id="cif_file"
-                                                            name="cif_file" accept=".csv" required>
+                                                        <input type="file" class="custom-file-input"
+                                                            id="cif_file" name="cif_file" accept=".csv" required>
                                                         <label class="custom-file-label" for="cif_file">Choose
                                                             file...</label>
                                                     </div>
                                                 </div>
 
                                                 <div class="form-group">
-                                                    <label for="loan_file" class="font-weight-bold text-dark mb-2">🏛️ Loans
+                                                    <label for="loan_file" class="font-weight-bold text-dark mb-2">🏛️
+                                                        Loans
                                                         File
                                                     </label>
                                                     <div class="custom-file">
@@ -220,11 +244,13 @@
 
                                             <div class="alert alert mb-3 mx-3 text-danger">
                                                 <i class="fa fa-exclamation-triangle"></i>
-                                                <strong class="text-danger">Important:</strong> Please ensure all files are correct before uploading.
+                                                <strong class="text-danger">Important:</strong> Please ensure all files
+                                                are correct before uploading.
                                             </div>
 
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-dismiss="modal">Close</button>
                                                 <button type="submit" class="btn btn-primary">Upload</button>
                                             </div>
                                         </form>
@@ -256,10 +282,6 @@
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                                 </div>
                             @endif
-
-
-
-
                             <div class="card-body">
 
                                 <div class="table-responsive">
@@ -313,6 +335,203 @@
                                     </table>
                                 </div>
                             </div>
+
+                            <!-- Floating View Format Button -->
+                            <button id="floatingFormatBtn" class="btn btn-success btn-lg shadow" data-toggle="modal"
+                                data-target="#viewFormatModal" title="View File Format Guide">
+                                <i class="fa fa-eye"></i>
+                            </button>
+
+                            <!-- View Format Modal -->
+                            <div class="modal fade" id="viewFormatModal" tabindex="-1" role="dialog"
+                                aria-labelledby="viewFormatModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="viewFormatModalLabel">File Upload Format Guide
+                                            </h5>
+                                            <button type="button" class="close" data-dismiss="modal"
+                                                aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p class="mb-3 text-dark">Below are the required formats for each file
+                                                type. Please ensure your files match these formats before uploading.</p>
+                                            <div class="accordion" id="formatAccordion">
+                                                <div class="card">
+                                                    <div class="card-header" id="headingForecast">
+                                                        <h2 class="mb-0">
+                                                            <button class="btn btn-link" type="button"
+                                                                data-toggle="collapse" data-target="#collapseForecast"
+                                                                aria-expanded="true" aria-controls="collapseForecast">
+                                                                📁 Installment Forecast File Format
+                                                            </button>
+                                                        </h2>
+                                                    </div>
+                                                    <div id="collapseForecast" class="collapse show"
+                                                        aria-labelledby="headingForecast"
+                                                        data-parent="#formatAccordion">
+                                                        <div class="card-body">
+                                                            <strong class="text-dark">Required Columns (Row 5 as
+                                                                header):</strong>
+                                                            <ul class="text-dark">
+                                                                <li>Branch Name</li>
+                                                                <li>Branch Code</li>
+                                                                <li>CID</li>
+                                                                <li>Name (Lastname, Firstname)</li>
+                                                                <li>Loan Account No.</li>
+                                                                <li>Open Date</li>
+                                                                <li>Maturity Date</li>
+                                                                <li>Amortization Due Date</li>
+                                                                <li>Principal</li>
+                                                                <li>Interest</li>
+                                                                <li>Total Amort</li>
+                                                                <li>Total Due</li>
+                                                                <li>Principal Due</li>
+                                                                <li>Interest Due</li>
+                                                                <li>Penalty Due</li>
+                                                            </ul>
+                                                            <small class="text-muted">File type: .csv</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="card">
+                                                    <div class="card-header" id="headingSavings">
+                                                        <h2 class="mb-0">
+                                                            <button class="btn btn-link collapsed" type="button"
+                                                                data-toggle="collapse" data-target="#collapseSavings"
+                                                                aria-expanded="false" aria-controls="collapseSavings">
+                                                                💰 Savings File Format
+                                                            </button>
+                                                        </h2>
+                                                    </div>
+                                                    <div id="collapseSavings" class="collapse"
+                                                        aria-labelledby="headingSavings"
+                                                        data-parent="#formatAccordion">
+                                                        <div class="card-body">
+                                                            <strong class="text-dark">Required Columns (Row 6 as
+                                                                header):</strong>
+                                                            <ul class="text-dark">
+                                                                <li>Customer No.</li>
+                                                                <li>Account No.</li>
+                                                                <li>Product Code</li>
+                                                                <li>Open Date</li>
+                                                                <li>Current Balance</li>
+                                                                <li>Available Balance</li>
+                                                                <li>Interest Due Amount</li>
+                                                                <li>Status</li>
+                                                                <li>Last Transaction Date</li>
+                                                            </ul>
+                                                            <small class="text-muted">File type: .csv</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="card">
+                                                    <div class="card-header" id="headingShares">
+                                                        <h2 class="mb-0">
+                                                            <button class="btn btn-link collapsed" type="button"
+                                                                data-toggle="collapse" data-target="#collapseShares"
+                                                                aria-expanded="false" aria-controls="collapseShares">
+                                                                📊 Shares File Format
+                                                            </button>
+                                                        </h2>
+                                                    </div>
+                                                    <div id="collapseShares" class="collapse"
+                                                        aria-labelledby="headingShares"
+                                                        data-parent="#formatAccordion">
+                                                        <div class="card-body">
+                                                            <strong class="text-dark">Required Columns (Row 6 as
+                                                                header):</strong>
+                                                            <ul class="text-dark">
+                                                                <li>Customer No.</li>
+                                                                <li>Account No.</li>
+                                                                <li>Product Code</li>
+                                                                <li>Open Date</li>
+                                                                <li>Current Balance</li>
+                                                                <li>Available Balance</li>
+                                                                <li>Interest Due Amount</li>
+                                                                <li>Status</li>
+                                                                <li>Last Transaction Date</li>
+                                                            </ul>
+                                                            <small class="text-muted">File type: .csv</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="card">
+                                                    <div class="card-header" id="headingCIF">
+                                                        <h2 class="mb-0">
+                                                            <button class="btn btn-link collapsed" type="button"
+                                                                data-toggle="collapse" data-target="#collapseCIF"
+                                                                aria-expanded="false" aria-controls="collapseCIF">
+                                                                👤 CIF File Format
+                                                            </button>
+                                                        </h2>
+                                                    </div>
+                                                    <div id="collapseCIF" class="collapse"
+                                                        aria-labelledby="headingCIF" data-parent="#formatAccordion">
+                                                        <div class="card-body">
+                                                            <strong class="text-dark">Required Columns (Row 4 as
+                                                                header):</strong>
+                                                            <ul class="text-dark">
+                                                                <li>Customer No.</li>
+                                                                <li>Customer Name (Lastname, Firstname)</li>
+                                                                <li>Birth Date</li>
+                                                                <li>Date Registered</li>
+                                                                <li>Gender</li>
+                                                                <li>Customer Type</li>
+                                                                <li>Customer Classification</li>
+                                                                <li>Industry</li>
+                                                                <li>Area Officer</li>
+                                                                <li>Area</li>
+                                                                <li>Status</li>
+                                                                <li>Address</li>
+                                                            </ul>
+                                                            <small class="text-muted">File type: .csv</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="card">
+                                                    <div class="card-header" id="headingLoans">
+                                                        <h2 class="mb-0">
+                                                            <button class="btn btn-link collapsed" type="button"
+                                                                data-toggle="collapse" data-target="#collapseLoans"
+                                                                aria-expanded="false" aria-controls="collapseLoans">
+                                                                🏛️ Loans File Format
+                                                            </button>
+                                                        </h2>
+                                                    </div>
+                                                    <div id="collapseLoans" class="collapse"
+                                                        aria-labelledby="headingLoans" data-parent="#formatAccordion">
+                                                        <div class="card-body">
+                                                            <strong class="text-dark">Required Columns (Row 1 as
+                                                                header):</strong>
+                                                            <ul class="text-dark">
+                                                                <li>CID (Column A)</li>
+                                                                <li>Account No. (Column B)</li>
+                                                                <li>Start Date (Column H)</li>
+                                                                <li>End Date (Column I)</li>
+                                                                <li>Principal (Column L)</li>
+                                                            </ul>
+                                                            <small class="text-muted">File type: .csv</small>
+                                                            <br><small class="text-muted">Note: Other columns may exist
+                                                                but are not required for import.</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <hr>
+                                            <p class="mb-0 text-dark"><strong class="text-dark">Note:</strong> For
+                                                best results, always use the provided template or sample file if
+                                                available. If you have questions, contact your system administrator.</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                data-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -360,7 +579,8 @@
             var fileInputs = document.querySelectorAll('.custom-file-input');
             fileInputs.forEach(function(input) {
                 input.addEventListener('change', function(e) {
-                    var fileName = e.target.files.length > 0 ? e.target.files[0].name : 'Choose file...';
+                    var fileName = e.target.files.length > 0 ? e.target.files[0].name :
+                        'Choose file...';
                     var label = input.nextElementSibling;
                     if (label && label.classList.contains('custom-file-label')) {
                         label.textContent = fileName;
@@ -398,8 +618,10 @@
                 // Add a disabled message if it doesn't already exist
                 if (!document.querySelector('.upload-disabled-message')) {
                     var disabledMessage = document.createElement('div');
-                    disabledMessage.className = 'alert alert-warning text-center small mb-2 upload-disabled-message';
-                    disabledMessage.innerHTML = '<i class="fa fa-exclamation-triangle"></i> Both upload options are disabled because one or more admin or branch users have been approved.';
+                    disabledMessage.className =
+                    'alert alert-warning text-center small mb-2 upload-disabled-message';
+                    disabledMessage.innerHTML =
+                        '<i class="fa fa-exclamation-triangle"></i> Both upload options are disabled because one or more admin or branch users have been approved.';
                     branchSelectionGroup.parentNode.insertBefore(disabledMessage, branchSelectionGroup);
                 }
             } else {
@@ -412,171 +634,6 @@
             toggleBranchSelection();
         });
     </script>
-
-    <!-- Floating View Format Button -->
-    <button id="floatingFormatBtn" class="btn btn-success btn-lg shadow" data-toggle="modal" data-target="#viewFormatModal" title="View File Format Guide">
-        <i class="fa fa-eye"></i>
-    </button>
-
-    <!-- View Format Modal -->
-    <div class="modal fade" id="viewFormatModal" tabindex="-1" role="dialog" aria-labelledby="viewFormatModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="viewFormatModalLabel">File Upload Format Guide</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-3 text-dark">Below are the required formats for each file type. Please ensure your files match these formats before uploading.</p>
-                    <div class="accordion" id="formatAccordion">
-                        <div class="card">
-                            <div class="card-header" id="headingForecast">
-                                <h2 class="mb-0">
-                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseForecast" aria-expanded="true" aria-controls="collapseForecast">
-                                        📁 Installment Forecast File Format
-                                    </button>
-                                </h2>
-                            </div>
-                            <div id="collapseForecast" class="collapse show" aria-labelledby="headingForecast" data-parent="#formatAccordion">
-                                <div class="card-body">
-                                    <strong class="text-dark">Required Columns (Row 5 as header):</strong>
-                                    <ul class="text-dark">
-                                        <li>Branch Name</li>
-                                        <li>Branch Code</li>
-                                        <li>CID</li>
-                                        <li>Name (Lastname, Firstname)</li>
-                                        <li>Loan Account No.</li>
-                                        <li>Open Date</li>
-                                        <li>Maturity Date</li>
-                                        <li>Amortization Due Date</li>
-                                        <li>Principal</li>
-                                        <li>Interest</li>
-                                        <li>Total Amort</li>
-                                        <li>Total Due</li>
-                                        <li>Principal Due</li>
-                                        <li>Interest Due</li>
-                                        <li>Penalty Due</li>
-                                    </ul>
-                                    <small class="text-muted">File type: .csv</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-header" id="headingSavings">
-                                <h2 class="mb-0">
-                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseSavings" aria-expanded="false" aria-controls="collapseSavings">
-                                        💰 Savings File Format
-                                    </button>
-                                </h2>
-                            </div>
-                            <div id="collapseSavings" class="collapse" aria-labelledby="headingSavings" data-parent="#formatAccordion">
-                                <div class="card-body">
-                                    <strong class="text-dark">Required Columns (Row 6 as header):</strong>
-                                    <ul class="text-dark">
-                                        <li>Customer No.</li>
-                                        <li>Account No.</li>
-                                        <li>Product Code</li>
-                                        <li>Open Date</li>
-                                        <li>Current Balance</li>
-                                        <li>Available Balance</li>
-                                        <li>Interest Due Amount</li>
-                                        <li>Status</li>
-                                        <li>Last Transaction Date</li>
-                                    </ul>
-                                    <small class="text-muted">File type: .csv</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-header" id="headingShares">
-                                <h2 class="mb-0">
-                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseShares" aria-expanded="false" aria-controls="collapseShares">
-                                        📊 Shares File Format
-                                    </button>
-                                </h2>
-                            </div>
-                            <div id="collapseShares" class="collapse" aria-labelledby="headingShares" data-parent="#formatAccordion">
-                                <div class="card-body">
-                                    <strong class="text-dark">Required Columns (Row 6 as header):</strong>
-                                    <ul class="text-dark">
-                                        <li>Customer No.</li>
-                                        <li>Account No.</li>
-                                        <li>Product Code</li>
-                                        <li>Open Date</li>
-                                        <li>Current Balance</li>
-                                        <li>Available Balance</li>
-                                        <li>Interest Due Amount</li>
-                                        <li>Status</li>
-                                        <li>Last Transaction Date</li>
-                                    </ul>
-                                    <small class="text-muted">File type: .csv</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-header" id="headingCIF">
-                                <h2 class="mb-0">
-                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseCIF" aria-expanded="false" aria-controls="collapseCIF">
-                                        👤 CIF File Format
-                                    </button>
-                                </h2>
-                            </div>
-                            <div id="collapseCIF" class="collapse" aria-labelledby="headingCIF" data-parent="#formatAccordion">
-                                <div class="card-body">
-                                    <strong class="text-dark">Required Columns (Row 4 as header):</strong>
-                                    <ul class="text-dark">
-                                        <li>Customer No.</li>
-                                        <li>Customer Name (Lastname, Firstname)</li>
-                                        <li>Birth Date</li>
-                                        <li>Date Registered</li>
-                                        <li>Gender</li>
-                                        <li>Customer Type</li>
-                                        <li>Customer Classification</li>
-                                        <li>Industry</li>
-                                        <li>Area Officer</li>
-                                        <li>Area</li>
-                                        <li>Status</li>
-                                        <li>Address</li>
-                                    </ul>
-                                    <small class="text-muted">File type: .csv</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="card-header" id="headingLoans">
-                                <h2 class="mb-0">
-                                    <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseLoans" aria-expanded="false" aria-controls="collapseLoans">
-                                        🏛️ Loans File Format
-                                    </button>
-                                </h2>
-                            </div>
-                            <div id="collapseLoans" class="collapse" aria-labelledby="headingLoans" data-parent="#formatAccordion">
-                                <div class="card-body">
-                                    <strong class="text-dark">Required Columns (Row 1 as header):</strong>
-                                    <ul class="text-dark">
-                                        <li>CID (Column A)</li>
-                                        <li>Account No. (Column B)</li>
-                                        <li>Start Date (Column H)</li>
-                                        <li>End Date (Column I)</li>
-                                        <li>Principal (Column L)</li>
-                                    </ul>
-                                    <small class="text-muted">File type: .csv</small>
-                                    <br><small class="text-muted">Note: Other columns may exist but are not required for import.</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-                    <p class="mb-0 text-dark"><strong class="text-dark">Note:</strong> For best results, always use the provided template or sample file if available. If you have questions, contact your system administrator.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
 </body>
 

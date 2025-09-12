@@ -22,6 +22,88 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 
+<style>
+    .modal-lg {
+        max-width: 900px;
+    }
+
+    .section-title {
+        color: #2c3e50;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #3498db;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #34495e;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border-radius: 0.375rem;
+        border: 1px solid #ddd;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+    }
+
+    .input-group-text {
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+    }
+
+    .modal-content {
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    .alert-info {
+        background-color: #ebf5fb;
+        border-color: #3498db;
+        color: #2c3e50;
+    }
+
+    p.small.text-muted {
+        display: none;
+    }
+
+    .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, .125);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
+    }
+
+    .input-group {
+        min-width: 300px;
+    }
+
+    .btn-success {
+        transition: all 0.3s ease;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, .1);
+    }
+
+    .card-title {
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+</style>
+
 <body>
 
     <div id="preloader">
@@ -135,7 +217,8 @@
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">Date Registered</label>
-                                                    <input type="date" name="date_registered" class="form-control">
+                                                    <input type="date" name="date_registered"
+                                                        class="form-control">
                                                 </div>
                                             </div>
 
@@ -241,18 +324,28 @@
                                         <h4 class="card-title mb-0 text-primary">Member Datatable</h4>
                                         <small class="text-muted">Manage all members in the system</small>
                                     </div>
-                                    <div class="col-12 col-md-8 d-flex flex-column align-items-md-end align-items-center">
-                                        <form method="GET" action="{{ url()->current() }}" class="d-flex flex-grow-1 flex-md-grow-0 gap-2 align-items-center mb-2 mb-md-0 justify-content-md-end w-100" style="max-width: 400px;">
-                                            <input type="text" name="search" value="{{ request('search') }}" class="form-control flex-grow-1 mr-2" placeholder="Search members..." />
-                                            <button type="submit" class="btn btn-primary d-flex align-items-center px-3">
-                                                <i class="fa fa-search me-2"></i> <span class="d-none d-md-inline">Search</span>
+                                    <div
+                                        class="col-12 col-md-8 d-flex flex-column align-items-md-end align-items-center">
+                                        <form method="GET" action="{{ url()->current() }}"
+                                            class="d-flex flex-grow-1 flex-md-grow-0 gap-2 align-items-center mb-2 mb-md-0 justify-content-md-end w-100"
+                                            style="max-width: 400px;">
+                                            <input type="text" name="search" value="{{ request('search') }}"
+                                                class="form-control flex-grow-1 mr-2"
+                                                placeholder="Search members..." />
+                                            <button type="submit"
+                                                class="btn btn-primary d-flex align-items-center px-3">
+                                                <i class="fa fa-search me-2"></i> <span
+                                                    class="d-none d-md-inline">Search</span>
                                             </button>
                                         </form>
 
                                     </div>
-                                    <div class="action-bar d-flex flex-wrap flex-md-nowrap gap-2 justify-content-center align-items-center p-2 rounded shadow-sm mt-2 w-100" style="background: #f8f9fa;">
-                                        <a href="#" class="btn btn-primary d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
-                                            <i class="fa fa-plus-circle p-1"></i><span class="d-none d-md-inline"> Add New Member</span>
+                                    <div class="action-bar d-flex flex-wrap flex-md-nowrap gap-2 justify-content-center align-items-center p-2 rounded shadow-sm mt-2 w-100"
+                                        style="background: #f8f9fa;">
+                                        <a href="#" class="btn btn-primary d-flex align-items-center px-3 mr-2"
+                                            data-toggle="modal" data-target="#addModal">
+                                            <i class="fa fa-plus-circle p-1"></i><span class="d-none d-md-inline"> Add
+                                                New Member</span>
                                         </a>
 
                                     </div>
@@ -279,7 +372,8 @@
                                                     <td>{{ $item->member->emp_id ?? 'N/A' }}</td>
                                                     <td>{{ $item->member->lname ?? '' }},
                                                         {{ $item->member->fname ?? '' }}</td>
-                                                    <td>{{ $item->member->branch ? $item->member->branch->name : 'N/A' }}</td>
+                                                    <td>{{ $item->member->branch ? $item->member->branch->name : 'N/A' }}
+                                                    </td>
                                                     <td>{{ $item->member->member_tagging ?? 'N/A' }}</td>
 
 
@@ -287,8 +381,13 @@
 
 
                                                         @php
-                                                            $isEditDisabled = $isEditDisabledForAll ||
-                                                                (!$isEditDisabledForAll && in_array($item->member->branch_id, $editDisabledBranches));
+                                                            $isEditDisabled =
+                                                                $isEditDisabledForAll ||
+                                                                (!$isEditDisabledForAll &&
+                                                                    in_array(
+                                                                        $item->member->branch_id,
+                                                                        $editDisabledBranches,
+                                                                    ));
                                                         @endphp
                                                         <button type="button" class="btn btn-rounded btn-info"
                                                             data-toggle="modal" data-target="#editModal"
@@ -317,7 +416,7 @@
                                                             data-loans='{!! json_encode($item->member->loan_forecasts_data) !!}'
                                                             data-savings='{!! json_encode($item->member->savings) !!}'
                                                             data-shares='{!! json_encode($item->member->shares) !!}'
-                                                            @if($isEditDisabled) disabled title="Edit disabled - Export has been generated" @endif>
+                                                            @if ($isEditDisabled) disabled title="Edit disabled - Export has been generated" @endif>
                                                             Edit
                                                         </button>
 
@@ -383,7 +482,8 @@
                                                 <h5 class="modal-title">
                                                     <i class="fa fa-edit me-2"></i>Edit Member
                                                 </h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <button type="button" class="close" data-dismiss="modal"
+                                                    aria-label="Close">
                                                     <span aria-hidden="true">&times;</span>
                                                 </button>
                                             </div>
@@ -624,60 +724,6 @@
                                 </div>
                             </div>
 
-                            <style>
-                                .modal-lg {
-                                    max-width: 900px;
-                                }
-
-                                .section-title {
-                                    color: #2c3e50;
-                                    font-size: 1rem;
-                                    margin-bottom: 1rem;
-                                    border-left: 4px solid #3498db;
-                                }
-
-                                .form-label {
-                                    font-weight: 500;
-                                    color: #34495e;
-                                    margin-bottom: 0.5rem;
-                                }
-
-                                .form-control {
-                                    border-radius: 0.375rem;
-                                    border: 1px solid #ddd;
-                                    padding: 0.5rem 0.75rem;
-                                }
-
-                                .form-control:focus {
-                                    border-color: #3498db;
-                                    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
-                                }
-
-                                .input-group-text {
-                                    background-color: #f8f9fa;
-                                    border: 1px solid #ddd;
-                                }
-
-                                .modal-body {
-                                    padding: 1.5rem;
-                                }
-
-                                .btn {
-                                    padding: 0.5rem 1rem;
-                                    border-radius: 0.375rem;
-                                }
-                                .modal-content {
-                                    border-radius: 0.5rem;
-                                    overflow: hidden;
-                                }
-
-                                .alert-info {
-                                    background-color: #ebf5fb;
-                                    border-color: #3498db;
-                                    color: #2c3e50;
-                                }
-                            </style>
-
                             <div class="modal fade" id="viewModal" tabindex="-1" role="dialog"
                                 aria-labelledby="viewModalLabel" aria-hidden="true">
                                 <div class="modal-dialog modal-lg" role="document"> <!-- larger modal for space -->
@@ -827,34 +873,7 @@
                                 </div>
                             </div>
 
-                            <style>
-                                p.small.text-muted {
-                                    display: none;
-                                }
 
-                                .card-header {
-                                    border-bottom: 1px solid rgba(0, 0, 0, .125);
-                                    box-shadow: 0 1px 3px rgba(0, 0, 0, .05);
-                                }
-
-                                .input-group {
-                                    min-width: 300px;
-                                }
-
-                                .btn-success {
-                                    transition: all 0.3s ease;
-                                }
-
-                                .btn-success:hover {
-                                    transform: translateY(-1px);
-                                    box-shadow: 0 4px 6px rgba(0, 0, 0, .1);
-                                }
-
-                                .card-title {
-                                    font-weight: 600;
-                                    letter-spacing: 0.5px;
-                                }
-                            </style>
 
                             <div class="modal fade" id="bulkEditModal" tabindex="-1" role="dialog"
                                 aria-labelledby="bulkEditModalLabel" aria-hidden="true">
@@ -956,12 +975,18 @@
 
         // Function to get loan product info from loan account number
         function getLoanProductInfo(loanAcctNo) {
-            if (!loanAcctNo) return { billing_type: 'Unknown', product_name: 'Unknown Product' };
+            if (!loanAcctNo) return {
+                billing_type: 'Unknown',
+                product_name: 'Unknown Product'
+            };
 
             const segments = loanAcctNo.split('-');
             const productCode = segments[2];
 
-            if (!productCode) return { billing_type: 'Unknown', product_name: 'Unknown Product' };
+            if (!productCode) return {
+                billing_type: 'Unknown',
+                product_name: 'Unknown Product'
+            };
 
             const loanProduct = window.loanProducts.find(p => p.product_code === productCode);
 
@@ -972,7 +997,10 @@
                 };
             }
 
-            return { billing_type: 'Unknown', product_name: 'Unknown Product' };
+            return {
+                billing_type: 'Unknown',
+                product_name: 'Unknown Product'
+            };
         }
     </script>
 
@@ -1246,10 +1274,10 @@
             let html = `
             <div class="savings-item border p-3 mb-3 rounded">
                 ${mortuaryCount > 0 ? `
-                <div class="alert alert-info mb-3">
-                    <strong>🏥 Mortuary Savings Summary:</strong> This member has ${mortuaryCount} mortuary savings account(s)
-                </div>
-                ` : ''}
+                        <div class="alert alert-info mb-3">
+                            <strong>🏥 Mortuary Savings Summary:</strong> This member has ${mortuaryCount} mortuary savings account(s)
+                        </div>
+                        ` : ''}
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label>Account Number</label>
@@ -1284,24 +1312,24 @@
                         </select>
                     </div>
                     ${isCurrentMortuary ? `
-                    <div class="form-group col-md-6">
-                        <label>Deduction Amount</label>
-                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount !== undefined && saving.deduction_amount !== null ? saving.deduction_amount : ''}" placeholder="${mortuaryProduct && mortuaryProduct.amount_to_deduct ? mortuaryProduct.amount_to_deduct : ''}" disabled>
-                    </div>
-                    <div class="form-group col-md-12">
-                        <div class="alert alert-warning">
-                            <strong>🏥 Mortuary Product Detected!</strong><br>
-                            <strong>Product:</strong> ${mortuaryProduct.product_name} (Code: ${mortuaryProduct.product_code})<br>
-                            <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
+                            <div class="form-group col-md-6">
+                                <label>Deduction Amount</label>
+                                <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount !== undefined && saving.deduction_amount !== null ? saving.deduction_amount : ''}" placeholder="${mortuaryProduct && mortuaryProduct.amount_to_deduct ? mortuaryProduct.amount_to_deduct : ''}" disabled>
+                            </div>
+                            <div class="form-group col-md-12">
+                                <div class="alert alert-warning">
+                                    <strong>🏥 Mortuary Product Detected!</strong><br>
+                                    <strong>Product:</strong> ${mortuaryProduct.product_name} (Code: ${mortuaryProduct.product_code})<br>
+                                    <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
 
-                        </div>
-                    </div>
-                    ` : `
-                    <div class="form-group col-md-6">
-                        <label>Deduction Amount</label>
-                        <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount !== undefined && saving.deduction_amount !== null ? saving.deduction_amount : ''}">
-                    </div>
-                    `}
+                                </div>
+                            </div>
+                            ` : `
+                            <div class="form-group col-md-6">
+                                <label>Deduction Amount</label>
+                                <input type="number" step="0.01" name="savings[${index}][deduction_amount]" class="form-control" value="${saving.deduction_amount !== undefined && saving.deduction_amount !== null ? saving.deduction_amount : ''}">
+                            </div>
+                            `}
                      <div class="form-group col-md-6">
                         <label>Approval Number</label>
                         <input type="text" name="savings[${index}][approval_no]" class="form-control" value="${saving.approval_no || ''}">
@@ -1559,7 +1587,8 @@
             const startHold = $(`input[name="savings[${currentSavingsIndex}][start_hold]"]`).val();
             const expiryDate = $(`input[name="savings[${currentSavingsIndex}][expiry_date]"]`).val();
             const accountStatus = $(`select[name="savings[${currentSavingsIndex}][account_status]"]`).val();
-            const deductionAmount = parseFloat($(`input[name="savings[${currentSavingsIndex}][deduction_amount]"]`).val()) || 0;
+            const deductionAmount = parseFloat($(`input[name="savings[${currentSavingsIndex}][deduction_amount]"]`)
+                .val()) || 0;
             const approvalNo = $(`input[name="savings[${currentSavingsIndex}][approval_no]"]`).val();
             const remarks = $(`textarea[name="savings[${currentSavingsIndex}][remarks]"]`).val();
 
@@ -1585,7 +1614,8 @@
             const startHold = $(`input[name="shares[${currentSharesIndex}][start_hold]"]`).val();
             const expiryDate = $(`input[name="shares[${currentSharesIndex}][expiry_date]"]`).val();
             const accountStatus = $(`select[name="shares[${currentSharesIndex}][account_status]"]`).val();
-            const deductionAmount = parseFloat($(`input[name="shares[${currentSharesIndex}][deduction_amount]"]`).val()) || 0;
+            const deductionAmount = parseFloat($(`input[name="shares[${currentSharesIndex}][deduction_amount]"]`).val()) ||
+                0;
             const approvalNo = $(`input[name="shares[${currentSharesIndex}][approval_no]"]`).val();
             const remarks = $(`textarea[name="shares[${currentSharesIndex}][remarks]"]`).val();
 
@@ -1701,10 +1731,10 @@
                 var html = `
                     <div class="savings-details">
                         ${mortuaryCount > 0 ? `
-                        <div class="alert alert-info mb-3">
-                            <strong>🏥 Mortuary Savings Summary:</strong> This member has ${mortuaryCount} mortuary savings account(s)
-                        </div>
-                        ` : ''}
+                                <div class="alert alert-info mb-3">
+                                    <strong>🏥 Mortuary Savings Summary:</strong> This member has ${mortuaryCount} mortuary savings account(s)
+                                </div>
+                                ` : ''}
                         <p><strong>Account Number:</strong> ${saving.account_number || 'N/A'}</p>
                         <p><strong>Product Code:</strong> ${saving.product_code || 'N/A'}</p>
                         <p><strong>Product Name:</strong> ${saving.product_name || 'N/A'}</p>
@@ -1717,14 +1747,14 @@
                         <p><strong>Expiry Date:</strong> ${saving.expiry_date || 'N/A'}</p>
                         <p><strong>Account Status:</strong> ${saving.account_status || 'N/A'}</p>
                         ${isCurrentMortuary ? `
-                        <div class="alert alert-warning">
-                            <strong>🏥 Mortuary Product Detected!</strong><br>
-                            <strong>Product:</strong> ${mortuaryProduct.product_name}<br>
-                            <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
-                            <strong>Prioritization:</strong> ${mortuaryProduct.prioritization}<br>
-                            <strong>Deduction Amount:</strong> ${saving.deduction_amount || '0.00'}
-                        </div>
-                        ` : ''}
+                                <div class="alert alert-warning">
+                                    <strong>🏥 Mortuary Product Detected!</strong><br>
+                                    <strong>Product:</strong> ${mortuaryProduct.product_name}<br>
+                                    <strong>Default Amount:</strong> ${mortuaryProduct.amount_to_deduct}<br>
+                                    <strong>Prioritization:</strong> ${mortuaryProduct.prioritization}<br>
+                                    <strong>Deduction Amount:</strong> ${saving.deduction_amount || '0.00'}
+                                </div>
+                                ` : ''}
                         <p><em>Savings Account ${index + 1} of ${savings.length}</em></p>
                     </div>`;
 
@@ -2211,7 +2241,7 @@
         }
 
         // Add event handler for bulk edit modal hidden event
-        $('#bulkEditModal').on('hidden.bs.modal', function () {
+        $('#bulkEditModal').on('hidden.bs.modal', function() {
             // Restore scrolling to the main edit modal
             $('body').addClass('modal-open');
             // Remove any inline styles that might have been added to body

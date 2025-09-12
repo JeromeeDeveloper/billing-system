@@ -395,10 +395,6 @@ class RemittanceController extends Controller
             $remittanceTags = [1]; // Default to remittance 1
         }
 
-        // Debug: Log the data (temporary)
-        Log::info('Remittance Data Count: ' . $remittanceData->count());
-        Log::info('Remittance Tags: ' . json_encode($remittanceTags));
-
         return view('components.admin.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
             'sharesPreviewPaginated',
