@@ -24,7 +24,9 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
         'skipped' => 0,
         'not_found' => 0,
         'skipped_no_product' => 0,
-        'skipped_no_product_code' => 0
+        'skipped_no_product_code' => 0,
+        'missing_branches' => [],
+        'missing_members' => []
     ];
 
     public function __construct(string $billingPeriod)
@@ -34,15 +36,24 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
 
     public function headingRow(): int
     {
-        return 5;
+        return 7;
     }
 
     public function collection(Collection $rows)
     {
         $now = now();
 
+        Log::info("LoanForecastImport: Starting collection with " . $rows->count() . " rows");
+
+        // Log first few rows for debugging
+        $sampleRows = $rows->take(5);
+        foreach ($sampleRows as $index => $row) {
+            Log::info("LoanForecastImport: Sample row {$index}: " . json_encode($row->toArray()));
+        }
+
         foreach ($rows as $row) {
             if (empty($row['cid']) || empty($row['branch_code'])) {
+                Log::info("LoanForecastImport: Skipping row - CID: '{$row['cid']}', Branch: '{$row['branch_code']}'");
                 continue;
             }
 
@@ -60,6 +71,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
             if (!$branch) {
                 Log::info("LoanForecast Import - Skipped CID {$row['cid']}: Branch with code '{$branchCode}' not found. Please create branch manually first.");
                 $this->stats['not_found']++;
+
+                // Collect missing branch codes for reporting
+                if (!in_array($branchCode, $this->stats['missing_branches'])) {
+                    $this->stats['missing_branches'][] = $branchCode;
+                }
                 continue;
             }
 
@@ -76,6 +92,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 // Log skipped member and continue
                 Log::info("LoanForecast Import - Skipped CID {$cid}: Member not found or not tagged as PGB or New");
                 $this->stats['not_found']++;
+
+                // Collect missing member CIDs for reporting
+                if (!in_array($cid, $this->stats['missing_members'])) {
+                    $this->stats['missing_members'][] = $cid;
+                }
                 continue;
             }
 
@@ -298,11 +319,6 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
         Log::info("LoanForecast Import completed - Processed: {$this->stats['processed']}, Not Found: {$this->stats['not_found']}");
     }
 
-    public function getStats()
-    {
-        return $this->stats;
-    }
-
     private function parseDate($value)
     {
         try {
@@ -319,5 +335,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
     private function cleanNumber($value)
     {
         return floatval(str_replace(',', '', $value));
+    }
+
+    public function getStats()
+    {
+        Log::info("LoanForecastImport: Final statistics: " . json_encode($this->stats));
+        return $this->stats;
     }
 }

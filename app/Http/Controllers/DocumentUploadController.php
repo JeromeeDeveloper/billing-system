@@ -100,8 +100,14 @@ class DocumentUploadController extends Controller
 
     public function store(Request $request)
     {
-        ini_set('max_execution_time', 2000);
-        ini_set('memory_limit', '2G'); // Increase memory limit to 1GB
+        ini_set('max_execution_time', 0);       // 0 = unlimited execution time
+        ini_set('memory_limit', -1);           // -1 = unlimited memory
+        ini_set('upload_max_filesize', '0');   // 0 = unlimited (but may need a very high number instead)
+        ini_set('post_max_size', '0');         // 0 = unlimited (same note as above)
+        ini_set('max_input_time', -1);         // -1 = unlimited
+        ini_set('max_input_vars', 1000000);    // raise very high instead of unlimited
+        ini_set('max_file_uploads', 1000);     // set very high (PHP has no unlimited here)
+        ini_set('default_socket_timeout', -1); // -1 = unlimited timeout
 
         $user = Auth::user();
         $request->validate([
@@ -223,6 +229,15 @@ class DocumentUploadController extends Controller
                                     throw $e;
                                 }
                             }
+                        }
+
+                        // Get import statistics for LoanForecastImport
+                        if ($options['type'] === 'Installment File' && method_exists($importClass, 'getStats')) {
+                            $stats = $importClass->getStats();
+                            Log::info("LoanForecast Import Statistics: " . json_encode($stats));
+
+                            // Store statistics in session for display
+                            session()->flash('import_stats', $stats);
                         }
                     } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
                         throw new \Exception("File validation failed for {$options['type']}: " . $e->getMessage());

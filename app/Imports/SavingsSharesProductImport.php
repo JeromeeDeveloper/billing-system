@@ -186,40 +186,123 @@ class SavingsSharesProductImport implements ToCollection
     private function updateLoanProduct($member, $loanProduct, $value)
     {
         try {
-            $uploadedTotalDue = floatval($value);
+            // Sanitize uploaded total due (remove thousands separators)
+            $uploadedTotalDue = (float) str_replace([',', ' '], '', trim((string) $value));
+
+            // Normalize product code
+            $productCode = trim((string) $loanProduct->product_code);
+
+            // Current billing period (optional constraint)
+            $currentBillingPeriod = Auth::user()->billing_period ?? null;
 
             // Find existing loan forecasts for this member that match the product code
-            $loanForecasts = $member->loanForecasts()
-                ->where('loan_acct_no', 'like', '%-' . $loanProduct->product_code . '-%')
+            $loanForecasts = \App\Models\LoanForecast::where('member_id', $member->id)
+                ->where('loan_acct_no', 'like', '%-' . $productCode . '-%')
+                ->when($currentBillingPeriod, function($q) use ($currentBillingPeriod) {
+                    $q->where(function($qq) use ($currentBillingPeriod) {
+                        $qq->whereNull('billing_period')
+                           ->orWhere('billing_period', $currentBillingPeriod);
+                    });
+                })
                 ->get();
+
+            Log::info("SavingsSharesProductImport: Member {$member->cid} product {$productCode} -> found {$loanForecasts->count()} loan forecast(s) to update. Uploaded total_due={$uploadedTotalDue}");
 
             if ($loanForecasts->count() > 0) {
                 foreach ($loanForecasts as $loanForecast) {
-                    // Store the current interest_due to preserve it
-                    $currentInterestDue = $loanForecast->interest_due ?? 0;
-
-                    // Calculate new principal_due to match the uploaded total_due
+                    // Keep current interest, adjust principal to match uploaded total
+                    $currentInterestDue = (float) ($loanForecast->interest_due ?? 0);
                     $newPrincipalDue = $uploadedTotalDue - $currentInterestDue;
-
-                    // Ensure principal_due is not negative
                     if ($newPrincipalDue < 0) {
                         $newPrincipalDue = 0;
                         Log::warning("Adjusted principal_due to 0 for member {$member->cid}, loan {$loanForecast->loan_acct_no} - uploaded total_due ({$uploadedTotalDue}) is less than interest_due ({$currentInterestDue})");
                     }
 
-                    // Update the loan forecast with new values
-                    $loanForecast->update([
-                        'principal_due' => $newPrincipalDue,
-                        'total_due' => $uploadedTotalDue,
-                        'billing_period' => Auth::user()->billing_period ?? null
-                    ]);
+                    // Apply updates (current)
+                    $loanForecast->principal_due = $newPrincipalDue;
+                    $loanForecast->total_due = $uploadedTotalDue;
+                    if ($currentBillingPeriod) {
+                        $loanForecast->billing_period = $currentBillingPeriod;
+                    }
 
-                    Log::info("Updated loan forecast {$loanForecast->loan_acct_no} for member {$member->cid} with total_due: {$uploadedTotalDue}, principal_due: {$newPrincipalDue}, interest_due: {$currentInterestDue}");
+                    // Apply updates (originals) with the same values and logic
+                    $loanForecast->original_principal_due = $newPrincipalDue;
+                    $loanForecast->original_interest_due = $currentInterestDue;
+                    $loanForecast->original_total_due = $uploadedTotalDue;
+
+                    $loanForecast->save();
+
+                    Log::info("Updated loan forecast {$loanForecast->loan_acct_no} for member {$member->cid} | new P={$newPrincipalDue}, I={$currentInterestDue}, T={$uploadedTotalDue} | originals set to same values");
                 }
 
                 $this->stats['loans_updated'] += $loanForecasts->count();
+
+                // Recalculate member loan_balance to reflect current dues
+                try {
+                    $billingPeriod = $currentBillingPeriod;
+                    $billingEnd = $billingPeriod ? \Carbon\Carbon::parse($billingPeriod . '-01')->endOfMonth() : null;
+                    $today = now()->toDateString();
+
+                    $allForecasts = \App\Models\LoanForecast::where('member_id', $member->id)->get();
+                    $newLoanBalance = 0.0;
+
+                    foreach ($allForecasts as $lf) {
+                        // Due on/before billing period end (or no constraint if billingEnd is null)
+                        $isDue = true;
+                        if ($billingEnd && $lf->amortization_due_date) {
+                            $dueDate = \Carbon\Carbon::parse($lf->amortization_due_date);
+                            $isDue = $dueDate->lte($billingEnd);
+                        }
+                        if (!$isDue) {
+                            continue;
+                        }
+
+                        // Account status validation: include deduction; include non-deduction only if NOT within hold window
+                        if ($lf->account_status === 'non-deduction') {
+                            $startHold = $lf->start_hold ? $lf->start_hold : null;
+                            $expiryDate = $lf->expiry_date ? $lf->expiry_date : null;
+                            $withinHold = (
+                                ($startHold && $expiryDate && $today >= $startHold && $today <= $expiryDate) ||
+                                ($startHold && !$expiryDate && $today >= $startHold) ||
+                                (!$startHold && $expiryDate && $today <= $expiryDate)
+                            );
+                            if ($withinHold) {
+                                continue;
+                            }
+                        } elseif ($lf->account_status !== 'deduction') {
+                            continue;
+                        }
+
+                        // Product must be registered for member and billing_type = regular
+                        $productCode = explode('-', $lf->loan_acct_no)[2] ?? null;
+                        if (!$productCode) {
+                            continue;
+                        }
+                        $hasRegularProduct = $member->loanProductMembers()
+                            ->whereHas('loanProduct', function($q) use ($productCode) {
+                                $q->where('product_code', $productCode)
+                                  ->where('billing_type', 'regular');
+                            })
+                            ->exists();
+                        if (!$hasRegularProduct) {
+                            continue;
+                        }
+
+                        $newLoanBalance += (float) ($lf->total_due ?? 0);
+                    }
+
+                    $member->loan_balance = $newLoanBalance;
+                    $member->save();
+                    Log::info("Recalculated loan_balance for member {$member->cid}: {$newLoanBalance}");
+                } catch (\Exception $e) {
+                    Log::error("Failed recalculating loan_balance for member {$member->cid}: " . $e->getMessage());
+                }
             } else {
-                Log::warning("No loan forecasts found for member {$member->cid} with product code {$loanProduct->product_code}");
+                // Log a brief inventory of member loans to aid troubleshooting
+                $sampleLoans = \App\Models\LoanForecast::where('member_id', $member->id)
+                    ->select('loan_acct_no', 'total_due', 'principal_due', 'interest_due')
+                    ->limit(5)->get();
+                Log::warning("No loan forecasts matched for member {$member->cid} and product {$productCode}. Sample member loans: " . $sampleLoans->toJson());
             }
 
         } catch (\Exception $e) {
