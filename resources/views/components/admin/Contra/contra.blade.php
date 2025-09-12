@@ -49,12 +49,12 @@
                                 @if(session('error'))
                                     <div class="alert alert-danger">{{ session('error') }}</div>
                                 @endif
-                                
+
                                 <!-- Check which types already have contra entries -->
                                 @php
                                     $existingTypes = $contraAccs->pluck('type')->unique()->toArray();
                                 @endphp
-                                
+
                                 <form method="POST" action="{{ route('admin.contra') }}">
                                     @csrf
                                     <div class="form-group">
@@ -226,7 +226,7 @@
             $('#type').on('change', function() {
                 var type = $(this).val();
                 var submitBtn = $('#submit-btn');
-                
+
                 // Check if the selected option is disabled
                 if ($(this).find('option:selected').prop('disabled')) {
                     Swal.fire({
@@ -243,7 +243,7 @@
                     submitBtn.prop('disabled', true);
                 }
             });
-            
+
             // SweetAlert2 for delete confirmation
             $('.delete-contra-btn').on('click', function(e) {
                 e.preventDefault();
@@ -262,16 +262,16 @@
                     }
                 });
             });
-            
+
             // Show info message if all types are disabled
-            if ($('#type option:not([disabled])').length <= 1) { // Only "Select Type" option available
-                Swal.fire({
-                    icon: 'info',
-                    title: 'All Contra Types Created',
-                    text: 'All contra account types (Shares, Savings, Loans) have been created. You can edit existing entries or delete them to create new ones.',
-                    confirmButtonText: 'OK'
-                });
-            }
+            // if ($('#type option:not([disabled])').length <= 1) { // Only "Select Type" option available
+            //     Swal.fire({
+            //         icon: 'info',
+            //         title: 'All Contra Types Created',
+            //         text: 'All contra account types (Shares, Savings, Loans) have been created. You can edit existing entries or delete them to create new ones.',
+            //         confirmButtonText: 'OK'
+            //     });
+            // }
         });
     </script>
 </body>

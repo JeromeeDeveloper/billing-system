@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use App\Models\Branch;
 use Carbon\Carbon;
 
@@ -33,17 +34,24 @@ class LoginController extends Controller
         $request->session()->regenerate();
 
         $user = Auth::user();
+        Log::info('Login successful', ['user_id' => $user->id, 'email' => $user->email, 'role' => $user->role]);
 
         // Remove logic that sets billing_period based on current date
         // The user's billing_period should only be updated by the admin's manual close action.
 
         if ($user->role === 'admin') {
+            Log::info('Redirecting after login', ['to' => 'dashboard']);
             return redirect()->route('dashboard')->with('success', 'Welcome, Admin!');
         } elseif ($user->role === 'branch') {
+            Log::info('Redirecting after login', ['to' => 'dashboard_branch']);
             return redirect()->route('dashboard_branch')->with('success', 'Welcome, Branch!');
+        } elseif ($user->role === 'admin-msp') {
+            Log::info('Redirecting after login', ['to' => 'dashboard']);
+            return redirect()->route('dashboard')->with('success', 'Welcome, Admin-MSP!');
         }
     }
 
+    Log::warning('Login failed', ['email' => $request->input('email')]);
     return back()->withErrors([
         'email' => 'Invalid email or password.',
     ])->onlyInput('email');
@@ -76,12 +84,19 @@ class LoginController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|min:8',
-            'role' => 'nullable|in:admin,branch',
-            'status' => 'nullable|in:pending,approved',
+            'role' => 'nullable|in:admin,branch,admin-msp',
+            'billing_approval_status' => 'nullable|in:pending,approved',
+            'special_billing_approval_status' => 'nullable|in:pending,approved',
             'branch_id' => 'nullable|exists:branches,id'
         ]);
 
-        $data = $request->only(['name', 'email', 'role', 'status', 'branch_id']);
+        $data = $request->only(['name', 'email', 'role', 'branch_id']);
+
+        // Only set approval statuses for admin and branch roles
+        if (in_array($request->role, ['admin', 'branch'])) {
+            $data['billing_approval_status'] = $request->billing_approval_status;
+            $data['special_billing_approval_status'] = $request->special_billing_approval_status;
+        }
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
@@ -104,12 +119,11 @@ class LoginController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|confirmed',
-            'role' => 'required|in:admin,branch',
-            'status' => 'required|in:pending,approved',
+            'role' => 'required|in:admin,branch,admin-msp',
             'branch_id' => 'nullable|exists:branches,id'
         ]);
 
-        $data = $request->only(['name', 'email', 'role', 'status', 'branch_id']);
+        $data = $request->only(['name', 'email', 'role', 'branch_id']);
         $data['password'] = Hash::make($request->password);
 
         // Set billing period based on admin's current billing period
@@ -119,6 +133,12 @@ class LoginController extends Controller
             $adminBillingPeriod = Carbon::now()->format('Y-m-01');
         }
         $data['billing_period'] = $adminBillingPeriod;
+
+        // Set default approval statuses for admin and branch roles
+        if (in_array($request->role, ['admin', 'branch'])) {
+            $data['billing_approval_status'] = 'pending';
+            $data['special_billing_approval_status'] = 'pending';
+        }
 
         User::create($data);
 

@@ -22,7 +22,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
     protected $stats = [
         'processed' => 0,
         'skipped' => 0,
-        'not_found' => 0
+        'not_found' => 0,
+        'skipped_no_product' => 0,
+        'skipped_no_product_code' => 0,
+        'missing_branches' => [],
+        'missing_members' => []
     ];
 
     public function __construct(string $billingPeriod)
@@ -32,15 +36,24 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
 
     public function headingRow(): int
     {
-        return 5;
+        return 7;
     }
 
     public function collection(Collection $rows)
     {
         $now = now();
 
+        Log::info("LoanForecastImport: Starting collection with " . $rows->count() . " rows");
+
+        // Log first few rows for debugging
+        $sampleRows = $rows->take(5);
+        foreach ($sampleRows as $index => $row) {
+            Log::info("LoanForecastImport: Sample row {$index}: " . json_encode($row->toArray()));
+        }
+
         foreach ($rows as $row) {
             if (empty($row['cid']) || empty($row['branch_code'])) {
+                Log::info("LoanForecastImport: Skipping row - CID: '{$row['cid']}', Branch: '{$row['branch_code']}'");
                 continue;
             }
 
@@ -58,6 +71,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
             if (!$branch) {
                 Log::info("LoanForecast Import - Skipped CID {$row['cid']}: Branch with code '{$branchCode}' not found. Please create branch manually first.");
                 $this->stats['not_found']++;
+
+                // Collect missing branch codes for reporting
+                if (!in_array($branchCode, $this->stats['missing_branches'])) {
+                    $this->stats['missing_branches'][] = $branchCode;
+                }
                 continue;
             }
 
@@ -74,6 +92,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
                 // Log skipped member and continue
                 Log::info("LoanForecast Import - Skipped CID {$cid}: Member not found or not tagged as PGB or New");
                 $this->stats['not_found']++;
+
+                // Collect missing member CIDs for reporting
+                if (!in_array($cid, $this->stats['missing_members'])) {
+                    $this->stats['missing_members'][] = $cid;
+                }
                 continue;
             }
 
@@ -86,23 +109,40 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
 
             $loanProductMemberIds = [];  // Array of member ids linked to loan products
 
+            $shouldProcessLoanForecast = false;
+
             if ($productCodePart) {
                 // Get all loan products with this product code
                 $loanProducts = LoanProduct::where('product_code', $productCodePart)
                     ->orderBy('prioritization', 'asc')
                     ->get();
 
-                foreach ($loanProducts as $loanProduct) {
-                    // Attach the member to the loan product pivot if not already attached
-                    if (!$loanProduct->members()->where('member_id', $member->id)->exists()) {
-                        $loanProduct->members()->attach($member->id);
-                    }
-                }
+                // Only proceed if loan products exist in the loans_product table
+                if ($loanProducts->count() > 0) {
+                    $shouldProcessLoanForecast = true;
 
-                // Collect all member IDs linked to these loan products (optional)
-                foreach ($loanProducts as $loanProduct) {
-                    $loanProductMemberIds = array_merge($loanProductMemberIds, $loanProduct->members()->pluck('members.id')->toArray());
+                    foreach ($loanProducts as $loanProduct) {
+                        // Attach the member to the loan product pivot if not already attached
+                        if (!$loanProduct->members()->where('member_id', $member->id)->exists()) {
+                            $loanProduct->members()->attach($member->id);
+                        }
+                    }
+
+                    // Collect all member IDs linked to these loan products (optional)
+                    foreach ($loanProducts as $loanProduct) {
+                        $loanProductMemberIds = array_merge($loanProductMemberIds, $loanProduct->members()->pluck('members.id')->toArray());
+                    }
+                } else {
+                    // Log that no loan product exists for this product code and skip processing
+                    Log::info("LoanForecast Import - No loan product found for product code: {$productCodePart}, skipping loan forecast creation/update for CID: {$cid}");
+                    $this->stats['skipped_no_product']++;
+                    continue; // Skip this row entirely
                 }
+            } else {
+                // If no product code, skip processing
+                Log::info("LoanForecast Import - No product code found in loan account: {$row['loan_account_no']}, skipping for CID: {$cid}");
+                $this->stats['skipped_no_product_code']++;
+                continue; // Skip this row entirely
             }
 
             // Prepare values from Excel
@@ -279,11 +319,6 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
         Log::info("LoanForecast Import completed - Processed: {$this->stats['processed']}, Not Found: {$this->stats['not_found']}");
     }
 
-    public function getStats()
-    {
-        return $this->stats;
-    }
-
     private function parseDate($value)
     {
         try {
@@ -300,5 +335,11 @@ class LoanForecastImport implements ToCollection, WithHeadingRow
     private function cleanNumber($value)
     {
         return floatval(str_replace(',', '', $value));
+    }
+
+    public function getStats()
+    {
+        Log::info("LoanForecastImport: Final statistics: " . json_encode($this->stats));
+        return $this->stats;
     }
 }

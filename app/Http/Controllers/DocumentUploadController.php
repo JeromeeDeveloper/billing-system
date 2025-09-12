@@ -100,8 +100,14 @@ class DocumentUploadController extends Controller
 
     public function store(Request $request)
     {
-        ini_set('max_execution_time', 2000);
-        ini_set('memory_limit', '2G'); // Increase memory limit to 1GB
+        ini_set('max_execution_time', 0);       // 0 = unlimited execution time
+        ini_set('memory_limit', -1);           // -1 = unlimited memory
+        ini_set('upload_max_filesize', '0');   // 0 = unlimited (but may need a very high number instead)
+        ini_set('post_max_size', '0');         // 0 = unlimited (same note as above)
+        ini_set('max_input_time', -1);         // -1 = unlimited
+        ini_set('max_input_vars', 1000000);    // raise very high instead of unlimited
+        ini_set('max_file_uploads', 1000);     // set very high (PHP has no unlimited here)
+        ini_set('default_socket_timeout', -1); // -1 = unlimited timeout
 
         $user = Auth::user();
         $request->validate([
@@ -224,6 +230,15 @@ class DocumentUploadController extends Controller
                                 }
                             }
                         }
+
+                        // Get import statistics for LoanForecastImport
+                        if ($options['type'] === 'Installment File' && method_exists($importClass, 'getStats')) {
+                            $stats = $importClass->getStats();
+                            Log::info("LoanForecast Import Statistics: " . json_encode($stats));
+
+                            // Store statistics in session for display
+                            session()->flash('import_stats', $stats);
+                        }
                     } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
                         throw new \Exception("File validation failed for {$options['type']}: " . $e->getMessage());
                     } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
@@ -285,8 +300,17 @@ class DocumentUploadController extends Controller
 
         // Check if user is approved
         $user = Auth::user();
-        if ($user->status !== 'pending') {
-            return redirect()->back()->with('error', 'Your account is approved. Upload is disabled for approved accounts.');
+        // Check if ANY admin or branch user has approved (disables uploads for everyone)
+        $hasApprovedUsers = User::whereIn('role', ['admin', 'branch'])
+            ->where('billing_approval_status', 'approved')
+            ->exists();
+
+        if ($hasApprovedUsers) {
+            return redirect()->back()->with('error', 'File uploads are disabled. One or more admin/branch users have approved billing.');
+        }
+
+        if ($user->role !== 'admin-msp' && $user->billing_approval_status !== 'pending') {
+            return redirect()->back()->with('error', 'Your billing approval is approved. Upload is disabled for approved accounts.');
         }
 
         $request->validate([
@@ -458,23 +482,38 @@ class DocumentUploadController extends Controller
         // but compute branch approval statuses to drive per-option disabling in the modal
         $hasApprovedBranches = false;
         $branchStatuses = collect();
-        if ($user->role === 'admin') {
-            $hasApprovedBranches = User::where('role', 'branch')
-                ->where('status', 'approved')
+        // Check if ANY admin or branch user has approved (disables uploads for everyone)
+        $hasApprovedUsers = User::whereIn('role', ['admin', 'branch'])
+            ->where('billing_approval_status', 'approved')
+            ->exists();
+
+        if ($user->role === 'admin-msp') {
+            // Admin-MSP always has full access, no approval needed
+            $hasApprovedBranches = false;
+            $branchStatuses = collect();
+            $isApproved = !$hasApprovedUsers; // Disabled if any admin/branch approved
+        } elseif ($user->role === 'admin') {
+            // Admin needs billing approval status to be pending to upload
+            $hasApprovedBranches = User::whereIn('role', ['admin', 'branch'])
+                ->where('billing_approval_status', 'approved')
                 ->exists();
             $branchStatuses = User::where('role', 'branch')
-                ->select('branch_id', 'status')
+                ->select('branch_id', 'billing_approval_status')
                 ->get()
                 ->groupBy('branch_id')
                 ->map(function ($rows) {
                     // If any user for the branch is approved, treat branch as approved
-                    return $rows->contains(function ($r) { return $r->status === 'approved'; }) ? 'approved' : 'pending';
+                    return $rows->contains(function ($r) { return $r->billing_approval_status === 'approved'; }) ? 'approved' : 'pending';
                 });
-            // Always allow opening Upload modal for admin; validations are in the modal UI
-            $isApproved = true;
+            // Admin can upload if they are pending OR if they are the only approved user
+            $otherApprovedUsers = User::whereIn('role', ['admin', 'branch'])
+                ->where('billing_approval_status', 'approved')
+                ->where('id', '!=', $user->id)
+                ->exists();
+            $isApproved = !$otherApprovedUsers;
         } else {
-            // For branch users, check their own status
-            $isApproved = $user->status === 'pending';
+            // For branch users, check their own billing approval status
+            $isApproved = $user->billing_approval_status === 'pending' && !$hasApprovedUsers;
         }
 
         // Get only the latest 5 files total across all document types
@@ -491,8 +530,8 @@ class DocumentUploadController extends Controller
         $user = Auth::user();
         $billingPeriod = $user->billing_period; // e.g. '2025-05'
 
-        // Check if user is pending (enabled) or approved (disabled)
-        $isApproved = $user->status === 'pending';
+        // Check if user billing approval is pending (enabled) or approved (disabled)
+        $isApproved = $user->billing_approval_status === 'pending';
 
         // Get only the latest 5 files total across all document types
         $documents = DocumentUpload::where('billing_period', $billingPeriod)

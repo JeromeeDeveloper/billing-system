@@ -26,12 +26,11 @@ class RemittanceController extends Controller
 {
     public function index(Request $request)
     {
-        $userId = Auth::id();
         $billingPeriod = Auth::user()->billing_period;
         $perPage = 10;
 
         // Get all remittance preview data and group by member
-        $allRemittanceData = \App\Models\RemittancePreview::where('user_id', $userId)
+        $allRemittanceData = \App\Models\RemittancePreview::query()
             ->where('type', 'admin')
             ->where('billing_period', $billingPeriod)
             ->whereNotNull('name')
@@ -150,7 +149,7 @@ class RemittanceController extends Controller
 
         // Get billing type information from RemittancePreview to determine which members belong to which billing type
         $userId = Auth::id();
-        $billingTypeMap = RemittancePreview::where('user_id', $userId)
+        $billingTypeMap = RemittancePreview::query()
             ->where('type', 'admin')
             ->where('billing_period', $billingPeriod)
             ->where('remittance_type', 'loans_savings')
@@ -283,12 +282,12 @@ class RemittanceController extends Controller
         // Get data counts for monitoring
         $monitoringData = [
             'loans_savings' => [
-                'total_records' => RemittancePreview::where('user_id', Auth::id())
+                'total_records' => RemittancePreview::query()
                     ->where('type', 'admin')
                     ->where('billing_period', $billingPeriod)
                     ->where('remittance_type', 'loans_savings')
                     ->count(),
-                'matched_records' => RemittancePreview::where('user_id', Auth::id())
+                'matched_records' => RemittancePreview::query()
                     ->where('type', 'admin')
                     ->where('billing_period', $billingPeriod)
                     ->where('remittance_type', 'loans_savings')
@@ -300,12 +299,12 @@ class RemittanceController extends Controller
                 })->values()
             ],
             'shares' => [
-                'total_records' => RemittancePreview::where('user_id', Auth::id())
+                'total_records' => RemittancePreview::query()
                     ->where('type', 'admin')
                     ->where('billing_period', $billingPeriod)
                     ->where('remittance_type', 'shares')
                     ->count(),
-                'matched_records' => RemittancePreview::where('user_id', Auth::id())
+                'matched_records' => RemittancePreview::query()
                     ->where('type', 'admin')
                     ->where('billing_period', $billingPeriod)
                     ->where('remittance_type', 'shares')
@@ -337,11 +336,21 @@ class RemittanceController extends Controller
             ->where('period', $billingPeriod)
             ->get()
             ->map(function ($report) {
+                // Get billing type from RemittanceBatch
+                $billingType = 'Regular'; // Default
+                $batch = RemittanceBatch::where('billing_period', $report->period)
+                    ->where('remittance_tag', $report->remittance_tag)
+                    ->first();
+                if ($batch) {
+                    $billingType = ucfirst($batch->billing_type);
+                }
+
                 return [
                     'cid' => $report->cid,
                     'member_name' => $report->member_name,
                     'remittance_type' => $report->remittance_type,
                     'remittance_tag' => $report->remittance_tag,
+                    'billing_type' => $billingType,
                     'remitted_loans' => $report->remitted_loans ?? 0,
                     'remitted_savings' => $report->remitted_savings ?? 0,
                     'remitted_shares' => $report->remitted_shares ?? 0,
@@ -351,7 +360,7 @@ class RemittanceController extends Controller
 
         // If no data in RemittanceReport, try to get from RemittancePreview as fallback
         if ($remittanceData->isEmpty()) {
-            $previewData = \App\Models\RemittancePreview::where('user_id', $userId)
+            $previewData = \App\Models\RemittancePreview::query()
                 ->where('type', 'admin')
                 ->where('billing_period', $billingPeriod)
                 ->whereNotNull('name')
@@ -363,6 +372,7 @@ class RemittanceController extends Controller
                         'member_name' => $preview->name,
                         'remittance_type' => $preview->remittance_type,
                         'remittance_tag' => 1, // Default to 1 for preview data
+                        'billing_type' => ucfirst($preview->billing_type ?? 'regular'), // Add billing type
                         'remitted_loans' => $preview->loans ?? 0,
                         'remitted_savings' => is_array($preview->savings) ? ($preview->savings['total'] ?? 0) : ($preview->savings ?? 0),
                         'remitted_shares' => $preview->share_amount ?? 0,
@@ -384,10 +394,6 @@ class RemittanceController extends Controller
         if (empty($remittanceTags)) {
             $remittanceTags = [1]; // Default to remittance 1
         }
-
-        // Debug: Log the data (temporary)
-        Log::info('Remittance Data Count: ' . $remittanceData->count());
-        Log::info('Remittance Tags: ' . json_encode($remittanceTags));
 
         return view('components.admin.remittance.remittance', compact(
             'loansSavingsPreviewPaginated',
@@ -426,9 +432,35 @@ class RemittanceController extends Controller
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;
 
-            // Process forecast file first
+            // Ensure tmp_uploads directory exists for forecast file
+            $tmpUploadsDir = storage_path('app/tmp_uploads');
+            if (!file_exists($tmpUploadsDir)) {
+                mkdir($tmpUploadsDir, 0777, true);
+            }
+
+            // Process forecast file first - save before processing (same logic as file datatable)
+            $forecastFile = $request->file('forecast_file');
+            $forecastTempPath = $forecastFile->storeAs('tmp_uploads', uniqid() . '-' . $forecastFile->getClientOriginalName(), 'local');
+            $forecastFullTempPath = storage_path('app/' . $forecastTempPath);
+
+            // Debug: Check if forecast file was actually saved
+            if (!file_exists($forecastFullTempPath)) {
+                throw new \Exception("Forecast file was not saved to expected location: {$forecastFullTempPath}. Temp path: {$forecastTempPath}");
+            }
+
+            $forecastImportFilePath = $forecastFullTempPath;
+            // If CSV, clean and re-save as UTF-8 CSV
+            $forecastExtension = strtolower($forecastFile->getClientOriginalExtension());
+            if ($forecastExtension === 'csv') {
+                $forecastImportFilePath = $this->cleanCsvFile($forecastFullTempPath);
+            }
+
+            // Process forecast file from saved location
             $forecastImport = new \App\Imports\LoanForecastImport($currentBillingPeriod);
-            Excel::import($forecastImport, $request->file('forecast_file'));
+            Excel::import($forecastImport, $forecastImportFilePath);
+
+            // Clean up forecast temporary files
+            $this->cleanupTempFiles($forecastFullTempPath, $forecastImportFilePath);
 
             // Then process the remittance file
             $import = new RemittanceImport($currentBillingPeriod, $billingType);
@@ -447,6 +479,10 @@ class RemittanceController extends Controller
             $hasUnmatched = false;
             $matchedCount = 0;
             $unmatchedCount = 0;
+
+            // Log the remittance tag for debugging
+            $remittanceTag = $import->getRemittanceTag();
+            Log::info("Processing remittance upload with tag: {$remittanceTag} for period: {$currentBillingPeriod}");
 
             foreach ($results as $result) {
                 // Always store in preview (both matched and unmatched)
@@ -481,22 +517,40 @@ class RemittanceController extends Controller
                 // Get the remittance tag from the import
                 $remittanceTag = $import->getRemittanceTag();
 
-                // Create or update remittance report with per-remittance tracking
-                $report = RemittanceReport::firstOrNew([
+                // Check if record already exists for this specific combination
+                $existingReport = RemittanceReport::where([
                     'cid' => $result['cid'],
                     'period' => $currentBillingPeriod,
                     'remittance_tag' => $remittanceTag,
                     'remittance_type' => 'loans_savings',
-                ]);
+                ])->first();
+
+                if ($existingReport) {
+                    // Log warning and skip if record already exists
+                    Log::warning("Record already exists for CID: {$result['cid']}, Tag: {$remittanceTag} - skipping to prevent overwrite");
+                    continue;
+                }
+
+                // Create new remittance report record
+                $report = new RemittanceReport();
+                $report->cid = $result['cid'];
+                $report->period = $currentBillingPeriod;
+                $report->remittance_tag = $remittanceTag;
+                $report->remittance_type = 'loans_savings';
                 $report->member_name = $result['name'];
-                $report->remitted_loans = $result['loans']; // Use actual amount, don't accumulate
-                $report->remitted_savings = $result['savings_total'] ?? 0; // Use actual amount, don't accumulate
+                $report->remitted_loans = $result['loans'];
+                $report->remitted_savings = $result['savings_total'] ?? 0;
                 $report->remitted_shares = 0; // Shares are handled separately
-
-                // Use billed amount from import result
                 $report->billed_amount = $result['billed_amount'] ?? 0;
-
                 $report->save();
+            }
+
+            // Log the results for debugging
+            Log::info("Remittance upload completed - Tag: {$remittanceTag}, Matched: {$matchedCount}, Unmatched: {$unmatchedCount}");
+
+            // Warn if no members were matched
+            if ($matchedCount == 0) {
+                Log::warning("No members were matched in remittance upload - Tag: {$remittanceTag}. This will result in empty remittance data.");
             }
 
             // Don't rollback - allow import to complete with both matched and unmatched
@@ -531,8 +585,50 @@ class RemittanceController extends Controller
                 ->with('success', $successMessage);
         } catch (\Exception $e) {
             DB::rollBack();
+            // Clean up forecast temporary files even if import fails
+            if (isset($forecastFullTempPath) && isset($forecastImportFilePath)) {
+                $this->cleanupTempFiles($forecastFullTempPath, $forecastImportFilePath);
+            }
             return redirect()->back()
                 ->with('error', 'Error processing file: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Clean CSV file and re-save as UTF-8 CSV
+     */
+    private function cleanCsvFile($filePath)
+    {
+        $content = file_get_contents($filePath);
+
+        // Detect encoding
+        $encoding = mb_detect_encoding($content, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
+
+        if ($encoding && $encoding !== 'UTF-8') {
+            $content = mb_convert_encoding($content, 'UTF-8', $encoding);
+        }
+
+        // Clean up any BOM or special characters
+        $content = preg_replace('/^\xEF\xBB\xBF/', '', $content);
+
+        // Re-save as clean UTF-8 CSV
+        $cleanPath = str_replace('.csv', '_clean.csv', $filePath);
+        file_put_contents($cleanPath, $content);
+
+        return $cleanPath;
+    }
+
+    /**
+     * Clean up temporary files
+     */
+    private function cleanupTempFiles($originalPath, $processedPath = null)
+    {
+        if (file_exists($originalPath)) {
+            unlink($originalPath);
+        }
+
+        if ($processedPath && $processedPath !== $originalPath && file_exists($processedPath)) {
+            unlink($processedPath);
         }
     }
 
@@ -552,6 +648,30 @@ class RemittanceController extends Controller
 
             // Get current billing period
             $currentBillingPeriod = Auth::user()->billing_period;
+
+            // Process forecast file first - save before processing (same logic as file datatable)
+            $forecastFile = $request->file('forecast_file');
+            $forecastTempPath = $forecastFile->storeAs('tmp_uploads', uniqid() . '-' . $forecastFile->getClientOriginalName(), 'local');
+            $forecastFullTempPath = storage_path('app/' . $forecastTempPath);
+
+            // Debug: Check if forecast file was actually saved
+            if (!file_exists($forecastFullTempPath)) {
+                throw new \Exception("Forecast file was not saved to expected location: {$forecastFullTempPath}. Temp path: {$forecastTempPath}");
+            }
+
+            $forecastImportFilePath = $forecastFullTempPath;
+            // If CSV, clean and re-save as UTF-8 CSV
+            $forecastExtension = strtolower($forecastFile->getClientOriginalExtension());
+            if ($forecastExtension === 'csv') {
+                $forecastImportFilePath = $this->cleanCsvFile($forecastFullTempPath);
+            }
+
+            // Process forecast file from saved location
+            $forecastImport = new \App\Imports\LoanForecastImport($currentBillingPeriod);
+            Excel::import($forecastImport, $forecastImportFilePath);
+
+            // Clean up forecast temporary files
+            $this->cleanupTempFiles($forecastFullTempPath, $forecastImportFilePath);
 
             $import = new ShareRemittanceImport($currentBillingPeriod);
             Excel::import($import, $request->file('file'));
@@ -642,6 +762,10 @@ class RemittanceController extends Controller
                 ->with('success', $successMessage);
         } catch (\Exception $e) {
             DB::rollBack();
+            // Clean up forecast temporary files even if import fails
+            if (isset($forecastFullTempPath) && isset($forecastImportFilePath)) {
+                $this->cleanupTempFiles($forecastFullTempPath, $forecastImportFilePath);
+            }
             return redirect()->back()
                 ->with('error', 'Error processing share remittance file: ' . $e->getMessage());
         }
@@ -705,8 +829,8 @@ class RemittanceController extends Controller
                     return redirect()->back()->with('error', 'No shares remittance data to export for the latest upload. Please upload a shares file first.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id());
+                // Mark export as generated (admin export)
+                ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id(), null, true);
 
                 $export = new \App\Exports\SharesExport($remittanceData);
                 $filename = 'shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
@@ -736,8 +860,8 @@ class RemittanceController extends Controller
                     return redirect()->back()->with('error', 'No shares remittance data to export for the latest upload. Please upload a shares file first.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product', Auth::id());
+                // Mark export as generated (admin export)
+                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product', Auth::id(), null, true);
 
                 $export = new \App\Exports\SharesWithProductExport($remittanceData);
                 $filename = 'shares_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
@@ -747,8 +871,8 @@ class RemittanceController extends Controller
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id());
+                // Mark export as generated (admin export)
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id(), null, true);
 
                 $export = new \App\Exports\LoansAndSavingsWithProductExport($remittanceData, $currentBillingPeriod);
                 $filename = 'loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
@@ -758,8 +882,8 @@ class RemittanceController extends Controller
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id());
+                // Mark export as generated (admin export)
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id(), null, true);
 
                 $export = new \App\Exports\LoansAndSavingsExport($remittanceData, $currentBillingPeriod);
                 $filename = 'loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.xlsx';
@@ -967,6 +1091,17 @@ class RemittanceController extends Controller
         );
     }
 
+    public function exportUnmatchedMembers()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+        $userId = Auth::id();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\UnmatchedMembersExport($billingPeriod, $userId),
+            'Unmatched_Members_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
     public function exportPerRemittance()
     {
         $billingPeriod = Auth::user()->billing_period;
@@ -974,6 +1109,56 @@ class RemittanceController extends Controller
         return \Maatwebsite\Excel\Facades\Excel::download(
             new \App\Exports\PerRemittanceReportExport($billingPeriod, false, null),
             'Per_Remittance_Report_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceSummaryRegular()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSummaryExport($billingPeriod, false, null, 'regular'),
+            'Per_Remittance_Summary_Regular_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceSummarySpecial()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSummaryExport($billingPeriod, false, null, 'special'),
+            'Per_Remittance_Summary_Special_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceLoans()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceLoansExport($billingPeriod, false, null),
+            'Per_Remittance_Loans_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceSavings()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSavingsExport($billingPeriod, false, null),
+            'Per_Remittance_Savings_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceShares()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSharesExport($billingPeriod, false, null),
+            'Per_Remittance_Shares_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
         );
     }
 

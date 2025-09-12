@@ -53,20 +53,7 @@
                     </div>
                 </div>
 
-                <div class="alert alert-info alert-dismissible fade show mb-4">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    <h5><i class="fa fa-info-circle"></i> Saving Products Management Flow</h5>
-                    <ol class="mb-2">
-                        <li><strong>Add Product:</strong> Admin can add new saving products to the system.</li>
-                        <li><strong>Edit Product:</strong> Edit existing saving products as needed.</li>
-                        <li><strong>View Product:</strong> View product details and associated members.</li>
-                        <li><strong>Delete Product:</strong> Remove saving products that are no longer needed.</li>
-                    </ol>
-                    <ul class="mb-2">
-                        <li><strong>Impact:</strong> Saving products affect available options for member savings and remittance processing.</li>
-                    </ul>
-                    <p class="mb-0"><small><strong>Note:</strong> Manage saving products carefully to ensure accurate billing and remittance options for members.</small></p>
-                </div>
+               
 
                 <div class="row">
                     <div class="col-12">
@@ -86,8 +73,8 @@
                                     <div class="row mb-3">
                                         <div class="col-md-4">
                                             <div class="input-group">
-                                                <input type="text" class="form-control" name="search" 
-                                                       placeholder="Search saving products..." 
+                                                <input type="text" class="form-control" name="search"
+                                                       placeholder="Search saving products..."
                                                        value="{{ request('search') }}">
                                                 <div class="input-group-append">
                                                     <button class="btn btn-outline-secondary" type="submit">
@@ -118,7 +105,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <p class="text-muted">
-                                            Showing {{ $savingProducts->firstItem() ?? 0 }} to {{ $savingProducts->lastItem() ?? 0 }} 
+                                            Showing {{ $savingProducts->firstItem() ?? 0 }} to {{ $savingProducts->lastItem() ?? 0 }}
                                             of {{ $savingProducts->total() }} entries
                                             @if(request('search'))
                                                 for "<strong>{{ request('search') }}</strong>"
@@ -130,7 +117,7 @@
                                 <!-- Data Table -->
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered">
-                                        <thead class="thead-dark">
+                                        <thead class="thead-primary">
                                             <tr>
                                                 <th>Product Name</th>
                                                 <th>Product Code</th>
@@ -233,7 +220,7 @@
                                         @if(request('page'))
                                             <input type="hidden" name="page" value="{{ request('page') }}">
                                         @endif
-                                        
+
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title">Add New Saving Product</h5>
@@ -293,7 +280,7 @@
                                         @if(request('page'))
                                             <input type="hidden" name="page" value="{{ request('page') }}">
                                         @endif
-                                        
+
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title">Edit Saving Product</h5>
@@ -385,7 +372,7 @@
                                         @if(request('page'))
                                             <input type="hidden" name="page" value="{{ request('page') }}">
                                         @endif
-                                        
+
                                         <div class="modal-content">
                                             <div class="modal-header">
                                                 <h5 class="modal-title">Delete Saving Product</h5>

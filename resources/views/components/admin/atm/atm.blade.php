@@ -14,6 +14,127 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 
+<style>
+    .flex.justify-between.flex-1.sm\:hidden {
+        display: none;
+    }
+
+    /* Custom styles for ATM modal */
+    .loan-option {
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+
+    .loan-option:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .loan-option.border-success {
+        background: #d1edff;
+        border-color: #28a745 !important;
+    }
+
+    .loan-option.border-secondary {
+        background: #f8f9fa;
+        border-color: #6c757d !important;
+    }
+
+    .form-control-lg {
+        font-size: 1.1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .card-header {
+        border-bottom: none;
+    }
+
+    .modal-xl {
+        max-width: 1200px;
+    }
+
+    .loan-details {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        border-left: 3px solid #007bff;
+    }
+
+    .loan-details div {
+        margin-bottom: 5px;
+    }
+
+    .loan-details div:last-child {
+        margin-bottom: 0;
+    }
+
+    .alert-info {
+        border-left: 4px solid #17a2b8;
+    }
+
+    .btn {
+        border-radius: 5px;
+        font-weight: 500;
+    }
+
+    .btn-secondary {
+        background: linear-gradient(45deg, #6c757d, #545b62);
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background: linear-gradient(45deg, #545b62, #3d4449);
+        transform: translateY(-1px);
+    }
+
+    .form-check-input:checked {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+
+    .form-check-input:focus {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+
+    .text-success.fw-bold {
+        color: #28a745 !important;
+        font-weight: 700 !important;
+    }
+
+    .text-danger.fw-bold {
+        color: #dc3545 !important;
+        font-weight: 700 !important;
+    }
+
+
+
+    .card-header.bg-success {
+        background: linear-gradient(45deg, #28a745, #1e7e34) !important;
+    }
+
+
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
+    }
+
+    .badge.bg-danger {
+        background: linear-gradient(45deg, #dc3545, #c82333) !important;
+    }
+
+    .badge.bg-warning {
+        background: linear-gradient(45deg, #ffc107, #e0a800) !important;
+        color: #212529 !important;
+    }
+
+    .badge.bg-info {
+        background: linear-gradient(45deg, #17a2b8, #138496) !important;
+    }
+</style>
+
 <body>
     <div id="preloader">
         <div class="sk-three-bounce">
@@ -45,7 +166,7 @@
                 </div>
 
                 <!-- Information Section -->
-                <div class="row mb-4">
+                {{-- <div class="row mb-4">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body">
@@ -67,7 +188,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Account Balances Table -->
                 <div class="row">
@@ -240,7 +361,7 @@
                                                     </td>
                                                     <td>
                                                         <div class="d-flex flex-column flex-md-row align-items-stretch">
-                                                            <button type="button" class="btn btn-success btn-sm mb-2 mb-md-0 mr-md-2 w-100" style="min-width: 120px;"
+                                                            <button type="button" class="btn btn-primary btn-sm mb-2 mb-md-0 mr-md-2 w-100" style="min-width: 120px;"
                                                                 data-toggle="modal" data-target="#postPaymentModal{{ $member->id }}">
                                                                 <i class="fa fa-money-bill"></i> Post Payment
                                                             </button>
@@ -562,11 +683,7 @@
                                                                         <label class="form-label fw-bold">
                                                                             <i class="fa fa-list-check me-2 text-success"></i>Select Loans to Pay
                                                                         </label>
-                                                                        <div class="alert alert-info">
-                                                                            <i class="fa fa-lightbulb me-2"></i>
-                                                                            <strong>Tip:</strong> You can directly enter amounts for loans you want to pay, or check the boxes to auto-fill with total due amounts.
-                                                                            Remaining amount will be added to Regular Savings if available.
-                                                                        </div>
+
                                                                         <div class="loan-selection-container" id="loan-selection{{ $member->id }}">
                                                                             @foreach ($member->loanForecasts as $index => $loan)
                                                                                 @if (floatval($loan->total_due) > 0)
@@ -940,141 +1057,6 @@
                                         </tbody>
                                     </table>
                                 </div>
-
-                                <style>
-                                    .flex.justify-between.flex-1.sm\:hidden {
-                                        display: none;
-                                    }
-
-                                    /* Custom styles for ATM modal */
-                                    .loan-option {
-                                        transition: all 0.3s ease;
-                                        background: #f8f9fa;
-                                    }
-
-                                    .loan-option:hover {
-                                        background: #e9ecef;
-                                        transform: translateY(-1px);
-                                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                                    }
-
-                                    .loan-option.border-success {
-                                        background: #d1edff;
-                                        border-color: #28a745 !important;
-                                    }
-
-                                    .loan-option.border-secondary {
-                                        background: #f8f9fa;
-                                        border-color: #6c757d !important;
-                                    }
-
-                                    .form-control-lg {
-                                        font-size: 1.1rem;
-                                        padding: 0.75rem 1rem;
-                                    }
-
-                                    .card-header {
-                                        border-bottom: none;
-                                    }
-
-                                    .modal-xl {
-                                        max-width: 1200px;
-                                    }
-
-                                    .loan-details {
-                                        background: #f8f9fa;
-                                        padding: 10px;
-                                        border-radius: 5px;
-                                        border-left: 3px solid #007bff;
-                                    }
-
-                                    .loan-details div {
-                                        margin-bottom: 5px;
-                                    }
-
-                                    .loan-details div:last-child {
-                                        margin-bottom: 0;
-                                    }
-
-                                    .alert-info {
-                                        border-left: 4px solid #17a2b8;
-                                    }
-
-                                    .btn {
-                                        border-radius: 5px;
-                                        font-weight: 500;
-                                    }
-
-                                    .btn-primary {
-                                        background: linear-gradient(45deg, #007bff, #0056b3);
-                                        border: none;
-                                    }
-
-                                    .btn-primary:hover {
-                                        background: linear-gradient(45deg, #0056b3, #004085);
-                                        transform: translateY(-1px);
-                                    }
-
-                                    .btn-secondary {
-                                        background: linear-gradient(45deg, #6c757d, #545b62);
-                                        border: none;
-                                    }
-
-                                    .btn-secondary:hover {
-                                        background: linear-gradient(45deg, #545b62, #3d4449);
-                                        transform: translateY(-1px);
-                                    }
-
-                                    .form-check-input:checked {
-                                        background-color: #28a745;
-                                        border-color: #28a745;
-                                    }
-
-                                    .form-check-input:focus {
-                                        border-color: #28a745;
-                                        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-                                    }
-
-                                    .text-success.fw-bold {
-                                        color: #28a745 !important;
-                                        font-weight: 700 !important;
-                                    }
-
-                                    .text-danger.fw-bold {
-                                        color: #dc3545 !important;
-                                        font-weight: 700 !important;
-                                    }
-
-                                    .modal-header.bg-primary {
-                                        background: linear-gradient(45deg, #007bff, #0056b3) !important;
-                                    }
-
-                                    .card-header.bg-success {
-                                        background: linear-gradient(45deg, #28a745, #1e7e34) !important;
-                                    }
-
-                                    .card-header.bg-primary {
-                                        background: linear-gradient(45deg, #007bff, #0056b3) !important;
-                                    }
-
-                                    .badge {
-                                        font-size: 0.75rem;
-                                        padding: 0.375rem 0.75rem;
-                                    }
-
-                                    .badge.bg-danger {
-                                        background: linear-gradient(45deg, #dc3545, #c82333) !important;
-                                    }
-
-                                    .badge.bg-warning {
-                                        background: linear-gradient(45deg, #ffc107, #e0a800) !important;
-                                        color: #212529 !important;
-                                    }
-
-                                    .badge.bg-info {
-                                        background: linear-gradient(45deg, #17a2b8, #138496) !important;
-                                    }
-                                </style>
                             </div>
                             <div class="d-flex text-center justify-content-center mt-4">
                                 {{ $members->appends(request()->query())->links() }}

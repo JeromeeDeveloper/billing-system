@@ -10,6 +10,10 @@
                 <a href="{{ route('dashboard_branch') }}" class="brand-logo">
                     <img class="logomsp img-fluid" src="{{ asset('images/logomsp.png') }}" alt="Branch or User Logo">
                 </a>
+            @elseif (Auth::user()->role === 'admin-msp')
+                <a href="{{ route('dashboard') }}" class="brand-logo">
+                    <img class="logomsp img-fluid" src="{{ asset('images/logomsp.png') }}" alt="Branch or User Logo">
+                </a>
             @endif
         @endif
 
@@ -56,7 +60,7 @@
                             </a>
                             <div class="dropdown-menu dropdown-menu-right">
 
-                                  <a class="all-notification" href="{{ route('notifications.index') }}">See all notifications <i class="bi bi-arrow-right"></i></a>
+                                  <a class="all-notification text-dark" href="{{ route('notifications.index') }}">See all notifications <i class="bi bi-arrow-right"></i></a>
                             </div>
                         </li>
                         <li class="nav-item dropdown header-profile">

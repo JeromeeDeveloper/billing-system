@@ -43,8 +43,8 @@ class BillingController extends Controller
             $perPage = 10;
         }
 
-         $allBranchApproved = User::where('role', 'branch')
-        ->where('status', '!=', 'approved')
+         $allUsersApproved = User::whereIn('role', ['admin', 'branch'])
+        ->where('billing_approval_status', '!=', 'approved')
         ->doesntExist(); // true if all are approved
 
         // Query with eager loading branch to avoid N+1 query problem
@@ -87,7 +87,10 @@ class BillingController extends Controller
 
         $hasAnyMemberNoBranch = Member::whereNull('branch_id')->exists();
 
-        return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'hasAnyMemberNoBranch'));
+        // Check if there's any billing export record for this billing period (to disable cancel approval)
+        $hasBillingExportForPeriod = \App\Models\BillingExport::where('billing_period', $billingPeriod)->exists();
+
+        return view('components.admin.billing.billing', compact('billing', 'search', 'perPage', 'allUsersApproved', 'hasAnyMemberNoBranch', 'hasBillingExportForPeriod'));
     }
 
     public function index_branch(Request $request)
@@ -102,8 +105,8 @@ class BillingController extends Controller
             $perPage = 10;
         }
 
-        $allBranchApproved = User::where('role', 'branch')
-            ->where('status', '!=', 'approved')
+        $allUsersApproved = User::whereIn('role', ['admin', 'branch'])
+            ->where('billing_approval_status', '!=', 'approved')
             ->doesntExist(); // true if all are approved
 
         // Query with eager loading branch to avoid N+1 query problem
@@ -148,7 +151,7 @@ class BillingController extends Controller
         // Check if there's any billing export record for this billing period (to disable cancel approval)
         $hasBillingExportForPeriod = \App\Models\BillingExport::where('billing_period', $billingPeriod)->exists();
 
-        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allBranchApproved', 'alreadyExported', 'hasBillingExportForPeriod'));
+        return view('components.branch.billing.billing', compact('billing', 'search', 'perPage', 'allUsersApproved', 'alreadyExported', 'hasBillingExportForPeriod'));
     }
 
     public function export(Request $request)
@@ -403,11 +406,11 @@ class BillingController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->status === 'approved') {
+        if ($user->billing_approval_status === 'approved') {
             return back()->with('info', 'You are already approved.');
         }
 
-        User::where('id', $user->id)->update(['status' => 'approved']);
+        User::where('id', $user->id)->update(['billing_approval_status' => 'approved']);
 
         // Create notification about approval
         \App\Models\Notification::create([
@@ -425,11 +428,11 @@ class BillingController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->status === 'pending') {
+        if ($user->billing_approval_status === 'pending') {
             return back()->with('info', 'You are already in pending status.');
         }
 
-        User::where('id', $user->id)->update(['status' => 'pending']);
+        User::where('id', $user->id)->update(['billing_approval_status' => 'pending']);
 
         // Create notification about approval cancellation
         \App\Models\Notification::create([
@@ -813,8 +816,8 @@ class BillingController extends Controller
     public function closeBillingPeriod(Request $request)
     {
         try {
-            // Only allow admin
-            if (!Auth::user() || Auth::user()->role !== 'admin') {
+            // Only allow admin and admin-msp
+            if (!Auth::user() || !in_array(Auth::user()->role, ['admin', 'admin-msp'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Access denied. Only administrators can close billing periods.'
@@ -823,27 +826,65 @@ class BillingController extends Controller
 
         $billingPeriod = Auth::user()->billing_period;
 
+        // Check if we should retain dues
+        $retainDues = \App\Models\BillingSetting::getBoolean('retain_dues_on_billing_close', false);
+
+        Log::info('Closing billing period', [
+            'billing_period' => $billingPeriod,
+            'retain_dues' => $retainDues,
+            'user_id' => Auth::id()
+        ]);
+
         // LoanForecast reset
-        \App\Models\LoanForecast::where('billing_period', $billingPeriod)
-            ->update([
-                'amount_due' => 0,
-                'open_date' => null,
-                'maturity_date' => null,
-                'amortization_due_date' => null,
-                'total_due' => 0,
-                'original_total_due' => 0,
-                'principal_due' => 0,
-                'interest_due' => 0,
-                'original_principal_due' => 0,
-                'original_interest_due' => 0,
-                'principal' => null,
-                'interest' => null,
-                'principal_due_status' => 'unpaid',
-                'interest_due_status' => 'unpaid',
-                'total_due_status' => 'unpaid',
-                'total_due_after_remittance' => 0,
-                'total_billed' => null,
-            ]);
+        $updateData = [
+            'amount_due' => 0,
+            'open_date' => null,
+            'maturity_date' => null,
+            'amortization_due_date' => null,
+            'principal' => null,
+            'interest' => null,
+            'principal_due_status' => 'unpaid',
+            'interest_due_status' => 'unpaid',
+            'total_due_status' => 'unpaid',
+            'total_due_after_remittance' => 0,
+            'total_billed' => null,
+        ];
+
+        // Only reset dues if retain_dues is false
+        if (!$retainDues) {
+            $updateData['total_due'] = 0;
+            $updateData['original_total_due'] = 0;
+            $updateData['principal_due'] = 0;
+            $updateData['interest_due'] = 0;
+            $updateData['original_principal_due'] = 0;
+            $updateData['original_interest_due'] = 0;
+        }
+
+        $loanForecastQuery = \App\Models\LoanForecast::where('billing_period', $billingPeriod);
+        $affectedLoanForecasts = $loanForecastQuery->update($updateData);
+        Log::info('Close billing period - LoanForecasts updated (primary period)', [
+            'billing_period' => $billingPeriod,
+            'retain_dues' => $retainDues,
+            'affected' => $affectedLoanForecasts,
+        ]);
+
+        // Fallback: if retain dues is OFF and no rows updated for user's period,
+        // attempt to reset the most recent LoanForecast billing period (in case of period mismatch)
+        $fallbackBillingPeriod = null;
+        $fallbackAffected = 0;
+        if (!$retainDues && $affectedLoanForecasts === 0) {
+            $fallbackBillingPeriod = \App\Models\LoanForecast::max('billing_period');
+            if ($fallbackBillingPeriod && $fallbackBillingPeriod !== $billingPeriod) {
+                $fallbackAffected = \App\Models\LoanForecast::where('billing_period', $fallbackBillingPeriod)->update($updateData);
+                Log::warning('Close billing period - Fallback reset applied', [
+                    'fallback_billing_period' => $fallbackBillingPeriod,
+                    'retain_dues' => $retainDues,
+                    'affected' => $fallbackAffected,
+                ]);
+                // Reflect fallback in the main counter for response visibility
+                $affectedLoanForecasts = $fallbackAffected;
+            }
+        }
 
         // Savings reset (keep only specified fields)
         \App\Models\Saving::query()->update([
@@ -894,6 +935,13 @@ class BillingController extends Controller
             Log::warning('Could not clear AtmPayment table: ' . $e->getMessage());
         }
 
+        // Clear billing exports for the closed billing period
+        try {
+            \App\Models\BillingExport::where('billing_period', $billingPeriod)->delete();
+        } catch (\Exception $e) {
+            Log::warning('Could not clear BillingExport table: ' . $e->getMessage());
+        }
+
 
         // Members reset (keep only cid and member_tagging)
         \App\Models\Member::query()->update([
@@ -922,8 +970,11 @@ class BillingController extends Controller
 
         // Update all users' billing_period
         \App\Models\User::query()->update(['billing_period' => $next]);
-        // Set all branch users' status to pending
-        \App\Models\User::where('role', 'branch')->update(['status' => 'pending']);
+        // Set all branch and admin users' approval statuses to pending
+        \App\Models\User::whereIn('role', ['branch', 'admin'])->update([
+            'billing_approval_status' => 'pending',
+            'special_billing_approval_status' => 'pending'
+        ]);
 
         // Notify all users
         $userIds = \App\Models\User::pluck('id');
@@ -937,13 +988,18 @@ class BillingController extends Controller
             ]);
         }
 
+        // Re-enable all edit buttons for the closed billing period
+        \App\Models\ExportStatus::reEnableAllEdits($billingPeriod);
+
         // Logout the current user
         Auth::logout();
 
         return response()->json([
             'success' => true,
             'message' => 'Billing period closed and records reset for new period. You will be logged out.',
-            'logout' => true
+            'logout' => true,
+            'affectedLoanForecasts' => $affectedLoanForecasts,
+            'fallbackBillingPeriod' => $fallbackBillingPeriod,
         ]);
 
         } catch (\Exception $e) {
@@ -971,5 +1027,58 @@ class BillingController extends Controller
             'hasExport' => $hasExport,
             'billingPeriod' => $billingPeriod
         ]);
+    }
+
+    public function toggleRetainDues(Request $request)
+    {
+        try {
+            // Only allow admin and admin-msp users to toggle this setting
+            if (!Auth::user() || !in_array(Auth::user()->role, ['admin', 'admin-msp'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied. Only administrators can modify this setting.'
+                ], 403);
+            }
+
+            // Get current setting
+            $currentValue = \App\Models\BillingSetting::getBoolean('retain_dues_on_billing_close', false);
+
+            // Toggle the setting
+            $newValue = !$currentValue;
+            \App\Models\BillingSetting::setBoolean(
+                'retain_dues_on_billing_close',
+                $newValue,
+                'Whether to retain total_due, principal_due, interest_due and their original values when closing billing period'
+            );
+
+            return response()->json([
+                'success' => true,
+                'retain_dues' => $newValue,
+                'message' => $newValue ?
+                    'All dues (total, principal, interest) will be retained when closing billing period' :
+                    'All dues (total, principal, interest) will be reset when closing billing period'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error toggling retain dues setting: ' . $e->getMessage(), [
+                'user_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while updating the setting. Please try again.'
+            ], 500);
+        }
+    }
+
+    public function exportMemberDeductionDetails()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\MemberDeductionDetailsExport($billingPeriod),
+            'Member_Deduction_Details_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 }

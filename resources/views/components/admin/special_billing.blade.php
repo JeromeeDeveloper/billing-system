@@ -40,44 +40,90 @@
                                     $userHasExported = $exportStatuses->get('special_billing') && !$exportStatuses->get('special_billing')->is_enabled;
                                     $canExport = $specialBillingEnabled && !$noBranch && !$noRegularSavings && $allBranchUsersApproved && !$anyBranchUsersPending && !$userHasExported;
                                 @endphp
+
+                                <div class="d-flex gap-2">
                                 <a href="{{ $canExport && $hasSpecialBillingData ? route('special-billing.export') : 'javascript:void(0);' }}"
-                                   class="btn btn-success {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
+                                   class="btn btn-rounded btn-primary text-white {{ !$canExport || !$hasSpecialBillingData ? 'disabled' : '' }}"
                                    onclick="{{ $canExport && $hasSpecialBillingData ? '' : 'void(0)' }}">
-                                    <i class="fa fa-file-excel"></i> Export Special Billing
-                                    @if(!$hasSpecialBillingData)
-                                        <br><small class="text-muted">(Disabled - No special billing data for this period)</small>
-                                    @elseif($userHasExported)
-                                        <br><small class="text-muted">(Disabled - You have already exported for this billing period)</small>
-                                    @elseif(!$specialBillingEnabled)
-                                        <br><small class="text-muted">(Disabled - Already exported. Wait for next period to enable)</small>
-                                    @elseif($anyBranchUsersPending)
-                                        <br><small class="text-muted">(Disabled - Some branch users have pending status)</small>
-                                    @elseif($noBranch)
-                                        <br><small class="text-muted">(Disabled - Some members have no branch)</small>
-                                    @elseif($noRegularSavings)
-                                        <br><small class="text-muted">(Disabled - Some members have no regular savings)</small>
-                                    @elseif(!$allBranchUsersApproved)
-                                        <br><small class="text-muted">(Disabled - Not all branch users are approved)</small>
-                                    @endif
+                                    <span class="btn-icon-left text-primary"><i class="fa fa-file"></i></span>
+                                    Generate Special Billing
                                 </a>
+
+                                @if(Auth::user()->role === 'admin')
+                                    @if(Auth::user()->special_billing_approval_status === 'pending')
+                                        <form action="{{ route('special-billing.approve') }}" method="POST" class="m-0">
+                                            @csrf
+                                            <button type="submit" class="btn btn-rounded btn-primary text-white">
+                                                <span class="btn-icon-left text-primary"><i class="fa fa-check"></i></span>
+                                                Approve Special Billing
+                                            </button>
+                                        </form>
+                                    @endif
+                                    @if(Auth::user()->special_billing_approval_status === 'approved')
+                                        <form action="{{ route('special-billing.cancel-approval') }}" method="POST" class="m-0" id="cancelSpecialBillingApprovalForm">
+                                            @csrf
+                                            <button type="submit" class="btn btn-rounded btn-warning text-white {{ $hasSpecialBillingExportForPeriod ? 'disabled' : '' }}" @if($hasSpecialBillingExportForPeriod) disabled @endif>
+                                                <span class="btn-icon-left text-warning"><i class="fa fa-times"></i></span>
+                                                Cancel Approval
+                                            </button>
+                                        </form>
+                                    @endif
+                                @endif
                             </div>
+                            </div>
+
+                            <!-- Disabled Messages -->
+                            @if(!$hasSpecialBillingData)
+                                <div class="alert alert text-center small mb-0 mt-2 text-danger">
+                                    * No special billing data available for this period.
+                                </div>
+                            @elseif($userHasExported)
+                                <div class="alert alert text-center small mb-0 mt-2 text-danger">
+                                    * You have already exported for this billing period.
+                                </div>
+                            @elseif(!$specialBillingEnabled)
+                                <div class="alert alert text-center small mb-0 mt-2 text-danger">
+                                    * Already exported. Wait for next period to enable.
+                                </div>
+                            @elseif($anyBranchUsersPending)
+                                <div class="alert alert text-center small mb-0 mt-2 text-danger">
+                                    * Some branch users have pending status.
+                                </div>
+                            @elseif($noBranch)
+                                <div class="alert alert text-center small mb-0 mt-2 text-danger">
+                                    * Some members have no branch assigned.
+                                </div>
+                            @elseif($noRegularSavings)
+                                <div class="alert alert text-center small mb-0 mt-2 text-danger">
+                                    * Some members have no regular savings.
+                                </div>
+                            @elseif(!$allBranchUsersApproved)
+                                <div class="alert alert text-center small mb-0 mt-2 text-danger">
+                                    * Not all branch users are approved.
+                                </div>
+                            @endif
+
+                            @if($hasSpecialBillingExportForPeriod)
+                                <div class="alert alert-danger text-center small mb-0 mt-2">
+                                    Special billing has been generated for this period. Cancel approval is disabled.
+                                </div>
+                            @endif
                             <div class="card-body">
                                 <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
+                                {{-- <div class="alert alert-info alert-dismissible fade show mb-4">
                                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Special Billing Flow & User Guide (Admin)</h5>
-                                    <ol class="mb-2">
-                                        <li><strong>Upload:</strong> Admin uploads special billing files (forecast and Loan).</li>
+                                    <h5><i class="fa fa-info-circle text-dark"></i> Special Billing Flow & User Guide (Admin)</h5>
+                                    <ol class="mb-2 text-dark">
+                                        <li><strong>Upload:</strong> Head Office uploads special billing files (forecast and Loan).</li>
                                         <li><strong>Processing:</strong> System processes only loans with special billing type and calculates amortization.</li>
                                         <li><strong>Review & Search:</strong> Admin can search, review, and export special billing data for all branches.</li>
                                         <li><strong>Export:</strong> Export the processed special billing data as needed.</li>
                                     </ol>
-                                    <ul class="mb-2">
+                                    <ul class="mb-2 text-dark">
                                         <li><strong>File Requirements:</strong> Ensure files meet the required format and headers before uploading.</li>
-                                        <li><strong>History:</strong> View and download previous special billing uploads and exports.</li>
+
                                     </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> Only admin can upload special billing data. Branch users can only view and export data filtered to their branch.</small></p>
-                                </div>
+                                </div> --}}
 
                                 @if (session('success'))
                                     <div class="alert alert-success alert-dismissible fade show">
@@ -244,5 +290,6 @@
             });
         </script>
     @endif
+
 </body>
 </html>

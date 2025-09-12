@@ -203,13 +203,12 @@
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">Member Tagging</label>
-                                                    <select class="form-control" name="member_tagging">
+                                                    <select class="form-control" name="member_tagging" disabled>
                                                         <option value="New" selected>New</option>
-                                                        <option value="PGB">PGB</option>
                                                     </select>
                                                 </div>
                                             </div>
-
+                                            <input type="hidden" name="member_tagging" value="New">
                                         </div>
                                     </div>
                                 </div>
@@ -244,15 +243,15 @@
 
                                     </div>
                                     <div class="action-bar d-flex flex-wrap flex-md-nowrap gap-2 justify-content-center align-items-center p-2 rounded shadow-sm mt-2 w-100" style="background: #f8f9fa;">
-                                        <a href="#" class="btn btn-success d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
+                                        <a href="#" class="btn btn-primary d-flex align-items-center px-3 mr-2" data-toggle="modal" data-target="#addModal">
                                             <i class="fa fa-plus-circle me-2 mr-2"></i> <span class="d-none d-md-inline">Add New Member</span>
                                         </a>
-                                        <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-outline-success d-flex align-items-center px-3 mr-2">
+                                        {{-- <a href="{{ route('master.exportMemberDetailsBranch') }}" class="btn btn-outline-primary d-flex align-items-center px-3 mr-2">
                                             <i class="fa fa-download me-2 mr-2"></i> <span class="d-none d-md-inline">Export Details (CSV)</span>
                                         </a>
-                                        <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-outline-warning d-flex align-items-center px-3 mr-2">
+                                        <a href="{{ route('master.exportMembersNoRegularSavingsBranch') }}" class="btn btn-outline-primary d-flex align-items-center px-3 mr-2">
                                             <i class="fa fa-exclamation-triangle me-2"></i> <span class="d-none d-md-inline">No Regular Savings (Excel)</span>
-                                        </a>
+                                        </a> --}}
                                     </div>
                                 </div>
                             </div>
@@ -284,11 +283,10 @@
                                                     {{-- <td>{{ $item->member->savings_balance ?? '' }}</td>
                                                     <td>{{ $item->member->share_balance ?? 'N/A' }}</td>
                                                     <td>{{ $item->member->loan_balance ?? 'N/A' }}</td> --}}
-
-
                                                     <td>
-
-
+                                                        @php
+                                                            $isEditDisabled = $isEditDisabledForAll || $isEditDisabledForBranch;
+                                                        @endphp
                                                         <button type="button" class="btn btn-rounded btn-primary"
                                                             data-toggle="modal" data-target="#editModal"
                                                             data-id="{{ $item->member->id }}"
@@ -315,7 +313,8 @@
                                                             data-additional_address="{{ $item->member->additional_address }}"
                                                             data-loans='{!! json_encode($item->member->loan_forecasts_data) !!}'
                                                             data-savings='{!! json_encode($item->member->savings) !!}'
-                                                            data-shares='{!! json_encode($item->member->shares) !!}'>
+                                                            data-shares='{!! json_encode($item->member->shares) !!}'
+                                                            @if($isEditDisabled) disabled title="Edit disabled - Export has been generated" @endif>
                                                             Edit
                                                         </button>
 
@@ -668,15 +667,7 @@
                                     border-radius: 0.375rem;
                                 }
 
-                                .btn-primary {
-                                    background-color: #3498db;
-                                    border-color: #3498db;
-                                }
 
-                                .btn-primary:hover {
-                                    background-color: #2980b9;
-                                    border-color: #2980b9;
-                                }
 
                                 .modal-content {
                                     border-radius: 0.5rem;

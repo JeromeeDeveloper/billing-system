@@ -3,73 +3,42 @@
 namespace App\Exports;
 
 use App\Models\RemittancePreview;
-use App\Models\Remittance;
+use App\Models\RemittanceReport;
 use App\Models\Member;
-use App\Models\LoanForecast;
-use App\Models\LoanProduct;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Font;
 use Illuminate\Support\Facades\Auth;
 
-class BranchConsolidatedRemittanceReportExport implements FromArray, WithHeadings, WithStyles, WithColumnWidths, WithTitle
+class UnmatchedMembersExport implements FromArray, WithHeadings, WithStyles, WithColumnWidths, WithTitle
 {
     protected $billingPeriod;
-    protected $branchId;
-    protected $regularRemittances;
-    protected $specialRemittances;
+    protected $userId;
     protected $loansSavingsPreviewPaginated;
     protected $sharesPreviewPaginated;
-    protected $remittanceReports;
 
-    public function __construct($billingPeriod = null, $branchId = null)
+    public function __construct($billingPeriod = null, $userId = null)
     {
         $this->billingPeriod = $billingPeriod ?? Auth::user()->billing_period;
-        $this->branchId = $branchId ?? Auth::user()->branch_id;
+        $this->userId = $userId ?? Auth::id();
         $this->loadData();
     }
 
     protected function loadData()
     {
-        // Load regular remittances from RemittanceReport (branch filtered)
-        $this->regularRemittances = Remittance::with('member')
-            ->whereHas('member', function($query) {
-                $query->where('billing_period', $this->billingPeriod)
-                      ->where('branch_id', $this->branchId);
-            })
-            ->get();
-
-        // Load special remittances from RemittanceReport (branch filtered)
-        $this->specialRemittances = Remittance::with('member')
-            ->whereHas('member', function($query) {
-                $query->where('billing_period', $this->billingPeriod)
-                      ->where('branch_id', $this->branchId);
-            })
-            ->get();
-
-        // Load preview data from RemittancePreview (branch filtered)
-        $this->loansSavingsPreviewPaginated = RemittancePreview::whereHas('member', function($query) {
-                $query->where('branch_id', $this->branchId);
-            })
-            ->where('remittance_type', 'loans_savings')
+        // Load preview data from RemittancePreview
+        $this->loansSavingsPreviewPaginated = RemittancePreview::where('remittance_type', 'loans_savings')
             ->where('billing_period', $this->billingPeriod)
             ->get();
 
-        $this->sharesPreviewPaginated = RemittancePreview::whereHas('member', function($query) {
-                $query->where('branch_id', $this->branchId);
-            })
-            ->where('remittance_type', 'shares')
+        $this->sharesPreviewPaginated = RemittancePreview::where('remittance_type', 'shares')
             ->where('billing_period', $this->billingPeriod)
-            ->get();
-
-        // Also load RemittanceReport data for accumulated billing data (branch filtered)
-        $this->remittanceReports = \App\Models\RemittanceReport::where('period', $this->billingPeriod)
-            ->whereHas('member', function($query) {
-                $query->where('branch_id', $this->branchId);
-            })
             ->get();
     }
 
@@ -77,15 +46,69 @@ class BranchConsolidatedRemittanceReportExport implements FromArray, WithHeading
     {
         $rows = [];
 
-        // Process Loans & Savings Preview - Unmatched only (branch filtered)
+        // Process Loans & Savings Preview - Unmatched only
         foreach ($this->loansSavingsPreviewPaginated as $row) {
             $status = is_array($row) ? ($row['status'] ?? '') : ($row->status ?? '');
             $message = is_array($row) ? ($row['message'] ?? '') : ($row->message ?? '');
             $isNoBranch = str_contains(strtolower($message), 'no branch');
 
             if ($status === 'error' && !$isNoBranch) {
-                $cid = is_array($row) ? ($row['cid'] ?? 'N/A') : ($row->cid ?? 'N/A');
-                $name = is_array($row) ? ($row['name'] ?? 'N/A') : ($row->name ?? 'N/A');
+                $cid = is_array($row) ? ($row['cid'] ?? null) : ($row->cid ?? null);
+                $name = is_array($row) ? ($row['name'] ?? null) : ($row->name ?? null);
+
+                // If CID is missing attempt to resolve via member_id, then emp_id, then name
+                if (!$cid) {
+                    $member = null;
+
+                    // 1) member_id
+                    $memberId = is_array($row) ? ($row['member_id'] ?? null) : ($row->member_id ?? null);
+                    if ($memberId) {
+                        $member = Member::find($memberId);
+                    }
+
+                    // 2) emp_id fallback
+                    if (!$member) {
+                        $empId = is_array($row) ? ($row['emp_id'] ?? null) : ($row->emp_id ?? null);
+                        if ($empId) {
+                            // Preview stores CID into emp_id for unmatched; try CID match first
+                            $member = Member::where('cid', $empId)->first();
+                            if (!$member) {
+                                $member = Member::where('emp_id', $empId)->first();
+                            }
+                            // If still no member, but empId looks like a CID, use it directly
+                            if (!$member) {
+                                $clean = preg_replace('/\D+/', '', (string) $empId);
+                                if ($clean && strlen($clean) >= 6) {
+                                    $cid = str_pad($clean, 9, '0', STR_PAD_LEFT);
+                                }
+                            }
+                        }
+                    }
+
+                    // 3) name fallback (basic split: last token = lname, rest = fname)
+                    if (!$member && $name) {
+                        $parts = preg_split('/\s+/', trim($name));
+                        if ($parts && count($parts) >= 2) {
+                            $last = array_pop($parts);
+                            $first = implode(' ', $parts);
+                            $member = Member::where('fname', $first)->where('lname', $last)->first();
+                            if (!$member) {
+                                // Try reversed (common data entry variance)
+                                $member = Member::where('fname', $last)->where('lname', $first)->first();
+                            }
+                        }
+                    }
+
+                    if ($member) {
+                        $cid = $member->cid ?? null;
+                        if (!$name) {
+                            $name = trim(($member->fname ?? '') . ' ' . ($member->lname ?? '')) ?: null;
+                        }
+                    }
+                }
+
+                $cid = $cid ?: 'N/A';
+                $name = $name ?: 'N/A';
                 $loans = (float)(is_array($row) ? ($row['loans'] ?? 0) : ($row->loans ?? 0));
                 $savings = (float)(is_array($row) ? ($row['savings'] ?? 0) : ($row->savings ?? 0));
                 $totalAmount = $loans + $savings;
@@ -109,7 +132,7 @@ class BranchConsolidatedRemittanceReportExport implements FromArray, WithHeading
             }
         }
 
-        // Process Shares Preview - Unmatched only (branch filtered)
+        // Process Shares Preview - Unmatched only
         foreach ($this->sharesPreviewPaginated as $row) {
             $status = is_array($row) ? ($row['status'] ?? '') : ($row->status ?? '');
             $message = is_array($row) ? ($row['message'] ?? '') : ($row->message ?? '');
@@ -156,6 +179,7 @@ class BranchConsolidatedRemittanceReportExport implements FromArray, WithHeading
         return [
             ['Unmatched Members Report'],
             ['Generated on', now()->format('F d, Y H:i:s')],
+            ['Billing Period', $this->billingPeriod],
             [''],
             ['CID', 'Member Name', 'Amount Remitted']
         ];
@@ -167,8 +191,16 @@ class BranchConsolidatedRemittanceReportExport implements FromArray, WithHeading
         return [
             1 => ['font' => ['bold' => true, 'size' => 14], 'alignment' => ['horizontal' => 'center']],
             2 => ['font' => ['bold' => true]],
-            4 => ['font' => ['bold' => true]],
+            3 => ['font' => ['bold' => true]],
+            5 => ['font' => ['bold' => true]],
             'A1:C' . $lastRow => ['borders' => ['allBorders' => ['borderStyle' => 'thin']]],
+            'A5:C5' => [
+                'font' => ['bold' => true],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'E6E6FA']
+                ]
+            ]
         ];
     }
 
@@ -186,4 +218,3 @@ class BranchConsolidatedRemittanceReportExport implements FromArray, WithHeading
         return 'Unmatched Members';
     }
 }
-

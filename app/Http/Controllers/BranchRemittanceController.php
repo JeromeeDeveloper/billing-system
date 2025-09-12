@@ -7,6 +7,7 @@ use App\Models\Remittance;
 use App\Models\Savings;
 use App\Models\Member;
 use App\Models\LoanForecast;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
@@ -362,8 +363,8 @@ class BranchRemittanceController extends Controller
                     return redirect()->back()->with('error', 'No shares remittance data to export for the latest upload. Please upload a shares file first.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id());
+                // Mark export as generated (branch export)
+                ExportStatus::markExported($currentBillingPeriod, 'shares', Auth::id(), $branch_id, false);
 
                 $export = new \App\Exports\BranchSharesExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
@@ -396,8 +397,8 @@ class BranchRemittanceController extends Controller
                     return redirect()->back()->with('error', 'No shares remittance data to export for the latest upload. Please upload a shares file first.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product', Auth::id());
+                // Mark export as generated (branch export)
+                ExportStatus::markExported($currentBillingPeriod, 'shares_with_product', Auth::id(), $branch_id, false);
 
                 $export = new \App\Exports\BranchSharesWithProductExport($remittanceData, $branch_id);
                 $filename = 'branch_shares_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
@@ -407,8 +408,8 @@ class BranchRemittanceController extends Controller
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id());
+                // Mark export as generated (branch export)
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings_with_product', Auth::id(), $branch_id, false);
 
                 $export = new \App\Exports\BranchLoansAndSavingsWithProductExport($remittanceData, $branch_id, $currentBillingPeriod);
                 $filename = 'branch_loans_and_savings_with_product_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
@@ -418,8 +419,8 @@ class BranchRemittanceController extends Controller
                     return redirect()->back()->with('error', 'Export is disabled. Please upload a new remittance file to enable export.');
                 }
 
-                // Mark export as generated
-                ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id());
+                // Mark export as generated (branch export)
+                ExportStatus::markExported($currentBillingPeriod, 'loans_savings', Auth::id(), $branch_id, false);
 
                 $export = new \App\Exports\BranchLoansAndSavingsExport($remittanceData, $branch_id, $currentBillingPeriod);
                 $filename = 'branch_loans_and_savings_export_' . $currentBillingPeriod . '_' . now()->format('Y-m-d') . '.csv';
@@ -553,6 +554,28 @@ class BranchRemittanceController extends Controller
         );
     }
 
+    public function exportPerRemittanceSummaryRegular()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+        $branchId = Auth::user()->branch_id;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSummaryExport($billingPeriod, true, $branchId, 'regular'),
+            'Branch_Per_Remittance_Summary_Regular_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
+    public function exportPerRemittanceSummarySpecial()
+    {
+        $billingPeriod = Auth::user()->billing_period;
+        $branchId = Auth::user()->branch_id;
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\PerRemittanceSummaryExport($billingPeriod, true, $branchId, 'special'),
+            'Branch_Per_Remittance_Summary_Special_' . $billingPeriod . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
 
 
     // Add a branch-specific comparison report method
@@ -601,5 +624,98 @@ class BranchRemittanceController extends Controller
         }
         unset($row);
         return array_values($memberTotals);
+    }
+
+    /**
+     * Approve special billing for the current branch user
+     */
+    public function approveSpecialBilling(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->special_billing_approval_status !== 'pending') {
+                return redirect()->back()->with('error', 'Only users with pending special billing status can approve special billing.');
+            }
+
+            // Update user special billing approval status to approved
+            User::where('id', $user->id)->update(['special_billing_approval_status' => 'approved']);
+
+            Log::info("Special billing approved by branch user", [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'branch_id' => $user->branch_id
+            ]);
+
+            return redirect()->back()->with('special_billing_approval_success', 'Special billing has been approved successfully.');
+
+        } catch (\Exception $e) {
+            Log::error("Error approving special billing: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to approve special billing. Please try again.');
+        }
+    }
+
+    /**
+     * Cancel special billing approval for the current branch user
+     */
+    public function cancelSpecialBillingApproval(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if ($user->special_billing_approval_status !== 'approved') {
+                return redirect()->back()->with('error', 'Only users with approved special billing status can cancel special billing approval.');
+            }
+
+            // Check if special billing export has been generated
+            $hasSpecialBillingExport = $this->checkSpecialBillingExportStatus($request);
+            if ($hasSpecialBillingExport->getData()->hasExport) {
+                return redirect()->back()->with('error', 'Cannot cancel approval. Special billing export has already been generated for this period.');
+            }
+
+            // Update user special billing approval status to pending
+            User::where('id', $user->id)->update(['special_billing_approval_status' => 'pending']);
+
+            Log::info("Special billing approval cancelled by branch user", [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'branch_id' => $user->branch_id
+            ]);
+
+            return redirect()->back()->with('special_billing_approval_success', 'Special billing approval has been cancelled successfully.');
+
+        } catch (\Exception $e) {
+            Log::error("Error cancelling special billing approval: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to cancel special billing approval. Please try again.');
+        }
+    }
+
+    /**
+     * Check if special billing export has been generated for the current period
+     */
+    public function checkSpecialBillingExportStatus(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $billingPeriod = $user->billing_period;
+
+            // Check if special billing export exists for this period
+            $hasExport = ExportStatus::where('export_type', 'special_billing')
+                ->where('billing_period', $billingPeriod)
+                ->where('is_enabled', false) // Export has been generated
+                ->exists();
+
+            return response()->json([
+                'hasExport' => $hasExport,
+                'billingPeriod' => $billingPeriod
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Error checking special billing export status: " . $e->getMessage());
+            return response()->json([
+                'hasExport' => false,
+                'error' => 'Failed to check export status'
+            ], 500);
+        }
     }
 }

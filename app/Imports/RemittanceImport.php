@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\RemittanceBatch;
 use Illuminate\Support\Facades\Auth;
+use App\Models\RemittanceReport;
 
 class RemittanceImport implements ToCollection, WithHeadingRow
 {
@@ -397,6 +398,36 @@ class RemittanceImport implements ToCollection, WithHeadingRow
 
                 // Always include distributionDetails in the result for export
                 $result['savings_distribution'] = $distributionDetails;
+
+                // Update the result to include excess loan payment in savings_total
+                $result['savings_total'] = (float)($savingsTotal ?? 0) + (float)($remainingPayment ?? 0);
+
+                // Update aggregated RemittanceReport to include savings excess
+                if ($member) {
+                    $cidValue = $member->cid;
+                    $remittedLoans = (float)($actualLoansPaid ?? 0);
+                    $remittedSavings = (float)($savingsTotal ?? 0) + (float)($remainingPayment ?? 0);
+
+                    $report = RemittanceReport::firstOrNew([
+                        'cid' => $cidValue,
+                        'period' => $this->billingPeriod,
+                        'remittance_tag' => $this->remittance_tag,
+                        'remittance_type' => 'loans_savings',
+                    ]);
+                    // Only update if this is a new record (not existing)
+                    if (!$report->exists) {
+                        $report->member_name = trim(($member->fname ?? '') . ' ' . ($member->lname ?? ''));
+                        $report->remitted_loans = $remittedLoans;
+                        $report->remitted_savings = $remittedSavings;
+                        $report->remitted_shares = 0;
+                        $report->billed_amount = $billedAmount ?? 0;
+                        $report->remittance_tag = $this->remittance_tag;
+                        $report->save();
+                    } else {
+                        // Log if we're trying to overwrite existing data
+                        \Log::warning("Attempted to overwrite existing remittance data in RemittanceImport for CID: {$cidValue}, Tag: {$this->remittance_tag}");
+                    }
+                }
 
                 DB::commit();
             } catch (\Exception $e) {

@@ -13,21 +13,24 @@ class ExportStatus extends Model
         'billing_period',
         'export_type',
         'user_id',
+        'branch_id',
         'last_export_at',
         'last_upload_at',
-        'is_enabled'
+        'is_enabled',
+        'is_admin_export'
     ];
 
     protected $casts = [
         'last_export_at' => 'datetime',
         'last_upload_at' => 'datetime',
-        'is_enabled' => 'boolean'
+        'is_enabled' => 'boolean',
+        'is_admin_export' => 'boolean'
     ];
 
     /**
      * Mark export as generated
      */
-    public static function markExported($billingPeriod, $exportType, $userId = null)
+    public static function markExported($billingPeriod, $exportType, $userId = null, $branchId = null, $isAdminExport = false)
     {
         return static::updateOrCreate(
             [
@@ -36,8 +39,10 @@ class ExportStatus extends Model
                 'user_id' => $userId
             ],
             [
+                'branch_id' => $branchId,
                 'last_export_at' => now(),
-                'is_enabled' => false
+                'is_enabled' => false,
+                'is_admin_export' => $isAdminExport
             ]
         );
     }
@@ -159,10 +164,85 @@ class ExportStatus extends Model
     }
 
     /**
+     * Check if edit buttons should be disabled for a specific branch
+     */
+    public static function isEditDisabledForBranch($billingPeriod, $branchId)
+    {
+        // Check if there's an admin or admin-msp billing export (disables all branches)
+        $adminBillingExport = \App\Models\BillingExport::where('billing_period', $billingPeriod)
+            ->whereHas('user', function($query) {
+                $query->whereIn('role', ['admin', 'admin-msp']);
+            })
+            ->exists();
+
+        if ($adminBillingExport) {
+            return true; // Admin/Admin-MSP billing export disables all branches
+        }
+
+        // Check if this specific branch has been exported
+        $branchExport = static::where('billing_period', $billingPeriod)
+            ->where('branch_id', $branchId)
+            ->where('is_enabled', false)
+            ->exists();
+
+        // Also check if this branch has generated billing
+        $branchBillingExport = \App\Models\BillingExport::where('billing_period', $billingPeriod)
+            ->whereHas('user', function($query) use ($branchId) {
+                $query->where('role', 'branch')
+                      ->where('branch_id', $branchId);
+            })
+            ->exists();
+
+        return $branchExport || $branchBillingExport;
+    }
+
+    /**
+     * Check if edit buttons should be disabled for all branches (admin export)
+     */
+    public static function isEditDisabledForAll($billingPeriod)
+    {
+        // Check if there's an admin or admin-msp billing export
+        $adminBillingExport = \App\Models\BillingExport::where('billing_period', $billingPeriod)
+            ->whereHas('user', function($query) {
+                $query->whereIn('role', ['admin', 'admin-msp']);
+            })
+            ->exists();
+
+        // Also check the old export_statuses logic for backward compatibility
+        $oldAdminExport = static::where('billing_period', $billingPeriod)
+            ->where('is_admin_export', true)
+            ->where('is_enabled', false)
+            ->exists();
+
+        return $adminBillingExport || $oldAdminExport;
+    }
+
+    /**
+     * Re-enable all edit buttons for a billing period (called when closing billing period)
+     */
+    public static function reEnableAllEdits($billingPeriod)
+    {
+        // Clear billing exports for the closed period
+        \App\Models\BillingExport::where('billing_period', $billingPeriod)->delete();
+
+        // Re-enable all export statuses
+        return static::where('billing_period', $billingPeriod)
+            ->update(['is_enabled' => true]);
+    }
+
+    /**
      * Relationship to User model
      */
     public function user()
     {
         return $this->belongsTo(\App\Models\User::class);
+    }
+
+    /**
+     * Relationship to Branch model
+     */
+    public function branch()
+    {
+        return $this->belongsTo(\App\Models\Branch::class);
     }
 }

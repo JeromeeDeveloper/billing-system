@@ -120,7 +120,7 @@
                                 <!-- Data Table -->
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered">
-                                        <thead class="thead-dark">
+                                        <thead class="thead-primary">
                                             <tr>
                                                 <th>Product</th>
                                                 <th>Product Code</th>

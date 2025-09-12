@@ -92,38 +92,6 @@
                     </div>
                 </div>
 
-                <!-- Search Section -->
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-body">
-                                <!-- Information Note -->
-                                <div class="alert alert-info alert-dismissible fade show mb-4">
-                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                                    <h5><i class="fa fa-info-circle"></i> Branch ATM Management Flow & User Guide</h5>
-                                    <ol class="mb-2">
-                                        <li><strong>Account Overview:</strong> View account for members in your branch
-                                            only.</li>
-                                        <li><strong>Post Payments:</strong> Post loan payments with automatic
-                                            prioritization (highest priority loans first).</li>
-                                        <li><strong>Export Reports:</strong> Export posted payment records for your
-                                            branch.</li>
-                                    </ol>
-                                    <ul class="mb-2">
-                                        <li><strong>Search:</strong> Find members by name, employee ID, or CID within
-                                            your branch.</li>
-                                        <li><strong>Branch-Specific:</strong> All operations and reports are limited to
-                                            your branch's member data.</li>
-                                    </ul>
-                                    <p class="mb-0"><small><strong>Note:</strong> This page allows you to manage
-                                            member accounts and process payments specifically for your branch.</small>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Account Balances Table -->
                 <div class="row">
                     <div class="col-12">
@@ -179,7 +147,7 @@
                                 <div class="row">
                                     <!-- Export Posted Payments Filter Form -->
                                     <div class="col-lg-6 col-md-12 mb-3">
-                                        <form method="GET" action="{{ route('branch.atm.export-posted-payments') }}" id="exportPostedPaymentsForm" class="p-4 border rounded shadow-sm bg-light">
+                                        <form method="GET" action="{{ route('branch.atm.export.posted-payments') }}" id="exportPostedPaymentsForm" class="p-4 border rounded shadow-sm bg-light">
                                             <h6 class="font-weight-bold text-primary mb-3">
                                                 <i class="fa fa-file-excel mr-2"></i>Export Posted Payments
                                             </h6>

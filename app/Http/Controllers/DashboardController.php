@@ -137,7 +137,7 @@ class DashboardController extends Controller
 
         // Get approved branches data
         $approvedBranches = Branch::whereHas('users', function($query) {
-            $query->where('status', 'approved');
+            $query->where('billing_approval_status', 'approved');
         })->pluck('name')->toArray();
 
         // Get all branches with member counts for status display
@@ -210,9 +210,12 @@ class DashboardController extends Controller
 
         $statusChanged = false;
 
-        // If billing period changed and user is a branch user, set status to pending
-        if ($user->role === 'branch' && $oldBillingPeriod !== $newBillingPeriod) {
-            User::where('id', $user->id)->update(['status' => 'pending']);
+        // If billing period changed and user is a branch or admin user, reset both approval statuses to pending
+        if (in_array($user->role, ['branch', 'admin']) && $oldBillingPeriod !== $newBillingPeriod) {
+            User::where('id', $user->id)->update([
+                'billing_approval_status' => 'pending',
+                'special_billing_approval_status' => 'pending'
+            ]);
             $statusChanged = true;
         }
 
@@ -251,9 +254,12 @@ class DashboardController extends Controller
 
         $statusChanged = false;
 
-        // If billing period changed and user is a branch user, set status to pending
-        if ($user->role === 'branch' && $oldBillingPeriod !== $newBillingPeriod) {
-            User::where('id', $user->id)->update(['status' => 'pending']);
+        // If billing period changed and user is a branch or admin user, reset both approval statuses to pending
+        if (in_array($user->role, ['branch', 'admin']) && $oldBillingPeriod !== $newBillingPeriod) {
+            User::where('id', $user->id)->update([
+                'billing_approval_status' => 'pending',
+                'special_billing_approval_status' => 'pending'
+            ]);
             $statusChanged = true;
         }
 

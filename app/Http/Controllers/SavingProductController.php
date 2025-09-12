@@ -13,7 +13,7 @@ class SavingProductController extends Controller
     public function index(Request $request)
     {
         $query = SavingProduct::with('members');
-        
+
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->get('search');
@@ -23,16 +23,16 @@ class SavingProductController extends Controller
                   ->orWhere('product_type', 'like', "%{$search}%");
             });
         }
-        
+
         // Show entries functionality
         $perPage = $request->get('per_page', 10);
         $savingProducts = $query
             ->orderByRaw('ISNULL(prioritization), prioritization ASC')
             ->paginate($perPage);
-        
+
         // Preserve search and pagination parameters for form actions
         $savingProducts->appends($request->except('page'));
-        
+
         return view('components.admin.savings.saving_products', compact('savingProducts'));
     }
 
@@ -47,7 +47,7 @@ class SavingProductController extends Controller
         ]);
 
         SavingProduct::create($request->all());
-        
+
         // Preserve pagination and search parameters
         $redirectParams = $request->only(['search', 'per_page']);
         if ($request->filled('page')) {
@@ -100,7 +100,7 @@ class SavingProductController extends Controller
     public function destroy($id)
     {
         SavingProduct::destroy($id);
-        
+
         // Preserve pagination and search parameters
         $redirectParams = request()->only(['search', 'per_page']);
         if (request()->filled('page')) {

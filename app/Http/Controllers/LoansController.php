@@ -13,7 +13,7 @@ class LoansController extends Controller
     public function index(Request $request)
     {
         $query = LoanProduct::query();
-        
+
         // Search functionality
         if ($request->filled('search')) {
             $search = $request->get('search');
@@ -24,14 +24,14 @@ class LoansController extends Controller
                   ->orWhere('billing_type', 'like', "%{$search}%");
             });
         }
-        
+
         // Show entries functionality
         $perPage = $request->get('per_page', 10);
         $loans = $query->orderBy('prioritization', 'asc')->paginate($perPage);
-        
+
         // Preserve search and pagination parameters for form actions
         $loans->appends($request->except('page'));
-        
+
         return view('components.admin.loans.loans_datatable', compact('loans'));
     }
 

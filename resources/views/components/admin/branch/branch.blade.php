@@ -116,7 +116,7 @@
                                                 <th>Name</th>
                                                 <th>Code</th>
                                                 <th>Members</th>
-                                                <th>Status</th>
+                                                {{-- <th>Status</th> --}}
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -129,22 +129,22 @@
                                                     <td>{{ $branch->name }}</td>
                                                     <td>{{ $branch->code }}</td>
                                                     <td>{{ $branch->members->count() }}</td>
-                                                    <td>
+                                                    {{-- <td>
                                                         <span class="badge badge-{{ $branch->status === 'approved' ? 'success' : ($branch->status === 'N/A' ? 'secondary' : 'warning') }}">
                                                             {{ $branch->status }}
                                                         </span>
-                                                    </td>
+                                                    </td> --}}
                                                     <td>
                                                         <div class="action-buttons">
 
                                                                <!-- Edit Button -->
-                                                            <button class="btn btn-rounded btn-primary" data-toggle="modal"
+                                                            <button class="btn btn-rounded btn-info" data-toggle="modal"
                                                                 data-target="#editModal" data-id="{{ $branch->id }}"
                                                                 data-name="{{ $branch->name }}"
                                                                 data-code="{{ $branch->code }}">Edit</button>
 
                                                             <!-- View Button -->
-                                                            <button class="btn btn-rounded btn-info" data-toggle="modal"
+                                                            <button class="btn btn-rounded btn-primary" data-toggle="modal"
                                                                 data-target="#viewModal" data-id="{{ $branch->id }}"
                                                                 data-name="{{ $branch->name }}"
                                                                 data-code="{{ $branch->code }}"
@@ -165,7 +165,7 @@
                                                 <th>Name</th>
                                                 <th>Code</th>
                                                 <th>Members</th>
-                                                <th>Status</th>
+
                                                 <th>Actions</th>
                                             </tr>
                                         </tfoot>

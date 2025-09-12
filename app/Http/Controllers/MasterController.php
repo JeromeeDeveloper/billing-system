@@ -129,7 +129,29 @@ class MasterController extends Controller
         // Load loan products for JavaScript access
         $loanProducts = \App\Models\LoanProduct::all(['product_code', 'product', 'billing_type']);
 
-        return view('components.admin.master.master', compact('masterlists', 'branches', 'mortuaryProducts', 'loanProducts'));
+        // Check export status for edit button disabling
+        $currentBillingPeriod = $billingPeriod ?: now()->format('Y-m');
+        $isEditDisabledForAll = \App\Models\ExportStatus::isEditDisabledForAll($currentBillingPeriod);
+
+        // Get branch-specific edit disable status
+        $editDisabledBranches = [];
+        if (!$isEditDisabledForAll) {
+            foreach ($branches as $branch) {
+                if (\App\Models\ExportStatus::isEditDisabledForBranch($currentBillingPeriod, $branch->id)) {
+                    $editDisabledBranches[] = $branch->id;
+                }
+            }
+        }
+
+        return view('components.admin.master.master', compact(
+            'masterlists',
+            'branches',
+            'mortuaryProducts',
+            'loanProducts',
+            'isEditDisabledForAll',
+            'editDisabledBranches',
+            'currentBillingPeriod'
+        ));
     }
 
    public function store(Request $request)
@@ -548,7 +570,20 @@ class MasterController extends Controller
         // Load loan products for JavaScript access
         $loanProducts = \App\Models\LoanProduct::all(['product_code', 'product', 'billing_type']);
 
-        return view('components.branch.master.master', compact('masterlists', 'branches', 'mortuaryProducts', 'loanProducts'));
+        // Check export status for edit button disabling
+        $currentBillingPeriod = now()->format('Y-m');
+        $isEditDisabledForAll = \App\Models\ExportStatus::isEditDisabledForAll($currentBillingPeriod);
+        $isEditDisabledForBranch = \App\Models\ExportStatus::isEditDisabledForBranch($currentBillingPeriod, $userBranchId);
+
+        return view('components.branch.master.master', compact(
+            'masterlists',
+            'branches',
+            'mortuaryProducts',
+            'loanProducts',
+            'isEditDisabledForAll',
+            'isEditDisabledForBranch',
+            'currentBillingPeriod'
+        ));
     }
 
    public function store_branch(Request $request)
@@ -1062,10 +1097,11 @@ class MasterController extends Controller
 
             $stats = $import->getStats();
 
-            $message = "Savings & Shares Product import completed successfully. ";
+            $message = "Savings, Shares & Loans Product import completed successfully. ";
             $message .= "Processed: {$stats['processed']}, ";
             $message .= "Savings Updated: {$stats['savings_updated']}, ";
             $message .= "Shares Updated: {$stats['shares_updated']}, ";
+            $message .= "Loans Updated: {$stats['loans_updated']}, ";
             $message .= "Skipped: {$stats['skipped']}";
 
             return redirect()->back()->with('success', $message);
