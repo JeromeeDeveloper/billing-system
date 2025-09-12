@@ -1829,7 +1829,7 @@
         $('#deleteModal').on('show.bs.modal', function(event) {
             var button = $(event.relatedTarget);
             var id = button.data('id');
-            $('#deleteForm').attr('action', '/members/' + id);
+            $('#deleteForm').attr('action', '/master/members/' + id);
         });
     </script>
 

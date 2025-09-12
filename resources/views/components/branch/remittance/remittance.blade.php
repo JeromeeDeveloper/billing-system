@@ -240,8 +240,8 @@
                                     <div class="col-12">
                                         <div class="card border-0 shadow-sm">
                                             <div class="card-header bg-gradient-primary text-white">
-                                                <h5 class="mb-0">
-                                                    <i class="fa fa-tachometer-alt"></i> Collection Monitoring Dashboard
+                                                <h5 class="mb-0 text-white">
+                                                    <i class="fa fa-tachometer-alt"></i> Monitoring Dashboard
                                                 </h5>
                                                 <small class="text-white-50">Comprehensive overview of collection
                                                     generation status and data availability</small>

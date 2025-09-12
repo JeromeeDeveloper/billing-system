@@ -209,8 +209,6 @@
                                                 </div>
                                             </div>
                                             <input type="hidden" name="member_tagging" value="New">
-
-
                                         </div>
                                     </div>
                                 </div>
@@ -285,11 +283,7 @@
                                                     {{-- <td>{{ $item->member->savings_balance ?? '' }}</td>
                                                     <td>{{ $item->member->share_balance ?? 'N/A' }}</td>
                                                     <td>{{ $item->member->loan_balance ?? 'N/A' }}</td> --}}
-
-
                                                     <td>
-
-
                                                         @php
                                                             $isEditDisabled = $isEditDisabledForAll || $isEditDisabledForBranch;
                                                         @endphp

@@ -201,7 +201,7 @@
                                 <!-- Results Summary -->
                                 <div class="row mb-3">
                                     <div class="col-12">
-                                        <div class="alert alert-info results-summary">
+                                        <div class="alert alert-info results-summary text-dark">
                                             <strong>Showing {{ $notifications->firstItem() ?? 0 }} to
                                                 {{ $notifications->lastItem() ?? 0 }} of {{ $notifications->total() }}
                                                 notifications</strong>
