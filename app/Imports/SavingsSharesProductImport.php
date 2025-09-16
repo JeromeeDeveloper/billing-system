@@ -39,11 +39,19 @@ class SavingsSharesProductImport implements ToCollection
 
         // Extract product codes from header (starting from column B)
         $productCodes = [];
+        $specialArrangementColumns = [];
+
         for ($i = 1; $i < count($headerRow); $i++) {
             $productCode = trim($headerRow[$i] ?? '');
             if (!empty($productCode)) {
-                $productCodes[$i] = $productCode;
-                Log::info("Found product code: {$productCode} at column " . ($i + 1));
+                // Check if this is a special arrangement column
+                if (in_array($productCode, ['SPECIAL ARRANGEMENT-LOAN', 'SPECIAL ARRANGEMENT-SHARE', 'SPECIAL ARRANGEMENT-SAVINGS'])) {
+                    $specialArrangementColumns[$i] = $productCode;
+                    Log::info("Found special arrangement column: {$productCode} at column " . ($i + 1));
+                } else {
+                    $productCodes[$i] = $productCode;
+                    Log::info("Found product code: {$productCode} at column " . ($i + 1));
+                }
             }
         }
 
@@ -78,6 +86,28 @@ class SavingsSharesProductImport implements ToCollection
 
             $this->stats['processed']++;
             Log::info("Processing member: {$member->fname} {$member->lname} (CID: {$cid})");
+
+            // Process special arrangement columns first
+            foreach ($specialArrangementColumns as $columnIndex => $specialColumn) {
+                $value = trim($row[$columnIndex] ?? '');
+
+                Log::info("Checking special arrangement column {$specialColumn} for member {$member->cid}: value='{$value}'");
+
+                if (empty($value) || !in_array(strtoupper($value), ['SPECIAL ARRANGEMENT', 'SPECIAL ARRANGEMENTS'])) {
+                    Log::info("Skipping special arrangement for member {$member->cid}: value='{$value}' (not 'Special Arrangement' or 'Special Arrangements')");
+                    continue; // Skip if not "Special Arrangement" or "Special Arrangements"
+                }
+
+                Log::info("Processing special arrangement for member {$member->cid}: {$specialColumn}");
+
+                if ($specialColumn === 'SPECIAL ARRANGEMENT-LOAN') {
+                    $this->applySpecialArrangementLoans($member);
+                } elseif ($specialColumn === 'SPECIAL ARRANGEMENT-SAVINGS') {
+                    $this->applySpecialArrangementSavings($member);
+                } elseif ($specialColumn === 'SPECIAL ARRANGEMENT-SHARE') {
+                    $this->applySpecialArrangementShares($member);
+                }
+            }
 
             // Process each product code column
             foreach ($productCodes as $columnIndex => $productCode) {
@@ -129,21 +159,12 @@ class SavingsSharesProductImport implements ToCollection
                     'deduction_amount' => floatval($value),
                     'account_status' => 'deduction'
                 ]);
-                Log::info("Updated saving product {$savingProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+                Log::info("Updated existing saving product {$savingProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+                $this->stats['savings_updated']++;
             } else {
-                // Create new saving record
-                $member->savings()->create([
-                    'product_code' => $savingProduct->product_code,
-                    'account_number' => $savingProduct->product_code . '-' . $member->cid,
-                    'current_balance' => 0,
-                    'deduction_amount' => floatval($value),
-                    'account_status' => 'deduction',
-                    'billing_period' => Auth::user()->billing_period ?? null
-                ]);
-                Log::info("Created new saving product {$savingProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+                // Skip if member doesn't have this savings product - do not create new ones
+                Log::info("Member {$member->cid} does not have savings product {$savingProduct->product_code} - skipping (will not create new savings)");
             }
-
-            $this->stats['savings_updated']++;
         } catch (\Exception $e) {
             Log::error("Error updating saving product for member {$member->cid}: " . $e->getMessage());
         }
@@ -163,21 +184,12 @@ class SavingsSharesProductImport implements ToCollection
                     'deduction_amount' => floatval($value),
                     'account_status' => 'deduction'
                 ]);
-                Log::info("Updated share product {$shareProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+                Log::info("Updated existing share product {$shareProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+                $this->stats['shares_updated']++;
             } else {
-                // Create new share record
-                $member->shares()->create([
-                    'product_code' => $shareProduct->product_code,
-                    'account_number' => $shareProduct->product_code . '-' . $member->cid,
-                    'current_balance' => 0,
-                    'deduction_amount' => floatval($value),
-                    'account_status' => 'deduction',
-                    'billing_period' => Auth::user()->billing_period ?? null
-                ]);
-                Log::info("Created new share product {$shareProduct->product_code} for member {$member->cid} with deduction_amount: {$value}");
+                // Skip if member doesn't have this shares product - do not create new ones
+                Log::info("Member {$member->cid} does not have shares product {$shareProduct->product_code} - skipping (will not create new shares)");
             }
-
-            $this->stats['shares_updated']++;
         } catch (\Exception $e) {
             Log::error("Error updating share product for member {$member->cid}: " . $e->getMessage());
         }
@@ -313,5 +325,162 @@ class SavingsSharesProductImport implements ToCollection
     public function getStats()
     {
         return $this->stats;
+    }
+
+    private function applySpecialArrangementLoans($member)
+    {
+        try {
+            $today = now()->format('Y-m');
+            Log::info("Applying special arrangement to loans for member {$member->cid}, today: {$today}");
+
+            // Get all existing loan forecasts for this member (do not create new ones)
+            $loanForecasts = $member->loanForecasts()->get();
+            Log::info("Found {$loanForecasts->count()} existing loan forecasts for member {$member->cid}");
+
+            if ($loanForecasts->isEmpty()) {
+                Log::info("No existing loan forecasts found for member {$member->cid} for special arrangement - skipping (will not create new loans)");
+                return;
+            }
+
+            // Find the longest maturity date among all loans
+            $longestMaturityDate = $loanForecasts->max('maturity_date');
+            Log::info("Longest maturity date for member {$member->cid}: {$longestMaturityDate}");
+
+            if (!$longestMaturityDate) {
+                Log::warning("No maturity dates found for member {$member->cid} loans");
+                return;
+            }
+
+            // Convert maturity date to YYYY-MM format
+            $expiryDate = \Carbon\Carbon::parse($longestMaturityDate)->format('Y-m');
+            Log::info("Converted expiry date for member {$member->cid}: {$expiryDate}");
+
+            // Update only existing loan forecasts with special arrangement (do not create new ones)
+            foreach ($loanForecasts as $loanForecast) {
+                $updateData = [
+                    'start_hold' => $today,
+                    'expiry_date' => $expiryDate,
+                    'account_status' => 'non-deduction'
+                ];
+
+                Log::info("Updating existing loan {$loanForecast->loan_acct_no} with data: " . json_encode($updateData));
+
+                $result = $loanForecast->update($updateData);
+
+                Log::info("Update result for loan {$loanForecast->loan_acct_no}: " . ($result ? 'SUCCESS' : 'FAILED'));
+                Log::info("Applied special arrangement to existing loan {$loanForecast->loan_acct_no} for member {$member->cid} - start_hold: {$today}, expiry_date: {$expiryDate}");
+            }
+
+            Log::info("Special arrangement applied to {$loanForecasts->count()} existing loans for member {$member->cid}");
+
+        } catch (\Exception $e) {
+            Log::error("Error applying special arrangement to loans for member {$member->cid}: " . $e->getMessage());
+        }
+    }
+
+    private function applySpecialArrangementSavings($member)
+    {
+        try {
+            $today = now()->format('Y-m');
+            Log::info("Applying special arrangement to savings for member {$member->cid}, today: {$today}");
+
+            // Get all savings for this member
+            $savings = $member->savings()->get();
+            Log::info("Found {$savings->count()} savings for member {$member->cid}");
+
+            if ($savings->isEmpty()) {
+                Log::info("No savings found for member {$member->cid} for special arrangement");
+                return;
+            }
+
+            // Get the longest maturity date from all loans for this member
+            $loanForecasts = $member->loanForecasts()->get();
+            $longestMaturityDate = $loanForecasts->max('maturity_date');
+            Log::info("Longest maturity date from loans for member {$member->cid}: {$longestMaturityDate}");
+
+            if (!$longestMaturityDate) {
+                Log::warning("No maturity dates found for member {$member->cid} loans, using 1 year from today for savings");
+                $expiryDate = now()->addYear()->format('Y-m');
+            } else {
+                // Convert maturity date to YYYY-MM format
+                $expiryDate = \Carbon\Carbon::parse($longestMaturityDate)->format('Y-m');
+            }
+
+            Log::info("Using expiry date for savings: {$expiryDate}");
+
+            // Update all savings with special arrangement
+            foreach ($savings as $saving) {
+                $updateData = [
+                    'start_hold' => $today,
+                    'expiry_date' => $expiryDate,
+                    'account_status' => 'non-deduction'
+                ];
+
+                Log::info("Updating savings {$saving->account_number} with data: " . json_encode($updateData));
+
+                $result = $saving->update($updateData);
+
+                Log::info("Update result for savings {$saving->account_number}: " . ($result ? 'SUCCESS' : 'FAILED'));
+                Log::info("Applied special arrangement to savings {$saving->account_number} for member {$member->cid} - start_hold: {$today}, expiry_date: {$expiryDate}");
+            }
+
+            Log::info("Special arrangement applied to {$savings->count()} savings for member {$member->cid}");
+
+        } catch (\Exception $e) {
+            Log::error("Error applying special arrangement to savings for member {$member->cid}: " . $e->getMessage());
+        }
+    }
+
+    private function applySpecialArrangementShares($member)
+    {
+        try {
+            $today = now()->format('Y-m');
+            Log::info("Applying special arrangement to shares for member {$member->cid}, today: {$today}");
+
+            // Get all existing shares for this member (do not create new ones)
+            $shares = $member->shares()->get();
+            Log::info("Found {$shares->count()} existing shares for member {$member->cid}");
+
+            if ($shares->isEmpty()) {
+                Log::info("No existing shares found for member {$member->cid} for special arrangement - skipping (will not create new shares)");
+                return;
+            }
+
+            // Get the longest maturity date from all loans for this member
+            $loanForecasts = $member->loanForecasts()->get();
+            $longestMaturityDate = $loanForecasts->max('maturity_date');
+            Log::info("Longest maturity date from loans for member {$member->cid}: {$longestMaturityDate}");
+
+            if (!$longestMaturityDate) {
+                Log::warning("No maturity dates found for member {$member->cid} loans, using 1 year from today for shares");
+                $expiryDate = now()->addYear()->format('Y-m');
+            } else {
+                // Convert maturity date to YYYY-MM format
+                $expiryDate = \Carbon\Carbon::parse($longestMaturityDate)->format('Y-m');
+            }
+
+            Log::info("Using expiry date for shares: {$expiryDate}");
+
+            // Update only existing shares with special arrangement (do not create new ones)
+            foreach ($shares as $share) {
+                $updateData = [
+                    'start_hold' => $today,
+                    'expiry_date' => $expiryDate,
+                    'account_status' => 'non-deduction'
+                ];
+
+                Log::info("Updating existing shares {$share->account_number} with data: " . json_encode($updateData));
+
+                $result = $share->update($updateData);
+
+                Log::info("Update result for shares {$share->account_number}: " . ($result ? 'SUCCESS' : 'FAILED'));
+                Log::info("Applied special arrangement to existing shares {$share->account_number} for member {$member->cid} - start_hold: {$today}, expiry_date: {$expiryDate}");
+            }
+
+            Log::info("Special arrangement applied to {$shares->count()} existing shares for member {$member->cid}");
+
+        } catch (\Exception $e) {
+            Log::error("Error applying special arrangement to shares for member {$member->cid}: " . $e->getMessage());
+        }
     }
 }
