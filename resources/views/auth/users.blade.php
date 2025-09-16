@@ -459,6 +459,16 @@
                 confirmButtonColor: '#d33',
             });
         @endif
+        // Specific SweetAlert for duplicate email and reopen Add User modal
+        @if ($errors->has('email'))
+            $('#addModal').modal('show');
+            Swal.fire({
+                icon: 'error',
+                title: 'Duplicate Email',
+                text: `{{ $errors->first('email') }}`,
+                confirmButtonColor: '#d33'
+            });
+        @endif
     </script>
 </body>
 

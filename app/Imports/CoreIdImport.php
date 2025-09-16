@@ -82,8 +82,12 @@ class CoreIdImport implements ToCollection, WithHeadingRow
             Log::info("CoreID Import - Detected columns: CID='{$cidColumn}', Branch='{$branchCodeColumn}'");
 
             // Get all existing CIDs from the uploaded file
-            $uploadedCids = $rows->pluck($cidColumn)->map(function($cid) {
-                return str_pad($cid, 9, '0', STR_PAD_LEFT);
+            $uploadedCids = $rows->pluck($cidColumn)->filter(function ($cid) {
+                return !is_null($cid) && $cid !== '';
+            })->map(function($cid) {
+                $normalized = trim((string) $cid);
+                $normalized = ltrim($normalized, "' ");
+                return str_pad($normalized, 9, '0', STR_PAD_LEFT);
             })->toArray();
 
             // Create a set of uploaded CIDs for faster lookup
@@ -91,22 +95,39 @@ class CoreIdImport implements ToCollection, WithHeadingRow
 
             // Process each row in the uploaded file
             foreach ($rows as $row) {
-                $cid = str_pad($row[$cidColumn], 9, '0', STR_PAD_LEFT);
-                $branchCode = $branchCodeColumn ? trim($row[$branchCodeColumn] ?? '') : null;
+                if (!isset($row[$cidColumn])) {
+                    continue;
+                }
+                $rawCid = ltrim(trim((string) $row[$cidColumn]), "' ");
+                $cid = str_pad($rawCid, 9, '0', STR_PAD_LEFT);
+                $branchCode = $branchCodeColumn ? trim((string) ($row[$branchCodeColumn] ?? '')) : null;
 
                 // Find member with this CID
                 $member = Member::where('cid', $cid)->first();
 
                 if ($member) {
                     // Update existing member's tagging to PGB
-                    $member->update(['member_tagging' => 'PGB']);
+                    $updates = ['member_tagging' => 'PGB'];
+
+                    // If branch code provided, attempt to map to branch and assign
+                    if ($branchCode !== null && $branchCode !== '') {
+                        $branch = Branch::where('code', $branchCode)->first();
+                        if ($branch) {
+                            $updates['branch_id'] = $branch->id;
+                        } else {
+                            Log::warning("CoreID Import - Branch with code '{$branchCode}' not found for existing member CID: {$cid}");
+                            $this->stats['branch_not_found']++;
+                        }
+                    }
+
+                    $member->update($updates);
                     $this->stats['matched']++;
                     $this->stats['updated']++;
 
                     $this->results[] = [
                         'cid' => $cid,
                         'status' => 'success',
-                        'message' => 'Member found and updated to PGB',
+                        'message' => 'Member found and updated to PGB' . ($branchCode ? ' (branch processed)' : ''),
                         'action' => 'updated'
                     ];
                 } else {
