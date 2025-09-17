@@ -146,6 +146,7 @@ use App\Models\BillingSetting;
                         </a></li>
 
                         <li class="nav-label">Billing</li>
+                        <li><a href="{{ route('reports.loan-accounts-due') }}">Loan Accounts Due</a></li>
                         <li><a href="{{ route('billing.exportMemberDeductionDetails') }}">Member Deduction Details</a></li>
 
                         <li class="nav-label">Remittance</li>

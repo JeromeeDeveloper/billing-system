@@ -519,7 +519,7 @@ class DocumentUploadController extends Controller
         // Get only the latest 5 files total across all document types
         $documents = DocumentUpload::where('billing_period', $billingPeriod)
             ->orderBy('upload_date', 'desc')
-            ->limit(5)
+            ->limit(10)
             ->get();
 
         return view('components.admin.files.file_datatable', compact('documents', 'isApproved', 'hasApprovedBranches', 'branchStatuses'));

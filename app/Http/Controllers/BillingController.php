@@ -710,6 +710,33 @@ class BillingController extends Controller
         }
     }
 
+    public function exportLoanAccountsDue(Request $request)
+    {
+        try {
+            $billingPeriod = Auth::user()->billing_period ?? now()->format('Y-m');
+
+            $export = new \App\Exports\LoanAccountsDueExport($billingPeriod);
+            $filename = 'loan_accounts_due_' . \Carbon\Carbon::parse($billingPeriod)->format('Y-m') . '_' . now()->format('Ymd_His') . '.xlsx';
+
+            \Maatwebsite\Excel\Facades\Excel::store($export, 'exports/' . $filename, 'public');
+
+            $billingExport = BillingExport::create([
+                'billing_period' => $billingPeriod,
+                'filename' => $filename,
+                'filepath' => 'exports/' . $filename,
+                'generated_by' => Auth::id()
+            ]);
+
+            NotificationController::createNotification('billing_report', Auth::id(), $billingExport->id);
+
+            return \Maatwebsite\Excel\Facades\Excel::download($export, $filename);
+
+        } catch (\Exception $e) {
+            Log::error('Error generating loan accounts due report: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error generating loan accounts due report: ' . $e->getMessage());
+        }
+    }
+
     public function exportBranchLoanReport(Request $request)
     {
         try {
