@@ -11,41 +11,45 @@
             margin: 0;
             padding: 20px;
         }
-        .header {
-            text-align: center;
+        .header-batch {
             margin-bottom: 30px;
             border-bottom: 2px solid #333;
             padding-bottom: 10px;
-            position: relative;
+            display: flex;
         }
-        .header-container {
+        .header-container-batch {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 10px;
+            width: 100%;
+            flex-direction: row;
         }
-        .header-left {
-            flex: 1;
-            text-align: left;
+        .header-left,
+        .header-right {
+            flex: 0 0 100px; /* fixed space for logos */
+            text-align: center;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
         }
         .header-center {
-            flex: 2;
-            text-align: center;
-        }
-        .header-right {
             flex: 1;
-            text-align: right;
+            text-align: center;
+            flex-direction: row;
+            justify-content: center;
         }
         .header-image {
-            max-height: 60px;
-            max-width: 120px;
+            max-height: 50px;
+            max-width: 100px;
+            display: block;
+            margin: 0 auto;
         }
-        .header h1 {
+        .header-center h1 {
             margin: 0;
             font-size: 18px;
             font-weight: bold;
         }
-        .header h2 {
+        .header-center h2 {
             margin: 5px 0 0 0;
             font-size: 14px;
             font-weight: normal;
@@ -93,8 +97,8 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-container">
+    <div class="header-batch">
+        <div class="header-container-batch">
             <div class="header-left">
                 @if($picture1Base64)
                     <img src="{{ $picture1Base64 }}" alt="Logo Left" class="header-image">

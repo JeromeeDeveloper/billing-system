@@ -698,7 +698,7 @@
                                                                                             <label class="form-check-label fw-bold" for="loan{{ $member->id }}_{{ $index }}">
                                                                                                 <i class="fa fa-credit-card me-2 text-primary"></i>
                                                                                                 <strong>{{ $loan->loan_acct_no }}</strong>
-                                                                                                <span class="badge bg-info ms-2">
+                                                                                                <span class="badge ms-2 text-dark">
                                                                                                     Amort Due: ₱ {{ number_format($loan->total_due, 2) }}
                                                                                                 </span>
                                                                                                 <br>
