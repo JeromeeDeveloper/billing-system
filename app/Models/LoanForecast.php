@@ -64,7 +64,7 @@ class LoanForecast extends Model
         return $this->belongsTo(Member::class);
     }
 
-    public function loanProduct()
+    public function getLoanProductNameAttribute()
     {
         // Extract product_code from loan_acct_no (3rd segment)
         $productCode = null;
@@ -72,7 +72,13 @@ class LoanForecast extends Model
             $segments = explode('-', $this->loan_acct_no);
             $productCode = $segments[2] ?? null;
         }
-        return $this->hasOne(LoanProduct::class, 'product_code', 'product_code')->where('product_code', $productCode);
+
+        if (!$productCode) {
+            return 'Unknown Product';
+        }
+
+        $product = LoanProduct::where('product_code', $productCode)->first();
+        return $product ? $product->product : 'Unknown Product';
     }
 
     public static function boot()

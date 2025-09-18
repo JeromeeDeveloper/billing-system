@@ -701,6 +701,10 @@
                                                                                                 <span class="badge bg-info ms-2">
                                                                                                     Amort Due: ₱ {{ number_format($loan->total_due, 2) }}
                                                                                                 </span>
+                                                                                                <br>
+                                                                                                <small class="text-muted">
+                                                                                                    {{ $loan->loan_product_name }}
+                                                                                                </small>
                                                                                             </label>
                                                                                         </div>
                                                                                         <div class="ml-4 mt-2">

@@ -141,7 +141,7 @@
 
     <script>
         $(document).ready(function() {
-            // Form submission with loading state
+            // Form submission with simple alert
             $('#cidGenerationForm').on('submit', function(e) {
                 const fileInput = $('#excel_file')[0];
                 if (!fileInput.files.length) {
@@ -155,17 +155,15 @@
                     return;
                 }
 
-                $('#generateBtn').prop('disabled', true).html('<i class="bi bi-hourglass-split"></i> Processing...');
-
-                // Show processing message
+                // Show simple processing message in upper right
                 Swal.fire({
-                    title: 'Processing...',
-                    text: 'Matching names and generating Excel file. Please wait.',
-                    allowOutsideClick: false,
+                    title: 'Processing Request',
+                    text: 'Your file will be downloaded shortly',
+                    icon: 'info',
+                    timer: 2000,
                     showConfirmButton: false,
-                    willOpen: () => {
-                        Swal.showLoading();
-                    }
+                    position: 'top-end',
+                    toast: true
                 });
             });
 
