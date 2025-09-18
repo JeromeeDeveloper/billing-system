@@ -105,14 +105,21 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Remittance ID</label>
+                                                    <input type="text" name="remittance_id" class="form-control">
+                                                </div>
+                                            </div>
+
+                                            <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">First Name</label>
                                                     <input type="text" name="fname" class="form-control">
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">Last Name</label>
                                                     <input type="text" name="lname" class="form-control">
@@ -292,6 +299,7 @@
                                                             data-id="{{ $item->member->id }}"
                                                             data-cid="{{ $item->member->cid }}"
                                                             data-emp_id="{{ $item->member->emp_id }}"
+                                                            data-remittance_id="{{ $item->member->remittance_id }}"
                                                             data-fname="{{ $item->member->fname }}"
                                                             data-lname="{{ $item->member->lname }}"
                                                             data-address="{{ $item->member->address }}"
@@ -410,6 +418,13 @@
                                                                     ID</label>
                                                                 <input type="text" class="form-control"
                                                                     name="emp_id" id="edit-emp_id">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-remittance_id">Remittance ID</label>
+                                                                <input type="text" class="form-control" name="remittance_id" id="edit-remittance_id">
                                                             </div>
                                                         </div>
 
@@ -1120,6 +1135,7 @@
 
             // Update form action dynamically
             $('#editForm').attr('action', '/Branch/master/members/' + button.data('id'));
+            $('#edit-remittance_id').val(button.data('remittance_id'));
 
             updateNavButtons();
         });
@@ -1375,6 +1391,13 @@
         function renderLoan(index) {
             $('#edit-loan-forecast-container').empty();
 
+            // If there are no loans, don't render any loan inputs so the form can save
+            if (!Array.isArray(loans) || loans.length === 0) {
+                $('#edit-loan-forecast-container').html('<div class="alert alert-info">No loans for this member.</div>');
+                $('#loan-counter').text('No loans.');
+                return;
+            }
+
             let loan = loans[index] || {};
             console.log('Rendering loan data:', loan);
             console.log('Start hold value:', loan.start_hold);
@@ -1396,7 +1419,8 @@
         <div class="form-row">
             <div class="col-md-6">
                 <label>Loan Account No.</label>
-                <input type="text" name="loan_forecasts[${index}][loan_acct_no]" class="form-control" value="${loan.loan_acct_no || ''}" required>
+                <input type="hidden" name="loan_forecasts[${index}][loan_acct_no]" value="${loan.loan_acct_no || ''}">
+                <input type="text" class="form-control" value="${loan.loan_acct_no || ''}" disabled>
             </div>
             <div class="col-md-6">
                 <label>Product Name</label>

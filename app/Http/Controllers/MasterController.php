@@ -280,7 +280,7 @@ class MasterController extends Controller
 
                 // LoanForecast validation
                 'loan_forecasts' => 'nullable|array',
-                'loan_forecasts.*.loan_acct_no' => 'required|string',
+                'loan_forecasts.*.loan_acct_no' => 'nullable|string',
                 'loan_forecasts.*.total_due' => 'required|numeric',
                 'loan_forecasts.*.billing_period' => 'nullable|string',
                 'loan_forecasts.*.start_hold' => 'nullable|regex:/^\d{4}-\d{2}$/',
@@ -716,7 +716,7 @@ class MasterController extends Controller
 
                 // LoanForecast validation
                 'loan_forecasts' => 'nullable|array',
-                'loan_forecasts.*.loan_acct_no' => 'required|string',
+                'loan_forecasts.*.loan_acct_no' => 'nullable|string',
                 'loan_forecasts.*.amount_due' => 'nullable|numeric',
                 'loan_forecasts.*.open_date' => 'nullable|date',
                 'loan_forecasts.*.maturity_date' => 'nullable|date',

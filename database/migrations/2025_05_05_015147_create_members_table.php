@@ -20,6 +20,7 @@ return new class extends Migration
 
             $table->string('cid')->unique();
             $table->string('emp_id')->unique()->nullable();
+            $table->string('remittance_id')->unique()->nullable();
             $table->string('fname')->nullable();
             $table->string('lname')->nullable();
             $table->text('address')->nullable();

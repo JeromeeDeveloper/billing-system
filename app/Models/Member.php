@@ -16,6 +16,7 @@ class Member extends Model
         'branch_id',
         'cid',
         'emp_id',
+        'remittance_id',
         'fname',
         'lname',
         'address',

@@ -186,6 +186,13 @@
                                                 </div>
                                             </div>
 
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label class="form-label">Remittance ID</label>
+                                                    <input type="text" name="remittance_id" class="form-control">
+                                                </div>
+                                            </div>
+
                                             <div class="col-md-6">
                                                 <div class="form-group">
                                                     <label class="form-label">First Name</label>
@@ -394,6 +401,7 @@
                                                             data-id="{{ $item->member->id }}"
                                                             data-cid="{{ $item->member->cid }}"
                                                             data-emp_id="{{ $item->member->emp_id }}"
+                                                            data-remittance_id="{{ $item->member->remittance_id }}"
                                                             data-fname="{{ $item->member->fname }}"
                                                             data-lname="{{ $item->member->lname }}"
                                                             data-address="{{ $item->member->address }}"
@@ -510,6 +518,13 @@
                                                                     ID</label>
                                                                 <input type="text" class="form-control"
                                                                     name="emp_id" id="edit-emp_id">
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="col-md-6">
+                                                            <div class="form-group">
+                                                                <label class="form-label" for="edit-remittance_id">Remittance ID</label>
+                                                                <input type="text" class="form-control" name="remittance_id" id="edit-remittance_id">
                                                             </div>
                                                         </div>
 
@@ -1069,6 +1084,7 @@
             $('#edit-id').val(button.data('id'));
             $('#edit-cid').val(button.data('cid'));
             $('#edit-emp_id').val(button.data('emp_id'));
+            $('#edit-remittance_id').val(button.data('remittance_id'));
             $('#edit-fname').val(button.data('fname'));
             $('#edit-lname').val(button.data('lname'));
             $('#edit-address').val(button.data('address'));
