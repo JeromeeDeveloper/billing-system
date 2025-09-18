@@ -209,6 +209,9 @@ use App\Models\BillingSetting;
                     <a href="{{ route('users') }}" aria-expanded="false"><i class="bi bi-people"></i><span class="nav-text">Users</span></a>
                 </li>
 
+                <li>
+                    <a href="{{ route('admin.cid-generation') }}" aria-expanded="false"><i class="bi bi-person-badge"></i><span class="nav-text">CID Generation</span></a>
+                </li>
 
             @endif
 

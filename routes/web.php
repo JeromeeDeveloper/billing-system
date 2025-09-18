@@ -71,6 +71,10 @@ Route::post('/billing/toggle-retain-dues', [BillingController::class, 'toggleRet
 // Reports - Loan Accounts Due (CID, Product Code, Loan Account #, Total Due)
 Route::get('/reports/loan-accounts-due', [BillingController::class, 'exportLoanAccountsDue'])->name('reports.loan-accounts-due');
 
+//CID Generation
+Route::get('/admin/cid-generation', [DocumentUploadController::class, 'showCidGeneration'])->name('admin.cid-generation');
+Route::post('/admin/cid-generation/process', [DocumentUploadController::class, 'processCidGeneration'])->name('admin.cid-generation.process');
+
 //Billing Export History
 Route::get('/billing/exports', [BillingController::class, 'viewExports'])->name('billing.exports');
 Route::get('/billing/exports/data', [BillingController::class, 'getExportsData'])->name('billing.exports.data');

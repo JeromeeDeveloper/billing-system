@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Database\Eloquent\Collection;
 use App\Models\User;
+use App\Imports\CidGenerationImport;
+use App\Exports\CidGenerationExport;
 
 class DocumentUploadController extends Controller
 {
@@ -600,5 +602,53 @@ class DocumentUploadController extends Controller
         }
 
         return $stats;
+    }
+
+    /**
+     * Show CID generation page
+     */
+    public function showCidGeneration()
+    {
+        return view('components.admin.generation.cid_generation');
+    }
+
+    /**
+     * Process CID generation from Excel file
+     */
+    public function processCidGeneration(Request $request)
+    {
+        try {
+            $request->validate([
+                'excel_file' => 'required|file|mimes:xlsx,xls|max:10240' // 10MB max
+            ]);
+
+            $import = new CidGenerationImport();
+            Excel::import($import, $request->file('excel_file'));
+
+            $results = $import->results;
+            $originalData = $import->originalData;
+            $stats = $import->stats;
+
+            Log::info('CID Generation completed', [
+                'total_processed' => $stats['total_processed'],
+                'matched' => $stats['matched'],
+                'no_match' => $stats['no_match']
+            ]);
+
+            // Generate Excel file with matched CIDs
+            $export = new CidGenerationExport($originalData, $results);
+            $filename = 'cid_generation_results_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
+
+            // Store the file temporarily
+            Excel::store($export, 'temp/' . $filename, 'public');
+
+            // Download the file
+            return Excel::download($export, $filename);
+
+        } catch (\Exception $e) {
+            Log::error('CID Generation failed: ' . $e->getMessage());
+            return redirect()->route('admin.cid-generation')
+                ->with('error', 'Error processing file: ' . $e->getMessage());
+        }
     }
 }
