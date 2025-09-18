@@ -11,45 +11,30 @@
             margin: 0;
             padding: 20px;
         }
-        .header-batch {
+        .header {
+            text-align: center;
             margin-bottom: 30px;
             border-bottom: 2px solid #333;
             padding-bottom: 10px;
-            display: flex;
         }
-        .header-container-batch {
+        .header-container {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            width: 100%;
+            margin-bottom: 10px;
             flex-direction: row;
-        }
-        .header-left,
-        .header-right {
-            flex: 0 0 100px; /* fixed space for logos */
-            text-align: center;
-            flex-direction: row;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .header-center {
-            flex: 1;
-            text-align: center;
-            flex-direction: row;
-            justify-content: center;
         }
         .header-image {
             max-height: 50px;
             max-width: 100px;
             display: block;
-            margin: 0 auto;
         }
-        .header-center h1 {
+        .header h1 {
             margin: 0;
             font-size: 18px;
             font-weight: bold;
         }
-        .header-center h2 {
+        .header h2 {
             margin: 5px 0 0 0;
             font-size: 14px;
             font-weight: normal;
@@ -97,8 +82,8 @@
     </style>
 </head>
 <body>
-    <div class="header-batch">
-        <div class="header-container-batch">
+    <div class="header">
+        <div class="header-container">
             <div class="header-left">
                 @if($picture1Base64)
                     <img src="{{ $picture1Base64 }}" alt="Logo Left" class="header-image">

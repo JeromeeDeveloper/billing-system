@@ -461,7 +461,7 @@
                                                                                                     class="fa fa-credit-card me-2 text-primary"></i>
                                                                                                 <strong>{{ $loan->loan_acct_no }}</strong>
                                                                                                 <span
-                                                                                                    class="badge text-dark ms-2">
+                                                                                                    class="badge bg-info ms-2">
                                                                                                     Amort Due: ₱
                                                                                                     {{ number_format($loan->total_due, 2) }}
                                                                                                 </span>
