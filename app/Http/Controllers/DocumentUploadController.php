@@ -622,7 +622,8 @@ class DocumentUploadController extends Controller
                 'excel_file' => 'required|file|mimes:xlsx,xls|max:10240' // 10MB max
             ]);
 
-            $import = new CidGenerationImport();
+            $nameFormat = $request->input('name_format', 'auto');
+            $import = new CidGenerationImport($nameFormat);
             Excel::import($import, $request->file('excel_file'));
 
             $results = $import->results;

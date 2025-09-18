@@ -19,6 +19,13 @@ class CidGenerationImport implements ToCollection, WithHeadingRow
         'no_match' => 0
     ];
 
+    protected $nameFormat;
+
+    public function __construct(string $nameFormat = 'auto')
+    {
+        $this->nameFormat = $nameFormat;
+    }
+
     public function collection(Collection $rows)
     {
         Log::info('CID Generation Import - Processing ' . $rows->count() . ' rows');
@@ -67,6 +74,16 @@ class CidGenerationImport implements ToCollection, WithHeadingRow
 
     private function getExcelName($row)
     {
+        // If two-columns mode, assemble from LASTNAME and FIRSTNAME
+        if ($this->nameFormat === 'two_columns') {
+            $last = isset($row['lastname']) ? trim($row['lastname']) : '';
+            $first = isset($row['firstname']) ? trim($row['firstname']) : '';
+            if ($last !== '' || $first !== '') {
+                // Assemble as "FIRST LAST"
+                return trim($first . ' ' . $last);
+            }
+        }
+
         // Look specifically for 'name' column (Column A with header "NAME")
         if (isset($row['name']) && !empty(trim($row['name']))) {
             return trim($row['name']);
@@ -136,8 +153,8 @@ class CidGenerationImport implements ToCollection, WithHeadingRow
             return true;
         }
 
-        // Handle "LASTNAME, FIRSTNAME" format from Excel
-        if (strpos($excelName, ',') !== false) {
+        // Handle explicit formats or auto-detect
+        if ($this->nameFormat === 'last_first' || ($this->nameFormat === 'auto' && strpos($excelName, ',') !== false)) {
             $parts = explode(',', $excelName, 2);
             $lastName = trim($parts[0]);
             $firstName = trim($parts[1]);
@@ -145,6 +162,13 @@ class CidGenerationImport implements ToCollection, WithHeadingRow
             // Try "FIRSTNAME LASTNAME" format
             $reversedName = $firstName . ' ' . $lastName;
             if ($this->normalizeName($reversedName) === $memberName) {
+                return true;
+            }
+        }
+
+        if ($this->nameFormat === 'first_last') {
+            // Already in first last; compare normalized
+            if ($this->normalizeName($excelName) === $memberName) {
                 return true;
             }
         }

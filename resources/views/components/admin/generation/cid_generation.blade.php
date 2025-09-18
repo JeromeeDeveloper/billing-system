@@ -59,14 +59,26 @@
                                 <form id="cidGenerationForm" action="{{ route('admin.cid-generation.process') }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     <div class="row">
-                                        <div class="col-md-8">
+                                        <div class="col-md-6">
                                             <div class="form-group">
                                                 <label for="excel_file">Excel File</label>
                                                 <input type="file" class="form-control" id="excel_file" name="excel_file" accept=".xlsx,.xls" required>
                                                 <small class="form-text text-muted">Upload Excel file with member names. Expected format: Column A header "NAME", data: "ABAD, EDMELYN PEREZ"</small>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <label for="name_format">Name Format</label>
+                                                <select class="form-control" id="name_format" name="name_format">
+                                                    <option value="auto" selected>Auto-detect (recommended)</option>
+                                                    <option value="last_first">LASTNAME, FIRSTNAME</option>
+                                                    <option value="first_last">FIRSTNAME LASTNAME</option>
+                                                    <option value="two_columns">Two columns: LASTNAME (A) + FIRSTNAME (B)</option>
+                                                </select>
+                                                <small class="form-text text-muted">Choose input name layout.</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
                                             <div class="form-group">
                                                 <label>&nbsp;</label>
                                                 <button type="submit" class="btn btn-primary btn-block" id="generateBtn">
