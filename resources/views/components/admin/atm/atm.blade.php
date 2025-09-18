@@ -262,12 +262,17 @@
                                                     </div>
                                                 </div>
 
-                                                <!-- Submit Button Full Width -->
+                                                <!-- Submit Buttons Full Width -->
                                                 <div class="row mt-3">
                                                     <div class="col">
                                                         <button type="submit" class="btn btn-primary btn-lg btn-block shadow">
                                                             <i class="fa fa-file-excel mr-2"></i> Export Posted Payments
                                                         </button>
+                                                    </div>
+                                                    <div class="col">
+                                                        <a href="{{ route('atm.export-posted-payments-with-description', request()->all()) }}" class="btn btn-success btn-lg btn-block shadow">
+                                                            <i class="fa fa-file-excel mr-2"></i> Export Posted Payments (with descriptions)
+                                                        </a>
                                                     </div>
                                                 </div>
                                             </form>

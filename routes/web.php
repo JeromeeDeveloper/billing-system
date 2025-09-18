@@ -124,6 +124,7 @@ Route::get('/atm', [AtmController::class, 'index'])->name('atm');
     Route::post('/atm/post-payment', [AtmController::class, 'postPayment'])->name('atm.post-payment');
     Route::get('/atm/export-posted-payments', [AtmController::class, 'exportPostedPayments'])->name('atm.export-posted-payments');
     Route::get('/atm/export-posted-payments-detailed', [AtmController::class, 'exportPostedPaymentsDetailed'])->name('atm.export-posted-payments-detailed');
+    Route::get('/atm/export-posted-payments-with-description', [AtmController::class, 'exportPostedPaymentsWithDescription'])->name('atm.export-posted-payments-with-description');
 Route::get('/atm/generate-batch-report', [AtmController::class, 'generateAtmBatchReport'])->name('atm.generate-batch-report');
 
 //Branch

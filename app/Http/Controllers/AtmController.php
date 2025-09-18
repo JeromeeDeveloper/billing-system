@@ -19,6 +19,7 @@ use App\Exports\RemittanceReportConsolidatedExport;
 use App\Models\LoanPayment;
 use Illuminate\Support\Facades\Log;
 use App\Exports\PostedPaymentsExport;
+use App\Exports\PostedPaymentsExportwithDescription;
 use App\Models\SavingsPayment;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -458,6 +459,40 @@ class AtmController extends Controller
             return response()->download(storage_path('app/public/' . $filename))->deleteFileAfterSend();
         } catch (\Exception $e) {
             Log::error('Error in exportPostedPayments: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
+        }
+    }
+
+    public function exportPostedPaymentsWithDescription(Request $request)
+    {
+        try {
+            $allDates = $request->input('all_dates');
+            $date = $request->input('date', now()->toDateString());
+
+            $atmPaymentsQuery = AtmPayment::with(['member.branch']);
+            if (!$allDates) {
+                $atmPaymentsQuery->whereDate('payment_date', $date);
+            }
+            $atmPayments = $atmPaymentsQuery->get();
+
+            $logDate = $allDates ? 'ALL DATES' : $date;
+            \Log::info("Found {$atmPayments->count()} ATM payments for export with description on {$logDate}");
+
+            if ($atmPayments->isEmpty()) {
+                return redirect()->back()->with('error', 'No posted payments found for the selected date(s).');
+            }
+
+            $filename = 'posted_payments_with_description_' . ($allDates ? 'all' : $date) . '.csv';
+
+            Excel::store(
+                new PostedPaymentsExportwithDescription($atmPayments),
+                $filename,
+                'public'
+            );
+
+            return response()->download(storage_path('app/public/' . $filename))->deleteFileAfterSend();
+        } catch (\Exception $e) {
+            \Log::error('Error in exportPostedPaymentsWithDescription: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error generating export: ' . $e->getMessage());
         }
     }
