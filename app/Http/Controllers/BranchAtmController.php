@@ -180,8 +180,6 @@ class BranchAtmController extends Controller
             $validated = $request->validate([
                 'member_id' => 'required|exists:members,id',
                 'withdrawal_amount' => 'required|numeric|min:0',
-                'selected_loans' => 'nullable|array',
-                'selected_loans.*' => 'string',
                 'loan_amounts' => 'nullable|array',
                 'payment_date' => 'required|date',
                 'payment_reference' => 'required|string',
@@ -196,38 +194,63 @@ class BranchAtmController extends Controller
             }
 
             $withdrawalAmount = $validated['withdrawal_amount'];
-            $selectedLoans = $validated['selected_loans'] ?? [];
             $loanAmounts = $validated['loan_amounts'] ?? [];
             $savingsAmounts = $request->input('savings_amounts', []); // New: get savings payments from modal
 
-            // Require at least one of: a selected loan OR a positive savings amount
+            // Check if there are any positive loan amounts or savings amounts
+            $hasPositiveLoans = false;
             $hasPositiveSavings = false;
+
+            foreach ($loanAmounts as $amount) {
+                // Skip empty or zero amounts
+                if (empty($amount) || $amount === '' || $amount === '0' || $amount === 0) {
+                    continue;
+                }
+
+                if (is_numeric($amount) && $amount > 0) {
+                    $hasPositiveLoans = true;
+                    break;
+                }
+            }
+
             foreach ($savingsAmounts as $amount) {
+                // Skip empty or zero amounts
+                if (empty($amount) || $amount === '' || $amount === '0' || $amount === 0) {
+                    continue;
+                }
+
                 if (is_numeric($amount) && $amount > 0) {
                     $hasPositiveSavings = true;
                     break;
                 }
             }
-            if ((empty($selectedLoans) || count($selectedLoans) === 0) && !$hasPositiveSavings) {
-                return redirect()->back()->with('error', 'Please select at least one loan or enter a positive savings amount.');
+
+            if (!$hasPositiveLoans && !$hasPositiveSavings) {
+                return redirect()->back()->with('error', 'Please enter a positive amount for at least one loan or savings account.');
             }
 
-            // Validate loan amounts for selected loans only
-            foreach ($selectedLoans as $loanAcctNo) {
-                if (!isset($loanAmounts[$loanAcctNo])) {
-                    return redirect()->back()->with('error', "Payment amount is required for loan {$loanAcctNo}");
+            // Validate loan amounts for loans with positive amounts
+            foreach ($loanAmounts as $loanAcctNo => $amount) {
+                // Skip empty or zero amounts
+                if (empty($amount) || $amount === '' || $amount === '0' || $amount === 0) {
+                    continue;
                 }
 
-                if (!is_numeric($loanAmounts[$loanAcctNo]) || $loanAmounts[$loanAcctNo] < 0) {
+                if (!is_numeric($amount) || $amount < 0) {
                     return redirect()->back()->with('error', "Invalid payment amount for loan {$loanAcctNo}");
                 }
             }
 
             // Calculate total loan payment
             $totalLoanPayment = 0;
-            foreach ($selectedLoans as $loanAcctNo) {
-                if (isset($loanAmounts[$loanAcctNo])) {
-                    $totalLoanPayment += $loanAmounts[$loanAcctNo];
+            foreach ($loanAmounts as $loanAcctNo => $amount) {
+                // Skip empty or zero amounts
+                if (empty($amount) || $amount === '' || $amount === '0' || $amount === 0) {
+                    continue;
+                }
+
+                if (is_numeric($amount) && $amount > 0) {
+                    $totalLoanPayment += $amount;
                 }
             }
 
@@ -250,12 +273,17 @@ class BranchAtmController extends Controller
             DB::beginTransaction();
 
             // Process loan payments with distribution logic (interest first, then principal, then penalty)
-            foreach ($selectedLoans as $loanAcctNo) {
-                if (!isset($loanAmounts[$loanAcctNo]) || $loanAmounts[$loanAcctNo] <= 0) {
+            foreach ($loanAmounts as $loanAcctNo => $amount) {
+                // Skip empty or zero amounts
+                if (empty($amount) || $amount === '' || $amount === '0' || $amount === 0) {
                     continue;
                 }
 
-                $paymentAmount = $loanAmounts[$loanAcctNo];
+                if (!is_numeric($amount) || $amount <= 0) {
+                    continue;
+                }
+
+                $paymentAmount = $amount;
 
                 // Find the loan forecast
                 $forecast = $member->loanForecasts()->where('loan_acct_no', $loanAcctNo)->first();
