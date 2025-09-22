@@ -193,14 +193,14 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">First Name</label>
                                                     <input type="text" name="fname" class="form-control">
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-6">
+                                            <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label class="form-label">Last Name</label>
                                                     <input type="text" name="lname" class="form-control">

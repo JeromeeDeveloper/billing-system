@@ -490,10 +490,24 @@ class DocumentUploadController extends Controller
             ->exists();
 
         if ($user->role === 'admin-msp') {
-            // Admin-MSP always has full access, no approval needed
-            $hasApprovedBranches = false;
-            $branchStatuses = collect();
-            $isApproved = !$hasApprovedUsers; // Disabled if any admin/branch approved
+            // Admin-MSP has same validation logic as admin
+            $hasApprovedBranches = User::whereIn('role', ['admin', 'branch'])
+                ->where('billing_approval_status', 'approved')
+                ->exists();
+            $branchStatuses = User::where('role', 'branch')
+                ->select('branch_id', 'billing_approval_status')
+                ->get()
+                ->groupBy('branch_id')
+                ->map(function ($rows) {
+                    // If any user for the branch is approved, treat branch as approved
+                    return $rows->contains(function ($r) { return $r->billing_approval_status === 'approved'; }) ? 'approved' : 'pending';
+                });
+            // Admin-MSP can upload if no other admin/branch users are approved
+            $otherApprovedUsers = User::whereIn('role', ['admin', 'branch'])
+                ->where('billing_approval_status', 'approved')
+                ->where('id', '!=', $user->id)
+                ->exists();
+            $isApproved = !$otherApprovedUsers;
         } elseif ($user->role === 'admin') {
             // Admin needs billing approval status to be pending to upload
             $hasApprovedBranches = User::whereIn('role', ['admin', 'branch'])

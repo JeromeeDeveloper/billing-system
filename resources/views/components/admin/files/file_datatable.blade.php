@@ -130,20 +130,21 @@
                                                         <input class="form-check-input" type="radio"
                                                             name="forecast_type" id="forecast_consolidated"
                                                             value="consolidated"
-                                                            {{ $consolidatedDisabled ? 'disabled checked' : 'checked' }}>
+                                                            {{ $consolidatedDisabled ? 'disabled' : 'checked' }}>
                                                         <label class="form-check-label text-dark"
                                                             for="forecast_consolidated">
                                                             <strong class="text-dark">Consolidated</strong> - Upload for
                                                             all branches
                                                             @if ($consolidatedDisabled)
                                                                 <span class="badge badge-warning ml-2">Disabled: at
-                                                                    least one admin or branch user is approved</span>
+                                                                    least one admin or branch user has approved</span>
                                                             @endif
                                                         </label>
                                                     </div>
                                                     <div class="form-check mb-2">
                                                         <input class="form-check-input" type="radio"
-                                                            name="forecast_type" id="forecast_branch" value="branch">
+                                                            name="forecast_type" id="forecast_branch" value="branch"
+                                                            {{ $consolidatedDisabled ? 'checked' : '' }}>
                                                         <label class="form-check-label text-dark" for="forecast_branch">
                                                             <strong class="text-dark">Per Branch</strong> - Upload for
                                                             specific branch only (shows as "Branch Forecast - [Branch
@@ -151,7 +152,7 @@
                                                         </label>
                                                     </div>
                                                     <div class="form-group" id="branch_selection_group"
-                                                        style="display: none;">
+                                                        style="display: {{ $consolidatedDisabled ? 'block' : 'none' }};">
                                                         <label for="branch_id"
                                                             class="font-weight-bold text-dark mb-2">Select
                                                             Branch</label>
