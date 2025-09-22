@@ -262,6 +262,21 @@
                                                     </div>
                                                 </div>
 
+                                                <!-- Current User Display -->
+                                                <div class="row">
+                                                    <div class="col-md-12 mb-3">
+                                                        <label class="font-weight-bold text-secondary">👤 Exporting for User</label>
+                                                        <div class="form-control border-primary bg-light">
+                                                            <strong>{{ Auth::user()->name }}</strong>
+                                                            @if(Auth::user()->branch)
+                                                                ({{ Auth::user()->branch->name }})
+                                                            @endif
+                                                            - {{ ucfirst(Auth::user()->role) }}
+                                                        </div>
+                                                        <input type="hidden" name="user_id" value="{{ Auth::id() }}">
+                                                    </div>
+                                                </div>
+
                                                 <!-- Submit Buttons Full Width -->
                                                 <div class="row mt-3">
                                                     <div class="col">
@@ -270,9 +285,9 @@
                                                         </button>
                                                     </div>
                                                     <div class="col">
-                                                        <a href="{{ route('atm.export-posted-payments-with-description', request()->all()) }}" class="btn btn-success btn-lg btn-block shadow">
+                                                        <button type="button" onclick="exportWithDescription()" class="btn btn-success btn-lg btn-block shadow">
                                                             <i class="fa fa-file-excel mr-2"></i> Export Posted Payments (with descriptions)
-                                                        </a>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             </form>
@@ -1101,6 +1116,21 @@
                 });
             }
         });
+
+        // Function to export with description using form data
+        function exportWithDescription() {
+            const form = document.getElementById('exportPostedPaymentsForm');
+            const formData = new FormData(form);
+
+            // Build query string from form data
+            const params = new URLSearchParams();
+            for (let [key, value] of formData.entries()) {
+                params.append(key, value);
+            }
+
+            // Redirect to export with description route
+            window.location.href = '{{ route("atm.export-posted-payments-with-description") }}?' + params.toString();
+        }
     </script>
 
 </body>

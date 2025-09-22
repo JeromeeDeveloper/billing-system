@@ -365,6 +365,7 @@ class AtmController extends Controller
             // Create ATM payment record to track the complete transaction
             $atmPayment = AtmPayment::create([
                 'member_id' => $member->id,
+                'user_id' => Auth::id(),
                 'withdrawal_amount' => $withdrawalAmount,
                 'total_loan_payment' => $totalLoanPayment,
                 'savings_allocation' => $savingsAllocation,
@@ -434,10 +435,14 @@ class AtmController extends Controller
         try {
             $allDates = $request->input('all_dates');
             $date = $request->input('date', now()->toDateString());
+            $userId = $request->input('user_id');
 
-            $atmPaymentsQuery = AtmPayment::with(['member.branch']);
+            $atmPaymentsQuery = AtmPayment::with(['member.branch', 'user']);
             if (!$allDates) {
                 $atmPaymentsQuery->whereDate('payment_date', $date);
+            }
+            if ($userId) {
+                $atmPaymentsQuery->where('user_id', $userId);
             }
             $atmPayments = $atmPaymentsQuery->get();
 
@@ -448,7 +453,8 @@ class AtmController extends Controller
                 return redirect()->back()->with('error', 'No posted payments found for the selected date(s).');
             }
 
-            $filename = 'posted_payments_' . ($allDates ? 'all' : $date) . '.csv';
+            $userSuffix = $userId ? '_user_' . $userId : '';
+            $filename = 'posted_payments_' . ($allDates ? 'all' : $date) . $userSuffix . '.csv';
 
             Excel::store(
                 new PostedPaymentsExport($atmPayments),
@@ -468,10 +474,14 @@ class AtmController extends Controller
         try {
             $allDates = $request->input('all_dates');
             $date = $request->input('date', now()->toDateString());
+            $userId = $request->input('user_id');
 
-            $atmPaymentsQuery = AtmPayment::with(['member.branch']);
+            $atmPaymentsQuery = AtmPayment::with(['member.branch', 'user']);
             if (!$allDates) {
                 $atmPaymentsQuery->whereDate('payment_date', $date);
+            }
+            if ($userId) {
+                $atmPaymentsQuery->where('user_id', $userId);
             }
             $atmPayments = $atmPaymentsQuery->get();
 
@@ -482,7 +492,8 @@ class AtmController extends Controller
                 return redirect()->back()->with('error', 'No posted payments found for the selected date(s).');
             }
 
-            $filename = 'posted_payments_with_description_' . ($allDates ? 'all' : $date) . '.csv';
+            $userSuffix = $userId ? '_user_' . $userId : '';
+            $filename = 'posted_payments_with_description_' . ($allDates ? 'all' : $date) . $userSuffix . '.csv';
 
             Excel::store(
                 new PostedPaymentsExportwithDescription($atmPayments),
@@ -554,8 +565,9 @@ class AtmController extends Controller
         $date = $request->input('date', date('Y-m-d'));
         $allDates = $request->input('all_dates', false);
 
-        // Get ATM payments based on date filter
-        $query = AtmPayment::with(['member.branch'])
+        // Get ATM payments based on date filter and current user
+        $query = AtmPayment::with(['member.branch', 'user'])
+            ->where('user_id', Auth::id())
             ->when(!$allDates, function ($query) use ($date) {
                 $query->whereDate('payment_date', $date);
             });

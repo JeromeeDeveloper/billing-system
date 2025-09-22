@@ -365,6 +365,7 @@ class BranchAtmController extends Controller
             // Create ATM payment record to track the complete transaction
             $atmPayment = AtmPayment::create([
                 'member_id' => $member->id,
+                'user_id' => Auth::id(),
                 'withdrawal_amount' => $withdrawalAmount,
                 'total_loan_payment' => $totalLoanPayment,
                 'savings_allocation' => $savingsAllocation,
