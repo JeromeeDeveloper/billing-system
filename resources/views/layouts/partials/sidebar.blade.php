@@ -334,6 +334,7 @@ use App\Models\BillingSetting;
                         Upload CoreID file to set member tagging to PGB.<br>
                         File should have "Customer No" header in A1 and CID values below.<br>
                         CIDs will be padded to 9 digits (e.g., 123 becomes 000000123).
+                        & File should have "Branch Code" header in B2 and Branch Code values below.
                     </p>
                     <input type="file" name="coreid_file" class="form-control-file" accept=".xlsx,.xls,.csv" required>
                 </div>

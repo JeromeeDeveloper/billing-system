@@ -55,9 +55,12 @@
                         <span class="focus-input100" data-placeholder="&#xf207;"></span>
                     </div>
 
-                    <div class="wrap-input100 validate-input" data-validate="Enter password">
-                        <input class="input100" type="password" name="password" placeholder="Password" required>
+                    <div class="wrap-input100 validate-input" data-validate="Enter password" style="position: relative;">
+                        <input id="password" class="input100" type="password" name="password" placeholder="Password" required>
                         <span class="focus-input100" data-placeholder="&#xf191;"></span>
+                        <button type="button" id="togglePassword" aria-label="Show password" class="btn btn-link p-0" style="position:absolute; right:12px; top:50%; transform: translateY(-50%); color:#fff;">
+                            <i class="bi bi-eye"></i>
+                        </button>
                     </div>
 
 
@@ -92,7 +95,7 @@
             <p>This application does not collect, store, or use any personal data from users. All information entered is used solely for authentication and is not shared with third parties. No tracking or analytics are implemented. For questions, contact the system administrator.</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary text-white" data-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
@@ -106,6 +109,20 @@
     <script src="assets/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        // Toggle password visibility
+        document.addEventListener('DOMContentLoaded', function () {
+            var toggle = document.getElementById('togglePassword');
+            var pwd = document.getElementById('password');
+            if (toggle && pwd) {
+                toggle.addEventListener('click', function () {
+                    var isPassword = pwd.getAttribute('type') === 'password';
+                    pwd.setAttribute('type', isPassword ? 'text' : 'password');
+                    this.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+                    this.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+                });
+            }
+        });
+
         @if (session('success'))
             Swal.fire({
                 icon: 'success',

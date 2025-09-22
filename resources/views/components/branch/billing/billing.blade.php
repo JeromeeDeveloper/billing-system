@@ -93,13 +93,6 @@
                             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-md-center align-items-start gap-2">
                                 <div class="d-flex flex-column flex-md-row align-items-md-center gap-2">
                                     <h4 class="card-title mb-0 me-3">Billing Datatable</h4>
-                                    <span class="status-badge">
-                                        @if(Auth::user()->status === 'pending')
-                                            <span class="badge badge-warning"><i class="fa fa-clock"></i> Status: Pending Approval</span>
-                                        @else
-                                            <span class="badge badge-success"><i class="fa fa-check-circle"></i> Status: Approved</span>
-                                        @endif
-                                    </span>
                                 </div>
                                 <div class="card-header-actions">
                                     <a href="{{ $allUsersApproved ? route('billing.export.branch', ['billing_period' => now()->format('Y-m')]) : '#' }}"
@@ -143,7 +136,7 @@
                                 </div>
                             @endif
                             <!-- Collapsible Information Note -->
-                            
+
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered display">
                                         <thead>
